@@ -1,0 +1,12 @@
+# Datos generados (CSV, PNG)
+data/*.csv
+data/*.png
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Chrome/Selenium
+chromedriver*
