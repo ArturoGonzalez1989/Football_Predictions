@@ -871,7 +871,7 @@ def extraer_estadisticas(driver) -> dict:
                 # Usar JavaScript click para evitar "element click intercepted"
                 driver.execute_script("arguments[0].click();", tab_element)
                 log.debug(f"  ✓ Clic en pestaña 'Estadísticas del partido' (JS click)")
-                time.sleep(1)  # Esperar a que cargue el iframe con las estadísticas
+                time.sleep(2)  # OPTIMIZADO: Aumentado de 1 a 2 segundos para carga completa del iframe
                 tab_clicked = True
                 break
             except (TimeoutException, NoSuchElementException, WebDriverException):
@@ -914,14 +914,32 @@ def extraer_estadisticas(driver) -> dict:
                             driver.switch_to.frame(nested_iframe)
                             log.debug(f"      → Iframe anidado #{nested_idx+1}: accediendo...")
 
-                            # Buscar párrafos en iframe anidado
-                            try:
-                                paragraphs = WebDriverWait(driver, 1).until(
-                                    EC.presence_of_all_elements_located((By.TAG_NAME, "p"))
-                                )
-                                log.debug(f"        - Párrafos encontrados: {len(paragraphs)}")
-                            except TimeoutException:
-                                log.debug(f"        × Sin párrafos")
+                            # Buscar párrafos en iframe anidado CON REINTENTOS
+                            paragraphs = []
+                            for attempt in range(3):  # Hasta 3 intentos
+                                try:
+                                    paragraphs = WebDriverWait(driver, 3).until(  # Aumentado de 1 a 3 segundos
+                                        EC.presence_of_all_elements_located((By.TAG_NAME, "p"))
+                                    )
+
+                                    # VALIDACIÓN: Verificar que hay suficientes párrafos (mínimo 10)
+                                    if len(paragraphs) >= 10:
+                                        log.debug(f"        - Párrafos encontrados: {len(paragraphs)} (intento {attempt+1})")
+                                        break  # Éxito
+                                    else:
+                                        log.debug(f"        - Solo {len(paragraphs)} párrafos (insuficiente), reintentando...")
+                                        if attempt < 2:
+                                            time.sleep(1.5)  # Espera antes de reintentar
+                                        paragraphs = []
+
+                                except TimeoutException:
+                                    if attempt < 2:
+                                        log.debug(f"        × Sin párrafos (intento {attempt+1}/3), reintentando...")
+                                        time.sleep(1.5)
+                                    else:
+                                        log.debug(f"        × Sin párrafos después de 3 intentos")
+
+                            if not paragraphs:
                                 driver.switch_to.parent_frame()
                                 continue
 
@@ -957,15 +975,33 @@ def extraer_estadisticas(driver) -> dict:
                                 pass
                             paragraphs = []
                 else:
-                    # Si no hay iframes anidados, buscar párrafos directamente
+                    # Si no hay iframes anidados, buscar párrafos directamente CON REINTENTOS
                     log.debug(f"    → Sin iframes anidados, buscando párrafos directamente...")
-                    try:
-                        paragraphs = WebDriverWait(driver, 1).until(
-                            EC.presence_of_all_elements_located((By.TAG_NAME, "p"))
-                        )
-                        log.debug(f"    - Párrafos encontrados: {len(paragraphs)}")
-                    except TimeoutException:
-                        log.debug(f"    × Sin párrafos")
+                    paragraphs = []
+                    for attempt in range(3):  # Hasta 3 intentos
+                        try:
+                            paragraphs = WebDriverWait(driver, 3).until(  # Aumentado de 1 a 3 segundos
+                                EC.presence_of_all_elements_located((By.TAG_NAME, "p"))
+                            )
+
+                            # VALIDACIÓN: Verificar que hay suficientes párrafos (mínimo 10)
+                            if len(paragraphs) >= 10:
+                                log.debug(f"    - Párrafos encontrados: {len(paragraphs)} (intento {attempt+1})")
+                                break  # Éxito
+                            else:
+                                log.debug(f"    - Solo {len(paragraphs)} párrafos (insuficiente), reintentando...")
+                                if attempt < 2:
+                                    time.sleep(1.5)  # Espera antes de reintentar
+                                paragraphs = []
+
+                        except TimeoutException:
+                            if attempt < 2:
+                                log.debug(f"    × Sin párrafos (intento {attempt+1}/3), reintentando...")
+                                time.sleep(1.5)
+                            else:
+                                log.debug(f"    × Sin párrafos después de 3 intentos")
+
+                    if not paragraphs:
                         driver.switch_to.default_content()
                         continue
 
@@ -1259,7 +1295,7 @@ def extraer_estadisticas(driver) -> dict:
 
                         for selector in attacking_selectors:
                             try:
-                                tab_element = WebDriverWait(driver, 2).until(
+                                tab_element = WebDriverWait(driver, 3).until(  # OPTIMIZADO: Aumentado de 2 a 3 segundos
                                     EC.presence_of_element_located((By.XPATH, selector))
                                 )
                                 driver.execute_script("arguments[0].click();", tab_element)
@@ -1316,7 +1352,7 @@ def extraer_estadisticas(driver) -> dict:
 
                         for selector in defence_selectors:
                             try:
-                                tab_element = WebDriverWait(driver, 2).until(
+                                tab_element = WebDriverWait(driver, 3).until(  # OPTIMIZADO: Aumentado de 2 a 3 segundos
                                     EC.presence_of_element_located((By.XPATH, selector))
                                 )
                                 driver.execute_script("arguments[0].click();", tab_element)
@@ -1329,7 +1365,7 @@ def extraer_estadisticas(driver) -> dict:
 
                         if defence_tab_clicked:
                             try:
-                                defence_paragraphs = WebDriverWait(driver, 2).until(
+                                defence_paragraphs = WebDriverWait(driver, 3).until(  # OPTIMIZADO: Aumentado de 2 a 3 segundos
                                     EC.presence_of_all_elements_located((By.TAG_NAME, "p"))
                                 )
 
@@ -1372,7 +1408,7 @@ def extraer_estadisticas(driver) -> dict:
 
                         for selector in distribution_selectors:
                             try:
-                                tab_element = WebDriverWait(driver, 2).until(
+                                tab_element = WebDriverWait(driver, 3).until(  # OPTIMIZADO: Aumentado de 2 a 3 segundos
                                     EC.presence_of_element_located((By.XPATH, selector))
                                 )
                                 driver.execute_script("arguments[0].click();", tab_element)
@@ -1516,7 +1552,7 @@ def extraer_momentum(driver) -> dict:
 
         # PASO 3: Abrir URL de momentum en nueva pestaña (sin clickear nada)
         driver.execute_script("window.open(arguments[0]);", momentum_url)
-        time.sleep(1)
+        time.sleep(1.5)  # OPTIMIZADO: Aumentado de 1 a 1.5 segundos para carga de gráfico
 
         # Cambiar a la nueva pestaña
         new_handles = [h for h in driver.window_handles if h != original_window]
