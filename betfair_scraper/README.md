@@ -2,9 +2,9 @@
 
 **Proyecto**: Captura de cuotas y estadísticas Opta de partidos de fútbol en tiempo real desde Betfair Exchange.
 
-**Status**: ✅ Producción - 6 Scripts Orquestados
+**Status**: ✅ Producción - 7 Scripts Orquestados
 
-Sistema automático que busca partidos, captura cuotas, extrae estadísticas y valida los datos **sin intervención manual**.
+Sistema automático que busca partidos, captura cuotas, extrae estadísticas, valida los datos **y unifica todo en un único archivo** sin intervención manual.
 
 ---
 
@@ -25,9 +25,10 @@ Sistema que:
 - **Captura** cuotas Match Odds, Over/Under, Resultado Correcto
 - **Extrae** estadísticas Opta (xG, pases, tiros, etc.)
 - **Valida** que datos se capturen correctamente
+- **Unifica** todos los CSVs en unificado.csv para análisis global
 - **Reporta** estado del sistema
 
-Funciona **24/7 automáticamente** mediante 6 scripts orquestados.
+Funciona **24/7 automáticamente** mediante 7 scripts orquestados.
 
 ---
 
@@ -55,6 +56,7 @@ python scripts/clean_games.py         # PASO 3: Limpieza
 python scripts/check_urls.py          # PASO 4: Verificación de URLs
 python scripts/generate_report.py     # PASO 5: Generación de reportes
 python scripts/validate_stats.py      # PASO 6: Validación de estadísticas
+python scripts/unify_data.py          # PASO 7: Unificar CSVs (NUEVO)
 ```
 
 ---
@@ -137,13 +139,20 @@ betfair_scraper/
 - Analiza games.csv y datos capturados
 - Genera informe consolidado
 
-### PASO 6: validate_stats.py ⭐ NUEVO
+### PASO 6: validate_stats.py
 **Responsabilidad**: ¿Se capturan las estadísticas disponibles?
 - Detecta automáticamente "brecha de datos"
 - Alerta si hay estadísticas no capturadas
 
+### PASO 7: unify_data.py ⭐ NUEVO
+**Responsabilidad**: Unificar todos los CSVs en un único archivo
+- Lee todos los CSVs de partidos individuales
+- Combina todas las filas en unificado.csv
+- Mantiene la unión de todas las columnas
+- Genera un archivo análisis global
+
 ### MAESTRO: supervisor_workflow.py
-Ejecuta los 6 PASOS automáticamente y reporta resultados.
+Ejecuta los 7 PASOS automáticamente y reporta resultados.
 
 ---
 

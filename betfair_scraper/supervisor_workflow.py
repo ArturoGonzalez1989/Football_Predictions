@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Workflow del Supervisor - Orquesta los 6 PASOS automáticamente
+Workflow del Supervisor - Orquesta los 7 PASOS automáticamente
 
 PASO 1: start_scraper.py      → Verifica/arranca scraper
 PASO 2: find_matches.py       → Busca nuevos partidos en Betfair
@@ -8,6 +8,7 @@ PASO 3: clean_games.py        → Elimina partidos terminados
 PASO 4: check_urls.py         → Verifica errores 404
 PASO 5: generate_report.py    → Genera informe completo
 PASO 6: validate_stats.py     → Valida estadísticas capturadas
+PASO 7: unify_data.py         → Unifica todos los CSVs en unificado.csv
 """
 
 import subprocess
@@ -64,9 +65,9 @@ def check_stats_gap_in_output(script_output_text):
 
 
 def main():
-    """Ejecuta los 6 PASOS del supervisor"""
+    """Ejecuta los 7 PASOS del supervisor"""
     print("\n" + "=" * 70)
-    print("  WORKFLOW DEL SUPERVISOR - ORQUESTACIÓN DE 6 PASOS")
+    print("  WORKFLOW DEL SUPERVISOR - ORQUESTACIÓN DE 7 PASOS")
     print("=" * 70)
     print(f"\nInicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
@@ -83,6 +84,7 @@ def main():
         "paso_4": False,
         "paso_5": False,
         "paso_6": False,
+        "paso_7": False,
         "stats_gap": False
     }
 
@@ -140,6 +142,15 @@ def main():
     if not results["paso_6"]:
         print("\n[ALERTA] Paso 6 falló - No se validaron estadísticas")
 
+    # PASO 7: Unificar datos (NUEVO)
+    results["paso_7"] = execute_step(
+        7,
+        "scripts/unify_data.py",
+        "Unificar todos los CSVs en unificado.csv"
+    )
+    if not results["paso_7"]:
+        print("\n[ALERTA] Paso 7 falló - Los datos no se unificaron")
+
     # =========================================================================
     # RESUMEN FINAL
     # =========================================================================
@@ -152,6 +163,7 @@ def main():
     print(f"  PASO 4 (check_urls.py):       {'[OK]' if results['paso_4'] else '[ERROR]'}")
     print(f"  PASO 5 (generate_report.py):  {'[OK]' if results['paso_5'] else '[ERROR]'}")
     print(f"  PASO 6 (validate_stats.py):   {'[OK]' if results['paso_6'] else '[ERROR]'} [OBLIGATORIO]")
+    print(f"  PASO 7 (unify_data.py):       {'[OK]' if results['paso_7'] else '[ERROR]'} [NUEVO]")
 
     print(f"\nFin: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
@@ -166,6 +178,9 @@ def main():
             print("  - PASO 1: Scraper puede no estar corriendo")
         if not results["paso_6"]:
             print("  - PASO 6: Validación de estadísticas falló")
+
+    if not results["paso_7"]:
+        print("  - PASO 7: Unificación de datos falló (no crítico)")
 
     print("\n" + "=" * 70 + "\n")
 
