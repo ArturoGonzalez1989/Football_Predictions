@@ -49,12 +49,12 @@ Ver: [MANUAL_DE_USUARIO.md](MANUAL_DE_USUARIO.md)
 ### Opción 3: Ejecutar Script Individual
 
 ```bash
-python start_scraper.py       # PASO 1: Control del scraper
-python find_matches.py        # PASO 2: Búsqueda de partidos
-python clean_games.py         # PASO 3: Limpieza
-python check_urls.py          # PASO 4: Verificación de URLs
-python generate_report.py     # PASO 5: Generación de reportes
-python validate_stats.py      # PASO 6: Validación de estadísticas
+python scripts/start_scraper.py       # PASO 1: Control del scraper
+python scripts/find_matches.py        # PASO 2: Búsqueda de partidos
+python scripts/clean_games.py         # PASO 3: Limpieza
+python scripts/check_urls.py          # PASO 4: Verificación de URLs
+python scripts/generate_report.py     # PASO 5: Generación de reportes
+python scripts/validate_stats.py      # PASO 6: Validación de estadísticas
 ```
 
 ---
@@ -63,34 +63,51 @@ python validate_stats.py      # PASO 6: Validación de estadísticas
 
 ```
 betfair_scraper/
-├── main.py                          # Scraper principal (Selenium)
-├── config.py                        # Configuración
-├── requirements.txt                 # Dependencias
 │
-├── SCRIPTS DE SUPERVISOR (6 PASOS)
-├── start_scraper.py                 # PASO 1: Control del scraper
-├── find_matches.py                  # PASO 2: Búsqueda de partidos
-├── clean_games.py                   # PASO 3: Limpieza de partidos
-├── check_urls.py                    # PASO 4: Verificación de URLs
-├── generate_report.py               # PASO 5: Generación de reportes
-├── validate_stats.py                # PASO 6: Validación de estadísticas (NUEVO)
+├── CORE (Scraper Principal)
+│   ├── main.py                      # Scraper principal (Selenium) - 125 KB
+│   ├── config.py                    # Configuración global
+│   ├── __init__.py                  # Inicialización módulo
+│   └── supervisor_config.json       # Config del supervisor
 │
-├── supervisor_workflow.py           # MAESTRO: Ejecuta 6 PASOS automáticamente
+├── SCRIPTS DE SUPERVISOR (Organizados)
+└── scripts/
+    ├── start_scraper.py             # PASO 1: Control del scraper (6.6 KB)
+    ├── find_matches.py              # PASO 2: Búsqueda de partidos (9.2 KB)
+    ├── clean_games.py               # PASO 3: Limpieza de partidos (2.8 KB)
+    ├── check_urls.py                # PASO 4: Verificación de URLs (5.8 KB)
+    ├── generate_report.py           # PASO 5: Generación de reportes (9.3 KB)
+    ├── validate_stats.py            # PASO 6: Validación de estadísticas (8.8 KB)
+    └── README.md                    # Documentación de scripts
 │
-├── DATOS Y LOGS
+├── MAESTRO (Orquestación)
+├── supervisor_workflow.py           # Ejecuta 6 PASOS automáticamente (5.7 KB)
+│
+├── DATOS Y LOGS (Vivos - No editar manualmente)
 ├── games.csv                        # Partidos a trackear
-├── data/                            # CSVs capturados con datos
-└── logs/                            # Logs del sistema
+├── data/                            # CSVs capturados con datos (53+ archivos)
+└── logs/                            # Logs y reportes del sistema
+│
+├── DEPENDENCIAS
+├── requirements.txt                 # Dependencias Python
+└── requirements_supervisor.txt      # Dependencias adicionales
 │
 └── DOCUMENTACIÓN
     ├── README.md                    # Este archivo
     ├── MANUAL_DE_USUARIO.md         # Guía de uso (RECOMENDADO)
+    ├── INDEX.md                     # Índice y referencias rápidas
+    ├── scripts/README.md            # Documentación de scripts
     ├── SUPERVISOR_WORKFLOW_README.md
     ├── VALIDATE_STATS_README.md
     ├── CLEAN_GAMES_README.md
     ├── FIND_MATCHES_README.md
+    ├── SUPERVISOR_ORQUESTADOR.md
     └── ARQUITECTURA_FINAL.txt
 ```
+
+**Total de código útil**: ~48 KB en scripts (distribuido en 7 archivos)
+**Total de código core**: ~130 KB (main.py + config.py)
+**Total de datos preservados**: 53+ CSVs + logs históricos
 
 ## 🔧 Scripts Disponibles
 

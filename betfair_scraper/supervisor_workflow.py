@@ -89,7 +89,7 @@ def main():
     # PASO 1: Verificar scraper
     results["paso_1"] = execute_step(
         1,
-        "start_scraper.py",
+        "scripts/start_scraper.py",
         "Verificar y arrancar scraper"
     )
     if not results["paso_1"]:
@@ -98,7 +98,7 @@ def main():
     # PASO 2: Buscar partidos
     results["paso_2"] = execute_step(
         2,
-        "find_matches.py",
+        "scripts/find_matches.py",
         "Buscar nuevos partidos en Betfair"
     )
     if not results["paso_2"]:
@@ -107,7 +107,7 @@ def main():
     # PASO 3: Limpiar partidos viejos
     results["paso_3"] = execute_step(
         3,
-        "clean_games.py",
+        "scripts/clean_games.py",
         "Limpiar partidos terminados"
     )
     if not results["paso_3"]:
@@ -116,7 +116,7 @@ def main():
     # PASO 4: Verificar URLs
     results["paso_4"] = execute_step(
         4,
-        "check_urls.py",
+        "scripts/check_urls.py",
         "Verificar URLs y eliminar 404s"
     )
     if not results["paso_4"]:
@@ -125,7 +125,7 @@ def main():
     # PASO 5: Generar reporte
     results["paso_5"] = execute_step(
         5,
-        "generate_report.py",
+        "scripts/generate_report.py",
         "Generar reporte de supervisión"
     )
     if not results["paso_5"]:
@@ -134,7 +134,7 @@ def main():
     # PASO 6: Validar estadísticas (CRÍTICO)
     results["paso_6"] = execute_step(
         6,
-        "validate_stats.py",
+        "scripts/validate_stats.py",
         "Validar estadísticas capturadas (OBLIGATORIO)"
     )
     if not results["paso_6"]:

@@ -1,0 +1,35 @@
+
+============================================================
+INFORME DE SUPERVISION
+============================================================
+
+Hora: 2026-02-11 18:23:18
+
+1. PARTIDOS CONFIGURADOS
+----------------------------------------
+   Total: 3 partidos
+   Activos: 0
+   Futuros: 3
+
+2. DATOS CAPTURADOS
+----------------------------------------
+   CSVs de partidos: 54
+   Filas totales: 416
+   Filas con cuotas: 88.5%
+   Filas con stats: 35.8%
+
+3. SALUD DEL SCRAPER
+----------------------------------------
+   Errores recientes: 0
+   Warnings recientes: 10
+   Capturas exitosas: 11
+   Ultima actividad: 18:23:17 [DEBUG]   
+
+4. ESTADO GENERAL
+----------------------------------------
+   STATUS: [OK] Sistema funcionando correctamente
+   - Scraper capturando datos
+   - Partidos configurados activamente
+   - Calidad de datos aceptable
+
+============================================================
