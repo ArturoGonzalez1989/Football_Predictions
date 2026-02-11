@@ -1,0 +1,1627 @@
+20:46:43 [INFO] 📝 Log guardándose en: logs/scraper_20260210_204643.log
+20:46:43 [INFO] Cargados 20 partidos desde games.csv
+20:46:43 [INFO] 📅 MODO SCHEDULING ACTIVADO
+20:46:43 [INFO]    Ventana tracking: 10 min antes → 150 min después
+20:46:43 [INFO]    Total en CSV: 20 partidos
+20:46:43 [INFO]    ✓ Partidos activos ahora: 14
+20:46:43 [INFO]    ⏰ Partidos futuros: 6
+20:46:43 [INFO]    ✅ Partidos finalizados: 0
+20:46:43 [INFO] 
+📋 Próximos partidos a trackear:
+20:46:43 [INFO]       Nápoles - Como (en 13 min)
+20:46:43 [INFO]       Birmingham - West Bromwich (en 13 min)
+20:46:43 [INFO]       Hearts - Hibernian (en 13 min)
+20:46:43 [INFO]       West Ham - Manchester United (en 28 min)
+20:46:43 [INFO]       Deportivo Tachira - The Strongest (en 283 min)
+20:46:43 [INFO] 
+Iniciando observador con 14 partidos.
+20:46:43 [INFO] Ciclo: 30s | Output: data/
+20:46:43 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 5 ciclos (scheduling)
+20:46:43 [INFO] 
+Iniciando Chrome...
+20:46:50 [INFO] ✓ Cookies aceptadas automáticamente
+20:46:51 [INFO] Pestaña 0: chelsea-leeds-apuestas-35212111 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/premier-league-inglesa/chels...
+20:47:17 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:47:17 [INFO] Pestaña 1: everton-bournemouth-apuestas-35212136 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/premier-league-inglesa/evert...
+20:47:43 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:47:43 [INFO] Pestaña 2: tottenham-newcastle-apuestas-35212115 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/premier-league-inglesa/totte...
+20:48:09 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:48:09 [INFO] Pestaña 3: hertha-berl%C3%ADn-friburgo-apuestas-35060079 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/copa-de-alemania/hertha-berl...
+20:48:35 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:48:35 [INFO] Pestaña 4: leicester-southampton-apuestas-35239402 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/inglaterra-sky-bet-champions...
+20:49:01 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:49:01 [INFO] Pestaña 5: oxford-united-norwich-apuestas-35239430 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/inglaterra-sky-bet-champions...
+20:49:27 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:49:27 [INFO] Pestaña 6: lucerna-grasshoppers-zurich-apuestas-35241339 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/super-league-suiza/lucerna-g...
+20:49:53 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:49:53 [INFO] Pestaña 7: annan-dumbarton-apuestas-35213339 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/league-2-escocesa/annan-dumb...
+20:50:19 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:50:19 [INFO] Pestaña 8: clyde-elgin-city-fc-apuestas-35213453 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/league-2-escocesa/clyde-elgi...
+20:50:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:50:44 [INFO] Pestaña 9: crawley-cambridge-united-apuestas-35234804 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/inglaterra-sky-bet-league-2/...
+20:51:10 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:51:10 [INFO] Pestaña 10: mansfield-peterborough-apuestas-35236568 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/inglaterra-sky-bet-league-1/...
+20:51:36 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:51:36 [INFO] Pestaña 11: shrewsbury-barrow-apuestas-35234799 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/inglaterra-sky-bet-league-2/...
+20:52:02 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:52:02 [INFO] Pestaña 12: stevenage-barnsley-apuestas-35235289 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/inglaterra-sky-bet-league-1/...
+20:52:29 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:52:29 [INFO] Pestaña 13: wigan-reading-apuestas-35235288 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/inglaterra-sky-bet-league-1/...
+20:52:29 [INFO] ============================================================
+20:52:29 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+20:52:29 [INFO] Tienes 0 segundos...
+20:52:29 [INFO] El scraper comenzará automáticamente después.
+20:52:29 [INFO] ============================================================
+20:52:29 [INFO] ============================================================
+20:52:29 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+20:52:29 [INFO] ============================================================
+20:52:29 [INFO] 
+--- Ciclo #1 ---
+20:52:29 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+20:52:30 [INFO] [Tab 0] → Extrayendo información del partido...
+20:52:58 [DEBUG]   ✓ Estado detectado: DESCANSO (XPATH: texto 'Descanso')
+20:52:58 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+20:53:00 [INFO] [Tab 0]   ✓ Match Odds: Home=1.55/1.56 | Draw=3.55/3.7 | Away=5.7/6.2
+20:53:00 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+20:53:03 [INFO] [Tab 0]   ✓ Over/Under: 20/20 valores capturados
+20:53:03 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+20:53:06 [INFO] [Tab 0]   ✓ Resultado Correcto: 24/30 valores capturados
+20:53:06 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+20:53:06 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+20:53:06 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+20:53:07 [DEBUG]   → Total iframes encontrados: 7
+20:53:07 [DEBUG]   → Iframe #1: accediendo...
+20:53:07 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+20:53:07 [DEBUG]       → Iframe anidado #1: accediendo...
+20:53:07 [DEBUG]         - Párrafos encontrados: 46
+20:53:07 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+20:53:07 [DEBUG]       ✓ Opta Points: 32.0 - 28.2
+20:53:07 [DEBUG]       ✓ Possession: 55% - 45%
+20:53:07 [DEBUG]       ✓ Shots: 2 - 1
+20:53:08 [DEBUG]       ✓ Shots On Target: 0 - 0
+20:53:08 [DEBUG]       ✓ Touches in Box: 3 - 3
+20:53:08 [DEBUG]       ✓ Yellow Cards: 2 - 1
+20:53:08 [DEBUG]       ✓ Red Cards: 0 - 0
+20:53:08 [DEBUG]       ✓ Booking Points: 20 - 10
+20:53:08 [DEBUG]       ✓ Total Passes: 122 - 99
+20:53:08 [DEBUG]       ✓ Corners: 0 - 0
+20:53:08 [DEBUG]   ✓✓ Total: 10 estadísticas Summary capturadas
+20:53:08 [DEBUG]   → Buscando tabs adicionales: Attacking, Defence, Distribution...
+20:53:08 [DEBUG]   → Buscando tab 'Attacking'...
+20:53:08 [DEBUG]   ✓ Clic en tab 'Attacking'
+20:53:09 [DEBUG]       ✓ Attacking - big chances: 0 - 0
+20:53:09 [DEBUG]       ✓ Attacking - shots on target: 0 - 0
+20:53:09 [DEBUG]       ✓ Attacking - shots off target: 0 - 0
+20:53:09 [DEBUG]       ✓ Attacking - attacks: 19 - 13
+20:53:09 [DEBUG]       ✓ Attacking - hit woodwork: 0 - 0
+20:53:09 [DEBUG]   ✓ Attacking: 5 estadísticas capturadas
+20:53:09 [DEBUG]   → Buscando tab 'Defence'...
+20:53:09 [DEBUG]   ✓ Clic en tab 'Defence'
+20:53:11 [DEBUG]       ✓ Defence - tackles: 2 - 3
+20:53:11 [DEBUG]       ✓ Defence - tackle success %: 100 - 33
+20:53:11 [DEBUG]       ✓ Defence - duels won: 8 - 14
+20:53:11 [DEBUG]       ✓ Defence - aerial duels won: 0 - 7
+20:53:11 [DEBUG]       ✓ Defence - clearance: 2 - 2
+20:53:11 [DEBUG]       ✓ Defence - saves: 0 - 0
+20:53:11 [DEBUG]       ✓ Defence - interceptions: 1 - 2
+20:53:11 [DEBUG]   ✓ Defence: 7 estadísticas capturadas
+20:53:11 [DEBUG]   → Buscando tab 'Distribution'...
+20:53:11 [DEBUG]   ✓ Clic en tab 'Distribution'
+20:53:13 [DEBUG]       ✓ Distribution - pass success %: 90 - 80
+20:53:13 [DEBUG]       ✓ Distribution - crosses: 3 - 2
+20:53:13 [DEBUG]       ✓ Distribution - successful crosses %: 33 - 50
+20:53:13 [DEBUG]       ✓ Distribution - successful passes in opposition half: 10 - 4
+20:53:13 [DEBUG]       ✓ Distribution - successful passes in final 3rd: 13 - 7
+20:53:13 [DEBUG]   ✓ Distribution: 5 estadísticas capturadas
+20:53:13 [INFO] [Tab 0]   ✓ Estadísticas: 50/54 valores capturados
+20:53:13 [INFO] [Tab 0]     - Summary: xG / | Opta 32.0/28.2 | Posesión 55/45
+20:53:13 [INFO] [Tab 0]     - Attacking: Big Chances 0/0 | Attacks 19/13
+20:53:13 [INFO] [Tab 0]     - Defence: Tackles 2/3 | Duels Won 0/7
+20:53:13 [INFO] [Tab 0]     - Distribution: Pass Success 90/80% | Crosses 3/2
+20:53:13 [INFO] [Tab 0] → Extrayendo volumen matched...
+20:53:26 [INFO] [Tab 0]   ✓ Volumen: No capturado
+20:53:26 [INFO] [Tab 0] → Extrayendo momentum...
+20:53:26 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+20:53:26 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=3toem7hmu
+20:53:26 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=3toem7hm
+20:53:30 [DEBUG]   → Divs: 181, Local: 15, Visit: 7
+20:53:30 [DEBUG]   ✓ Momentum Local: 375.27 (15 barras)
+20:53:30 [DEBUG]   ✓ Momentum Visitante: 258.39 (7 barras)
+20:53:31 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+20:53:31 [INFO] [Tab 0]     - Local: 375.27 | Visitante: 258.39
+20:53:31 [INFO] [Tab 0] ☕ chelsea-leeds-apuestas-35212111 | DESCANSO | Min:20 | 0-0 | BH:1.55 LH:1.56
+20:53:31 [DEBUG] Espera 11.1s antes de siguiente pestaña...
+20:53:42 [ERROR] Error al cambiar a pestaña everton-bournemouth-apuestas-35212136: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:53:42 [DEBUG] Espera 10.0s antes de siguiente pestaña...
+20:53:52 [ERROR] Error al cambiar a pestaña tottenham-newcastle-apuestas-35212115: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:53:52 [DEBUG] Espera 9.8s antes de siguiente pestaña...
+20:54:02 [ERROR] Error al cambiar a pestaña hertha-berl%C3%ADn-friburgo-apuestas-35060079: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:54:02 [DEBUG] Espera 11.6s antes de siguiente pestaña...
+20:54:13 [ERROR] Error al cambiar a pestaña leicester-southampton-apuestas-35239402: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:54:13 [DEBUG] Espera 10.6s antes de siguiente pestaña...
+20:54:24 [ERROR] Error al cambiar a pestaña oxford-united-norwich-apuestas-35239430: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:54:24 [DEBUG] Espera 9.8s antes de siguiente pestaña...
+20:54:34 [ERROR] Error al cambiar a pestaña lucerna-grasshoppers-zurich-apuestas-35241339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:54:34 [DEBUG] Espera 12.0s antes de siguiente pestaña...
+20:54:46 [ERROR] Error al cambiar a pestaña annan-dumbarton-apuestas-35213339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:54:46 [DEBUG] Espera 9.3s antes de siguiente pestaña...
+20:54:55 [ERROR] Error al cambiar a pestaña clyde-elgin-city-fc-apuestas-35213453: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:54:55 [DEBUG] Espera 10.8s antes de siguiente pestaña...
+20:55:06 [ERROR] Error al cambiar a pestaña crawley-cambridge-united-apuestas-35234804: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:55:06 [DEBUG] Espera 10.2s antes de siguiente pestaña...
+20:55:16 [ERROR] Error al cambiar a pestaña mansfield-peterborough-apuestas-35236568: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:55:16 [DEBUG] Espera 10.6s antes de siguiente pestaña...
+20:55:27 [ERROR] Error al cambiar a pestaña shrewsbury-barrow-apuestas-35234799: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:55:27 [DEBUG] Espera 8.4s antes de siguiente pestaña...
+20:55:35 [ERROR] Error al cambiar a pestaña stevenage-barnsley-apuestas-35235289: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:55:35 [DEBUG] Espera 9.9s antes de siguiente pestaña...
+20:55:45 [ERROR] Error al cambiar a pestaña wigan-reading-apuestas-35235288: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:55:45 [WARNING] Ciclo tardó 196.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+20:55:45 [INFO] 
+--- Ciclo #2 ---
+20:55:46 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+20:55:46 [INFO] [Tab 0] → Extrayendo información del partido...
+20:56:14 [DEBUG]   ✓ Estado detectado: DESCANSO (XPATH: texto 'Descanso')
+20:56:14 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+20:56:17 [INFO] [Tab 0]   ✓ Match Odds: Home=1.53/1.61 | Draw=/ | Away=/
+20:56:17 [WARNING] ⟳ Match Odds incompletos (1/3), refrescando pestaña...
+20:56:46 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+20:57:15 [DEBUG]   ✓ Estado detectado: DESCANSO (XPATH: texto 'Descanso')
+20:57:17 [WARNING] ⚠ Refresco no mejoró captura: 0/3
+20:57:17 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+20:57:19 [INFO] [Tab 0]   ✓ Over/Under: 0/20 valores capturados
+20:57:19 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+20:57:22 [INFO] [Tab 0]   ✓ Resultado Correcto: 0/30 valores capturados
+20:57:22 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+20:57:22 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+20:57:22 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+20:57:23 [DEBUG]   → Total iframes encontrados: 8
+20:57:23 [DEBUG]   → Iframe #1: accediendo...
+20:57:23 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+20:57:23 [DEBUG]       → Iframe anidado #1: accediendo...
+20:57:23 [DEBUG]         - Párrafos encontrados: 46
+20:57:23 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+20:57:23 [DEBUG]       ✓ Opta Points: 62.4 - 14.8
+20:57:23 [DEBUG]       ✓ Possession: 57% - 43%
+20:57:23 [DEBUG]       ✓ Shots: 5 - 1
+20:57:23 [DEBUG]       ✓ Shots On Target: 2 - 0
+20:57:23 [DEBUG]       ✓ Touches in Box: 5 - 3
+20:57:23 [DEBUG]       ✓ Yellow Cards: 2 - 2
+20:57:23 [DEBUG]       ✓ Red Cards: 0 - 0
+20:57:23 [DEBUG]       ✓ Booking Points: 20 - 20
+20:57:23 [DEBUG]       ✓ Total Passes: 139 - 102
+20:57:23 [DEBUG]       ✓ Corners: 0 - 0
+20:57:23 [DEBUG]   ✓✓ Total: 10 estadísticas Summary capturadas
+20:57:23 [DEBUG]   → Buscando tabs adicionales: Attacking, Defence, Distribution...
+20:57:23 [DEBUG]   → Buscando tab 'Attacking'...
+20:57:23 [DEBUG]   ✓ Clic en tab 'Attacking'
+20:57:25 [DEBUG]       ✓ Attacking - big chances: 1 - 0
+20:57:25 [DEBUG]       ✓ Attacking - shots on target: 2 - 0
+20:57:25 [DEBUG]       ✓ Attacking - shots off target: 0 - 0
+20:57:25 [DEBUG]       ✓ Attacking - attacks: 22 - 13
+20:57:25 [DEBUG]       ✓ Attacking - hit woodwork: 0 - 0
+20:57:25 [DEBUG]   ✓ Attacking: 5 estadísticas capturadas
+20:57:25 [DEBUG]   → Buscando tab 'Defence'...
+20:57:25 [DEBUG]   ✓ Clic en tab 'Defence'
+20:57:27 [DEBUG]       ✓ Defence - tackles: 2 - 3
+20:57:27 [DEBUG]       ✓ Defence - tackle success %: 100 - 33
+20:57:27 [DEBUG]       ✓ Defence - duels won: 9 - 14
+20:57:27 [DEBUG]       ✓ Defence - aerial duels won: 0 - 7
+20:57:27 [DEBUG]       ✓ Defence - clearance: 2 - 2
+20:57:27 [DEBUG]       ✓ Defence - saves: 0 - 1
+20:57:27 [DEBUG]       ✓ Defence - interceptions: 1 - 2
+20:57:27 [DEBUG]   ✓ Defence: 7 estadísticas capturadas
+20:57:27 [DEBUG]   → Buscando tab 'Distribution'...
+20:57:27 [DEBUG]   ✓ Clic en tab 'Distribution'
+20:57:28 [DEBUG]       ✓ Distribution - pass success %: 91 - 79
+20:57:28 [DEBUG]       ✓ Distribution - crosses: 3 - 2
+20:57:28 [DEBUG]       ✓ Distribution - successful crosses %: 33 - 50
+20:57:28 [DEBUG]       ✓ Distribution - successful passes in opposition half: 12 - 5
+20:57:28 [DEBUG]       ✓ Distribution - successful passes in final 3rd: 16 - 7
+20:57:28 [DEBUG]   ✓ Distribution: 5 estadísticas capturadas
+20:57:28 [INFO] [Tab 0]   ✓ Estadísticas: 50/54 valores capturados
+20:57:28 [INFO] [Tab 0]     - Summary: xG / | Opta 62.4/14.8 | Posesión 57/43
+20:57:28 [INFO] [Tab 0]     - Attacking: Big Chances 1/0 | Attacks 22/13
+20:57:28 [INFO] [Tab 0]     - Defence: Tackles 2/3 | Duels Won 0/7
+20:57:28 [INFO] [Tab 0]     - Distribution: Pass Success 91/79% | Crosses 3/2
+20:57:28 [INFO] [Tab 0] → Extrayendo volumen matched...
+20:57:41 [INFO] [Tab 0]   ✓ Volumen: No capturado
+20:57:41 [INFO] [Tab 0] → Extrayendo momentum...
+20:57:41 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+20:57:41 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=3toem7hmu
+20:57:41 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=3toem7hm
+20:57:45 [DEBUG]   → Divs: 181, Local: 19, Visit: 7
+20:57:45 [DEBUG]   ✓ Momentum Local: 654.50 (19 barras)
+20:57:45 [DEBUG]   ✓ Momentum Visitante: 258.39 (7 barras)
+20:57:45 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+20:57:45 [INFO] [Tab 0]     - Local: 654.50 | Visitante: 258.39
+20:57:45 [INFO] [Tab 0] ☕ chelsea-leeds-apuestas-35212111 | DESCANSO | Min:24 | 1-0 | BH:- LH:-
+20:57:45 [DEBUG] Espera 10.2s antes de siguiente pestaña...
+20:57:56 [ERROR] Error al cambiar a pestaña everton-bournemouth-apuestas-35212136: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:57:56 [DEBUG] Espera 9.3s antes de siguiente pestaña...
+20:58:05 [ERROR] Error al cambiar a pestaña tottenham-newcastle-apuestas-35212115: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:58:05 [DEBUG] Espera 8.1s antes de siguiente pestaña...
+20:58:13 [ERROR] Error al cambiar a pestaña hertha-berl%C3%ADn-friburgo-apuestas-35060079: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:58:13 [DEBUG] Espera 10.0s antes de siguiente pestaña...
+20:58:23 [ERROR] Error al cambiar a pestaña leicester-southampton-apuestas-35239402: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:58:23 [DEBUG] Espera 8.6s antes de siguiente pestaña...
+20:58:32 [ERROR] Error al cambiar a pestaña oxford-united-norwich-apuestas-35239430: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:58:32 [DEBUG] Espera 10.4s antes de siguiente pestaña...
+20:58:42 [ERROR] Error al cambiar a pestaña lucerna-grasshoppers-zurich-apuestas-35241339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:58:42 [DEBUG] Espera 11.6s antes de siguiente pestaña...
+20:58:54 [ERROR] Error al cambiar a pestaña annan-dumbarton-apuestas-35213339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:58:54 [DEBUG] Espera 10.1s antes de siguiente pestaña...
+20:59:04 [ERROR] Error al cambiar a pestaña clyde-elgin-city-fc-apuestas-35213453: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:59:04 [DEBUG] Espera 11.4s antes de siguiente pestaña...
+20:59:15 [ERROR] Error al cambiar a pestaña crawley-cambridge-united-apuestas-35234804: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:59:15 [DEBUG] Espera 8.6s antes de siguiente pestaña...
+20:59:24 [ERROR] Error al cambiar a pestaña mansfield-peterborough-apuestas-35236568: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:59:24 [DEBUG] Espera 9.1s antes de siguiente pestaña...
+20:59:33 [ERROR] Error al cambiar a pestaña shrewsbury-barrow-apuestas-35234799: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:59:33 [DEBUG] Espera 9.7s antes de siguiente pestaña...
+20:59:43 [ERROR] Error al cambiar a pestaña stevenage-barnsley-apuestas-35235289: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:59:43 [DEBUG] Espera 11.3s antes de siguiente pestaña...
+20:59:54 [ERROR] Error al cambiar a pestaña wigan-reading-apuestas-35235288: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+20:59:54 [WARNING] Ciclo tardó 248.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+20:59:54 [INFO] 
+--- Ciclo #3 ---
+20:59:54 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+20:59:55 [INFO] [Tab 0] → Extrayendo información del partido...
+21:00:23 [DEBUG]   ✓ Estado detectado: DESCANSO (XPATH: texto 'Descanso')
+21:00:23 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+21:00:25 [INFO] [Tab 0]   ✓ Match Odds: Home=1.17/1.18 | Draw=5.8/6.4 | Away=19/19.5
+21:00:25 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+21:00:27 [INFO] [Tab 0]   ✓ Over/Under: 0/20 valores capturados
+21:00:27 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+21:00:30 [INFO] [Tab 0]   ✓ Resultado Correcto: 0/30 valores capturados
+21:00:30 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+21:00:30 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+21:00:30 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+21:00:31 [DEBUG]   → Total iframes encontrados: 8
+21:00:31 [DEBUG]   → Iframe #1: accediendo...
+21:00:31 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+21:00:31 [DEBUG]       → Iframe anidado #1: accediendo...
+21:00:31 [DEBUG]         - Párrafos encontrados: 31
+21:00:31 [DEBUG]         × No contiene estadísticas reconocidas
+21:00:31 [DEBUG]       → Iframe anidado #2: accediendo...
+21:00:32 [DEBUG]         × Sin párrafos
+21:00:32 [DEBUG]       → Iframe anidado #3: accediendo...
+21:00:33 [DEBUG]         × Sin párrafos
+21:00:33 [DEBUG]     × No se encontraron párrafos con estadísticas
+21:00:33 [DEBUG]   → Iframe #2: accediendo...
+21:00:34 [DEBUG]     → Sin iframes anidados, buscando párrafos directamente...
+21:00:35 [DEBUG]     × Sin párrafos
+21:00:35 [DEBUG]   → Iframe #3: accediendo...
+21:00:35 [DEBUG]     → Encontrados 1 iframes anidados, revisando...
+21:00:35 [DEBUG]       → Iframe anidado #1: accediendo...
+21:00:36 [DEBUG]         × Sin párrafos
+21:00:36 [DEBUG]     × No se encontraron párrafos con estadísticas
+21:00:36 [DEBUG]   → Iframe #4: accediendo...
+21:00:37 [DEBUG]     → Sin iframes anidados, buscando párrafos directamente...
+21:00:38 [DEBUG]     × Sin párrafos
+21:00:38 [DEBUG]   → Iframe #5: accediendo...
+21:00:39 [DEBUG]     → Sin iframes anidados, buscando párrafos directamente...
+21:00:40 [DEBUG]     × Sin párrafos
+21:00:40 [INFO] [Tab 0]   ✓ Estadísticas: 0/54 valores capturados
+21:00:40 [INFO] [Tab 0]     - Summary: xG / | Opta / | Posesión /
+21:00:40 [INFO] [Tab 0] → Extrayendo volumen matched...
+21:00:53 [INFO] [Tab 0]   ✓ Volumen: No capturado
+21:00:53 [INFO] [Tab 0] → Extrayendo momentum...
+21:00:53 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+21:00:53 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=3toem7hmu
+21:00:53 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=3toem7hm
+21:00:57 [DEBUG]   → Divs: 181, Local: 19, Visit: 10
+21:00:57 [DEBUG]   ✓ Momentum Local: 654.50 (19 barras)
+21:00:57 [DEBUG]   ✓ Momentum Visitante: 411.30 (10 barras)
+21:00:57 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+21:00:57 [INFO] [Tab 0]     - Local: 654.50 | Visitante: 411.30
+21:00:57 [INFO] [Tab 0] ☕ chelsea-leeds-apuestas-35212111 | DESCANSO | Min:28 | 1-0 | BH:1.17 LH:1.18
+21:00:57 [DEBUG] Espera 10.3s antes de siguiente pestaña...
+21:01:08 [ERROR] Error al cambiar a pestaña everton-bournemouth-apuestas-35212136: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:01:08 [DEBUG] Espera 8.1s antes de siguiente pestaña...
+21:01:16 [ERROR] Error al cambiar a pestaña tottenham-newcastle-apuestas-35212115: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:01:16 [DEBUG] Espera 10.6s antes de siguiente pestaña...
+21:01:26 [ERROR] Error al cambiar a pestaña hertha-berl%C3%ADn-friburgo-apuestas-35060079: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:01:26 [DEBUG] Espera 11.1s antes de siguiente pestaña...
+21:01:38 [ERROR] Error al cambiar a pestaña leicester-southampton-apuestas-35239402: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:01:38 [DEBUG] Espera 9.2s antes de siguiente pestaña...
+21:01:47 [ERROR] Error al cambiar a pestaña oxford-united-norwich-apuestas-35239430: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:01:47 [DEBUG] Espera 11.3s antes de siguiente pestaña...
+21:01:58 [ERROR] Error al cambiar a pestaña lucerna-grasshoppers-zurich-apuestas-35241339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:01:58 [DEBUG] Espera 10.2s antes de siguiente pestaña...
+21:02:08 [ERROR] Error al cambiar a pestaña annan-dumbarton-apuestas-35213339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:02:08 [DEBUG] Espera 9.6s antes de siguiente pestaña...
+21:02:18 [ERROR] Error al cambiar a pestaña clyde-elgin-city-fc-apuestas-35213453: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:02:18 [DEBUG] Espera 8.7s antes de siguiente pestaña...
+21:02:27 [ERROR] Error al cambiar a pestaña crawley-cambridge-united-apuestas-35234804: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:02:27 [DEBUG] Espera 12.0s antes de siguiente pestaña...
+21:02:39 [ERROR] Error al cambiar a pestaña mansfield-peterborough-apuestas-35236568: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:02:39 [DEBUG] Espera 10.6s antes de siguiente pestaña...
+21:02:49 [ERROR] Error al cambiar a pestaña shrewsbury-barrow-apuestas-35234799: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:02:49 [DEBUG] Espera 10.8s antes de siguiente pestaña...
+21:03:00 [ERROR] Error al cambiar a pestaña stevenage-barnsley-apuestas-35235289: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:03:00 [DEBUG] Espera 9.7s antes de siguiente pestaña...
+21:03:10 [ERROR] Error al cambiar a pestaña wigan-reading-apuestas-35235288: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:03:10 [WARNING] Ciclo tardó 195.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+21:03:10 [INFO] 
+--- Ciclo #4 ---
+21:03:10 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+21:03:10 [INFO] [Tab 0] → Extrayendo información del partido...
+21:03:39 [DEBUG]   ✓ Estado detectado: DESCANSO (XPATH: texto 'Descanso')
+21:03:39 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+21:03:41 [INFO] [Tab 0]   ✓ Match Odds: Home=1.21/1.22 | Draw=6.2/6.4 | Away=19/19.5
+21:03:41 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+21:03:43 [INFO] [Tab 0]   ✓ Over/Under: 0/20 valores capturados
+21:03:43 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+21:03:45 [INFO] [Tab 0]   ✓ Resultado Correcto: 0/30 valores capturados
+21:03:45 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+21:03:45 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+21:03:45 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+21:03:46 [DEBUG]   → Total iframes encontrados: 8
+21:03:46 [DEBUG]   → Iframe #1: accediendo...
+21:03:46 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+21:03:46 [DEBUG]       → Iframe anidado #1: accediendo...
+21:03:46 [DEBUG]         - Párrafos encontrados: 31
+21:03:46 [DEBUG]         × No contiene estadísticas reconocidas
+21:03:46 [DEBUG]       → Iframe anidado #2: accediendo...
+21:03:47 [DEBUG]         × Sin párrafos
+21:03:47 [DEBUG]       → Iframe anidado #3: accediendo...
+21:03:49 [DEBUG]         × Sin párrafos
+21:03:49 [DEBUG]     × No se encontraron párrafos con estadísticas
+21:03:49 [DEBUG]   → Iframe #2: accediendo...
+21:03:50 [DEBUG]     → Sin iframes anidados, buscando párrafos directamente...
+21:03:51 [DEBUG]     × Sin párrafos
+21:03:51 [DEBUG]   → Iframe #3: accediendo...
+21:03:51 [DEBUG]     → Encontrados 1 iframes anidados, revisando...
+21:03:51 [DEBUG]       → Iframe anidado #1: accediendo...
+21:03:52 [DEBUG]         × Sin párrafos
+21:03:52 [DEBUG]     × No se encontraron párrafos con estadísticas
+21:03:52 [DEBUG]   → Iframe #4: accediendo...
+21:03:53 [DEBUG]     → Sin iframes anidados, buscando párrafos directamente...
+21:03:54 [DEBUG]     × Sin párrafos
+21:03:54 [DEBUG]   → Iframe #5: accediendo...
+21:03:55 [DEBUG]     → Sin iframes anidados, buscando párrafos directamente...
+21:03:56 [DEBUG]     × Sin párrafos
+21:03:56 [INFO] [Tab 0]   ✓ Estadísticas: 0/54 valores capturados
+21:03:56 [INFO] [Tab 0]     - Summary: xG / | Opta / | Posesión /
+21:03:56 [INFO] [Tab 0] → Extrayendo volumen matched...
+21:04:09 [INFO] [Tab 0]   ✓ Volumen: No capturado
+21:04:09 [INFO] [Tab 0] → Extrayendo momentum...
+21:04:09 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+21:04:09 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=3toem7hmu
+21:04:09 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=3toem7hm
+21:04:13 [DEBUG]   → Divs: 181, Local: 19, Visit: 13
+21:04:13 [DEBUG]   ✓ Momentum Local: 654.50 (19 barras)
+21:04:13 [DEBUG]   ✓ Momentum Visitante: 448.25 (13 barras)
+21:04:13 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+21:04:13 [INFO] [Tab 0]     - Local: 654.50 | Visitante: 448.25
+21:04:13 [INFO] [Tab 0] ☕ chelsea-leeds-apuestas-35212111 | DESCANSO | Min:31 | 1-0 | BH:1.21 LH:1.22
+21:04:13 [DEBUG] Espera 8.3s antes de siguiente pestaña...
+21:04:21 [ERROR] Error al cambiar a pestaña everton-bournemouth-apuestas-35212136: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:04:21 [DEBUG] Espera 10.9s antes de siguiente pestaña...
+21:04:32 [ERROR] Error al cambiar a pestaña tottenham-newcastle-apuestas-35212115: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:04:32 [DEBUG] Espera 9.9s antes de siguiente pestaña...
+21:04:42 [ERROR] Error al cambiar a pestaña hertha-berl%C3%ADn-friburgo-apuestas-35060079: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:04:42 [DEBUG] Espera 9.3s antes de siguiente pestaña...
+21:04:51 [ERROR] Error al cambiar a pestaña leicester-southampton-apuestas-35239402: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:04:51 [DEBUG] Espera 8.4s antes de siguiente pestaña...
+21:05:00 [ERROR] Error al cambiar a pestaña oxford-united-norwich-apuestas-35239430: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:05:00 [DEBUG] Espera 9.1s antes de siguiente pestaña...
+21:05:09 [ERROR] Error al cambiar a pestaña lucerna-grasshoppers-zurich-apuestas-35241339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:05:09 [DEBUG] Espera 8.6s antes de siguiente pestaña...
+21:05:18 [ERROR] Error al cambiar a pestaña annan-dumbarton-apuestas-35213339: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:05:18 [DEBUG] Espera 8.3s antes de siguiente pestaña...
+21:05:26 [ERROR] Error al cambiar a pestaña clyde-elgin-city-fc-apuestas-35213453: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:05:26 [DEBUG] Espera 8.9s antes de siguiente pestaña...
+21:05:35 [ERROR] Error al cambiar a pestaña crawley-cambridge-united-apuestas-35234804: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:05:35 [DEBUG] Espera 9.5s antes de siguiente pestaña...
+21:05:44 [ERROR] Error al cambiar a pestaña mansfield-peterborough-apuestas-35236568: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:05:44 [DEBUG] Espera 8.6s antes de siguiente pestaña...
+21:05:53 [ERROR] Error al cambiar a pestaña shrewsbury-barrow-apuestas-35234799: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:05:53 [DEBUG] Espera 8.2s antes de siguiente pestaña...
+21:06:01 [ERROR] Error al cambiar a pestaña stevenage-barnsley-apuestas-35235289: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:06:01 [DEBUG] Espera 8.5s antes de siguiente pestaña...
+21:06:10 [ERROR] Error al cambiar a pestaña wigan-reading-apuestas-35235288: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x375093
+	0x3750d4
+	0x16b2ce
+	0x1e8302
+	0x1d8183
+	0x1a96c9
+	0x1aa484
+	0x5c7e34
+	0x5c30c9
+	0x5e0add
+	0x38db38
+	0x3958ad
+	0x37d848
+	0x37da12
+	0x3675fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+	(nil)
+
+21:06:10 [WARNING] Ciclo tardó 180.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+21:06:10 [INFO] 
+--- Ciclo #5 ---
+21:06:10 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+21:06:10 [INFO] [Tab 0] → Extrayendo información del partido...
+21:06:39 [DEBUG]   ✓ Estado detectado: DESCANSO (XPATH: texto 'Descanso')
+21:06:39 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...

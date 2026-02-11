@@ -1,0 +1,701 @@
+23:14:14 [INFO] 📝 Log guardándose en: logs/scraper_20260209_231414.log
+23:14:14 [INFO] Cargadas 1 URLs desde games.csv
+23:14:14 [INFO] Iniciando observador con 1 partidos.
+23:14:14 [INFO] Ciclo: 30s | Output: data/
+23:14:14 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 10 ciclos
+23:14:14 [INFO] Iniciando Chrome...
+23:14:28 [INFO] ✓ Cookies aceptadas automáticamente
+23:14:29 [INFO] Pestaña 0: oporto-sporting-de-lisboa-apuestas-35219749 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/portugal-primeira-liga/oport...
+23:14:30 [INFO] ============================================================
+23:14:30 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+23:14:30 [INFO] Tienes 0 segundos...
+23:14:30 [INFO] El scraper comenzará automáticamente después.
+23:14:30 [INFO] ============================================================
+23:14:30 [INFO] ============================================================
+23:14:30 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+23:14:30 [INFO] ============================================================
+23:14:30 [INFO] 
+--- Ciclo #1 ---
+23:14:30 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:14:31 [INFO] [Tab 0] → Extrayendo información del partido...
+23:15:07 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:15:09 [INFO] [Tab 0]   ✓ Match Odds: Home=3.8/3.95 | Draw=1.83/1.85 | Away=4.5/4.6
+23:15:09 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:15:13 [INFO] [Tab 0]   ✓ Over/Under: 14/20 valores capturados
+23:15:13 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:15:17 [INFO] [Tab 0]   ✓ Resultado Correcto: 26/30 valores capturados
+23:15:17 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:15:17 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:15:17 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:15:18 [DEBUG]   → Total iframes encontrados: 7
+23:15:18 [DEBUG]   → Iframe #1: accediendo...
+23:15:18 [DEBUG]     → Encontrados 4 iframes anidados, revisando...
+23:15:18 [DEBUG]       → Iframe anidado #1: accediendo...
+23:15:18 [DEBUG]         - Párrafos encontrados: 46
+23:15:19 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:15:19 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:15:19 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:15:19 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:15:19 [DEBUG]       ✓ Opta Points: 104.0 - 117.0
+23:15:19 [DEBUG]       ✓ Possession: 47% - 54%
+23:15:19 [DEBUG]       ✓ Shots: 2 - 2
+23:15:19 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:15:19 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:15:19 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:15:19 [DEBUG]       ✓ Red Cards: 0 - 0
+23:15:19 [DEBUG]       ✓ Booking Points: 10 - 10
+23:15:20 [DEBUG]       ✓ Total Passes: 293 - 333
+23:15:20 [DEBUG]       ✓ Corners: 1 - 5
+23:15:20 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:15:20 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:15:20 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 104.0/117.0
+23:15:20 [INFO] [Tab 0]     - Posesión: 47/54 | Corners: 1/5
+23:15:20 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:15:32 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:15:32 [INFO] [Tab 0] → Extrayendo momentum...
+23:15:32 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:15:33 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:15:33 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:15:37 [DEBUG]   → Divs: 393, Local: 45, Visit: 26
+23:15:37 [DEBUG]   ✓ Momentum Local: 559.52 (45 barras)
+23:15:37 [DEBUG]   ✓ Momentum Visitante: 364.43 (26 barras)
+23:15:37 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:15:37 [INFO] [Tab 0]     - Local: 559.52 | Visitante: 364.43
+23:15:37 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:62 | 0-0 | BH:3.8 LH:3.95
+23:15:37 [WARNING] Ciclo tardó 66.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:15:37 [INFO] 
+--- Ciclo #2 ---
+23:15:37 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:15:38 [INFO] [Tab 0] → Extrayendo información del partido...
+23:16:13 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:16:16 [INFO] [Tab 0]   ✓ Match Odds: Home=3.05/4 | Draw=1.72/1.78 | Away=4.2/4.3
+23:16:16 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:16:19 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+23:16:19 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:16:23 [INFO] [Tab 0]   ✓ Resultado Correcto: 22/30 valores capturados
+23:16:23 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:16:23 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:16:23 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:16:24 [DEBUG]   → Total iframes encontrados: 7
+23:16:24 [DEBUG]   → Iframe #1: accediendo...
+23:16:24 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:16:24 [DEBUG]       → Iframe anidado #1: accediendo...
+23:16:24 [DEBUG]         - Párrafos encontrados: 46
+23:16:25 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:16:25 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:16:25 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:16:25 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:16:25 [DEBUG]       ✓ Opta Points: 103.6 - 119.0
+23:16:25 [DEBUG]       ✓ Possession: 46% - 54%
+23:16:25 [DEBUG]       ✓ Shots: 2 - 2
+23:16:25 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:16:25 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:16:25 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:16:25 [DEBUG]       ✓ Red Cards: 0 - 0
+23:16:25 [DEBUG]       ✓ Booking Points: 10 - 10
+23:16:25 [DEBUG]       ✓ Total Passes: 301 - 343
+23:16:25 [DEBUG]       ✓ Corners: 1 - 5
+23:16:25 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:16:25 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:16:25 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 103.6/119.0
+23:16:25 [INFO] [Tab 0]     - Posesión: 46/54 | Corners: 1/5
+23:16:25 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:16:38 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:16:38 [INFO] [Tab 0] → Extrayendo momentum...
+23:16:38 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:16:38 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:16:38 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:16:42 [DEBUG]   → Divs: 393, Local: 47, Visit: 26
+23:16:42 [DEBUG]   ✓ Momentum Local: 572.90 (47 barras)
+23:16:42 [DEBUG]   ✓ Momentum Visitante: 364.43 (26 barras)
+23:16:42 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:16:42 [INFO] [Tab 0]     - Local: 572.90 | Visitante: 364.43
+23:16:42 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:62 | 0-0 | BH:3.05 LH:4
+23:16:42 [WARNING] Ciclo tardó 65.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:16:42 [INFO] 
+--- Ciclo #3 ---
+23:16:43 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:16:43 [INFO] [Tab 0] → Extrayendo información del partido...
+23:17:19 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:17:22 [INFO] [Tab 0]   ✓ Match Odds: Home=3.05/4 | Draw=1.72/1.78 | Away=4.2/4.3
+23:17:22 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:17:25 [INFO] [Tab 0]   ✓ Over/Under: 10/20 valores capturados
+23:17:25 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:17:29 [INFO] [Tab 0]   ✓ Resultado Correcto: 18/30 valores capturados
+23:17:29 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:17:29 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:17:29 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:17:30 [DEBUG]   → Total iframes encontrados: 7
+23:17:30 [DEBUG]   → Iframe #1: accediendo...
+23:17:30 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:17:30 [DEBUG]       → Iframe anidado #1: accediendo...
+23:17:30 [DEBUG]         - Párrafos encontrados: 46
+23:17:31 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:17:31 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:17:31 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:17:31 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:17:31 [DEBUG]       ✓ Opta Points: 103.6 - 124.2
+23:17:31 [DEBUG]       ✓ Possession: 45% - 55%
+23:17:31 [DEBUG]       ✓ Shots: 2 - 2
+23:17:31 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:17:31 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:17:31 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:17:31 [DEBUG]       ✓ Red Cards: 0 - 0
+23:17:31 [DEBUG]       ✓ Booking Points: 10 - 10
+23:17:32 [DEBUG]       ✓ Total Passes: 301 - 368
+23:17:32 [DEBUG]       ✓ Corners: 1 - 5
+23:17:32 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:17:32 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:17:32 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 103.6/124.2
+23:17:32 [INFO] [Tab 0]     - Posesión: 45/55 | Corners: 1/5
+23:17:32 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:17:44 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:17:44 [INFO] [Tab 0] → Extrayendo momentum...
+23:17:44 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:17:44 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:17:44 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:17:49 [DEBUG]   → Divs: 393, Local: 47, Visit: 27
+23:17:49 [DEBUG]   ✓ Momentum Local: 573.26 (47 barras)
+23:17:49 [DEBUG]   ✓ Momentum Visitante: 367.86 (27 barras)
+23:17:49 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:17:49 [INFO] [Tab 0]     - Local: 573.26 | Visitante: 367.86
+23:17:49 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:62 | 0-0 | BH:3.05 LH:4
+23:17:49 [WARNING] Ciclo tardó 66.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:17:49 [INFO] 
+--- Ciclo #4 ---
+23:17:49 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:17:49 [INFO] [Tab 0] → Extrayendo información del partido...
+23:18:26 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:18:28 [INFO] [Tab 0]   ✓ Match Odds: Home=3.05/4 | Draw=1.75/1.78 | Away=4.2/4.3
+23:18:28 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:18:32 [INFO] [Tab 0]   ✓ Over/Under: 12/20 valores capturados
+23:18:32 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:18:36 [INFO] [Tab 0]   ✓ Resultado Correcto: 22/30 valores capturados
+23:18:36 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:18:36 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:18:36 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:18:37 [DEBUG]   → Total iframes encontrados: 7
+23:18:37 [DEBUG]   → Iframe #1: accediendo...
+23:18:37 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:18:37 [DEBUG]       → Iframe anidado #1: accediendo...
+23:18:37 [DEBUG]         - Párrafos encontrados: 46
+23:18:38 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:18:38 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:18:38 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:18:38 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:18:38 [DEBUG]       ✓ Opta Points: 106.6 - 124.6
+23:18:38 [DEBUG]       ✓ Possession: 45% - 56%
+23:18:38 [DEBUG]       ✓ Shots: 2 - 2
+23:18:38 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:18:38 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:18:38 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:18:38 [DEBUG]       ✓ Red Cards: 0 - 0
+23:18:38 [DEBUG]       ✓ Booking Points: 10 - 10
+23:18:38 [DEBUG]       ✓ Total Passes: 301 - 370
+23:18:38 [DEBUG]       ✓ Corners: 1 - 5
+23:18:38 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:18:38 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:18:38 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 106.6/124.6
+23:18:38 [INFO] [Tab 0]     - Posesión: 45/56 | Corners: 1/5
+23:18:38 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:18:51 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:18:51 [INFO] [Tab 0] → Extrayendo momentum...
+23:18:51 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:18:51 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:18:51 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:18:55 [DEBUG]   → Divs: 393, Local: 47, Visit: 27
+23:18:55 [DEBUG]   ✓ Momentum Local: 573.26 (47 barras)
+23:18:55 [DEBUG]   ✓ Momentum Visitante: 367.86 (27 barras)
+23:18:56 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:18:56 [INFO] [Tab 0]     - Local: 573.26 | Visitante: 367.86
+23:18:56 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:66 | 0-0 | BH:3.05 LH:4
+23:18:56 [WARNING] Ciclo tardó 66.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:18:56 [INFO] 
+--- Ciclo #5 ---
+23:18:56 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:18:56 [INFO] [Tab 0] → Extrayendo información del partido...
+23:19:33 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:19:35 [INFO] [Tab 0]   ✓ Match Odds: Home=4.3/4.4 | Draw=1.67/1.68 | Away=3.25/4.5
+23:19:35 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:19:39 [INFO] [Tab 0]   ✓ Over/Under: 12/20 valores capturados
+23:19:39 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:19:42 [INFO] [Tab 0]   ✓ Resultado Correcto: 18/30 valores capturados
+23:19:42 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:19:42 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:19:42 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:19:43 [DEBUG]   → Total iframes encontrados: 7
+23:19:43 [DEBUG]   → Iframe #1: accediendo...
+23:19:43 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:19:43 [DEBUG]       → Iframe anidado #1: accediendo...
+23:19:43 [DEBUG]         - Párrafos encontrados: 46
+23:19:44 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:19:44 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:19:44 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:19:44 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:19:44 [DEBUG]       ✓ Opta Points: 106.6 - 124.6
+23:19:44 [DEBUG]       ✓ Possession: 45% - 56%
+23:19:44 [DEBUG]       ✓ Shots: 2 - 2
+23:19:44 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:19:44 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:19:44 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:19:44 [DEBUG]       ✓ Red Cards: 0 - 0
+23:19:44 [DEBUG]       ✓ Booking Points: 10 - 10
+23:19:44 [DEBUG]       ✓ Total Passes: 301 - 370
+23:19:44 [DEBUG]       ✓ Corners: 1 - 5
+23:19:44 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:19:44 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:19:44 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 106.6/124.6
+23:19:44 [INFO] [Tab 0]     - Posesión: 45/56 | Corners: 1/5
+23:19:44 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:19:57 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:19:57 [INFO] [Tab 0] → Extrayendo momentum...
+23:19:57 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:19:57 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:19:57 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:20:01 [DEBUG]   → Divs: 393, Local: 47, Visit: 29
+23:20:01 [DEBUG]   ✓ Momentum Local: 573.26 (47 barras)
+23:20:01 [DEBUG]   ✓ Momentum Visitante: 390.60 (29 barras)
+23:20:02 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:20:02 [INFO] [Tab 0]     - Local: 573.26 | Visitante: 390.60
+23:20:02 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:67 | 0-0 | BH:4.3 LH:4.4
+23:20:02 [WARNING] Ciclo tardó 66.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:20:02 [INFO] 
+--- Ciclo #6 ---
+23:20:02 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:20:02 [INFO] [Tab 0] → Extrayendo información del partido...
+23:20:38 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:20:41 [INFO] [Tab 0]   ✓ Match Odds: Home=3.05/4.2 | Draw=1.76/1.77 | Away=4/4.1
+23:20:41 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:20:44 [INFO] [Tab 0]   ✓ Over/Under: 12/20 valores capturados
+23:20:44 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:20:48 [INFO] [Tab 0]   ✓ Resultado Correcto: 18/30 valores capturados
+23:20:48 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:20:48 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:20:48 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:20:49 [DEBUG]   → Total iframes encontrados: 7
+23:20:49 [DEBUG]   → Iframe #1: accediendo...
+23:20:49 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:20:49 [DEBUG]       → Iframe anidado #1: accediendo...
+23:20:49 [DEBUG]         - Párrafos encontrados: 46
+23:20:49 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:20:49 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:20:49 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:20:50 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:20:50 [DEBUG]       ✓ Opta Points: 107.2 - 124.6
+23:20:50 [DEBUG]       ✓ Possession: 45% - 55%
+23:20:50 [DEBUG]       ✓ Shots: 2 - 2
+23:20:50 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:20:50 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:20:50 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:20:50 [DEBUG]       ✓ Red Cards: 0 - 0
+23:20:50 [DEBUG]       ✓ Booking Points: 10 - 10
+23:20:50 [DEBUG]       ✓ Total Passes: 304 - 370
+23:20:50 [DEBUG]       ✓ Corners: 1 - 5
+23:20:50 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:20:50 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:20:50 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 107.2/124.6
+23:20:50 [INFO] [Tab 0]     - Posesión: 45/55 | Corners: 1/5
+23:20:50 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:21:03 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:21:03 [INFO] [Tab 0] → Extrayendo momentum...
+23:21:03 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:21:03 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:21:03 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:21:07 [DEBUG]   → Divs: 393, Local: 47, Visit: 30
+23:21:07 [DEBUG]   ✓ Momentum Local: 573.26 (47 barras)
+23:21:07 [DEBUG]   ✓ Momentum Visitante: 394.03 (30 barras)
+23:21:07 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:21:07 [INFO] [Tab 0]     - Local: 573.26 | Visitante: 394.03
+23:21:07 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:68 | 0-0 | BH:3.05 LH:4.2
+23:21:07 [WARNING] Ciclo tardó 65.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:21:07 [INFO] 
+--- Ciclo #7 ---
+23:21:07 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:21:08 [INFO] [Tab 0] → Extrayendo información del partido...
+23:21:43 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:21:46 [INFO] [Tab 0]   ✓ Match Odds: Home=4.3/4.4 | Draw=1.67/1.68 | Away=3.25/4.5
+23:21:46 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:21:49 [INFO] [Tab 0]   ✓ Over/Under: 10/20 valores capturados
+23:21:49 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:21:53 [INFO] [Tab 0]   ✓ Resultado Correcto: 22/30 valores capturados
+23:21:53 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:21:53 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:21:53 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:21:54 [DEBUG]   → Total iframes encontrados: 7
+23:21:54 [DEBUG]   → Iframe #1: accediendo...
+23:21:54 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:21:54 [DEBUG]       → Iframe anidado #1: accediendo...
+23:21:54 [DEBUG]         - Párrafos encontrados: 46
+23:21:54 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:21:54 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:21:54 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:21:55 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:21:55 [DEBUG]       ✓ Opta Points: 112.4 - 124.6
+23:21:55 [DEBUG]       ✓ Possession: 46% - 54%
+23:21:55 [DEBUG]       ✓ Shots: 2 - 2
+23:21:55 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:21:55 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:21:55 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:21:55 [DEBUG]       ✓ Red Cards: 0 - 0
+23:21:55 [DEBUG]       ✓ Booking Points: 10 - 10
+23:21:55 [DEBUG]       ✓ Total Passes: 320 - 375
+23:21:55 [DEBUG]       ✓ Corners: 1 - 5
+23:21:55 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:21:55 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:21:55 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 112.4/124.6
+23:21:55 [INFO] [Tab 0]     - Posesión: 46/54 | Corners: 1/5
+23:21:55 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:22:08 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:22:08 [INFO] [Tab 0] → Extrayendo momentum...
+23:22:08 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:22:08 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:22:08 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:22:12 [DEBUG]   → Divs: 393, Local: 47, Visit: 31
+23:22:12 [DEBUG]   ✓ Momentum Local: 573.26 (47 barras)
+23:22:12 [DEBUG]   ✓ Momentum Visitante: 395.68 (31 barras)
+23:22:12 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:22:12 [INFO] [Tab 0]     - Local: 573.26 | Visitante: 395.68
+23:22:12 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:69 | 0-0 | BH:4.3 LH:4.4
+23:22:12 [WARNING] Ciclo tardó 65.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:22:12 [INFO] 
+--- Ciclo #8 ---
+23:22:12 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:22:13 [INFO] [Tab 0] → Extrayendo información del partido...
+23:22:48 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:22:51 [INFO] [Tab 0]   ✓ Match Odds: Home=3.7/4 | Draw=1.66/1.67 | Away=3.65/4.5
+23:22:51 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:22:54 [INFO] [Tab 0]   ✓ Over/Under: 12/20 valores capturados
+23:22:54 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:22:57 [INFO] [Tab 0]   ✓ Resultado Correcto: 14/30 valores capturados
+23:22:57 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:22:57 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:22:57 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:22:58 [DEBUG]   → Total iframes encontrados: 7
+23:22:58 [DEBUG]   → Iframe #1: accediendo...
+23:22:58 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:22:59 [DEBUG]       → Iframe anidado #1: accediendo...
+23:22:59 [DEBUG]         - Párrafos encontrados: 46
+23:22:59 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:22:59 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:22:59 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:22:59 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:22:59 [DEBUG]       ✓ Opta Points: 114.2 - 125.8
+23:22:59 [DEBUG]       ✓ Possession: 46% - 54%
+23:22:59 [DEBUG]       ✓ Shots: 2 - 2
+23:22:59 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:22:59 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:22:59 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:22:59 [DEBUG]       ✓ Red Cards: 0 - 0
+23:23:00 [DEBUG]       ✓ Booking Points: 10 - 10
+23:23:00 [DEBUG]       ✓ Total Passes: 328 - 376
+23:23:00 [DEBUG]       ✓ Corners: 1 - 5
+23:23:00 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:23:00 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:23:00 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 114.2/125.8
+23:23:00 [INFO] [Tab 0]     - Posesión: 46/54 | Corners: 1/5
+23:23:00 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:23:12 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:23:12 [INFO] [Tab 0] → Extrayendo momentum...
+23:23:12 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:23:12 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:23:12 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:23:16 [DEBUG]   → Divs: 393, Local: 48, Visit: 31
+23:23:16 [DEBUG]   ✓ Momentum Local: 576.42 (48 barras)
+23:23:16 [DEBUG]   ✓ Momentum Visitante: 396.36 (31 barras)
+23:23:17 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:23:17 [INFO] [Tab 0]     - Local: 576.42 | Visitante: 396.36
+23:23:17 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:71 | 0-0 | BH:3.7 LH:4
+23:23:17 [WARNING] Ciclo tardó 64.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:23:17 [INFO] 
+--- Ciclo #9 ---
+23:23:17 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:23:17 [INFO] [Tab 0] → Extrayendo información del partido...
+23:23:53 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:23:55 [INFO] [Tab 0]   ✓ Match Odds: Home=3.25/4.6 | Draw=1.52/1.62 | Away=3.25/4.7
+23:23:55 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:23:59 [INFO] [Tab 0]   ✓ Over/Under: 4/20 valores capturados
+23:23:59 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:24:02 [INFO] [Tab 0]   ✓ Resultado Correcto: 4/30 valores capturados
+23:24:02 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:24:02 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:24:02 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:24:03 [DEBUG]   → Total iframes encontrados: 7
+23:24:03 [DEBUG]   → Iframe #1: accediendo...
+23:24:03 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:24:03 [DEBUG]       → Iframe anidado #1: accediendo...
+23:24:03 [DEBUG]         - Párrafos encontrados: 46
+23:24:04 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:24:04 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:24:04 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.09
+23:24:04 [DEBUG]       ✓ xG: 0.09 - 0.07
+23:24:04 [DEBUG]       ✓ Opta Points: 116.2 - 128.6
+23:24:04 [DEBUG]       ✓ Possession: 46% - 54%
+23:24:04 [DEBUG]       ✓ Shots: 3 - 2
+23:24:04 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:24:04 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:24:04 [DEBUG]       ✓ Yellow Cards: 1 - 1
+23:24:04 [DEBUG]       ✓ Red Cards: 0 - 0
+23:24:04 [DEBUG]       ✓ Booking Points: 10 - 10
+23:24:04 [DEBUG]       ✓ Total Passes: 333 - 380
+23:24:04 [DEBUG]       ✓ Corners: 1 - 5
+23:24:04 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:24:04 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:24:04 [INFO] [Tab 0]     - xG: 0.09/0.07 | Opta Points: 116.2/128.6
+23:24:04 [INFO] [Tab 0]     - Posesión: 46/54 | Corners: 1/5
+23:24:04 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:24:17 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:24:17 [INFO] [Tab 0] → Extrayendo momentum...
+23:24:17 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:24:17 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:24:17 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:24:21 [DEBUG]   → Divs: 393, Local: 49, Visit: 31
+23:24:21 [DEBUG]   ✓ Momentum Local: 652.74 (49 barras)
+23:24:21 [DEBUG]   ✓ Momentum Visitante: 396.36 (31 barras)
+23:24:21 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:24:21 [INFO] [Tab 0]     - Local: 652.74 | Visitante: 396.36
+23:24:21 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:72 | 0-0 | BH:3.25 LH:4.6
+23:24:21 [WARNING] Ciclo tardó 64.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:24:21 [INFO] 
+--- Ciclo #10 ---
+23:24:22 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:24:22 [INFO] [Tab 0] → Extrayendo información del partido...
+23:24:58 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:25:00 [INFO] [Tab 0]   ✓ Match Odds: Home=3.75/5.2 | Draw=1.55/1.56 | Away=5.1/5.3
+23:25:00 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:25:04 [INFO] [Tab 0]   ✓ Over/Under: 10/20 valores capturados
+23:25:04 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:25:07 [INFO] [Tab 0]   ✓ Resultado Correcto: 20/30 valores capturados
+23:25:07 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:25:07 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:25:07 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:25:08 [DEBUG]   → Total iframes encontrados: 7
+23:25:08 [DEBUG]   → Iframe #1: accediendo...
+23:25:08 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:25:08 [DEBUG]       → Iframe anidado #1: accediendo...
+23:25:08 [DEBUG]         - Párrafos encontrados: 46
+23:25:09 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:25:09 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:25:09 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.12
+23:25:09 [DEBUG]       ✓ xG: 0.12 - 0.07
+23:25:09 [DEBUG]       ✓ Opta Points: 119.4 - 129.8
+23:25:09 [DEBUG]       ✓ Possession: 47% - 53%
+23:25:09 [DEBUG]       ✓ Shots: 3 - 2
+23:25:09 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:25:09 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:25:09 [DEBUG]       ✓ Yellow Cards: 1 - 2
+23:25:09 [DEBUG]       ✓ Red Cards: 0 - 0
+23:25:09 [DEBUG]       ✓ Booking Points: 10 - 20
+23:25:09 [DEBUG]       ✓ Total Passes: 344 - 381
+23:25:09 [DEBUG]       ✓ Corners: 1 - 5
+23:25:09 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:25:10 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:25:10 [INFO] [Tab 0]     - xG: 0.12/0.07 | Opta Points: 119.4/129.8
+23:25:10 [INFO] [Tab 0]     - Posesión: 47/53 | Corners: 1/5
+23:25:10 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:25:22 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:25:22 [INFO] [Tab 0] → Extrayendo momentum...
+23:25:22 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:25:22 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:25:22 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:25:26 [DEBUG]   → Divs: 393, Local: 51, Visit: 31
+23:25:26 [DEBUG]   ✓ Momentum Local: 719.80 (51 barras)
+23:25:26 [DEBUG]   ✓ Momentum Visitante: 396.36 (31 barras)
+23:25:27 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:25:27 [INFO] [Tab 0]     - Local: 719.80 | Visitante: 396.36
+23:25:27 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:72 | 0-0 | BH:3.75 LH:5.2
+23:25:27 [INFO] 🔄 Revisando games.csv para detectar cambios...
+23:25:27 [INFO] Cargadas 1 URLs desde games.csv
+23:25:27 [WARNING] Ciclo tardó 65.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:25:27 [INFO] 
+--- Ciclo #11 ---
+23:25:27 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:25:27 [INFO] [Tab 0] → Extrayendo información del partido...
+23:26:03 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:26:06 [INFO] [Tab 0]   ✓ Match Odds: Home=4.5/4.6 | Draw=1.57/1.58 | Away=3.4/5.1
+23:26:06 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:26:09 [INFO] [Tab 0]   ✓ Over/Under: 6/20 valores capturados
+23:26:09 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:26:13 [INFO] [Tab 0]   ✓ Resultado Correcto: 6/30 valores capturados
+23:26:13 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:26:13 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:26:13 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:26:14 [DEBUG]   → Total iframes encontrados: 7
+23:26:14 [DEBUG]   → Iframe #1: accediendo...
+23:26:14 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:26:14 [DEBUG]       → Iframe anidado #1: accediendo...
+23:26:14 [DEBUG]         - Párrafos encontrados: 46
+23:26:15 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:26:15 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:26:15 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.12
+23:26:15 [DEBUG]       ✓ xG: 0.12 - 0.07
+23:26:15 [DEBUG]       ✓ Opta Points: 120.6 - 129.8
+23:26:15 [DEBUG]       ✓ Possession: 48% - 52%
+23:26:15 [DEBUG]       ✓ Shots: 3 - 2
+23:26:15 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:26:15 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:26:15 [DEBUG]       ✓ Yellow Cards: 1 - 2
+23:26:15 [DEBUG]       ✓ Red Cards: 0 - 0
+23:26:15 [DEBUG]       ✓ Booking Points: 10 - 20
+23:26:15 [DEBUG]       ✓ Total Passes: 349 - 381
+23:26:15 [DEBUG]       ✓ Corners: 1 - 5
+23:26:15 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:26:15 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:26:15 [INFO] [Tab 0]     - xG: 0.12/0.07 | Opta Points: 120.6/129.8
+23:26:15 [INFO] [Tab 0]     - Posesión: 48/52 | Corners: 1/5
+23:26:15 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:26:28 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:26:28 [INFO] [Tab 0] → Extrayendo momentum...
+23:26:28 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+23:26:28 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=2xdg9a2wx
+23:26:28 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=2xdg9a2w
+23:26:32 [DEBUG]   → Divs: 393, Local: 51, Visit: 31
+23:26:32 [DEBUG]   ✓ Momentum Local: 719.80 (51 barras)
+23:26:32 [DEBUG]   ✓ Momentum Visitante: 396.36 (31 barras)
+23:26:32 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+23:26:32 [INFO] [Tab 0]     - Local: 719.80 | Visitante: 396.36
+23:26:32 [INFO] [Tab 0] ⚽ oporto-sporting-de-lisboa-apuestas-35219749 | EN_JUEGO | Min:74 | 0-0 | BH:4.5 LH:4.6
+23:26:32 [WARNING] Ciclo tardó 65.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:26:32 [INFO] 
+--- Ciclo #12 ---
+23:26:33 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:26:33 [INFO] [Tab 0] → Extrayendo información del partido...
+23:27:09 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:27:11 [INFO] [Tab 0]   ✓ Match Odds: Home=3.75/4.7 | Draw=1.51/1.52 | Away=5.6/5.7
+23:27:11 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:27:14 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+23:27:14 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:27:18 [INFO] [Tab 0]   ✓ Resultado Correcto: 12/30 valores capturados
+23:27:18 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:27:18 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:27:18 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+23:27:19 [DEBUG]   → Total iframes encontrados: 7
+23:27:19 [DEBUG]   → Iframe #1: accediendo...
+23:27:19 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:27:19 [DEBUG]       → Iframe anidado #1: accediendo...
+23:27:19 [DEBUG]         - Párrafos encontrados: 46
+23:27:19 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:27:19 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:27:20 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.12
+23:27:20 [DEBUG]       ✓ xG: 0.12 - 0.07
+23:27:20 [DEBUG]       ✓ Opta Points: 122.4 - 131.8
+23:27:20 [DEBUG]       ✓ Possession: 48% - 52%
+23:27:20 [DEBUG]       ✓ Shots: 3 - 2
+23:27:20 [DEBUG]       ✓ Shots On Target: 0 - 1
+23:27:20 [DEBUG]       ✓ Touches in Box: 8 - 5
+23:27:20 [DEBUG]       ✓ Yellow Cards: 1 - 2
+23:27:20 [DEBUG]       ✓ Red Cards: 0 - 0
+23:27:20 [DEBUG]       ✓ Booking Points: 10 - 20
+23:27:20 [DEBUG]       ✓ Total Passes: 358 - 381
+23:27:20 [DEBUG]       ✓ Corners: 1 - 5
+23:27:20 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:27:20 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+23:27:20 [INFO] [Tab 0]     - xG: 0.12/0.07 | Opta Points: 122.4/131.8
+23:27:20 [INFO] [Tab 0]     - Posesión: 48/52 | Corners: 1/5
+23:27:20 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:27:22 [INFO] Señal de parada recibida. Finalizando ciclo actual...
+23:27:22 [ERROR] Error fatal: ('Connection aborted.', ConnectionResetError(10054, 'Se ha forzado la interrupción de una conexión existente por el host remoto', None, 10054, None))
+Traceback (most recent call last):
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1814, in main
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1651, in ciclo_captura
+    "#onetrust-accept-btn-handler",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1501, in capturar_pestaña
+    pass
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1175, in extraer_volumen
+    try:
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 263, in buscar_elemento_texto
+    reader = csv.DictReader(f)
+           ^^^^^^^^^^^^^^^^^^^
+    for row in reader:
+    ^^^^^^^^^^^^^^^^^^
+        if "url" in row and row["url"].strip():
+    
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\support\wait.py", line 112, in until
+    value = method(self._driver)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\support\expected_conditions.py", line 92, in _predicate
+    return driver.find_element(*locator)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 802, in find_element
+    return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 429, in execute
+    response = cast(RemoteConnection, self.command_executor).execute(driver_command, params)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 406, in execute
+    return self._request(command_info[0], url, body=data)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 430, in _request
+    response = self._conn.request(method, url, body=body, headers=headers, timeout=self._client_config.timeout)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\_request_methods.py", line 143, in request
+    return self.request_encode_body(
+           ~~~~~~~~~~~~~~~~~~~~~~~~^
+        method, url, fields=fields, headers=headers, **urlopen_kw
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\_request_methods.py", line 278, in request_encode_body
+    return self.urlopen(method, url, **extra_kw)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\poolmanager.py", line 457, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\util\retry.py", line 490, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\util\util.py", line 38, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'Se ha forzado la interrupción de una conexión existente por el host remoto', None, 10054, None))
+23:27:22 [INFO] Cerrando...
+23:27:22 [INFO] Archivos CSV cerrados correctamente.
+23:27:38 [INFO] Observador finalizado. Revisa los CSV en la carpeta de salida.

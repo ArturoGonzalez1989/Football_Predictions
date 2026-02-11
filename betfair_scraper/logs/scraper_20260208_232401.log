@@ -1,0 +1,848 @@
+23:24:01 [INFO] 📝 Log guardándose en: logs/scraper_20260208_232401.log
+23:24:01 [INFO] Cargadas 1 URLs desde games.csv
+23:24:01 [INFO] Iniciando observador con 1 partidos.
+23:24:01 [INFO] Ciclo: 30s | Output: data/
+23:24:01 [INFO] Iniciando Chrome...
+23:24:14 [INFO] ✓ Cookies aceptadas automáticamente
+23:24:15 [INFO] Pestaña 0: benfica-alverca-apuestas-35218038 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/portugal-primeira-liga/benfi...
+23:24:16 [INFO] ============================================================
+23:24:16 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+23:24:16 [INFO] Tienes 0 segundos...
+23:24:16 [INFO] El scraper comenzará automáticamente después.
+23:24:16 [INFO] ============================================================
+23:24:16 [INFO] ============================================================
+23:24:16 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+23:24:16 [INFO] ============================================================
+23:24:16 [INFO] 
+--- Ciclo #1 ---
+23:24:16 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:24:17 [INFO] [Tab 0] → Extrayendo información del partido...
+23:24:53 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:24:55 [INFO] [Tab 0]   ✓ Match Odds: Home=1.02/1.03 | Draw=12.5/17.5 | Away=1.2/1.46
+23:24:55 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:24:58 [INFO] [Tab 0]   ✓ Over/Under: 6/20 valores capturados
+23:24:58 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:25:02 [INFO] [Tab 0]   ✓ Resultado Correcto: 8/30 valores capturados
+23:25:02 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:25:02 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:25:03 [DEBUG]   × No se pudo hacer clic en pestaña de estadísticas: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:25:03 [DEBUG]   → Total iframes encontrados: 7
+23:25:03 [DEBUG]   → Iframe #1: accediendo...
+23:25:03 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:25:03 [DEBUG]       → Iframe anidado #1: accediendo...
+23:25:03 [DEBUG]         - Párrafos encontrados: 46
+23:25:03 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:25:03 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:25:04 [DEBUG]       ✓ Red Cards: Discipline - 2.02
+23:25:04 [DEBUG]       ✓ Opta Points: 239.4 - 141.8
+23:25:04 [DEBUG]       ✓ Possession: 65% - 35%
+23:25:04 [DEBUG]       ✓ Shots: 28 - 6
+23:25:04 [DEBUG]       ✓ Shots On Target: 10 - 2
+23:25:04 [DEBUG]       ✓ Touches in Box: 49 - 10
+23:25:04 [DEBUG]       ✓ Yellow Cards: 2 - 2
+23:25:04 [DEBUG]       ✓ Red Cards: 0 - 0
+23:25:04 [DEBUG]       ✓ Booking Points: 20 - 20
+23:25:04 [DEBUG]       ✓ Total Passes: 436 - 249
+23:25:04 [DEBUG]       ✓ Corners: 9 - 1
+23:25:04 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:25:04 [INFO] [Tab 0]   ✓ Estadísticas: 20/22 valores capturados
+23:25:04 [INFO] [Tab 0]     - xG: / | Opta Points: 239.4/141.8
+23:25:04 [INFO] [Tab 0]     - Posesión: 65/35 | Corners: 9/1
+23:25:04 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:25:17 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:25:17 [INFO] [Tab 0] → Extrayendo momentum...
+23:25:17 [DEBUG]   → Buscando pestaña 'Estadísticas del partido' para Momentum...
+23:25:18 [DEBUG]   × Error general extrayendo Momentum: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:25:18 [INFO] [Tab 0]   ✓ Momentum: 0/2 valores capturados
+23:25:18 [INFO] [Tab 0] ⚽ benfica-alverca-apuestas-35218038 | EN_JUEGO | Min:90 | 2-1 | BH:1.02 LH:1.03
+23:25:18 [WARNING] Ciclo tardó 61.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:25:18 [INFO] 
+--- Ciclo #2 ---
+23:25:18 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:25:19 [INFO] [Tab 0] → Extrayendo información del partido...
+23:25:55 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:25:57 [INFO] [Tab 0]   ✓ Match Odds: Home=1.01/1.02 | Draw=12/27 | Away=1.21/1.31
+23:25:57 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:26:00 [INFO] [Tab 0]   ✓ Over/Under: 4/20 valores capturados
+23:26:00 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:26:03 [INFO] [Tab 0]   ✓ Resultado Correcto: 6/30 valores capturados
+23:26:03 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:26:03 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:26:04 [DEBUG]   × No se pudo hacer clic en pestaña de estadísticas: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:26:05 [DEBUG]   → Total iframes encontrados: 7
+23:26:05 [DEBUG]   → Iframe #1: accediendo...
+23:26:05 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:26:05 [DEBUG]       → Iframe anidado #1: accediendo...
+23:26:05 [DEBUG]         - Párrafos encontrados: 46
+23:26:05 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:26:05 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:26:05 [DEBUG]       ✓ Red Cards: Discipline - 2.02
+23:26:05 [DEBUG]       ✓ Opta Points: 239.0 - 143.6
+23:26:05 [DEBUG]       ✓ Possession: 64% - 36%
+23:26:05 [DEBUG]       ✓ Shots: 28 - 6
+23:26:06 [DEBUG]       ✓ Shots On Target: 10 - 2
+23:26:06 [DEBUG]       ✓ Touches in Box: 49 - 10
+23:26:06 [DEBUG]       ✓ Yellow Cards: 2 - 2
+23:26:06 [DEBUG]       ✓ Red Cards: 0 - 0
+23:26:06 [DEBUG]       ✓ Booking Points: 20 - 20
+23:26:06 [DEBUG]       ✓ Total Passes: 439 - 259
+23:26:06 [DEBUG]       ✓ Corners: 9 - 1
+23:26:06 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:26:06 [INFO] [Tab 0]   ✓ Estadísticas: 20/22 valores capturados
+23:26:06 [INFO] [Tab 0]     - xG: / | Opta Points: 239.0/143.6
+23:26:06 [INFO] [Tab 0]     - Posesión: 64/36 | Corners: 9/1
+23:26:06 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:26:19 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:26:19 [INFO] [Tab 0] → Extrayendo momentum...
+23:26:19 [DEBUG]   → Buscando pestaña 'Estadísticas del partido' para Momentum...
+23:26:20 [DEBUG]   × Error general extrayendo Momentum: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:26:20 [INFO] [Tab 0]   ✓ Momentum: 0/2 valores capturados
+23:26:20 [INFO] [Tab 0] ⚽ benfica-alverca-apuestas-35218038 | EN_JUEGO | Min:90 | 2-1 | BH:1.01 LH:1.02
+23:26:20 [WARNING] Ciclo tardó 62.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:26:20 [INFO] 
+--- Ciclo #3 ---
+23:26:20 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:26:20 [INFO] [Tab 0] → Extrayendo información del partido...
+23:26:57 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:26:59 [INFO] [Tab 0]   ✓ Match Odds: Home=1.01/1.02 | Draw=13.5/34 | Away=1.21/1.33
+23:26:59 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:27:02 [INFO] [Tab 0]   ✓ Over/Under: 6/20 valores capturados
+23:27:02 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:27:05 [INFO] [Tab 0]   ✓ Resultado Correcto: 6/30 valores capturados
+23:27:05 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:27:05 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:27:06 [DEBUG]   × No se pudo hacer clic en pestaña de estadísticas: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:27:06 [DEBUG]   → Total iframes encontrados: 7
+23:27:06 [DEBUG]   → Iframe #1: accediendo...
+23:27:06 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:27:07 [DEBUG]       → Iframe anidado #1: accediendo...
+23:27:07 [DEBUG]         - Párrafos encontrados: 46
+23:27:07 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:27:07 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:27:07 [DEBUG]       ✓ Red Cards: Discipline - 2.02
+23:27:07 [DEBUG]       ✓ Opta Points: 242.4 - 144.8
+23:27:07 [DEBUG]       ✓ Possession: 64% - 36%
+23:27:07 [DEBUG]       ✓ Shots: 28 - 6
+23:27:07 [DEBUG]       ✓ Shots On Target: 10 - 2
+23:27:07 [DEBUG]       ✓ Touches in Box: 49 - 10
+23:27:07 [DEBUG]       ✓ Yellow Cards: 2 - 2
+23:27:07 [DEBUG]       ✓ Red Cards: 0 - 0
+23:27:08 [DEBUG]       ✓ Booking Points: 20 - 20
+23:27:08 [DEBUG]       ✓ Total Passes: 441 - 264
+23:27:08 [DEBUG]       ✓ Corners: 9 - 1
+23:27:08 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:27:08 [INFO] [Tab 0]   ✓ Estadísticas: 20/22 valores capturados
+23:27:08 [INFO] [Tab 0]     - xG: / | Opta Points: 242.4/144.8
+23:27:08 [INFO] [Tab 0]     - Posesión: 64/36 | Corners: 9/1
+23:27:08 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:27:20 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:27:20 [INFO] [Tab 0] → Extrayendo momentum...
+23:27:20 [DEBUG]   → Buscando pestaña 'Estadísticas del partido' para Momentum...
+23:27:22 [DEBUG]   × Error general extrayendo Momentum: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:27:22 [INFO] [Tab 0]   ✓ Momentum: 0/2 valores capturados
+23:27:22 [INFO] [Tab 0] ⚽ benfica-alverca-apuestas-35218038 | EN_JUEGO | Min:92 | 2-1 | BH:1.01 LH:1.02
+23:27:22 [WARNING] Ciclo tardó 61.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:27:22 [INFO] 
+--- Ciclo #4 ---
+23:27:22 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:27:22 [INFO] [Tab 0] → Extrayendo información del partido...
+23:27:58 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:28:02 [INFO] [Tab 0]   ✓ Match Odds: Home=1.04/1.05 | Draw=/ | Away=1.1/1.24
+23:28:02 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:28:05 [INFO] [Tab 0]   ✓ Over/Under: 2/20 valores capturados
+23:28:05 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:28:08 [INFO] [Tab 0]   ✓ Resultado Correcto: 6/30 valores capturados
+23:28:08 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:28:08 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:28:10 [DEBUG]   × No se pudo hacer clic en pestaña de estadísticas: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:28:10 [DEBUG]   → Total iframes encontrados: 7
+23:28:10 [DEBUG]   → Iframe #1: accediendo...
+23:28:10 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:28:10 [DEBUG]       → Iframe anidado #1: accediendo...
+23:28:10 [DEBUG]         - Párrafos encontrados: 46
+23:28:10 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:28:10 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:28:10 [DEBUG]       ✓ Red Cards: Discipline - 2.02
+23:28:11 [DEBUG]       ✓ Opta Points: 243.8 - 144.0
+23:28:11 [DEBUG]       ✓ Possession: 64% - 36%
+23:28:11 [DEBUG]       ✓ Shots: 28 - 6
+23:28:11 [DEBUG]       ✓ Shots On Target: 10 - 2
+23:28:11 [DEBUG]       ✓ Touches in Box: 49 - 10
+23:28:11 [DEBUG]       ✓ Yellow Cards: 2 - 2
+23:28:11 [DEBUG]       ✓ Red Cards: 0 - 0
+23:28:11 [DEBUG]       ✓ Booking Points: 20 - 20
+23:28:11 [DEBUG]       ✓ Total Passes: 443 - 265
+23:28:11 [DEBUG]       ✓ Corners: 9 - 1
+23:28:11 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:28:11 [INFO] [Tab 0]   ✓ Estadísticas: 20/22 valores capturados
+23:28:11 [INFO] [Tab 0]     - xG: / | Opta Points: 243.8/144.0
+23:28:11 [INFO] [Tab 0]     - Posesión: 64/36 | Corners: 9/1
+23:28:11 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:28:24 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:28:24 [INFO] [Tab 0] → Extrayendo momentum...
+23:28:24 [DEBUG]   → Buscando pestaña 'Estadísticas del partido' para Momentum...
+23:28:25 [DEBUG]   × Error general extrayendo Momentum: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:28:25 [INFO] [Tab 0]   ✓ Momentum: 0/2 valores capturados
+23:28:25 [INFO] [Tab 0] ⚽ benfica-alverca-apuestas-35218038 | EN_JUEGO | Min:93 | 2-1 | BH:1.04 LH:1.05
+23:28:25 [WARNING] Ciclo tardó 63.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:28:25 [INFO] 
+--- Ciclo #5 ---
+23:28:25 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:28:25 [INFO] [Tab 0] → Extrayendo información del partido...
+23:29:02 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:29:06 [INFO] [Tab 0]   ✓ Match Odds: Home=1.09/1.18 | Draw=27/36 | Away=/
+23:29:06 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:29:08 [INFO] [Tab 0]   ✓ Over/Under: 2/20 valores capturados
+23:29:08 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:29:12 [INFO] [Tab 0]   ✓ Resultado Correcto: 2/30 valores capturados
+23:29:12 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:29:12 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:29:13 [DEBUG]   × No se pudo hacer clic en pestaña de estadísticas: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:29:13 [DEBUG]   → Total iframes encontrados: 7
+23:29:13 [DEBUG]   → Iframe #1: accediendo...
+23:29:13 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:29:13 [DEBUG]       → Iframe anidado #1: accediendo...
+23:29:13 [DEBUG]         - Párrafos encontrados: 46
+23:29:13 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:29:14 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:29:14 [DEBUG]       ✓ Red Cards: Discipline - 2.02
+23:29:14 [DEBUG]       ✓ Opta Points: 248.2 - 144.0
+23:29:14 [DEBUG]       ✓ Possession: 64% - 36%
+23:29:14 [DEBUG]       ✓ Shots: 29 - 6
+23:29:14 [DEBUG]       ✓ Shots On Target: 10 - 2
+23:29:14 [DEBUG]       ✓ Touches in Box: 49 - 10
+23:29:14 [DEBUG]       ✓ Yellow Cards: 2 - 2
+23:29:14 [DEBUG]       ✓ Red Cards: 0 - 0
+23:29:14 [DEBUG]       ✓ Booking Points: 20 - 20
+23:29:14 [DEBUG]       ✓ Total Passes: 445 - 270
+23:29:14 [DEBUG]       ✓ Corners: 9 - 1
+23:29:14 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:29:14 [INFO] [Tab 0]   ✓ Estadísticas: 20/22 valores capturados
+23:29:14 [INFO] [Tab 0]     - xG: / | Opta Points: 248.2/144.0
+23:29:14 [INFO] [Tab 0]     - Posesión: 64/36 | Corners: 9/1
+23:29:14 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:29:27 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:29:27 [INFO] [Tab 0] → Extrayendo momentum...
+23:29:27 [DEBUG]   → Buscando pestaña 'Estadísticas del partido' para Momentum...
+23:29:28 [DEBUG]   × Error general extrayendo Momentum: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:29:28 [INFO] [Tab 0]   ✓ Momentum: 0/2 valores capturados
+23:29:28 [INFO] [Tab 0] ⚽ benfica-alverca-apuestas-35218038 | EN_JUEGO | Min:94 | 2-1 | BH:1.09 LH:1.18
+23:29:28 [WARNING] Ciclo tardó 63.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:29:28 [INFO] 
+--- Ciclo #6 ---
+23:29:28 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:29:29 [INFO] [Tab 0] → Extrayendo información del partido...
+23:30:05 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:30:09 [INFO] [Tab 0]   ✓ Match Odds: Home=1.04/1.05 | Draw=/ | Away=1.09/1.19
+23:30:09 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:30:11 [INFO] [Tab 0]   ✓ Over/Under: 2/20 valores capturados
+23:30:11 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:30:15 [INFO] [Tab 0]   ✓ Resultado Correcto: 0/30 valores capturados
+23:30:15 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:30:15 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:30:16 [DEBUG]   × No se pudo hacer clic en pestaña de estadísticas: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:30:16 [DEBUG]   → Total iframes encontrados: 7
+23:30:16 [DEBUG]   → Iframe #1: accediendo...
+23:30:16 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:30:16 [DEBUG]       → Iframe anidado #1: accediendo...
+23:30:16 [DEBUG]         - Párrafos encontrados: 46
+23:30:16 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:30:16 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:30:17 [DEBUG]       ✓ Red Cards: Discipline - 2.02
+23:30:17 [DEBUG]       ✓ Opta Points: 252.4 - 148.2
+23:30:17 [DEBUG]       ✓ Possession: 64% - 36%
+23:30:17 [DEBUG]       ✓ Shots: 29 - 6
+23:30:17 [DEBUG]       ✓ Shots On Target: 10 - 2
+23:30:17 [DEBUG]       ✓ Touches in Box: 49 - 10
+23:30:17 [DEBUG]       ✓ Yellow Cards: 2 - 2
+23:30:17 [DEBUG]       ✓ Red Cards: 0 - 0
+23:30:17 [DEBUG]       ✓ Booking Points: 20 - 20
+23:30:17 [DEBUG]       ✓ Total Passes: 456 - 276
+23:30:17 [DEBUG]       ✓ Corners: 9 - 1
+23:30:17 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:30:17 [INFO] [Tab 0]   ✓ Estadísticas: 20/22 valores capturados
+23:30:17 [INFO] [Tab 0]     - xG: / | Opta Points: 252.4/148.2
+23:30:17 [INFO] [Tab 0]     - Posesión: 64/36 | Corners: 9/1
+23:30:17 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:30:30 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:30:30 [INFO] [Tab 0] → Extrayendo momentum...
+23:30:30 [DEBUG]   → Buscando pestaña 'Estadísticas del partido' para Momentum...
+23:30:31 [DEBUG]   × Error general extrayendo Momentum: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:30:31 [INFO] [Tab 0]   ✓ Momentum: 0/2 valores capturados
+23:30:31 [INFO] [Tab 0] ⚽ benfica-alverca-apuestas-35218038 | EN_JUEGO | Min:94 | 2-1 | BH:1.04 LH:1.05
+23:30:31 [WARNING] Ciclo tardó 62.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:30:31 [INFO] 
+--- Ciclo #7 ---
+23:30:31 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:30:31 [INFO] [Tab 0] → Extrayendo información del partido...
+23:31:07 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+23:31:10 [INFO] [Tab 0]   ✓ Match Odds: Home=1.03/1.04 | Draw=40/42 | Away=1.09/1.19
+23:31:10 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+23:31:12 [INFO] [Tab 0]   ✓ Over/Under: 2/20 valores capturados
+23:31:12 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+23:31:16 [INFO] [Tab 0]   ✓ Resultado Correcto: 0/30 valores capturados
+23:31:16 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+23:31:16 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+23:31:17 [DEBUG]   × No se pudo hacer clic en pestaña de estadísticas: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:31:17 [DEBUG]   → Total iframes encontrados: 7
+23:31:17 [DEBUG]   → Iframe #1: accediendo...
+23:31:17 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+23:31:17 [DEBUG]       → Iframe anidado #1: accediendo...
+23:31:17 [DEBUG]         - Párrafos encontrados: 46
+23:31:17 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+23:31:17 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+23:31:18 [DEBUG]       ✓ Red Cards: Discipline - 2.06
+23:31:18 [DEBUG]       ✓ Opta Points: 249.4 - 148.4
+23:31:18 [DEBUG]       ✓ Possession: 64% - 37%
+23:31:18 [DEBUG]       ✓ Shots: 29 - 6
+23:31:18 [DEBUG]       ✓ Shots On Target: 10 - 2
+23:31:18 [DEBUG]       ✓ Touches in Box: 49 - 10
+23:31:18 [DEBUG]       ✓ Yellow Cards: 3 - 2
+23:31:18 [DEBUG]       ✓ Red Cards: 0 - 0
+23:31:18 [DEBUG]       ✓ Booking Points: 30 - 20
+23:31:18 [DEBUG]       ✓ Total Passes: 456 - 276
+23:31:18 [DEBUG]       ✓ Corners: 9 - 1
+23:31:18 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+23:31:18 [INFO] [Tab 0]   ✓ Estadísticas: 20/22 valores capturados
+23:31:18 [INFO] [Tab 0]     - xG: / | Opta Points: 249.4/148.4
+23:31:18 [INFO] [Tab 0]     - Posesión: 64/37 | Corners: 9/1
+23:31:18 [INFO] [Tab 0] → Extrayendo volumen matched...
+23:31:31 [INFO] [Tab 0]   ✓ Volumen: No capturado
+23:31:31 [INFO] [Tab 0] → Extrayendo momentum...
+23:31:31 [DEBUG]   → Buscando pestaña 'Estadísticas del partido' para Momentum...
+23:31:32 [DEBUG]   × Error general extrayendo Momentum: Message: element click intercepted: Element <li class="bf-col-1-2 tab selected" ng-repeat="tab in livestream.data.tabs" ng-click="livestream.events.selectTab($index, livestream.data.tabs[$index])" ng-class="{ selected: livestream.data.selectedTab == $index }">...</li> is not clickable at point (1356, 551). Other element would receive the click: <ul class="tabs bf-row">...</ul>
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xe15093
+	0xe150d4
+	0xc0b490
+	0xc5bfd8
+	0xc5a1e9
+	0xc57ba2
+	0xc56db4
+	0xc4b4f8
+	0xc781bc
+	0xc4af34
+	0xc78384
+	0xc95341
+	0xc77f56
+	0xc496c9
+	0xc4a484
+	0x1067e34
+	0x10630c9
+	0x1080add
+	0xe2db38
+	0xe358ad
+	0xe1d848
+	0xe1da12
+	0xe075fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+23:31:32 [INFO] [Tab 0]   ✓ Momentum: 0/2 valores capturados
+23:31:32 [INFO] [Tab 0] ⚽ benfica-alverca-apuestas-35218038 | EN_JUEGO | Min:96 | 2-1 | BH:1.03 LH:1.04
+23:31:32 [WARNING] Ciclo tardó 61.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+23:31:32 [INFO] 
+--- Ciclo #8 ---
+23:31:32 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+23:31:33 [INFO] [Tab 0] → Extrayendo información del partido...
+23:31:50 [INFO] Señal de parada recibida. Finalizando ciclo actual...
+23:31:50 [ERROR] Error fatal: ('Connection aborted.', ConnectionResetError(10054, 'Se ha forzado la interrupción de una conexión existente por el host remoto', None, 10054, None))
+Traceback (most recent call last):
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1761, in main
+    f"Ciclo completado en {duracion:.1f}s. "
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1667, in ciclo_captura
+    time.sleep(delay)
+        ^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1461, in capturar_pestaña
+    bool(odds_mo["back_draw"]),
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 496, in extraer_info_partido
+    info["evento"] = buscar_elemento_texto(driver, SELECTORES["event_name"], timeout=3)
+                     ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 263, in buscar_elemento_texto
+    elem = WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\support\wait.py", line 112, in until
+    value = method(self._driver)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\support\expected_conditions.py", line 92, in _predicate
+    return driver.find_element(*locator)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 802, in find_element
+    return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 429, in execute
+    response = cast(RemoteConnection, self.command_executor).execute(driver_command, params)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 406, in execute
+    return self._request(command_info[0], url, body=data)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 430, in _request
+    response = self._conn.request(method, url, body=body, headers=headers, timeout=self._client_config.timeout)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\_request_methods.py", line 143, in request
+    return self.request_encode_body(
+           ~~~~~~~~~~~~~~~~~~~~~~~~^
+        method, url, fields=fields, headers=headers, **urlopen_kw
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\_request_methods.py", line 278, in request_encode_body
+    return self.urlopen(method, url, **extra_kw)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\poolmanager.py", line 457, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\util\retry.py", line 490, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\util\util.py", line 38, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'Se ha forzado la interrupción de una conexión existente por el host remoto', None, 10054, None))
+23:31:50 [INFO] Cerrando...
+23:31:50 [INFO] Archivos CSV cerrados correctamente.
+23:32:06 [INFO] Observador finalizado. Revisa los CSV en la carpeta de salida.

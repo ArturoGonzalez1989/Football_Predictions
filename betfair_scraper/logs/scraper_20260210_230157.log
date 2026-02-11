@@ -1,0 +1,68 @@
+23:01:57 [INFO] 📝 Log guardándose en: logs/scraper_20260210_230157.log
+23:01:57 [INFO] Cargados 20 partidos desde games.csv
+23:01:57 [INFO] 📅 MODO SCHEDULING ACTIVADO
+23:01:57 [INFO]    Ventana tracking: 10 min antes → 150 min después
+23:01:57 [INFO]    Total en CSV: 20 partidos
+23:01:57 [INFO]    ✓ Partidos activos ahora: 13
+23:01:57 [INFO]    ⏰ Partidos futuros: 3
+23:01:57 [INFO]    ✅ Partidos finalizados: 4
+23:01:57 [INFO] 
+📋 Próximos partidos a trackear:
+23:01:57 [INFO]       Deportivo Tachira - The Strongest (en 148 min)
+23:01:57 [INFO]       EC Vitoria Salvador - Flamengo (en 148 min)
+23:01:57 [INFO]       Pumas U.N.A.M. - San Diego FC (en 178 min)
+23:01:57 [WARNING] ⚠️ 13 partidos activos excede --max-tabs=8. Abriendo primeros 8, el resto rotará.
+23:01:57 [INFO] 
+Iniciando observador con 8 partidos.
+23:01:57 [INFO] Ciclo: 30s | Output: data/
+23:01:57 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 1 ciclos (scheduling)
+23:01:57 [INFO] Cargados 20 partidos desde games.csv
+23:01:57 [INFO] 
+🚀 Iniciando 13 drivers Chrome (sistema multi-driver paralelo)...
+23:01:57 [INFO] 🔧 Creando driver de login: West Ham - Manchester United
+23:01:57 [INFO] 🔧 Creando driver para: West Ham - Manchester United
+23:02:05 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:06 [INFO] ✓ Driver listo: west-ham-manchester-united-apuestas-35212135
+23:02:06 [INFO] ============================================================
+23:02:06 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+23:02:06 [INFO] Tienes 30 segundos...
+23:02:06 [INFO] El scraper comenzará automáticamente después.
+23:02:06 [INFO] ============================================================
+23:02:06 [INFO]   Comenzando en 30s...
+23:02:16 [INFO]   Comenzando en 20s...
+23:02:26 [INFO]   Comenzando en 10s...
+23:02:36 [INFO] 🔧 Creando 12 drivers adicionales en paralelo...
+23:02:36 [INFO] 🔧 Creando driver para: Hertha Berlín - Friburgo
+23:02:36 [INFO] 🔧 Creando driver para: Nápoles - Como
+23:02:36 [INFO] 🔧 Creando driver para: Birmingham - West Bromwich
+23:02:36 [INFO] 🔧 Creando driver para: Leicester - Southampton
+23:02:36 [INFO] 🔧 Creando driver para: Oxford United - Norwich
+23:02:36 [INFO] 🔧 Creando driver para: Annan - Dumbarton
+23:02:36 [INFO] 🔧 Creando driver para: Clyde - Elgin City FC
+23:02:36 [INFO] 🔧 Creando driver para: Crawley - Cambridge United
+23:02:44 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:45 [INFO] ✓ Driver listo: clyde-elgin-city-fc-apuestas-35213453
+23:02:45 [INFO] 🔧 Creando driver para: Mansfield - Peterborough
+23:02:48 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:49 [INFO] ✓ Driver listo: hertha-berl%C3%ADn-friburgo-apuestas-35060079
+23:02:49 [INFO] 🔧 Creando driver para: Shrewsbury - Barrow
+23:02:50 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:51 [INFO] ✓ Driver listo: n%C3%A1poles-como-apuestas-35199124
+23:02:51 [INFO] 🔧 Creando driver para: Wigan - Reading
+23:02:51 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:52 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:52 [INFO] ✓ Driver listo: leicester-southampton-apuestas-35239402
+23:02:52 [INFO] 🔧 Creando driver para: Hearts - Hibernian
+23:02:53 [INFO] ✓ Driver listo: annan-dumbarton-apuestas-35213339
+23:02:54 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:54 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:55 [INFO] ✓ Driver listo: crawley-cambridge-united-apuestas-35234804
+23:02:55 [INFO] ✓ Driver listo: birmingham-west-bromwich-apuestas-35239405
+23:02:57 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:57 [INFO] ✓ Cookies aceptadas automáticamente
+23:02:58 [INFO] ✓ Driver listo: oxford-united-norwich-apuestas-35239430
+23:02:58 [INFO] ✓ Driver listo: mansfield-peterborough-apuestas-35236568
+23:02:59 [INFO] ✓ Cookies aceptadas automáticamente
+23:03:00 [INFO] ✓ Driver listo: shrewsbury-barrow-apuestas-35234799
+23:03:03 [INFO] ✓ Cookies aceptadas automáticamente
+23:03:04 [INFO] ✓ Driver listo: wigan-reading-apuestas-35235288

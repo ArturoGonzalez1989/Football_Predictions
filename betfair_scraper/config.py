@@ -9,18 +9,15 @@ Ajusta estos valores según tus necesidades antes de ejecutar main.py.
 # Formato típico: https://www.betfair.es/exchange/plus/es/futbol/...
 # Puedes añadir hasta 10. El script abrirá una pestaña por cada URL.
 MATCH_URLS = [
-    "https://www.betfair.es/exchange/plus/es/futbol/partido-placeholder-1",
-    "https://www.betfair.es/exchange/plus/es/futbol/partido-placeholder-2",
-    "https://www.betfair.es/exchange/plus/es/futbol/partido-placeholder-3",
-    # Añade más URLs aquí...
+    "https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/eredivisie-holandesa/utrecht-feyenoord-apuestas-35189654",
 ]
 
 # ── Tiempos y frecuencias ───────────────────────────────────────────────────
-CICLO_TOTAL_SEG = 60          # Segundos entre ciclos completos de captura
+CICLO_TOTAL_SEG = 30          # Segundos entre ciclos completos de captura
 DELAY_MIN_SEG = 8             # Delay mínimo aleatorio entre pestañas (anti-bot)
 DELAY_MAX_SEG = 12            # Delay máximo aleatorio entre pestañas
 TIMEOUT_ELEMENTO_SEG = 10     # Timeout al buscar elementos en cada pestaña
-PAUSA_LOGIN_SEG = 60          # Segundos de espera para login manual al inicio
+PAUSA_LOGIN_SEG = 0           # Sin pausa de login - las cuotas son públicas
 
 # ── Directorio de salida ────────────────────────────────────────────────────
 OUTPUT_DIR = "data"           # Carpeta donde se guardan los CSV
@@ -33,6 +30,18 @@ USER_AGENT = (
 )
 # Idioma del navegador
 CHROME_LANG = "es-ES,es;q=0.9"
+
+# ── Auto-login con perfil de Chrome ──────────────────────────────────────────
+# Si quieres usar tu sesión de Chrome existente (donde ya estás logueado):
+# 1. Cierra TODOS los Chrome que tengas abiertos
+# 2. Descomenta y configura las siguientes líneas:
+# 3. Ejecuta el script - usará tu perfil con la sesión de Betfair ya iniciada
+
+# Ruta al perfil de Chrome (Windows)
+# Para encontrarla: abre Chrome, ve a chrome://version y copia "Profile Path"
+USE_CHROME_PROFILE = False    # Desactivado - no es necesario para scrapear
+CHROME_PROFILE_PATH = r"C:\Users\agonz\AppData\Local\Google\Chrome\User Data"
+CHROME_PROFILE_NAME = "Default"
 
 # ── Selectores CSS (Betfair Exchange) ───────────────────────────────────────
 # NOTA: Los selectores de Betfair cambian con frecuencia. Si fallan,
@@ -55,14 +64,14 @@ SELECTORES = {
     # Volumen matched del mercado
     "matched_amount": ".matched-amount .size-value, .total-matched .matched-value",
 
-    # Tiempo del partido (reloj in-play)
-    "match_time": ".elapsed-time, .event-header .time, .inplay-indicator .time",
+    # Tiempo del partido (reloj in-play) - ACTUALIZADO 2026
+    "match_time": ".time-elapsed.inplay span, .time-elapsed span, p.time-elapsed",
 
     # Marcador del partido
-    "match_score": ".score, .event-header .score-home, .event-header .score-away",
+    "match_score": ".score, .event-header .score-home, .event-header .score-away, .current-score",
 
-    # Nombre del evento/partido
-    "event_name": ".event-header .title, .event-name, h1.event-name",
+    # Nombre del evento/partido - ACTUALIZADO 2026
+    "event_name": "h1.event-title, .event-name, h1, .sports-header h1, [class*='event-name']",
 
     # Navegación de mercados (para buscar Over/Under)
     "market_tab": ".market-tabs .tab, .market-selector .tab-item",

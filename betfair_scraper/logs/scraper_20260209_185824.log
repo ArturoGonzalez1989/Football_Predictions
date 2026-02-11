@@ -1,0 +1,1789 @@
+18:58:24 [INFO] 📝 Log guardándose en: logs/scraper_20260209_185824.log
+18:58:24 [INFO] Cargadas 3 URLs desde games.csv
+18:58:24 [INFO] Iniciando observador con 3 partidos.
+18:58:24 [INFO] Ciclo: 30s | Output: data/
+18:58:24 [INFO] Iniciando Chrome...
+18:58:30 [INFO] ✓ Cookies aceptadas automáticamente
+18:58:31 [INFO] Pestaña 0: gaziantep-fk-kasimpasa-apuestas-35219303 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/superliga-turca/gaziantep-fk...
+18:58:57 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:58:57 [INFO] Pestaña 1: sakaryaspor-erzurum-bb-apuestas-35220926 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/1-lig-turca/sakaryaspor-erzu...
+18:59:23 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:59:23 [INFO] Pestaña 2: atalanta-us-cremonese-apuestas-35188979 -> https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/serie-a-italiana/atalanta-us...
+18:59:24 [INFO] ============================================================
+18:59:24 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+18:59:24 [INFO] Tienes 0 segundos...
+18:59:24 [INFO] El scraper comenzará automáticamente después.
+18:59:24 [INFO] ============================================================
+18:59:24 [INFO] ============================================================
+18:59:24 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+18:59:24 [INFO] ============================================================
+18:59:24 [INFO] 
+--- Ciclo #1 ---
+18:59:24 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+18:59:24 [INFO] [Tab 0] → Extrayendo información del partido...
+18:59:47 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+18:59:47 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+18:59:49 [INFO] [Tab 0]   ✓ Match Odds: Home=2.04/2.08 | Draw=3/3.05 | Away=3.1/4.3
+18:59:49 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+18:59:52 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+18:59:52 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+18:59:54 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+18:59:54 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+18:59:54 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+18:59:55 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+18:59:56 [DEBUG]   → Total iframes encontrados: 7
+18:59:56 [DEBUG]   → Iframe #1: accediendo...
+18:59:56 [DEBUG]     → Encontrados 4 iframes anidados, revisando...
+18:59:56 [DEBUG]       → Iframe anidado #1: accediendo...
+18:59:56 [DEBUG]         - Párrafos encontrados: 46
+18:59:56 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+18:59:56 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+18:59:56 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+18:59:56 [DEBUG]       ✓ xG: 0.83 - 0.36
+18:59:56 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+18:59:56 [DEBUG]       ✓ Possession: 60% - 40%
+18:59:56 [DEBUG]       ✓ Shots: 3 - 3
+18:59:56 [DEBUG]       ✓ Shots On Target: 2 - 1
+18:59:56 [DEBUG]       ✓ Touches in Box: 7 - 7
+18:59:56 [DEBUG]       ✓ Yellow Cards: 1 - 0
+18:59:56 [DEBUG]       ✓ Red Cards: 1 - 0
+18:59:56 [DEBUG]       ✓ Booking Points: 25 - 0
+18:59:56 [DEBUG]       ✓ Total Passes: 244 - 151
+18:59:56 [DEBUG]       ✓ Corners: 1 - 4
+18:59:56 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+18:59:56 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+18:59:56 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+18:59:56 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+18:59:56 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:00:09 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:00:09 [INFO] [Tab 0] → Extrayendo momentum...
+19:00:09 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:00:09 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:00:09 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:00:13 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:00:13 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:00:13 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:00:13 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:00:13 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:00:13 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:2.04 LH:2.08
+19:00:13 [DEBUG] Espera 10.5s antes de siguiente pestaña...
+19:00:24 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:00:24 [DEBUG] Espera 8.1s antes de siguiente pestaña...
+19:00:32 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:00:32 [WARNING] Ciclo tardó 68.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:00:32 [INFO] 
+--- Ciclo #2 ---
+19:00:32 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:00:32 [INFO] [Tab 0] → Extrayendo información del partido...
+19:00:55 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:00:55 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:00:58 [INFO] [Tab 0]   ✓ Match Odds: Home=2.04/2.08 | Draw=2.58/3.05 | Away=3.1/4.3
+19:00:58 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:01:00 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:01:00 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:01:03 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:01:03 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:01:03 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:01:03 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:01:04 [DEBUG]   → Total iframes encontrados: 7
+19:01:04 [DEBUG]   → Iframe #1: accediendo...
+19:01:04 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:01:04 [DEBUG]       → Iframe anidado #1: accediendo...
+19:01:04 [DEBUG]         - Párrafos encontrados: 46
+19:01:04 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:01:04 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:01:04 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:01:04 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:01:04 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:01:04 [DEBUG]       ✓ Possession: 60% - 40%
+19:01:04 [DEBUG]       ✓ Shots: 3 - 3
+19:01:04 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:01:04 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:01:04 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:01:04 [DEBUG]       ✓ Red Cards: 1 - 0
+19:01:04 [DEBUG]       ✓ Booking Points: 25 - 0
+19:01:04 [DEBUG]       ✓ Total Passes: 244 - 151
+19:01:04 [DEBUG]       ✓ Corners: 1 - 4
+19:01:04 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:01:04 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:01:04 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:01:04 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:01:04 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:01:17 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:01:17 [INFO] [Tab 0] → Extrayendo momentum...
+19:01:17 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:01:17 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:01:17 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:01:21 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:01:21 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:01:21 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:01:21 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:01:21 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:01:21 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:2.04 LH:2.08
+19:01:21 [DEBUG] Espera 11.3s antes de siguiente pestaña...
+19:01:33 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:01:33 [DEBUG] Espera 10.4s antes de siguiente pestaña...
+19:01:43 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:01:43 [WARNING] Ciclo tardó 71.4s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:01:43 [INFO] 
+--- Ciclo #3 ---
+19:01:44 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:01:44 [INFO] [Tab 0] → Extrayendo información del partido...
+19:02:07 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:02:07 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:02:09 [INFO] [Tab 0]   ✓ Match Odds: Home=2.04/2.08 | Draw=2.58/3.05 | Away=3.1/4.2
+19:02:09 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:02:11 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:02:11 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:02:14 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:02:14 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:02:14 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:02:14 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:02:15 [DEBUG]   → Total iframes encontrados: 7
+19:02:15 [DEBUG]   → Iframe #1: accediendo...
+19:02:15 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:02:15 [DEBUG]       → Iframe anidado #1: accediendo...
+19:02:15 [DEBUG]         - Párrafos encontrados: 46
+19:02:15 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:02:15 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:02:15 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:02:15 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:02:15 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:02:16 [DEBUG]       ✓ Possession: 60% - 40%
+19:02:16 [DEBUG]       ✓ Shots: 3 - 3
+19:02:16 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:02:16 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:02:16 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:02:16 [DEBUG]       ✓ Red Cards: 1 - 0
+19:02:16 [DEBUG]       ✓ Booking Points: 25 - 0
+19:02:16 [DEBUG]       ✓ Total Passes: 244 - 151
+19:02:16 [DEBUG]       ✓ Corners: 1 - 4
+19:02:16 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:02:16 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:02:16 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:02:16 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:02:16 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:02:29 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:02:29 [INFO] [Tab 0] → Extrayendo momentum...
+19:02:29 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:02:29 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:02:29 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:02:33 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:02:33 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:02:33 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:02:33 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:02:33 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:02:33 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:2.04 LH:2.08
+19:02:33 [DEBUG] Espera 10.5s antes de siguiente pestaña...
+19:02:43 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:02:43 [DEBUG] Espera 10.4s antes de siguiente pestaña...
+19:02:54 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:02:54 [WARNING] Ciclo tardó 70.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:02:54 [INFO] 
+--- Ciclo #4 ---
+19:02:54 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:02:54 [INFO] [Tab 0] → Extrayendo información del partido...
+19:03:17 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:03:17 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:03:19 [INFO] [Tab 0]   ✓ Match Odds: Home=2.04/2.08 | Draw=2.58/3.05 | Away=3.1/4.4
+19:03:19 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:03:22 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:03:22 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:03:25 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:03:25 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:03:25 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:03:25 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:03:26 [DEBUG]   → Total iframes encontrados: 7
+19:03:26 [DEBUG]   → Iframe #1: accediendo...
+19:03:26 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:03:26 [DEBUG]       → Iframe anidado #1: accediendo...
+19:03:26 [DEBUG]         - Párrafos encontrados: 46
+19:03:26 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:03:26 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:03:26 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:03:26 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:03:26 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:03:26 [DEBUG]       ✓ Possession: 60% - 40%
+19:03:26 [DEBUG]       ✓ Shots: 3 - 3
+19:03:26 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:03:26 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:03:26 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:03:26 [DEBUG]       ✓ Red Cards: 1 - 0
+19:03:26 [DEBUG]       ✓ Booking Points: 25 - 0
+19:03:26 [DEBUG]       ✓ Total Passes: 244 - 151
+19:03:26 [DEBUG]       ✓ Corners: 1 - 4
+19:03:26 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:03:26 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:03:26 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:03:26 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:03:26 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:03:39 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:03:39 [INFO] [Tab 0] → Extrayendo momentum...
+19:03:39 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:03:39 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:03:39 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:03:43 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:03:43 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:03:43 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:03:43 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:03:43 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:03:43 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:2.04 LH:2.08
+19:03:43 [DEBUG] Espera 10.7s antes de siguiente pestaña...
+19:03:54 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:03:54 [DEBUG] Espera 11.7s antes de siguiente pestaña...
+19:04:06 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:04:06 [WARNING] Ciclo tardó 72.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:04:06 [INFO] 
+--- Ciclo #5 ---
+19:04:06 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:04:06 [INFO] [Tab 0] → Extrayendo información del partido...
+19:04:29 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:04:29 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:04:31 [INFO] [Tab 0]   ✓ Match Odds: Home=2.04/2.08 | Draw=3.1/3.15 | Away=4.2/4.3
+19:04:31 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:04:34 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:04:34 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:04:37 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:04:37 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:04:37 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:04:37 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:04:38 [DEBUG]   → Total iframes encontrados: 7
+19:04:38 [DEBUG]   → Iframe #1: accediendo...
+19:04:38 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:04:38 [DEBUG]       → Iframe anidado #1: accediendo...
+19:04:38 [DEBUG]         - Párrafos encontrados: 46
+19:04:38 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:04:38 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:04:38 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:04:38 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:04:38 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:04:38 [DEBUG]       ✓ Possession: 60% - 40%
+19:04:38 [DEBUG]       ✓ Shots: 3 - 3
+19:04:38 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:04:38 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:04:38 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:04:38 [DEBUG]       ✓ Red Cards: 1 - 0
+19:04:38 [DEBUG]       ✓ Booking Points: 25 - 0
+19:04:38 [DEBUG]       ✓ Total Passes: 244 - 151
+19:04:38 [DEBUG]       ✓ Corners: 1 - 4
+19:04:38 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:04:38 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:04:38 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:04:38 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:04:38 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:04:51 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:04:51 [INFO] [Tab 0] → Extrayendo momentum...
+19:04:51 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:04:51 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:04:51 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:04:55 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:04:55 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:04:55 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:04:55 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:04:55 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:04:55 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:2.04 LH:2.08
+19:04:55 [DEBUG] Espera 11.0s antes de siguiente pestaña...
+19:05:06 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:05:06 [DEBUG] Espera 9.2s antes de siguiente pestaña...
+19:05:15 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:05:15 [WARNING] Ciclo tardó 69.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:05:15 [INFO] 
+--- Ciclo #6 ---
+19:05:16 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:05:16 [INFO] [Tab 0] → Extrayendo información del partido...
+19:05:39 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:05:39 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:05:41 [INFO] [Tab 0]   ✓ Match Odds: Home=1.78/2.06 | Draw=3.1/3.15 | Away=4.2/4.3
+19:05:41 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:05:44 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:05:44 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:05:46 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:05:46 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:05:46 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:05:46 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:05:47 [DEBUG]   → Total iframes encontrados: 7
+19:05:47 [DEBUG]   → Iframe #1: accediendo...
+19:05:47 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:05:47 [DEBUG]       → Iframe anidado #1: accediendo...
+19:05:47 [DEBUG]         - Párrafos encontrados: 46
+19:05:47 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:05:48 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:05:48 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:05:48 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:05:48 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:05:48 [DEBUG]       ✓ Possession: 60% - 40%
+19:05:48 [DEBUG]       ✓ Shots: 3 - 3
+19:05:48 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:05:48 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:05:48 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:05:48 [DEBUG]       ✓ Red Cards: 1 - 0
+19:05:48 [DEBUG]       ✓ Booking Points: 25 - 0
+19:05:48 [DEBUG]       ✓ Total Passes: 244 - 151
+19:05:48 [DEBUG]       ✓ Corners: 1 - 4
+19:05:48 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:05:48 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:05:48 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:05:48 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:05:48 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:06:01 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:06:01 [INFO] [Tab 0] → Extrayendo momentum...
+19:06:01 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:06:01 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:06:01 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:06:05 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:06:05 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:06:05 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:06:05 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:06:05 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:06:05 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:1.78 LH:2.06
+19:06:05 [DEBUG] Espera 11.0s antes de siguiente pestaña...
+19:06:16 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:06:16 [DEBUG] Espera 8.7s antes de siguiente pestaña...
+19:06:25 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:06:25 [WARNING] Ciclo tardó 69.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:06:25 [INFO] 
+--- Ciclo #7 ---
+19:06:25 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:06:25 [INFO] [Tab 0] → Extrayendo información del partido...
+19:06:48 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:06:48 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:06:50 [INFO] [Tab 0]   ✓ Match Odds: Home=1.78/2.06 | Draw=3/3.1 | Away=4.2/4.3
+19:06:50 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:06:53 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:06:53 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:06:56 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:06:56 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:06:56 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:06:56 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:06:57 [DEBUG]   → Total iframes encontrados: 7
+19:06:57 [DEBUG]   → Iframe #1: accediendo...
+19:06:57 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:06:57 [DEBUG]       → Iframe anidado #1: accediendo...
+19:06:57 [DEBUG]         - Párrafos encontrados: 46
+19:06:57 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:06:57 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:06:57 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:06:57 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:06:57 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:06:57 [DEBUG]       ✓ Possession: 60% - 40%
+19:06:57 [DEBUG]       ✓ Shots: 3 - 3
+19:06:57 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:06:57 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:06:57 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:06:57 [DEBUG]       ✓ Red Cards: 1 - 0
+19:06:57 [DEBUG]       ✓ Booking Points: 25 - 0
+19:06:57 [DEBUG]       ✓ Total Passes: 244 - 151
+19:06:57 [DEBUG]       ✓ Corners: 1 - 4
+19:06:57 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:06:57 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:06:57 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:06:57 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:06:57 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:07:10 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:07:10 [INFO] [Tab 0] → Extrayendo momentum...
+19:07:10 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:07:10 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:07:10 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:07:14 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:07:14 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:07:14 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:07:14 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:07:14 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:07:14 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:1.78 LH:2.06
+19:07:14 [DEBUG] Espera 9.7s antes de siguiente pestaña...
+19:07:24 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:07:24 [DEBUG] Espera 8.2s antes de siguiente pestaña...
+19:07:32 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:07:32 [WARNING] Ciclo tardó 67.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:07:32 [INFO] 
+--- Ciclo #8 ---
+19:07:32 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:07:33 [INFO] [Tab 0] → Extrayendo información del partido...
+19:07:56 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:07:56 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:07:58 [INFO] [Tab 0]   ✓ Match Odds: Home=1.78/2.06 | Draw=3.05/3.1 | Away=4.2/4.3
+19:07:58 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:08:00 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:08:00 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:08:03 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:08:03 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:08:03 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:08:03 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:08:04 [DEBUG]   → Total iframes encontrados: 7
+19:08:04 [DEBUG]   → Iframe #1: accediendo...
+19:08:04 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:08:04 [DEBUG]       → Iframe anidado #1: accediendo...
+19:08:04 [DEBUG]         - Párrafos encontrados: 46
+19:08:04 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:08:04 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:08:04 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:08:04 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:08:04 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:08:04 [DEBUG]       ✓ Possession: 60% - 40%
+19:08:04 [DEBUG]       ✓ Shots: 3 - 3
+19:08:04 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:08:04 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:08:04 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:08:04 [DEBUG]       ✓ Red Cards: 1 - 0
+19:08:04 [DEBUG]       ✓ Booking Points: 25 - 0
+19:08:04 [DEBUG]       ✓ Total Passes: 244 - 151
+19:08:04 [DEBUG]       ✓ Corners: 1 - 4
+19:08:04 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:08:04 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:08:04 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:08:04 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:08:04 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:08:17 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:08:17 [INFO] [Tab 0] → Extrayendo momentum...
+19:08:17 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:08:17 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:08:17 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:08:21 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:08:22 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:08:22 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:08:22 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:08:22 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:08:22 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:1.78 LH:2.06
+19:08:22 [DEBUG] Espera 11.7s antes de siguiente pestaña...
+19:08:33 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:08:33 [DEBUG] Espera 12.0s antes de siguiente pestaña...
+19:08:45 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:08:45 [WARNING] Ciclo tardó 73.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:08:45 [INFO] 
+--- Ciclo #9 ---
+19:08:46 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:08:46 [INFO] [Tab 0] → Extrayendo información del partido...
+19:09:09 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:09:09 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:09:11 [INFO] [Tab 0]   ✓ Match Odds: Home=1.78/2.06 | Draw=3/3.1 | Away=3.1/4.2
+19:09:11 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:09:13 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:09:13 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:09:16 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:09:16 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:09:16 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:09:16 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:09:17 [DEBUG]   → Total iframes encontrados: 7
+19:09:17 [DEBUG]   → Iframe #1: accediendo...
+19:09:17 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:09:17 [DEBUG]       → Iframe anidado #1: accediendo...
+19:09:17 [DEBUG]         - Párrafos encontrados: 46
+19:09:17 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:09:17 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:09:17 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:09:17 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:09:17 [DEBUG]       ✓ Opta Points: 83.2 - 42.0
+19:09:17 [DEBUG]       ✓ Possession: 60% - 40%
+19:09:17 [DEBUG]       ✓ Shots: 3 - 3
+19:09:17 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:09:17 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:09:17 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:09:17 [DEBUG]       ✓ Red Cards: 1 - 0
+19:09:17 [DEBUG]       ✓ Booking Points: 25 - 0
+19:09:17 [DEBUG]       ✓ Total Passes: 244 - 151
+19:09:17 [DEBUG]       ✓ Corners: 1 - 4
+19:09:17 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:09:17 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:09:17 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.2/42.0
+19:09:17 [INFO] [Tab 0]     - Posesión: 60/40 | Corners: 1/4
+19:09:17 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:09:30 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:09:30 [INFO] [Tab 0] → Extrayendo momentum...
+19:09:30 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:09:30 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:09:30 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:09:34 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:09:34 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:09:34 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:09:34 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:09:34 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:09:34 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:1.78 LH:2.06
+19:09:34 [DEBUG] Espera 10.1s antes de siguiente pestaña...
+19:09:45 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:09:45 [DEBUG] Espera 10.0s antes de siguiente pestaña...
+19:09:55 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:09:55 [WARNING] Ciclo tardó 69.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:09:55 [INFO] 
+--- Ciclo #10 ---
+19:09:55 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:09:55 [INFO] [Tab 0] → Extrayendo información del partido...
+19:10:18 [DEBUG]   ✓ Estado detectado: DESCANSO (texto: 'Descanso')
+19:10:18 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:10:20 [INFO] [Tab 0]   ✓ Match Odds: Home=1.78/2.06 | Draw=3/3.05 | Away=4.2/4.3
+19:10:20 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:10:23 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:10:23 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:10:25 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:10:25 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:10:25 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:10:25 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:10:26 [DEBUG]   → Total iframes encontrados: 7
+19:10:26 [DEBUG]   → Iframe #1: accediendo...
+19:10:26 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:10:26 [DEBUG]       → Iframe anidado #1: accediendo...
+19:10:26 [DEBUG]         - Párrafos encontrados: 46
+19:10:26 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:10:27 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:10:27 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:10:27 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:10:27 [DEBUG]       ✓ Opta Points: 83.6 - 43.0
+19:10:27 [DEBUG]       ✓ Possession: 59% - 41%
+19:10:27 [DEBUG]       ✓ Shots: 3 - 3
+19:10:27 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:10:27 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:10:27 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:10:27 [DEBUG]       ✓ Red Cards: 1 - 0
+19:10:27 [DEBUG]       ✓ Booking Points: 25 - 0
+19:10:27 [DEBUG]       ✓ Total Passes: 246 - 155
+19:10:27 [DEBUG]       ✓ Corners: 1 - 4
+19:10:27 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:10:27 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:10:27 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 83.6/43.0
+19:10:27 [INFO] [Tab 0]     - Posesión: 59/41 | Corners: 1/4
+19:10:27 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:10:40 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:10:40 [INFO] [Tab 0] → Extrayendo momentum...
+19:10:40 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:10:40 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:10:40 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:10:44 [DEBUG]   → Divs: 201, Local: 32, Visit: 18
+19:10:44 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:10:44 [DEBUG]   ✓ Momentum Visitante: 453.03 (18 barras)
+19:10:44 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:10:44 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 453.03
+19:10:44 [INFO] [Tab 0] ☕ gaziantep-fk-kasimpasa-apuestas-35219303 | DESCANSO | Min:? | 2-1 | BH:1.78 LH:2.06
+19:10:44 [DEBUG] Espera 8.9s antes de siguiente pestaña...
+19:10:53 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:10:53 [DEBUG] Espera 9.4s antes de siguiente pestaña...
+19:11:02 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:11:02 [WARNING] Ciclo tardó 67.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:11:02 [INFO] 
+--- Ciclo #11 ---
+19:11:03 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:11:03 [INFO] [Tab 0] → Extrayendo información del partido...
+19:11:39 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:11:41 [INFO] [Tab 0]   ✓ Match Odds: Home=2.02/2.04 | Draw=3.05/3.1 | Away=4.1/4.2
+19:11:41 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:11:43 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:11:43 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:11:46 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:11:46 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:11:46 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:11:46 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:11:47 [DEBUG]   → Total iframes encontrados: 7
+19:11:47 [DEBUG]   → Iframe #1: accediendo...
+19:11:47 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:11:47 [DEBUG]       → Iframe anidado #1: accediendo...
+19:11:47 [DEBUG]         - Párrafos encontrados: 46
+19:11:47 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:11:47 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:11:47 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:11:47 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:11:47 [DEBUG]       ✓ Opta Points: 87.6 - 47.4
+19:11:47 [DEBUG]       ✓ Possession: 59% - 41%
+19:11:47 [DEBUG]       ✓ Shots: 3 - 3
+19:11:47 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:11:47 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:11:47 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:11:47 [DEBUG]       ✓ Red Cards: 1 - 0
+19:11:47 [DEBUG]       ✓ Booking Points: 25 - 0
+19:11:47 [DEBUG]       ✓ Total Passes: 256 - 167
+19:11:47 [DEBUG]       ✓ Corners: 1 - 4
+19:11:47 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:11:47 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:11:47 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 87.6/47.4
+19:11:47 [INFO] [Tab 0]     - Posesión: 59/41 | Corners: 1/4
+19:11:47 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:12:00 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:12:00 [INFO] [Tab 0] → Extrayendo momentum...
+19:12:00 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:12:00 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:12:00 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:12:04 [DEBUG]   → Divs: 381, Local: 32, Visit: 19
+19:12:04 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:12:04 [DEBUG]   ✓ Momentum Visitante: 463.80 (19 barras)
+19:12:04 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:12:04 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 463.80
+19:12:04 [INFO] [Tab 0] ⚽ gaziantep-fk-kasimpasa-apuestas-35219303 | EN_JUEGO | Min:45 | 2-1 | BH:2.02 LH:2.04
+19:12:04 [DEBUG] Espera 11.3s antes de siguiente pestaña...
+19:12:16 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:12:16 [DEBUG] Espera 11.7s antes de siguiente pestaña...
+19:12:27 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:12:27 [WARNING] Ciclo tardó 85.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:12:27 [INFO] 
+--- Ciclo #12 ---
+19:12:28 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:12:28 [INFO] [Tab 0] → Extrayendo información del partido...
+19:13:04 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:13:06 [INFO] [Tab 0]   ✓ Match Odds: Home=1.98/1.99 | Draw=3.1/3.15 | Away=4.2/4.4
+19:13:06 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:13:08 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:13:08 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:13:11 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:13:11 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:13:11 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:13:11 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:13:12 [DEBUG]   → Total iframes encontrados: 7
+19:13:12 [DEBUG]   → Iframe #1: accediendo...
+19:13:12 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:13:12 [DEBUG]       → Iframe anidado #1: accediendo...
+19:13:12 [DEBUG]         - Párrafos encontrados: 46
+19:13:12 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:13:12 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:13:12 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:13:12 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:13:12 [DEBUG]       ✓ Opta Points: 90.2 - 48.2
+19:13:12 [DEBUG]       ✓ Possession: 58% - 42%
+19:13:12 [DEBUG]       ✓ Shots: 3 - 3
+19:13:12 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:13:12 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:13:12 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:13:12 [DEBUG]       ✓ Red Cards: 1 - 0
+19:13:12 [DEBUG]       ✓ Booking Points: 25 - 0
+19:13:12 [DEBUG]       ✓ Total Passes: 259 - 171
+19:13:12 [DEBUG]       ✓ Corners: 1 - 4
+19:13:12 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:13:12 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:13:12 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 90.2/48.2
+19:13:12 [INFO] [Tab 0]     - Posesión: 58/42 | Corners: 1/4
+19:13:12 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:13:25 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:13:25 [INFO] [Tab 0] → Extrayendo momentum...
+19:13:25 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:13:25 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:13:25 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:13:29 [DEBUG]   → Divs: 381, Local: 33, Visit: 19
+19:13:29 [DEBUG]   ✓ Momentum Local: 968.81 (33 barras)
+19:13:29 [DEBUG]   ✓ Momentum Visitante: 463.80 (19 barras)
+19:13:29 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:13:29 [INFO] [Tab 0]     - Local: 968.81 | Visitante: 463.80
+19:13:29 [INFO] [Tab 0] ⚽ gaziantep-fk-kasimpasa-apuestas-35219303 | EN_JUEGO | Min:46 | 2-1 | BH:1.98 LH:1.99
+19:13:29 [DEBUG] Espera 8.0s antes de siguiente pestaña...
+19:13:37 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:13:37 [DEBUG] Espera 9.5s antes de siguiente pestaña...
+19:13:47 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:13:47 [WARNING] Ciclo tardó 79.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:13:47 [INFO] 
+--- Ciclo #13 ---
+19:13:47 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:13:48 [INFO] [Tab 0] → Extrayendo información del partido...
+19:14:23 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:14:26 [INFO] [Tab 0]   ✓ Match Odds: Home=2.04/2.06 | Draw=3.05/3.1 | Away=4.1/4.2
+19:14:26 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:14:28 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:14:28 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:14:31 [INFO] [Tab 0]   ✓ Resultado Correcto: 8/30 valores capturados
+19:14:31 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:14:31 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:14:31 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:14:32 [DEBUG]   → Total iframes encontrados: 7
+19:14:32 [DEBUG]   → Iframe #1: accediendo...
+19:14:32 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:14:32 [DEBUG]       → Iframe anidado #1: accediendo...
+19:14:32 [DEBUG]         - Párrafos encontrados: 46
+19:14:32 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:14:32 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:14:32 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:14:32 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:14:32 [DEBUG]       ✓ Opta Points: 87.2 - 50.0
+19:14:32 [DEBUG]       ✓ Possession: 58% - 42%
+19:14:32 [DEBUG]       ✓ Shots: 3 - 3
+19:14:32 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:14:32 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:14:32 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:14:32 [DEBUG]       ✓ Red Cards: 1 - 0
+19:14:32 [DEBUG]       ✓ Booking Points: 25 - 0
+19:14:32 [DEBUG]       ✓ Total Passes: 259 - 175
+19:14:32 [DEBUG]       ✓ Corners: 1 - 4
+19:14:32 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:14:32 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:14:32 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 87.2/50.0
+19:14:32 [INFO] [Tab 0]     - Posesión: 58/42 | Corners: 1/4
+19:14:32 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:14:45 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:14:45 [INFO] [Tab 0] → Extrayendo momentum...
+19:14:45 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:14:45 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:14:45 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:14:49 [DEBUG]   → Divs: 381, Local: 32, Visit: 21
+19:14:49 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:14:49 [DEBUG]   ✓ Momentum Visitante: 484.56 (21 barras)
+19:14:49 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:14:49 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 484.56
+19:14:49 [INFO] [Tab 0] ⚽ gaziantep-fk-kasimpasa-apuestas-35219303 | EN_JUEGO | Min:48 | 2-1 | BH:2.04 LH:2.06
+19:14:49 [DEBUG] Espera 10.1s antes de siguiente pestaña...
+19:14:59 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:14:59 [DEBUG] Espera 8.9s antes de siguiente pestaña...
+19:15:08 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:15:08 [WARNING] Ciclo tardó 81.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:15:08 [INFO] 
+--- Ciclo #14 ---
+19:15:08 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:15:09 [INFO] [Tab 0] → Extrayendo información del partido...
+19:15:44 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:15:46 [INFO] [Tab 0]   ✓ Match Odds: Home=2.02/2.04 | Draw=3.05/3.1 | Away=4.1/4.3
+19:15:46 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:15:49 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:15:49 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:15:51 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:15:51 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:15:51 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:15:51 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:15:52 [DEBUG]   → Total iframes encontrados: 7
+19:15:52 [DEBUG]   → Iframe #1: accediendo...
+19:15:52 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:15:52 [DEBUG]       → Iframe anidado #1: accediendo...
+19:15:52 [DEBUG]         - Párrafos encontrados: 46
+19:15:52 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:15:52 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:15:53 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:15:53 [DEBUG]       ✓ xG: 0.83 - 0.36
+19:15:53 [DEBUG]       ✓ Opta Points: 84.8 - 60.0
+19:15:53 [DEBUG]       ✓ Possession: 58% - 43%
+19:15:53 [DEBUG]       ✓ Shots: 3 - 4
+19:15:53 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:15:53 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:15:53 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:15:53 [DEBUG]       ✓ Red Cards: 1 - 0
+19:15:53 [DEBUG]       ✓ Booking Points: 35 - 0
+19:15:53 [DEBUG]       ✓ Total Passes: 262 - 179
+19:15:53 [DEBUG]       ✓ Corners: 1 - 4
+19:15:53 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:15:53 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:15:53 [INFO] [Tab 0]     - xG: 0.83/0.36 | Opta Points: 84.8/60.0
+19:15:53 [INFO] [Tab 0]     - Posesión: 58/43 | Corners: 1/4
+19:15:53 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:16:06 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:16:06 [INFO] [Tab 0] → Extrayendo momentum...
+19:16:06 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:16:06 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:16:06 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:16:10 [DEBUG]   → Divs: 381, Local: 32, Visit: 22
+19:16:10 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:16:10 [DEBUG]   ✓ Momentum Visitante: 496.35 (22 barras)
+19:16:10 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:16:10 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 496.35
+19:16:10 [INFO] [Tab 0] ⚽ gaziantep-fk-kasimpasa-apuestas-35219303 | EN_JUEGO | Min:50 | 2-1 | BH:2.02 LH:2.04
+19:16:10 [DEBUG] Espera 10.0s antes de siguiente pestaña...
+19:16:20 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:16:20 [DEBUG] Espera 10.0s antes de siguiente pestaña...
+19:16:30 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:16:30 [WARNING] Ciclo tardó 81.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:16:30 [INFO] 
+--- Ciclo #15 ---
+19:16:30 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:16:31 [INFO] [Tab 0] → Extrayendo información del partido...
+19:17:06 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:17:08 [INFO] [Tab 0]   ✓ Match Odds: Home=1.97/1.99 | Draw=3/3.05 | Away=4.4/4.5
+19:17:08 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:17:10 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:17:10 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:17:13 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:17:13 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:17:13 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:17:13 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:17:14 [DEBUG]   → Total iframes encontrados: 7
+19:17:14 [DEBUG]   → Iframe #1: accediendo...
+19:17:14 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:17:14 [DEBUG]       → Iframe anidado #1: accediendo...
+19:17:14 [DEBUG]         - Párrafos encontrados: 46
+19:17:14 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:17:14 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:17:14 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:17:14 [DEBUG]       ✓ xG: 0.83 - 0.37
+19:17:14 [DEBUG]       ✓ Opta Points: 90.0 - 59.8
+19:17:14 [DEBUG]       ✓ Possession: 58% - 42%
+19:17:14 [DEBUG]       ✓ Shots: 3 - 4
+19:17:14 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:17:14 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:17:14 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:17:14 [DEBUG]       ✓ Red Cards: 1 - 0
+19:17:14 [DEBUG]       ✓ Booking Points: 35 - 0
+19:17:15 [DEBUG]       ✓ Total Passes: 273 - 183
+19:17:15 [DEBUG]       ✓ Corners: 1 - 4
+19:17:15 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:17:15 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:17:15 [INFO] [Tab 0]     - xG: 0.83/0.37 | Opta Points: 90.0/59.8
+19:17:15 [INFO] [Tab 0]     - Posesión: 58/42 | Corners: 1/4
+19:17:15 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:17:28 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:17:28 [INFO] [Tab 0] → Extrayendo momentum...
+19:17:28 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:17:28 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:17:28 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:17:32 [DEBUG]   → Divs: 381, Local: 32, Visit: 23
+19:17:32 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:17:32 [DEBUG]   ✓ Momentum Visitante: 506.38 (23 barras)
+19:17:32 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:17:32 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 506.38
+19:17:32 [INFO] [Tab 0] ⚽ gaziantep-fk-kasimpasa-apuestas-35219303 | EN_JUEGO | Min:50 | 2-1 | BH:1.97 LH:1.99
+19:17:32 [DEBUG] Espera 8.7s antes de siguiente pestaña...
+19:17:40 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:17:40 [DEBUG] Espera 9.2s antes de siguiente pestaña...
+19:17:50 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:17:50 [WARNING] Ciclo tardó 79.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:17:50 [INFO] 
+--- Ciclo #16 ---
+19:17:50 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:17:50 [INFO] [Tab 0] → Extrayendo información del partido...
+19:18:26 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:18:28 [INFO] [Tab 0]   ✓ Match Odds: Home=1.86/1.89 | Draw=2.62/3.05 | Away=3.55/5.2
+19:18:28 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:18:30 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:18:30 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:18:33 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:18:33 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:18:33 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:18:33 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:18:34 [DEBUG]   → Total iframes encontrados: 7
+19:18:34 [DEBUG]   → Iframe #1: accediendo...
+19:18:34 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:18:34 [DEBUG]       → Iframe anidado #1: accediendo...
+19:18:34 [DEBUG]         - Párrafos encontrados: 46
+19:18:34 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:18:34 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:18:34 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:18:34 [DEBUG]       ✓ xG: 0.83 - 0.37
+19:18:34 [DEBUG]       ✓ Opta Points: 91.4 - 60.4
+19:18:34 [DEBUG]       ✓ Possession: 57% - 43%
+19:18:34 [DEBUG]       ✓ Shots: 3 - 4
+19:18:34 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:18:34 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:18:35 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:18:35 [DEBUG]       ✓ Red Cards: 1 - 0
+19:18:35 [DEBUG]       ✓ Booking Points: 35 - 0
+19:18:35 [DEBUG]       ✓ Total Passes: 275 - 191
+19:18:35 [DEBUG]       ✓ Corners: 1 - 4
+19:18:35 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:18:35 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:18:35 [INFO] [Tab 0]     - xG: 0.83/0.37 | Opta Points: 91.4/60.4
+19:18:35 [INFO] [Tab 0]     - Posesión: 57/43 | Corners: 1/4
+19:18:35 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:18:48 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:18:48 [INFO] [Tab 0] → Extrayendo momentum...
+19:18:48 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:18:48 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:18:48 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:18:52 [DEBUG]   → Divs: 381, Local: 32, Visit: 25
+19:18:52 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:18:52 [DEBUG]   ✓ Momentum Visitante: 532.85 (25 barras)
+19:18:52 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:18:52 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 532.85
+19:18:52 [INFO] [Tab 0] ⚽ gaziantep-fk-kasimpasa-apuestas-35219303 | EN_JUEGO | Min:52 | 2-1 | BH:1.86 LH:1.89
+19:18:52 [DEBUG] Espera 8.4s antes de siguiente pestaña...
+19:19:00 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:19:00 [DEBUG] Espera 11.0s antes de siguiente pestaña...
+19:19:11 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:19:11 [WARNING] Ciclo tardó 81.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:19:11 [INFO] 
+--- Ciclo #17 ---
+19:19:12 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:19:12 [INFO] [Tab 0] → Extrayendo información del partido...
+19:19:48 [INFO] [Tab 0] → Extrayendo cuotas Match Odds...
+19:19:50 [INFO] [Tab 0]   ✓ Match Odds: Home=1.87/1.88 | Draw=3/3.05 | Away=5.5/5.7
+19:19:50 [INFO] [Tab 0] → Extrayendo cuotas Over/Under...
+19:19:52 [INFO] [Tab 0]   ✓ Over/Under: 8/20 valores capturados
+19:19:52 [INFO] [Tab 0] → Extrayendo cuotas Resultado Correcto...
+19:19:55 [INFO] [Tab 0]   ✓ Resultado Correcto: 10/30 valores capturados
+19:19:55 [INFO] [Tab 0] → Extrayendo estadísticas del partido...
+19:19:55 [DEBUG]   → Buscando pestaña 'Estadísticas del partido'...
+19:19:55 [DEBUG]   ✓ Clic en pestaña 'Estadísticas del partido' (JS click)
+19:19:56 [DEBUG]   → Total iframes encontrados: 7
+19:19:56 [DEBUG]   → Iframe #1: accediendo...
+19:19:56 [DEBUG]     → Encontrados 5 iframes anidados, revisando...
+19:19:56 [DEBUG]       → Iframe anidado #1: accediendo...
+19:19:56 [DEBUG]         - Párrafos encontrados: 46
+19:19:56 [DEBUG]         ✓ Contiene estadísticas! Extrayendo...
+19:19:56 [DEBUG]       × xG rechazado (valores no numéricos): Momentum - Attacking
+19:19:56 [DEBUG]       × Red Cards rechazado (valores no numéricos): Discipline - 0.83
+19:19:56 [DEBUG]       ✓ xG: 0.83 - 0.37
+19:19:56 [DEBUG]       ✓ Opta Points: 92.8 - 60.6
+19:19:56 [DEBUG]       ✓ Possession: 57% - 43%
+19:19:56 [DEBUG]       ✓ Shots: 3 - 4
+19:19:56 [DEBUG]       ✓ Shots On Target: 2 - 1
+19:19:56 [DEBUG]       ✓ Touches in Box: 7 - 7
+19:19:56 [DEBUG]       ✓ Yellow Cards: 1 - 0
+19:19:56 [DEBUG]       ✓ Red Cards: 1 - 0
+19:19:56 [DEBUG]       ✓ Booking Points: 35 - 0
+19:19:56 [DEBUG]       ✓ Total Passes: 277 - 192
+19:19:56 [DEBUG]       ✓ Corners: 1 - 4
+19:19:56 [DEBUG]   ✓✓ Total: 11 estadísticas Summary capturadas
+19:19:56 [INFO] [Tab 0]   ✓ Estadísticas: 22/22 valores capturados
+19:19:56 [INFO] [Tab 0]     - xG: 0.83/0.37 | Opta Points: 92.8/60.6
+19:19:56 [INFO] [Tab 0]     - Posesión: 57/43 | Corners: 1/4
+19:19:56 [INFO] [Tab 0] → Extrayendo volumen matched...
+19:20:09 [INFO] [Tab 0]   ✓ Volumen: No capturado
+19:20:09 [INFO] [Tab 0] → Extrayendo momentum...
+19:20:09 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+19:20:09 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/stats/live-stats/summary?&eventId=94x5041l5
+19:20:09 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=94x5041l
+19:20:13 [DEBUG]   → Divs: 381, Local: 32, Visit: 26
+19:20:13 [DEBUG]   ✓ Momentum Local: 956.57 (32 barras)
+19:20:13 [DEBUG]   ✓ Momentum Visitante: 546.85 (26 barras)
+19:20:13 [INFO] [Tab 0]   ✓ Momentum: 2/2 valores capturados
+19:20:13 [INFO] [Tab 0]     - Local: 956.57 | Visitante: 546.85
+19:20:13 [INFO] [Tab 0] ⚽ gaziantep-fk-kasimpasa-apuestas-35219303 | EN_JUEGO | Min:53 | 2-1 | BH:1.87 LH:1.88
+19:20:13 [DEBUG] Espera 9.6s antes de siguiente pestaña...
+19:20:23 [ERROR] Error al cambiar a pestaña sakaryaspor-erzurum-bb-apuestas-35220926: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:20:23 [DEBUG] Espera 8.1s antes de siguiente pestaña...
+19:20:31 [ERROR] Error al cambiar a pestaña atalanta-us-cremonese-apuestas-35188979: Message: no such window
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x10b5093
+	0x10b50d4
+	0xeab2ce
+	0xf28302
+	0xf18183
+	0xee96c9
+	0xeea484
+	0x1307e34
+	0x13030c9
+	0x1320add
+	0x10cdb38
+	0x10d58ad
+	0x10bd848
+	0x10bda12
+	0x10a75fa
+	0x75db5d49
+	0x779ad5db
+	0x779ad561
+
+19:20:31 [WARNING] Ciclo tardó 79.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+19:20:31 [INFO] 
+--- Ciclo #18 ---
+19:20:31 [DEBUG] ✓ Clic en botón 'Actualizar' con selector: //button[contains(text(), 'Act
+19:20:32 [INFO] [Tab 0] → Extrayendo información del partido...
+19:20:35 [INFO] Señal de parada recibida. Finalizando ciclo actual...
+19:20:35 [ERROR] Error fatal: ('Connection aborted.', ConnectionResetError(10054, 'Se ha forzado la interrupción de una conexión existente por el host remoto', None, 10054, None))
+Traceback (most recent call last):
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1745, in main
+    ciclo_captura(driver, tabs, writer)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1651, in ciclo_captura
+    datos = capturar_pestaña(driver, tab_info)
+            ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 1445, in capturar_pestaña
+    info = extraer_info_partido(driver)
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 496, in extraer_info_partido
+    info["evento"] = buscar_elemento_texto(driver, SELECTORES["event_name"], timeout=3)
+                     ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 263, in buscar_elemento_texto
+    elem = WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\support\wait.py", line 112, in until
+    value = method(self._driver)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\support\expected_conditions.py", line 92, in _predicate
+    return driver.find_element(*locator)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 802, in find_element
+    return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 429, in execute
+    response = cast(RemoteConnection, self.command_executor).execute(driver_command, params)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 406, in execute
+    return self._request(command_info[0], url, body=data)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 430, in _request
+    response = self._conn.request(method, url, body=body, headers=headers, timeout=self._client_config.timeout)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\_request_methods.py", line 143, in request
+    return self.request_encode_body(
+           ~~~~~~~~~~~~~~~~~~~~~~~~^
+        method, url, fields=fields, headers=headers, **urlopen_kw
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\_request_methods.py", line 278, in request_encode_body
+    return self.urlopen(method, url, **extra_kw)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\poolmanager.py", line 457, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\util\retry.py", line 490, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\util\util.py", line 38, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\agonz\miniconda3\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\agonz\miniconda3\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'Se ha forzado la interrupción de una conexión existente por el host remoto', None, 10054, None))
+19:20:35 [INFO] Cerrando...
+19:20:35 [INFO] Archivos CSV cerrados correctamente.
+19:20:52 [INFO] Observador finalizado. Revisa los CSV en la carpeta de salida.

@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr:*)",
+      "Bash(pip install:*)",
+      "Bash(python main.py:*)",
+      "Bash(timeout:*)",
+      "Bash(exit:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_run_code",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(python -c \"import os; [os.remove\\(f''data/{f}''\\) for f in [''partido_utrecht-feyenoord-apuestas-35189654.csv'', ''unificado.csv''] if os.path.exists\\(f''data/{f}''\\)]\")",
+      "Bash(ls:*)",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(del \"C:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\analyze_heights.py\")",
+      "mcp__plugin_playwright_playwright__browser_tabs",
+      "Bash(wmic process:*)",
+      "Bash(tasklist:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(start \"\" python main.py)",
+      "Bash(powershell:*)",
+      "Bash(start:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(ps:*)",
+      "Bash(taskkill:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:www.betfair.es)",
+      "Bash(cmd /c \"tasklist | findstr python.exe\")"
+    ]
+  }
+}

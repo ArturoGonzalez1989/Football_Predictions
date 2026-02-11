@@ -1,0 +1,503 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e148]:
+      - table [ref=e149]:
+        - rowgroup [ref=e150]:
+          - row "Betfair Home Ayuda Iniciar sesión Regístrate Recordarme ¿Has olvidado tu nombre de usuario / contraseña ?" [ref=e151]:
+            - cell "Betfair Home" [ref=e152]:
+              - link "Betfair Home" [ref=e153] [cursor=pointer]:
+                - /url: https://www.betfair.es/sport/
+            - cell "Ayuda" [ref=e154]:
+              - link "Ayuda" [ref=e157] [cursor=pointer]:
+                - /url: https://support.betfair.es/app/home/
+            - cell [ref=e158]
+            - cell "Iniciar sesión Regístrate Recordarme ¿Has olvidado tu nombre de usuario / contraseña ?" [ref=e161]:
+              - link "Sitio de Intercambio para móviles" [ref=e162] [cursor=pointer]:
+                - /url: https://promociones.betfair.es/es-download-free-apps/
+              - generic [ref=e166]:
+                - generic [ref=e167]:
+                  - textbox "Introduce tu nombre de usuario" [ref=e168]:
+                    - /placeholder: correo electrónico/nombre de usuario
+                  - textbox "Introduce tu contraseña" [ref=e169]:
+                    - /placeholder: contraseña
+                - button "Iniciar sesión" [ref=e172] [cursor=pointer]
+                - link "Regístrate" [ref=e174] [cursor=pointer]:
+                  - /url: https://btfr.co/linker/join-now-es-exc
+                - generic [ref=e175]:
+                  - generic [ref=e177]:
+                    - checkbox "Recordarme" [ref=e178]
+                    - text: Recordarme
+                  - generic [ref=e179]:
+                    - text: ¿Has olvidado tu
+                    - link "nombre de usuario" [ref=e180] [cursor=pointer]:
+                      - /url: https://identitysso.betfair.es/view/recoverusername?fromSSC=1
+                    - text: /
+                    - link "contraseña" [ref=e181] [cursor=pointer]:
+                      - /url: https://identitysso.betfair.es/view/recoverpassword?fromSSC=1&product=exchange-eds&redirectMethod=GET&url=https://www.betfair.es/exchange/plus/inplay/all
+                    - text: "?"
+            - cell
+            - cell [ref=e182]
+      - generic [ref=e189]:
+        - link "Juego más seguro" [ref=e191] [cursor=pointer]:
+          - /url: https://juegoresponsable.betfair.es
+        - list [ref=e192]:
+          - listitem [ref=e193]:
+            - link "Sportsbook" [ref=e194] [cursor=pointer]:
+              - /url: https://www.betfair.es/sport/
+          - listitem [ref=e195] [cursor=pointer]:
+            - link "Exchange" [ref=e196]:
+              - /url: https://www.betfair.es/exchange
+          - listitem [ref=e197]:
+            - link "Casino" [ref=e198] [cursor=pointer]:
+              - /url: https://casino.betfair.es/
+          - listitem [ref=e199]:
+            - link "Casino en vivo" [ref=e200] [cursor=pointer]:
+              - /url: https://casino.betfair.es/p/casino-en-vivo
+          - listitem [ref=e201]:
+            - link "Arcade" [ref=e202] [cursor=pointer]:
+              - /url: https://arcade.betfair.es/
+          - listitem [ref=e203]:
+            - link "Poker" [ref=e204] [cursor=pointer]:
+              - /url: https://poker.betfair.es
+    - generic [ref=e21]:
+      - list [ref=e206]:
+        - listitem:
+          - link "Inicio" [ref=e207] [cursor=pointer]:
+            - /url: .
+        - listitem:
+          - link "En Juego" [ref=e208] [cursor=pointer]:
+            - /url: inplay
+        - listitem:
+          - link "Cash Out" [ref=e209] [cursor=pointer]:
+            - /url: cashout
+        - listitem:
+          - link "Crear Apuesta" [ref=e210] [cursor=pointer]:
+            - /url: https://promociones.betfair.es/prs/combipartido
+        - listitem:
+          - link "Fútbol" [ref=e211] [cursor=pointer]:
+            - /url: es/fútbol-apuestas-1
+        - listitem:
+          - link "Tenis" [ref=e212] [cursor=pointer]:
+            - /url: es/tenis-apuestas-2
+        - listitem:
+          - link "Baloncesto" [ref=e213] [cursor=pointer]:
+            - /url: es/baloncesto-apuestas-7522
+        - listitem:
+          - link "Promociones" [ref=e214] [cursor=pointer]:
+            - /url: https://promos.betfair.es/sport
+        - listitem:
+          - link "Blog" [ref=e215] [cursor=pointer]:
+            - /url: https://apuestas.betfair.es/
+      - button "Ajustes" [ref=e216] [cursor=pointer]:
+        - generic [ref=e217]: Ajustes
+        - img [ref=e218]
+  - generic [ref=e31]:
+    - generic [ref=e32]:
+      - generic [ref=e39] [cursor=pointer]:
+        - text: Ocultar menú
+        - img [ref=e41]
+      - generic [ref=e220] [cursor=pointer]:
+        - text: Mis mercados
+        - img [ref=e222]
+      - generic [ref=e224]:
+        - generic [ref=e225] [cursor=pointer]: Deportes
+        - list [ref=e229]:
+          - listitem [ref=e230]:
+            - list [ref=e236]:
+              - listitem [ref=e237]:
+                - link "Baloncesto" [ref=e238] [cursor=pointer]:
+                  - /url: es/baloncesto-apuestas-7522
+              - listitem [ref=e239]:
+                - link "Fútbol" [ref=e240] [cursor=pointer]:
+                  - /url: es/fútbol-apuestas-1
+      - list [ref=e242]:
+        - listitem [ref=e243] [cursor=pointer]:
+          - link "Deportes en TV" [ref=e244]:
+            - /url: http://tvguide.betfair.com/espanol/tv
+    - generic [ref=e69]:
+      - generic [ref=e71]:
+        - main [ref=e74]:
+          - generic [ref=e76]:
+            - heading "En juego" [level=2] [ref=e245]
+            - navigation "In-Play sports" [ref=e246]:
+              - link "Todos" [ref=e248] [cursor=pointer]:
+                - /url: /exchange/plus/inplay/all
+              - link "Fútbol" [ref=e250] [cursor=pointer]:
+                - /url: /exchange/plus/inplay/football
+          - generic [ref=e79]:
+            - generic:
+              - generic "Ver por:" [ref=e80]
+              - generic [ref=e83]:
+                - generic [ref=e84] [cursor=pointer]: Fecha
+                - img
+            - generic [ref=e85]:
+              - text: "Filtrar por:"
+              - generic [ref=e86] [cursor=pointer]: En TV
+              - generic [ref=e87] [cursor=pointer]: Betfair Video
+              - generic [ref=e90] [cursor=pointer]:
+                - text: Dinero igualado
+                - img [ref=e91]
+          - generic [ref=e251]:
+            - generic [ref=e252] [cursor=pointer]:
+              - generic [ref=e253]:
+                - img [ref=e254]
+                - text: Fútbol
+              - generic [ref=e256]:
+                - generic [ref=e258]:
+                  - text: Combinadas
+                  - img [ref=e259]
+                - text: .
+              - text: .
+            - generic [ref=e261]:
+              - table [ref=e264]:
+                - rowgroup [ref=e265]:
+                  - row "En juego 1 X 2" [ref=e266]:
+                    - columnheader "En juego" [ref=e267]
+                    - columnheader "1" [ref=e268]
+                    - columnheader "X" [ref=e269]
+                    - columnheader "2" [ref=e270]
+                    - columnheader [ref=e271]
+                - rowgroup [ref=e272]:
+                  - row "DESC. 0 0 Sparta Prague Femenino FK Austria Wien (W) 2.2 €36 2.4 €127 2.64 €24 2.8 €18 4.8 €74 5.7 €64 Reglas" [ref=e273]:
+                    - cell "DESC. 0 0 Sparta Prague Femenino FK Austria Wien (W)" [ref=e274]:
+                      - link "DESC. 0 0 Sparta Prague Femenino FK Austria Wien (W)" [ref=e275] [cursor=pointer]:
+                        - /url: es/fútbol/uefa-europa-cup-femenina/sparta-prague-femenino-fk-austria-wien-w-apuestas-35250527
+                        - generic [ref=e277]:
+                          - generic [ref=e281]:
+                            - generic [ref=e284]: DESC.
+                            - generic [ref=e288]:
+                              - generic [ref=e289]: "0"
+                              - generic [ref=e290]: "0"
+                          - list [ref=e291]:
+                            - listitem "Sparta Prague Femenino" [ref=e292]
+                            - listitem "FK Austria Wien (W)" [ref=e293]
+                          - list [ref=e294]
+                    - cell "2.2 €36 2.4 €127 2.64 €24 2.8 €18 4.8 €74 5.7 €64" [ref=e295]:
+                      - generic [ref=e296]:
+                        - button "2.2 €36" [ref=e297] [cursor=pointer]:
+                          - generic [ref=e298]: "2.2"
+                          - generic [ref=e299]: €36
+                        - button "2.4 €127" [ref=e300] [cursor=pointer]:
+                          - generic [ref=e301]: "2.4"
+                          - generic [ref=e302]: €127
+                      - generic [ref=e303]:
+                        - button "2.64 €24" [ref=e304] [cursor=pointer]:
+                          - generic [ref=e305]: "2.64"
+                          - generic [ref=e306]: €24
+                        - button "2.8 €18" [ref=e307] [cursor=pointer]:
+                          - generic [ref=e308]: "2.8"
+                          - generic [ref=e309]: €18
+                      - generic [ref=e310]:
+                        - button "4.8 €74" [ref=e311] [cursor=pointer]:
+                          - generic [ref=e312]: "4.8"
+                          - generic [ref=e313]: €74
+                        - button "5.7 €64" [ref=e314] [cursor=pointer]:
+                          - generic [ref=e315]: "5.7"
+                          - generic [ref=e316]: €64
+                    - cell "Reglas" [ref=e317]:
+                      - generic "Reglas" [ref=e318] [cursor=pointer]
+              - table [ref=e321]:
+                - rowgroup [ref=e322]:
+                  - row "Próximamente 1 X 2" [ref=e323]:
+                    - columnheader "Próximamente" [ref=e324]
+                    - columnheader "1" [ref=e325]
+                    - columnheader "X" [ref=e326]
+                    - columnheader "2" [ref=e327]
+                    - columnheader [ref=e328]
+                - rowgroup [ref=e329]:
+                  - row "Comienza en 25' Cong An Nhan Dan Tampines Rovers 1.28 €36 1.3 €297 6.6 €15 7.6 €15 10.5 €33 14 €11 Reglas" [ref=e330]:
+                    - cell "Comienza en 25' Cong An Nhan Dan Tampines Rovers" [ref=e331]:
+                      - link "Comienza en 25' Cong An Nhan Dan Tampines Rovers" [ref=e332] [cursor=pointer]:
+                        - /url: es/fútbol/afc-champions-league-2/cong-an-nhan-dan-tampines-rovers-apuestas-35249215
+                        - generic [ref=e334]:
+                          - generic [ref=e342]: Comienza en 25'
+                          - list [ref=e343]:
+                            - listitem "Cong An Nhan Dan" [ref=e344]
+                            - listitem "Tampines Rovers" [ref=e345]
+                          - list [ref=e346]
+                    - cell "1.28 €36 1.3 €297 6.6 €15 7.6 €15 10.5 €33 14 €11" [ref=e347]:
+                      - generic [ref=e348]:
+                        - button "1.28 €36" [ref=e349] [cursor=pointer]:
+                          - generic [ref=e350]: "1.28"
+                          - generic [ref=e351]: €36
+                        - button "1.3 €297" [ref=e352] [cursor=pointer]:
+                          - generic [ref=e353]: "1.3"
+                          - generic [ref=e354]: €297
+                      - generic [ref=e355]:
+                        - button "6.6 €15" [ref=e356] [cursor=pointer]:
+                          - generic [ref=e357]: "6.6"
+                          - generic [ref=e358]: €15
+                        - button "7.6 €15" [ref=e359] [cursor=pointer]:
+                          - generic [ref=e360]: "7.6"
+                          - generic [ref=e361]: €15
+                      - generic [ref=e362]:
+                        - button "10.5 €33" [ref=e363] [cursor=pointer]:
+                          - generic [ref=e364]: "10.5"
+                          - generic [ref=e365]: €33
+                        - button "14 €11" [ref=e366] [cursor=pointer]:
+                          - generic [ref=e367]: "14"
+                          - generic [ref=e368]: €11
+                    - cell "Reglas" [ref=e369]:
+                      - generic "Reglas" [ref=e370] [cursor=pointer]
+                  - row "Comienza en 25' Ratchaburi Persib Bandung 2.52 €34 2.66 €17 3.45 €73 3.65 €58 2.96 €121 3.15 €57 Reglas" [ref=e371]:
+                    - cell "Comienza en 25' Ratchaburi Persib Bandung" [ref=e372]:
+                      - link "Comienza en 25' Ratchaburi Persib Bandung" [ref=e373] [cursor=pointer]:
+                        - /url: es/fútbol/afc-champions-league-2/ratchaburi-persib-bandung-apuestas-35249210
+                        - generic [ref=e375]:
+                          - generic [ref=e383]: Comienza en 25'
+                          - list [ref=e384]:
+                            - listitem "Ratchaburi" [ref=e385]
+                            - listitem "Persib Bandung" [ref=e386]
+                          - list [ref=e387]
+                    - cell "2.52 €34 2.66 €17 3.45 €73 3.65 €58 2.96 €121 3.15 €57" [ref=e388]:
+                      - generic [ref=e389]:
+                        - button "2.52 €34" [ref=e390] [cursor=pointer]:
+                          - generic [ref=e391]: "2.52"
+                          - generic [ref=e392]: €34
+                        - button "2.66 €17" [ref=e393] [cursor=pointer]:
+                          - generic [ref=e394]: "2.66"
+                          - generic [ref=e395]: €17
+                      - generic [ref=e396]:
+                        - button "3.45 €73" [ref=e397] [cursor=pointer]:
+                          - generic [ref=e398]: "3.45"
+                          - generic [ref=e399]: €73
+                        - button "3.65 €58" [ref=e400] [cursor=pointer]:
+                          - generic [ref=e401]: "3.65"
+                          - generic [ref=e402]: €58
+                      - generic [ref=e403]:
+                        - button "2.96 €121" [ref=e404] [cursor=pointer]:
+                          - generic [ref=e405]: "2.96"
+                          - generic [ref=e406]: €121
+                        - button "3.15 €57" [ref=e407] [cursor=pointer]:
+                          - generic [ref=e408]: "3.15"
+                          - generic [ref=e409]: €57
+                    - cell "Reglas" [ref=e410]:
+                      - generic "Reglas" [ref=e411] [cursor=pointer]
+                  - row "Hoy 14:45 Arkadag FK Al Nassr 6.2 €13 7.2 €18 4.3 €59 4.7 €20 1.58 €19 1.62 €17 Reglas" [ref=e412]:
+                    - cell "Hoy 14:45 Arkadag FK Al Nassr" [ref=e413]:
+                      - link "Hoy 14:45 Arkadag FK Al Nassr" [ref=e414] [cursor=pointer]:
+                        - /url: es/fútbol/afc-champions-league-2/arkadag-fk-al-nassr-apuestas-35249235
+                        - generic [ref=e416]:
+                          - generic [ref=e424]: Hoy 14:45
+                          - list [ref=e425]:
+                            - listitem "Arkadag FK" [ref=e426]
+                            - listitem "Al Nassr" [ref=e427]
+                          - list [ref=e428]
+                    - cell "6.2 €13 7.2 €18 4.3 €59 4.7 €20 1.58 €19 1.62 €17" [ref=e429]:
+                      - generic [ref=e430]:
+                        - button "6.2 €13" [ref=e431] [cursor=pointer]:
+                          - generic [ref=e432]: "6.2"
+                          - generic [ref=e433]: €13
+                        - button "7.2 €18" [ref=e434] [cursor=pointer]:
+                          - generic [ref=e435]: "7.2"
+                          - generic [ref=e436]: €18
+                      - generic [ref=e437]:
+                        - button "4.3 €59" [ref=e438] [cursor=pointer]:
+                          - generic [ref=e439]: "4.3"
+                          - generic [ref=e440]: €59
+                        - button "4.7 €20" [ref=e441] [cursor=pointer]:
+                          - generic [ref=e442]: "4.7"
+                          - generic [ref=e443]: €20
+                      - generic [ref=e444]:
+                        - button "1.58 €19" [ref=e445] [cursor=pointer]:
+                          - generic [ref=e446]: "1.58"
+                          - generic [ref=e447]: €19
+                        - button "1.62 €17" [ref=e448] [cursor=pointer]:
+                          - generic [ref=e449]: "1.62"
+                          - generic [ref=e450]: €17
+                    - cell "Reglas" [ref=e451]:
+                      - generic "Reglas" [ref=e452] [cursor=pointer]
+                  - row "Hoy 16:00 Al Ahly Cairo Ismaily 1.25 €254 1.27 €22 5.9 €24 6.6 €47 19.5 €12 24 €14 Reglas" [ref=e453]:
+                    - cell "Hoy 16:00 Al Ahly Cairo Ismaily" [ref=e454]:
+                      - link "Hoy 16:00 Al Ahly Cairo Ismaily" [ref=e455] [cursor=pointer]:
+                        - /url: es/fútbol/egipto-premier-league/al-ahly-cairo-ismaily-apuestas-35227552
+                        - generic [ref=e457]:
+                          - generic [ref=e465]: Hoy 16:00
+                          - list [ref=e466]:
+                            - listitem "Al Ahly Cairo" [ref=e467]
+                            - listitem "Ismaily" [ref=e468]
+                          - list [ref=e469]
+                    - cell "1.25 €254 1.27 €22 5.9 €24 6.6 €47 19.5 €12 24 €14" [ref=e470]:
+                      - generic [ref=e471]:
+                        - button "1.25 €254" [ref=e472] [cursor=pointer]:
+                          - generic [ref=e473]: "1.25"
+                          - generic [ref=e474]: €254
+                        - button "1.27 €22" [ref=e475] [cursor=pointer]:
+                          - generic [ref=e476]: "1.27"
+                          - generic [ref=e477]: €22
+                      - generic [ref=e478]:
+                        - button "5.9 €24" [ref=e479] [cursor=pointer]:
+                          - generic [ref=e480]: "5.9"
+                          - generic [ref=e481]: €24
+                        - button "6.6 €47" [ref=e482] [cursor=pointer]:
+                          - generic [ref=e483]: "6.6"
+                          - generic [ref=e484]: €47
+                      - generic [ref=e485]:
+                        - button "19.5 €12" [ref=e486] [cursor=pointer]:
+                          - generic [ref=e487]: "19.5"
+                          - generic [ref=e488]: €12
+                        - button "24 €14" [ref=e489] [cursor=pointer]:
+                          - generic [ref=e490]: "24"
+                          - generic [ref=e491]: €14
+                    - cell "Reglas" [ref=e492]:
+                      - generic "Reglas" [ref=e493] [cursor=pointer]
+            - link "Ver todos Fútbol En juego" [ref=e495] [cursor=pointer]:
+              - /url: es/fútbol-apuestas-1/inplay
+              - text: Ver todos Fútbol En juego
+              - img [ref=e496]
+        - contentinfo [ref=e501]:
+          - generic [ref=e503]:
+            - paragraph [ref=e506]:
+              - strong [ref=e507]: "Advertencia:"
+              - text: al margen de que la puntuación actual, el tiempo transcurrido, imágenes y otros datos provistos en este sitio se consigan de fuentes "en directo" por parte de terceros, ten en cuenta que esta información podría sufrir ciertos retrasos y/o ser poco precisa. Debes saber además que es posible que otros usuarios de Betfair tengan acceso a datos más actualizados o precisos que los que se muestran en el sitio web de Betfair. Las apuestas que hagas con estos datos están bajo tu responsabilidad. Betfair proporciona estos datos TAL CUALES sin ninguna garantía de que sean precisos, estén completos o sean actuales, y no se hace responsable de ninguna pérdida (directa o indirecta) que puedas sufrir por confiar en ellos.
+            - generic [ref=e508]:
+              - generic [ref=e509]:
+                - list [ref=e510]:
+                  - listitem [ref=e511] [cursor=pointer]:
+                    - link "Autoexclusión" [ref=e512]:
+                      - /url: https://myaccount.betfair.es/playerprotection#selfExclusion
+                  - listitem [ref=e513] [cursor=pointer]:
+                    - link "Ayuda y Contacto" [ref=e514]:
+                      - /url: https://support.betfair.es/app/home/
+                  - listitem [ref=e515] [cursor=pointer]:
+                    - link "Seguridad" [ref=e516]:
+                      - /url: https://www.betfair.es/es/conocenos/#Seguridad
+                  - listitem [ref=e517] [cursor=pointer]:
+                    - link "Acerca de Betfair" [ref=e518]:
+                      - /url: https://www.betfair.es/es/conocenos/
+                  - listitem [ref=e519] [cursor=pointer]:
+                    - link "Información Corporativa" [ref=e520]:
+                      - /url: https://www.flutter.com/
+                  - listitem [ref=e521] [cursor=pointer]:
+                    - link "Betfair es una marca del grupo Flutter" [ref=e522]:
+                      - /url: ""
+                  - listitem [ref=e523] [cursor=pointer]: Juego más seguro
+                - generic [ref=e524]:
+                  - link "Facebook" [ref=e525] [cursor=pointer]:
+                    - /url: https://www.facebook.com/BetfairES
+                    - generic: Facebook
+                  - link "X" [ref=e527] [cursor=pointer]:
+                    - /url: https://x.com/Betfair_ES
+                    - generic: X
+              - generic [ref=e530]:
+                - generic [ref=e531]:
+                  - link "Registro General de Interdicciones de Acceso al Juego (RGIAJ)" [ref=e532] [cursor=pointer]:
+                    - /url: https://www.ordenacionjuego.es/participantes-juego/juego-seguro/rgiaj
+                  - link "Over 18s only" [ref=e533] [cursor=pointer]:
+                    - /url: https://juegoresponsable.betfair.es/rgbf-es-protecting-minors/
+                  - link "Juego Autorizado" [ref=e534] [cursor=pointer]:
+                    - /url: https://www.ordenacionjuego.es/participantes-juego/juego-autorizado/
+                  - link "Juego Seguro" [ref=e535] [cursor=pointer]:
+                    - /url: https://www.ordenacionjuego.es/participantes-juego/juego-seguro/
+                  - link "FEJAR - Federación Española de Jugadores de Azar Rehabilitados" [ref=e536] [cursor=pointer]:
+                    - /url: https://fejar.org/
+                  - link "Gordon Moody - Therapy for Gambling Addiction" [ref=e537] [cursor=pointer]:
+                    - /url: https://www.gamblingtherapy.org/es
+                - generic [ref=e538]: 11:50
+              - generic [ref=e540]:
+                - text: Se prohíbe la participación de menores y personas consideradas incapaces legalmente o por orden judicial. Betfair opera en España en virtud de licencias otorgadas y reguladas por la DGOJ (Dirección General de Ordenación del Juego).
+                - link "Juegos autorizados" [ref=e541] [cursor=pointer]:
+                  - /url: https://www.ordenacionjuego.es/es/op-BetfairInternational
+                - text: "Betfair International Spain, S.A. Paseo de las Palmeras, 10, Entreplanta, oficina 1, CP: 51001, Ceuta, España. ASENSI ABOGADOS. Avenida Jaime III, 1, Primera Planta, 07012, Palma de Mallorca, Islas Baleares (España)"
+              - list [ref=e544]:
+                - listitem [ref=e545] [cursor=pointer]:
+                  - link "Política de privacidad" [ref=e546]:
+                    - /url: "https://www.betfair.es/aboutUs/Privacy.Policy/ "
+                - listitem [ref=e547] [cursor=pointer]:
+                  - link "Política de cookies" [ref=e548]:
+                    - /url: https://www.betfair.es/aboutUs/Cookie.Policy/
+                - listitem [ref=e549] [cursor=pointer]:
+                  - link "Accesibilidad" [ref=e550]:
+                    - /url: https://support.betfair.es/app/answers/detail/accesibilidad
+                - listitem [ref=e551] [cursor=pointer]:
+                  - link "Centro de preferencia de privacidad" [ref=e552]:
+                    - /url: javascript:Optanon.ToggleInfoDisplay();
+                - listitem [ref=e553] [cursor=pointer]:
+                  - link "Reglas y Regulaciones" [ref=e554]:
+                    - /url: https://www.betfair.es/es/conocenos/#reglas
+                - listitem [ref=e555] [cursor=pointer]:
+                  - link "Términos y condiciones" [ref=e556]:
+                    - /url: https://www.betfair.es/es/conocenos/#terminos
+                - listitem [ref=e557] [cursor=pointer]:
+                  - link "El juego puede ser adictivo. Por favor, juega con responsabilidad." [ref=e558]:
+                    - /url: https://juegoresponsable.betfair.es/
+                - listitem [ref=e559] [cursor=pointer]:
+                  - link "Vigilancia a menores" [ref=e560]:
+                    - /url: https://juegoresponsable.betfair.es/rgbf-es-protecting-minors/
+              - link "Betfair Página principal" [ref=e562] [cursor=pointer]:
+                - /url: https://sports.betfair.es/
+      - generic [ref=e97]:
+        - generic [ref=e565]:
+          - heading "Enlaces rápidos" [level=1] [ref=e566]
+          - link "1 En juego ahora" [ref=e567] [cursor=pointer]:
+            - /url: inplay
+            - generic [ref=e568]: "1"
+            - generic [ref=e569]: En juego ahora
+            - img [ref=e570]
+          - list [ref=e572]:
+            - listitem [ref=e573]:
+              - link "LaLiga" [ref=e574] [cursor=pointer]:
+                - /url: https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/la-liga-espa%C3%B1ola-apuestas-117
+                - img [ref=e575]
+                - generic [ref=e577]: LaLiga
+                - img [ref=e578]
+            - listitem [ref=e580]:
+              - link "Premier League" [ref=e581] [cursor=pointer]:
+                - /url: https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/premier-league-inglesa-apuestas-10932509
+                - img [ref=e582]
+                - generic [ref=e584]: Premier League
+                - img [ref=e585]
+            - listitem [ref=e587]:
+              - link "Segunda División" [ref=e588] [cursor=pointer]:
+                - /url: https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/segunda-divisi%C3%B3n-espa%C3%B1ola-apuestas-12204313
+                - img [ref=e589]
+                - generic [ref=e591]: Segunda División
+                - img [ref=e592]
+            - listitem [ref=e594]:
+              - link "Champions League" [ref=e595] [cursor=pointer]:
+                - /url: https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/uefa-champions-league-apuestas-228
+                - img [ref=e596]
+                - generic [ref=e598]: Champions League
+                - img [ref=e599]
+            - listitem [ref=e601]:
+              - link "Fútbol de hoy" [ref=e602] [cursor=pointer]:
+                - /url: https://www.betfair.es/exchange/plus/es/fútbol-apuestas-1/today
+                - img [ref=e603]
+                - generic [ref=e605]: Fútbol de hoy
+                - img [ref=e606]
+            - listitem [ref=e608]:
+              - link "Tenis de hoy" [ref=e609] [cursor=pointer]:
+                - /url: https://www.betfair.es/exchange/plus/es/tenis-apuestas-2/today
+                - img [ref=e610]
+                - generic [ref=e612]: Tenis de hoy
+                - img [ref=e613]
+            - listitem [ref=e615]:
+              - link "Casino en vivo" [ref=e616] [cursor=pointer]:
+                - /url: https://casino.betfair.es/p/casino-en-vivo
+                - img [ref=e617]
+                - generic [ref=e619]: Casino en vivo
+                - img [ref=e620]
+            - listitem [ref=e622]:
+              - link "Baloncesto de hoy" [ref=e623] [cursor=pointer]:
+                - /url: https://www.betfair.es/exchange/plus/es/baloncesto-apuestas-7522/today
+                - img [ref=e624]
+                - generic [ref=e626]: Baloncesto de hoy
+                - img [ref=e627]
+        - generic [ref=e631]:
+          - generic [ref=e632]: Juega
+          - generic [ref=e633]:
+            - img "Baron Rojo" [ref=e636]
+            - img "En Vivo Ruleta Betfair" [ref=e639]
+            - img "Kick it!™ Multiplayer" [ref=e642]
+            - img "Ruleta Relámpago en Vivo" [ref=e645]
+            - img "Betfair Gates of Olympus" [ref=e648]
+            - img "Mega Fire Blaze Roulette Live" [ref=e651]
+            - img "Sweet Bonanza" [ref=e654]
+            - img "Mega Fireblaze Big Circus" [ref=e657]
+            - img "La Mina de Oro Plus" [ref=e660]
+            - img "Age of the Gods God of Storms" [ref=e663]
+            - img "Book of Dead" [ref=e666]
+            - img "Betfair Big Bass Bonanza" [ref=e669]
+          - generic [ref=e671] [cursor=pointer]:
+            - text: Mostrar menos
+            - img [ref=e672]

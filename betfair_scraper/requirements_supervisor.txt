@@ -1,0 +1,15 @@
+# Dependencias del Supervisor Agent
+# Instalar con: pip install -r requirements_supervisor.txt
+
+# Core dependencies (ya deberías tenerlas del scraper principal)
+pandas>=1.5.0
+selenium>=4.0.0
+
+# Playwright para descubrimiento de partidos
+playwright>=1.40.0
+
+# Monitoring y gestión de procesos
+psutil>=5.9.0
+
+# Nota: Después de instalar playwright, ejecutar:
+# playwright install chromium
