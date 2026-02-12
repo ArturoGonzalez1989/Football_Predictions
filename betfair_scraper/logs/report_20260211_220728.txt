@@ -1,0 +1,33 @@
+
+============================================================
+INFORME DE SUPERVISION
+============================================================
+
+Hora: 2026-02-11 22:07:28
+
+1. PARTIDOS CONFIGURADOS
+----------------------------------------
+   Total: 0 partidos
+   Activos: 0
+   Futuros: 0
+
+2. DATOS CAPTURADOS
+----------------------------------------
+   CSVs de partidos: 56
+   Filas totales: 420
+   Filas con cuotas: 88.6%
+   Filas con stats: 36.0%
+
+3. SALUD DEL SCRAPER
+----------------------------------------
+   Errores recientes: 0
+   Warnings recientes: 4
+   Capturas exitosas: 4
+   Ultima actividad: 22:07:19 [INFO] Cic
+
+4. ESTADO GENERAL
+----------------------------------------
+   STATUS: [ATENCION] Revisar problemas detectados
+   - WARNING: Sin partidos en games.csv
+
+============================================================

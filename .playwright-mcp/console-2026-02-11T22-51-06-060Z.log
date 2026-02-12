@@ -1,0 +1,8 @@
+[     210ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie1eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
+[    3017ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0
+[    3418ms] [WARNING] Error while trying to get football data soccerEventStats response invalid @ https://ie1eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[    4937ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/serie-a-brasil/s%C3%A3o-paulo-gr%C3%AAmio-apuestas-35229905:0
+[    4937ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[   14974ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0
+[   50605ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/serie-a-brasil/s%C3%A3o-paulo-gr%C3%AAmio-apuestas-35229905:0
+[   50606ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0

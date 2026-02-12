@@ -590,3 +590,162 @@ Guarda en la memoria del proyecto:
    - SIEMPRE reporta sugerencias de mejora con contexto claro
    - Propuestas bien estructuradas ayudan al usuario a tomar decisiones
    - Ejemplo: "Detecto que Betfair ahora publica 'momentum' para Champions League - ¿Deberías capturarlo?"
+
+8. **VERIFICACIÓN MANUAL CON PLAYWRIGHT - PROTOCOLO OBLIGATORIO** (11/02/2026):
+   - **PROBLEMA**: validate_stats.py puede reportar FALSOS POSITIVOS
+   - **CAUSA**: Detecta estadísticas en ligas sin cobertura Opta (Europa Cup Femenina, ligas menores)
+   - **SOLUCIÓN**: SIEMPRE verificar con tus propios ojos ANTES de reportar al usuario
+
+   **PROTOCOLO DE VERIFICACIÓN OBLIGATORIA:**
+   1. Si validate_stats.py reporta "brecha de datos" → NO reportar inmediatamente
+   2. Usar MCP Playwright para verificar CADA partido reportado:
+      ```
+      - Navegar a la URL del partido en Betfair
+      - Esperar 5 segundos (carga dinámica)
+      - Buscar botón "Estadísticas del partido" o "Enfrentamientos directos"
+      - Si hay botón de estadísticas: hacer clic y verificar contenido
+      - Tomar captura de pantalla para evidencia
+      ```
+   3. Clasificar cada partido según LO QUE VES:
+      - **✅ Estadísticas disponibles**: Panel con "Powered by Opta", xG, Opta Points, Possession visible
+      - **❌ Sin estadísticas**: Modal dice "No hay estadísticas" o no hay panel de stats
+      - **⚠️ Requiere login**: Página pide iniciar sesión (registrar como "no verificable")
+
+   4. **SOLO reportar al usuario** partidos donde:
+      - Confirmas visualmente que SÍ hay estadísticas Opta disponibles
+      - Y el scraper NO las está capturando
+      - Con evidencia: capturas de pantalla + análisis
+
+   5. **NO reportar como problema** cuando:
+      - Betfair NO publica estadísticas para esa liga (Europa Cup Fem, ligas menores)
+      - Es normal y esperado que no se capturen
+      - Reportar como: "[INFO] Liga sin cobertura Opta - comportamiento esperado"
+
+   **IMPORTANTE - EVITAR FALSOS POSITIVOS:**
+   - validate_stats.py es una herramienta útil pero NO infalible
+   - Tu verificación visual con Playwright es la VERDAD ABSOLUTA
+   - NUNCA reportar "brecha de datos" sin verificación visual previa
+   - Si validate_stats.py dice "hay estadísticas" pero tú NO las ves → Es falso positivo
+
+   **LIGAS CON COBERTURA OPTA CONFIRMADA:**
+   - ✅ Eredivisie Holandesa
+   - ✅ Champions League (verificar cada partido)
+   - ✅ Premier League, La Liga, Serie A, Bundesliga, Ligue 1
+   - ❌ UEFA Europa Cup Femenina (sin cobertura)
+   - ❌ Ligas menores asiáticas (Camboya, Tailandia L2/L3)
+
+   **EJEMPLO DE REPORTE CORRECTO:**
+   ```
+   [VERIFICADO CON PLAYWRIGHT]
+
+   Partido: Go Ahead Eagles - Heerenveen (Eredivisie)
+   Estado: ✅ Estadísticas Opta disponibles en Betfair
+   - xG visible: 0.06 - 0.22
+   - Opta Points: 50.6 - 60.4
+   - Tabs: Summary, Momentum, Attacking, Defence
+
+   Problema: Scraper NO está capturando estas estadísticas
+   Evidencia: [captura de pantalla adjunta]
+
+   Acción recomendada: Revisar selectores CSS en main.py
+   ```
+
+9. **ESTADÍSTICAS PRIORITARIAS PARA TRADING DEPORTIVO** (11/02/2026):
+
+   **CONTEXTO**: El objetivo del proyecto es capturar datos para trading deportivo. NO todas las estadísticas tienen el mismo valor.
+
+   **PRIORIDAD CRÍTICA - VIGILAR SIEMPRE:**
+
+   1. **MOMENTUM** ⭐⭐⭐⭐⭐ (MÁXIMA PRIORIDAD)
+      - **POR QUÉ ES CRÍTICO**: Indica qué equipo está dominando EN ESTE MOMENTO
+      - Cambia dinámicamente durante el partido
+      - Afecta DIRECTAMENTE las probabilidades de gol inmediato
+      - **TRADING**: Fundamental para entradas/salidas rápidas
+      - **VALIDACIÓN**: En validate_stats.py, SIEMPRE verificar si Momentum está disponible
+      - **UBICACIÓN EN BETFAIR**: Tab "Momentum" o pestaña principal de estadísticas
+      - **ALERTA MÁXIMA**: Si Momentum está disponible pero NO se captura → REPORTAR INMEDIATAMENTE
+
+   2. **xG (Expected Goals)** ⭐⭐⭐⭐⭐ (MÁXIMA PRIORIDAD)
+      - **POR QUÉ ES CRÍTICO**: Mejor predictor de goles futuros que el marcador actual
+      - Métrica avanzada que indica calidad de ocasiones (no solo cantidad)
+      - **TRADING**: Identifica partidos donde cuotas no reflejan el juego real
+      - Fundamental para estrategia de value betting
+      - **VALIDACIÓN**: Verificar que xG de ambos equipos se capture correctamente
+      - **UBICACIÓN EN BETFAIR**: "Expected Goals" o "xG" en panel principal
+
+   3. **CORNERS (Saques de esquina)** ⭐⭐⭐⭐ (ALTA PRIORIDAD)
+      - **POR QUÉ ES IMPORTANTE**: Hay mercados específicos de corners muy líquidos
+      - Indica dominación territorial
+      - Correlacionado con probabilidad de gol
+      - **TRADING**: Mercado popular con buena liquidez
+      - **VALIDACIÓN**: Verificar corners totales y por tiempo (1H, 2H)
+      - **UBICACIÓN EN BETFAIR**: Estadísticas principales, fácilmente visible
+
+   4. **TARJETAS (Amarillas/Rojas)** ⭐⭐⭐⭐ (ALTA PRIORIDAD)
+      - **POR QUÉ ES IMPORTANTE**: Mercados específicos de tarjetas
+      - Expulsiones cambian completamente el partido
+      - Afecta momentum y probabilidades
+      - **TRADING**: Mercados de tarjetas + impacto en resultado
+      - **VALIDACIÓN**: Verificar tarjetas amarillas y rojas por equipo
+      - **UBICACIÓN EN BETFAIR**: Stats principales, columna de disciplina
+
+   5. **TIROS y TIROS A PUERTA** ⭐⭐⭐ (PRIORIDAD MEDIA-ALTA)
+      - **POR QUÉ ES IMPORTANTE**: Indica presión ofensiva
+      - Útil para mercados "siguiente gol" y "total de goles"
+      - Complementa xG para análisis completo
+      - **TRADING**: Combinado con xG identifica value
+      - **VALIDACIÓN**: Verificar tiros totales y tiros a puerta
+      - **UBICACIÓN EN BETFAIR**: Tab "Attacking" o stats principales
+
+   6. **ATTACKS / DANGEROUS ATTACKS** ⭐⭐⭐ (PRIORIDAD MEDIA)
+      - **POR QUÉ ES ÚTIL**: Indicador de presión constante
+      - Útil para mercados en vivo
+      - Contexto adicional para momentum
+      - **TRADING**: Complementa otras métricas
+      - **UBICACIÓN EN BETFAIR**: Tab "Attacking"
+
+   7. **POSSESSION (Posesión)** ⭐⭐ (PRIORIDAD BAJA)
+      - **POR QUÉ ES SECUNDARIO**: NO correlaciona directamente con goles
+      - Útil solo como contexto (ej: equipo dominante sin eficacia)
+      - **TRADING**: Métrica de contexto, no de decisión
+      - **UBICACIÓN EN BETFAIR**: Stats principales
+
+   **PROTOCOLO DE VALIDACIÓN AJUSTADO:**
+
+   Cuando validate_stats.py reporta "brecha de datos", aplicar el siguiente protocolo:
+
+   1. **Verificar con Playwright** (obligatorio - Lección #8)
+
+   2. **Si confirmas que SÍ hay estadísticas**, PRIORIZAR verificación en este orden:
+      - ¿Se captura MOMENTUM? → Si NO → **ALERTA CRÍTICA**
+      - ¿Se captura xG? → Si NO → **ALERTA CRÍTICA**
+      - ¿Se capturan Corners? → Si NO → **ALERTA ALTA**
+      - ¿Se capturan Tarjetas? → Si NO → **ALERTA ALTA**
+      - ¿Se capturan Tiros? → Si NO → **ALERTA MEDIA**
+      - ¿Se captura Posesión? → Si NO → **INFO** (prioridad baja)
+
+   3. **Reportar al usuario** con priorización clara:
+      ```
+      [ALERTA CRÍTICA] MOMENTUM disponible pero NO capturado
+      - Impacto: Alto - Fundamental para trading en vivo
+      - Acción: URGENTE - Revisar selectores para capturar Momentum
+
+      [ALERTA CRÍTICA] xG disponible pero NO capturado
+      - Impacto: Alto - Métrica clave para value betting
+      - Acción: URGENTE - Revisar selectores para capturar xG
+
+      [ALERTA ALTA] Corners disponibles pero NO capturados
+      - Impacto: Medio-Alto - Mercado popular
+      - Acción: Prioritario - Añadir captura de corners
+      ```
+
+   4. **NO reportar como problema** estadísticas de baja prioridad si las críticas funcionan
+      - Ejemplo: Si Momentum y xG se capturan OK, pero falta posesión → No es urgente
+
+   **RESUMEN PARA VALIDACIÓN:**
+   - **CRÍTICO**: Momentum, xG
+   - **IMPORTANTE**: Corners, Tarjetas
+   - **ÚTIL**: Tiros, Attacks
+   - **CONTEXTO**: Posesión
+
+   **RECORDATORIO**: El objetivo es TRADING DEPORTIVO, no análisis académico. Prioriza métricas que generan DECISIONES DE TRADING, no solo datos descriptivos.

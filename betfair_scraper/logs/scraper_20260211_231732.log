@@ -1,0 +1,105 @@
+23:17:32 [INFO] 📝 Log guardándose en: logs/scraper_20260211_231732.log
+23:17:32 [INFO] Cargados 17 partidos desde games.csv
+23:17:32 [INFO] 📅 MODO SCHEDULING ACTIVADO
+23:17:32 [INFO]    Ventana tracking: 10 min antes → 150 min después
+23:17:32 [INFO]    Total en CSV: 17 partidos
+23:17:32 [INFO]    ✓ Partidos activos ahora: 16
+23:17:32 [INFO]    ⏰ Partidos futuros: 1
+23:17:32 [INFO]    ✅ Partidos finalizados: 0
+23:17:32 [INFO] 
+📋 Próximos partidos a trackear:
+23:17:32 [INFO]       Atletico MG - Remo (en 42 min)
+23:17:32 [INFO] 🚀 Sistema multi-driver: Creando 16 drivers independientes (sin límite de tabs)
+23:17:32 [INFO] 
+Iniciando observador con 16 partidos.
+23:17:32 [INFO] Ciclo: 30s | Output: data/
+23:17:32 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 5 ciclos (scheduling)
+23:17:32 [INFO] 🧹 Limpiando ventanas Betfair antiguas...
+23:17:32 [WARNING] Script de limpieza no encontrado: C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\close_betfair_windows.ps1
+23:17:32 [INFO] Cargados 17 partidos desde games.csv
+23:17:32 [INFO] 
+🚀 Iniciando 16 drivers Chrome (sistema multi-driver paralelo)...
+23:17:32 [INFO] 🔧 Creando driver de login: Aston Villa - Brighton
+23:17:32 [INFO] 🔧 Creando driver para: Aston Villa - Brighton
+23:17:37 [INFO] ✓ Cookies aceptadas automáticamente
+23:17:38 [INFO] ✓ Driver listo: aston-villa-brighton-apuestas-35212177
+23:17:38 [INFO] ============================================================
+23:17:38 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+23:17:38 [INFO] Tienes 0 segundos...
+23:17:38 [INFO] El scraper comenzará automáticamente después.
+23:17:38 [INFO] ============================================================
+23:17:38 [INFO] 🔧 Creando 15 drivers adicionales en paralelo...
+23:17:38 [INFO] 🔧 Creando driver para: FC Zurich - Winterthur
+23:17:38 [INFO] 🔧 Creando driver para: Lugano - Servette
+23:17:38 [INFO] 🔧 Creando driver para: Manchester City - Fulham
+23:17:38 [INFO] 🔧 Creando driver para: Nottingham Forest - Wolves
+23:17:38 [INFO] 🔧 Creando driver para: St Gallen - Young Boys
+23:17:38 [INFO] 🔧 Creando driver para: Union St Gilloise - Charleroi
+23:17:38 [INFO] 🔧 Creando driver para: Crystal Palace - Burnley
+23:17:38 [INFO] 🔧 Creando driver para: Bayern Múnich - RB Leipzig
+23:17:53 [INFO] ✓ Cookies aceptadas automáticamente
+23:17:54 [INFO] ✓ Driver listo: crystal-palace-burnley-apuestas-35212181
+23:17:54 [INFO] 🔧 Creando driver para: Celtic - Livingston
+23:17:59 [INFO] ✓ Cookies aceptadas automáticamente
+23:18:00 [INFO] ✓ Driver listo: nottingham-forest-wolves-apuestas-35212170
+23:18:00 [INFO] 🔧 Creando driver para: Chapecoense - Coritiba
+23:18:08 [INFO] ✓ Cookies aceptadas automáticamente
+23:18:09 [INFO] ✓ Driver listo: st-gallen-young-boys-apuestas-35244304
+23:18:09 [INFO] 🔧 Creando driver para: Mirassol - Cruzeiro
+23:18:12 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+23:18:12 [INFO] ✓ Driver listo: fc-zurich-winterthur-apuestas-35244302
+23:18:12 [INFO] 🔧 Creando driver para: São Paulo - Grêmio
+23:18:13 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+23:18:13 [INFO] ✓ Driver listo: bayern-m%C3%BAnich-rb-leipzig-apuestas-35060077
+23:18:13 [INFO] 🔧 Creando driver para: Vasco Da Gama - Bahía
+23:18:15 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+23:18:15 [INFO] ✓ Driver listo: manchester-city-fulham-apuestas-35212169
+23:18:15 [INFO] 🔧 Creando driver para: CF America - CD Olimpia
+23:18:16 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+23:18:16 [INFO] ✓ Driver listo: lugano-servette-apuestas-35243576
+23:18:16 [INFO] 🔧 Creando driver para: Internacional de Bogotá - Deportivo de Cali
+23:18:17 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+23:18:17 [INFO] ✓ Driver listo: union-st-gilloise-charleroi-apuestas-35238953
+23:18:24 [INFO] ✓ Cookies aceptadas automáticamente
+23:18:25 [INFO] ✓ Driver listo: mirassol-cruzeiro-apuestas-35207545
+23:18:48 [ERROR] ✗ Error creando driver para celtic-livingston-apuestas-35234617: Message: unknown error: net::ERR_CONNECTION_TIMED_OUT
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0xae5093
+	0xae50d4
+	0x8db490
+	0x8d899e
+	0x8cbac4
+	0x8cd51c
+	0x8cbf67
+	0x8cb895
+	0x8cb595
+	0x8c96a8
+	0x8c9dba
+	0x8def1e
+	0x965e84
+	0x9481bc
+	0x965341
+	0x947f56
+	0x9196c9
+	0x91a484
+	0xd37e34
+	0xd330c9
+	0xd50add
+	0xafdb38
+	0xb058ad
+	0xaed848
+	0xaeda12
+	0xad75fa
+	0x75a75d49
+	0x771ad83b
+	0x771ad7c1
+
+23:18:51 [DEBUG] ✓ Driver cerrado: celtic-livingston-apuestas-35234617
+23:18:55 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+23:18:55 [INFO] ✓ Driver listo: vasco-da-gama-bah%C3%ADa-apuestas-35207543
+23:18:55 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+23:18:55 [INFO] ✓ Driver listo: chapecoense-coritiba-apuestas-35207738
+23:19:02 [INFO] ✓ Cookies aceptadas automáticamente
+23:19:03 [INFO] ✓ Driver listo: internacional-de-bogot%C3%A1-deportivo-de-cali-apu

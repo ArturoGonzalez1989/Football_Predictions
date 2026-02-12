@@ -1,0 +1,20 @@
+[     226ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
+[    2662ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0
+[   16266ms] [WARNING] Error while trying to get football data soccerEventStats response invalid @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[  547192ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/serie-a-brasil/chapecoense-coritiba-apuestas-35207738:0
+[  547192ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  591507ms] [WARNING] Error while fetching manageMarketOnBetEngine Error: bettingType betting type must be one of ODDS, ASIAN_HANDICAP_SINGLE_LINE, ASIAN_HANDICAP_DOUBLE_LINE, LINE. Current value is "undefined"
+    at o (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:1:3147)
+    at A (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:1:4707)
+    at new <anonymous> (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:81341)
+    at https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:170458
+    at Fe (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:170642)
+    at https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:172299
+    at Qe.addMarket (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:175254)
+    at https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:1:798530
+    at https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:1:798591
+    at Array.forEach (<anonymous>) @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[  757854ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/serie-a-brasil/chapecoense-coritiba-apuestas-35207738:0
+[  757854ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  864811ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/serie-a-brasil/chapecoense-coritiba-apuestas-35207738:0
+[  864811ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0

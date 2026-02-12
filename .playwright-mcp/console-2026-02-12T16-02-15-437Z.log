@@ -1,0 +1,35 @@
+[    2606ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  <App>
+    <Dashboard>
+      <div className="min-h-scre...">
+        <header>
+        <div className="max-w-7xl ...">
+          <div>
+          <div className="grid grid-...">
+            <div className="lg:col-spa...">
+              <section>
+                <h2>
+                <div className="space-y-3">
+                  <MatchCard match={{name:"Dham...", ...}} onDelete={function}>
+                    <div className="rounded-xl...">
+>                     <button
+>                       onClick={function onClick}
+>                       className="w-full text-left p-4 flex items-center justify-between gap-3 cursor-pointer hover:b..."
+>                     >
+                        <div>
+                        <div className="flex items...">
+>                         <button
+>                           onClick={function onClick}
+>                           className="p-1 rounded hover:bg-red-500/10 text-zinc-600 hover:text-red-400 transition-col..."
+>                           title="Stop tracking this match"
+>                         >
+                          ...
+              ...
+            ...
+ @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=11e185f4:2155
+[    2606ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=11e185f4:2162
+[   21453ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/MatchCard.tsx?t=1770912156847:0
+[   21453ms] [ERROR] [vite] Failed to reload /src/components/MatchCard.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808

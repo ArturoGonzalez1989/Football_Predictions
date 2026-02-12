@@ -1,0 +1,4 @@
+[  421637ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/matches:0
+[  421753ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/system/status:0
+[  423279ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/matches/al-hazm-ksa-al-akhdoud-apuestas-35232966/momentum:0
+[  423279ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/matches/al-hazm-ksa-al-akhdoud-apuestas-35232966:0

@@ -1,0 +1,3 @@
+[   32791ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5173/api/matches/pohang-steelers-g-osaka-apuestas-35253419/full:0
+[   50074ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/matches:0
+[   50076ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/system/status:0

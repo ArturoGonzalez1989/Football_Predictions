@@ -20,7 +20,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # Configuración
 BETFAIR_INPLAY_URL = "https://www.betfair.es/exchange/plus/inplay"
-GAMES_CSV = Path("games.csv")
+GAMES_CSV = Path(__file__).parent.parent / "games.csv"  # Ruta al games.csv del proyecto
 HEADLESS = True  # Chrome sin GUI
 TIMEOUT = 10  # Segundos para esperar elementos
 
@@ -94,50 +94,56 @@ def extract_football_matches(driver):
     matches = []
 
     try:
-        # Buscar todos los elementos de partido (listitem con rol de botón)
-        # Betfair estructura: Cada partido es un elemento clickeable con datos
-
-        # Esperar a que haya al menos un elemento de partido
+        # Esperar a que carguen los partidos
+        # Betfair estructura: Cada partido está en un <ul class="runners">
         WebDriverWait(driver, TIMEOUT).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[data-testid*='event']"))
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "ul.runners"))
         )
 
-        # Obtener todos los elementos que contienen info de partidos
-        # Estrategia: buscar enlaces que contengan /fútbol/ en la URL
-        event_links = driver.find_elements(By.CSS_SELECTOR, "a[href*='/es/futbol/']")
+        # Obtener todos los elementos que contienen partidos
+        runner_uls = driver.find_elements(By.CSS_SELECTOR, "ul.runners")
 
-        print(f"[DEBUG] Encontrados {len(event_links)} enlaces de fútbol")
+        print(f"[DEBUG] Encontrados {len(runner_uls)} partidos de fútbol")
 
-        for link in event_links:
+        for ul in runner_uls:
             try:
-                # Obtener href
-                href = link.get_attribute("href")
-                if not href or "/futbol/" not in href:
+                # Obtener nombres de equipos (están en <li class="name">)
+                team_elements = ul.find_elements(By.CSS_SELECTOR, "li.name")
+                team_names = [team.text.strip() for team in team_elements if team.text.strip()]
+
+                # Validar que haya exactamente 2 equipos
+                if len(team_names) != 2:
                     continue
 
-                # Obtener texto del partido (nombre de equipos)
-                text = link.text.strip()
-                if not text:
+                # Construir nombre del partido
+                match_name = f"{team_names[0]} - {team_names[1]}"
+
+                # Buscar el enlace del partido en la fila
+                parent_row = ul.find_element(By.XPATH, "./ancestor::tr")
+                match_link = parent_row.find_element(By.CSS_SELECTOR, "a.mod-link")
+
+                href = match_link.get_attribute("href")
+                if not href:
                     continue
 
-                # Parsear nombre y hora desde el contexto
-                # Buscar elemento padre que contenga hora
-                parent = link.find_element(By.XPATH, ".//ancestor::div[@data-testid]")
+                # FILTRO: Solo partidos de fútbol
+                # Las URLs de fútbol contienen '/fútbol/' o '/futbol/' (puede estar URL encoded como f%C3%BAtbol)
+                href_lower = href.lower()
+                if not ("/futbol/" in href_lower or "/f%c3%batbol/" in href_lower):
+                    continue
 
-                # Extraer hora si está disponible
-                start_time = extract_start_time(parent, text)
+                # Extraer hora de inicio
+                start_time = extract_start_time(parent_row, match_name)
 
-                # Construir URL completa
+                # Construir URL completa si es necesario
                 if not href.startswith("http"):
-                    href = "https://www.betfair.es/exchange/plus" + href
+                    href = "https://www.betfair.es" + href
 
-                # Validar que sea un partido (debe tener dos equipos)
-                if " - " in text or " v " in text.lower():
-                    matches.append({
-                        "name": text,
-                        "url": href,
-                        "start_time": start_time
-                    })
+                matches.append({
+                    "name": match_name,
+                    "url": href,
+                    "start_time": start_time
+                })
 
             except Exception as e:
                 print(f"[DEBUG] Error extrayendo partido individual: {e}")

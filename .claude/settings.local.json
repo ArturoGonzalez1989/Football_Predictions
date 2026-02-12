@@ -35,7 +35,29 @@
       "Bash(cmd /c \"tasklist | findstr python.exe\")",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nLimpieza del proyecto y documentación consolidada\n\nELIMINADO \\(35+ archivos\\):\n- Scripts Python obsoletos: test_*, analyze.py, eda_*.py, trading_analysis.py\n- Supervisor antiguos: supervisor.py, supervisor_agent.py, supervisor_config.py, supervisor_utils.py\n- PowerShell adhoc: _check.ps1, _kill_restart.ps1, close_betfair_windows.ps1\n- Documentación duplicada: 12 archivos de versiones anteriores del supervisor\n- Imágenes viejas: *.png en raíz y .playwright-mcp/\n- Directorios temp: _ul/\n\nCREADO \\(3 archivos nuevos\\):\n- MANUAL_DE_USUARIO.md: Guía completa de 450+ líneas \\(instalación, uso manual, uso con agente, FAQ\\)\n- INDEX.md: Índice y referencias rápidas de navegación\n- LIMPIEZA_PROYECTO_COMPLETADA.md: Resumen de cambios realizados\n\nACTUALIZADO:\n- README.md: Consolidado y simplificado\n\nPRESERVADO \\(100%\\):\n- games.csv: Todos los partidos configurados\n- data/: 53+ CSVs con datos capturados\n- logs/: Historial completo de ejecución\n\nRESULTADO:\n✅ Proyecto limpio y bien organizado\n✅ 10 scripts vigentes esenciales \\(~1,800 líneas\\)\n✅ 9 archivos de documentación consolidados\n✅ Reducción de 55% en código adhoc\n✅ Documentación clara para usuario final\n✅ Todos los datos históricos preservados\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(xargs -I {} sh -c 'wc -l {} && tail -1 {} | cut -d\"\",\"\" -f65-78')",
+      "Bash(done)",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "Bash(del:*)",
+      "Bash(git checkout:*)",
+      "WebFetch(domain:betfair.cpp.statsperform.com)",
+      "Bash(cmd //c \"tasklist | findstr chrome.exe | find /c \"\"chrome.exe\"\"\")",
+      "Bash(Get-Process:*)",
+      "Bash(Select-Object Id, ProcessName, StartTime)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(pgrep:*)",
+      "WebFetch(domain:videoplayer.betfair.es)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(pip:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "mcp__plugin_playwright_playwright__browser_network_requests",
+      "Bash(ping:*)",
+      "mcp__plugin_playwright_playwright__browser_press_key",
+      "Bash(Select-Object -Last 30)"
     ]
   }
 }

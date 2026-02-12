@@ -1,0 +1,3 @@
+[     108ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie1eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
+[    4712ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/arabia-saud%C3%AD-liga-profesional/al-quadisiya-ksa-neom-sports-club-apuestas-35241036:0
+[    4713ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0

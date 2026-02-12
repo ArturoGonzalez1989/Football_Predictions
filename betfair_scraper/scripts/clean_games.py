@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # Configuración
-GAMES_CSV = Path("games.csv")
+GAMES_CSV = Path(__file__).parent.parent / "games.csv"
 MATCH_DURATION_MINUTES = 120  # 90 min juego + 30 min margen
 DATE_FORMATS = ["%Y-%m-%d %H:%M", "%d/%m/%Y %H:%M"]  # Formatos soportados
 
