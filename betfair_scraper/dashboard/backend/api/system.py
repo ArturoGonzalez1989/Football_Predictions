@@ -144,3 +144,112 @@ def stop_scraper():
         return {"ok": True, "message": "Scraper already stopped"}
     except Exception as e:
         return {"ok": False, "message": f"Error stopping scraper: {e}"}
+
+
+@router.post("/backend/restart")
+def restart_backend():
+    """Reinicia el servidor backend (FastAPI/uvicorn)."""
+    import os
+    import time
+
+    if not HAS_PSUTIL:
+        return {"ok": False, "message": "psutil no está instalado"}
+
+    try:
+        # Obtener el PID del proceso actual (el backend)
+        current_pid = os.getpid()
+        current_proc = psutil.Process(current_pid)
+
+        # Obtener el comando usado para iniciar el backend
+        cmdline = current_proc.cmdline()
+
+        # Iniciar nuevo proceso backend en background
+        # Usar el mismo comando que se usó para iniciar este proceso
+        new_proc = subprocess.Popen(
+            cmdline,
+            cwd=str(SCRAPER_DIR / "dashboard" / "backend"),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+        )
+
+        # Esperar un momento para que el nuevo proceso arranque
+        time.sleep(2)
+
+        # Programar terminación del proceso actual después de responder
+        def delayed_shutdown():
+            time.sleep(1)
+            current_proc.terminate()
+
+        import threading
+        threading.Thread(target=delayed_shutdown, daemon=True).start()
+
+        return {
+            "ok": True,
+            "message": f"Backend reiniciándose (nuevo PID: {new_proc.pid}, terminando PID: {current_pid})",
+            "old_pid": current_pid,
+            "new_pid": new_proc.pid
+        }
+
+    except Exception as e:
+        return {"ok": False, "message": f"Error reiniciando backend: {e}"}
+
+
+def _find_frontend_process():
+    """Busca el proceso del frontend (npm/vite)."""
+    if not HAS_PSUTIL:
+        return None
+    for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+        try:
+            cmdline = proc.info.get("cmdline") or []
+            cmdline_str = " ".join(cmdline).lower()
+            # Buscar procesos de Vite dev server (puerto 5173)
+            if "vite" in cmdline_str or (proc.info.get("name", "").lower() in ["node.exe", "node"] and "5173" in cmdline_str):
+                return proc
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    return None
+
+
+@router.post("/frontend/restart")
+def restart_frontend():
+    """Reinicia el servidor frontend (Vite)."""
+    if not HAS_PSUTIL:
+        return {"ok": False, "message": "psutil no está instalado"}
+
+    frontend_dir = SCRAPER_DIR / "dashboard" / "frontend"
+    if not frontend_dir.exists():
+        return {"ok": False, "message": f"Frontend directory not found: {frontend_dir}"}
+
+    try:
+        # Detener proceso existente si hay
+        existing = _find_frontend_process()
+        if existing:
+            pid = existing.pid
+            existing.terminate()
+            try:
+                existing.wait(timeout=5)
+            except psutil.TimeoutExpired:
+                existing.kill()
+
+        # Iniciar nuevo proceso frontend
+        import time
+        time.sleep(1)  # Esperar a que el puerto se libere
+
+        # Iniciar npm run dev
+        proc = subprocess.Popen(
+            ["npm", "run", "dev"],
+            cwd=str(frontend_dir),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+        )
+
+        return {
+            "ok": True,
+            "message": f"Frontend reiniciado (PID: {proc.pid})",
+            "pid": proc.pid
+        }
+
+    except Exception as e:
+        return {"ok": False, "message": f"Error reiniciando frontend: {e}"}

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react"
-import { api, type Match, type MatchDetail, type MomentumData } from "../lib/api"
+import { api, type Match, type MatchDetail, type MomentumData, type MatchFull } from "../lib/api"
 import { formatTimeTo } from "../lib/utils"
 import { StatusBadge } from "./StatusBadge"
 import { CaptureIndicator } from "./CaptureIndicator"
 import { StatsBar } from "./StatsBar"
 import { MomentumChart, XgChart } from "./MomentumChart"
+import { OddsTable } from "./OddsChart"
 import { CaptureTable } from "./CaptureTable"
 import { GapAnalysis } from "./GapAnalysis"
 
@@ -19,18 +20,21 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [detail, setDetail] = useState<MatchDetail | null>(null)
   const [momentum, setMomentum] = useState<MomentumData | null>(null)
+  const [fullData, setFullData] = useState<MatchFull | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
 
   const loadDetail = useCallback(async () => {
     if (!expanded) return
     setLoadingDetail(true)
     try {
-      const [d, m] = await Promise.all([
+      const [d, m, f] = await Promise.all([
         api.getMatchDetail(match.match_id),
         api.getMatchMomentum(match.match_id),
+        api.getMatchFull(match.match_id),
       ])
       setDetail(d)
       setMomentum(m)
+      setFullData(f)
     } catch {
       /* ignore */
     } finally {
@@ -151,24 +155,12 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
               <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider px-1">
                 Current Stats
               </h4>
-              {(() => {
-                const parse = (s: string) => {
-                  const [a, b] = s.split("-")
-                  return [a?.trim() || "—", b?.trim() || "—"] as const
-                }
-                const [xgH, xgA] = parse(lastCapture.xg)
-                const [posH, posA] = parse(lastCapture.posesion)
-                const [cornH, cornA] = parse(lastCapture.corners)
-                const [shotH, shotA] = parse(lastCapture.tiros)
-                return (
-                  <div className="space-y-1">
-                    <StatsBar label="xG" homeValue={xgH} awayValue={xgA} />
-                    <StatsBar label="Poss %" homeValue={posH} awayValue={posA} />
-                    <StatsBar label="Corners" homeValue={cornH} awayValue={cornA} />
-                    <StatsBar label="Shots" homeValue={shotH} awayValue={shotA} />
-                  </div>
-                )
-              })()}
+              <div className="space-y-1">
+                <StatsBar label="xG" homeValue={lastCapture.xg_local || "—"} awayValue={lastCapture.xg_visitante || "—"} />
+                <StatsBar label="Poss %" homeValue={lastCapture.posesion_local || "—"} awayValue={lastCapture.posesion_visitante || "—"} />
+                <StatsBar label="Corners" homeValue={lastCapture.corners_local || "—"} awayValue={lastCapture.corners_visitante || "—"} />
+                <StatsBar label="Shots" homeValue={lastCapture.tiros_local || "—"} awayValue={lastCapture.tiros_visitante || "—"} />
+              </div>
             </div>
           )}
 
@@ -177,6 +169,14 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
 
           {/* xG Chart */}
           <XgChart data={momentum} />
+
+          {/* Odds Table */}
+          {fullData && fullData.odds_timeline && (
+            <OddsTable
+              data={fullData.odds_timeline}
+              loading={loadingDetail && !fullData}
+            />
+          )}
 
           {/* Gap Analysis */}
           {detail && (

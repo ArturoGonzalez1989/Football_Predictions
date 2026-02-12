@@ -241,6 +241,16 @@ CSV_COLUMNS = [
     "goal_kicks_visitante",
     "throw_ins_local",
     "throw_ins_visitante",
+    "free_kicks_local",
+    "free_kicks_visitante",
+    "offsides_local",
+    "offsides_visitante",
+    "substitutions_local",
+    "substitutions_visitante",
+    "injuries_local",
+    "injuries_visitante",
+    "time_in_dangerous_attack_pct_local",
+    "time_in_dangerous_attack_pct_visitante",
     "momentum_local",
     "momentum_visitante",
     # Volumen
@@ -868,9 +878,8 @@ def extraer_estadisticas(driver) -> dict:
 
         if not event_id:
             log.warning("  × No se pudo extraer eventId - partido sin estadísticas Opta")
-            log.info("  → Intentando fallback: extracción desde iframe de visualización...")
 
-            # Intentar extraer Betfair event ID para el fallback
+            # FALLBACK: Intentar extraer desde iframe de visualización
             try:
                 betfair_event_id = None
 
@@ -885,25 +894,28 @@ def extraer_estadisticas(driver) -> dict:
                         betfair_event_id = match.group(1)
 
                 if betfair_event_id:
-                    from stats_api import extract_iframe_stats
-                    iframe_stats = extract_iframe_stats(driver, betfair_event_id)
+                    from extract_iframe_stats import extract_stats_from_iframe
+                    iframe_stats = extract_stats_from_iframe(driver, betfair_event_id)
 
-                    # Actualizar solo los campos que el iframe pudo capturar
+                    # DEBUG: Log what iframe captured
+                    iframe_captured = {k: v for k, v in iframe_stats.items() if v != ""}
+                    if iframe_captured:
+                        log.debug(f"  → Iframe stats capturados: {iframe_captured}")
+
+                    # Actualizar solo los campos que el iframe capturó
                     for key, value in iframe_stats.items():
                         if value and value != "":
                             stats[key] = value
 
                     captured_count = sum(1 for v in stats.values() if v != "")
                     if captured_count > 0:
-                        log.info(f"  ✓ Fallback exitoso: {captured_count} campos capturados desde iframe")
+                        log.debug(f"  → Total stats en dict tras merge: {captured_count}")
                         return stats
-                    else:
-                        log.warning("  × Fallback del iframe no capturó estadísticas")
                 else:
                     log.warning("  × No se pudo extraer Betfair event ID para fallback")
 
             except Exception as e:
-                log.error(f"  × Error en fallback del iframe: {e}")
+                log.error(f"  × Error en fallback iframe: {e}")
 
             return stats
 
@@ -994,6 +1006,18 @@ def extraer_estadisticas(driver) -> dict:
         stats["throw_ins_local"] = extract_stat_value(all_stats, 'summary', 'home', 'throwIns', "")
         stats["throw_ins_visitante"] = extract_stat_value(all_stats, 'summary', 'away', 'throwIns', "")
 
+        # Momentum (NUEVO: desde API)
+        momentum_data = all_stats.get('momentum')
+        if momentum_data:
+            home_momentum = momentum_data.get('home', 0)
+            away_momentum = momentum_data.get('away', 0)
+
+            # Solo asignar si tenemos valores válidos
+            if home_momentum or away_momentum:
+                stats["momentum_local"] = f"{home_momentum:.2f}" if home_momentum else ""
+                stats["momentum_visitante"] = f"{away_momentum:.2f}" if away_momentum else ""
+                log.debug(f"    → Momentum vía API: {stats['momentum_local']}-{stats['momentum_visitante']}")
+
         # Contar cuántas estadísticas se capturaron
         captured_count = sum(1 for v in stats.values() if v != "")
         log.info(f"  ✓ Estadísticas capturadas vía API: {captured_count}/{len(stats)} campos")
@@ -1044,7 +1068,8 @@ def extraer_momentum(driver) -> dict:
                 for nested in nested_iframes:
                     try:
                         src = nested.get_attribute("src") or ""
-                        if "stats/live-stats" in src:
+                        # ACTUALIZADO: Betfair cambió de /stats/live-stats a /watch/pitchView
+                        if "stats/live-stats" in src or ("/watch/" in src and "statsperform" in src):
                             stats_iframe_url = src
                             log.debug(f"  ✓ URL stats encontrada en iframe #{idx+1}: {src[:80]}")
                             break
@@ -1066,12 +1091,26 @@ def extraer_momentum(driver) -> dict:
             log.debug("  × No se encontró URL del iframe de stats")
             return momentum
 
-        # PASO 2: Construir URL de momentum reemplazando el path
-        momentum_url = re.sub(
-            r"/stats/live-stats/[^?]+",
-            "/stats/live-stats/momentum",
-            stats_iframe_url,
-        )
+        # PASO 2: Construir URL de momentum
+        # IMPORTANTE: Aunque el iframe base cambió a /watch/pitchView,
+        # la URL de momentum SIEMPRE debe ser /stats/live-stats/momentum
+        if "/stats/live-stats/" in stats_iframe_url:
+            momentum_url = re.sub(
+                r"/stats/live-stats/[^?]+",
+                "/stats/live-stats/momentum",
+                stats_iframe_url,
+            )
+        elif "/watch/" in stats_iframe_url:
+            # El iframe base usa /watch/, pero momentum sigue usando /stats/live-stats/
+            momentum_url = re.sub(
+                r"/watch/[^?]+",
+                "/stats/live-stats/momentum",
+                stats_iframe_url,
+            )
+        else:
+            log.debug(f"  × Formato de URL desconocido: {stats_iframe_url[:80]}")
+            return momentum
+
         log.debug(f"  → URL momentum construida: {momentum_url[:80]}")
 
         # PASO 3: Abrir URL de momentum en nueva pestaña (sin clickear nada)
@@ -1475,8 +1514,18 @@ class MatchDriver:
                 log.debug(f"[{self.match_id}] → Extrayendo volumen matched...")
                 volumen = extraer_volumen(self.driver)
 
-                log.debug(f"[{self.match_id}] → Extrayendo momentum...")
-                momentum = extraer_momentum(self.driver)
+                # Momentum: Primero intentar desde API (ya viene en stats), fallback a método visual
+                momentum_local = stats.get("momentum_local", "")
+                momentum_visitante = stats.get("momentum_visitante", "")
+
+                if not momentum_local and not momentum_visitante:
+                    # Fallback: Usar método visual si la API no tiene momentum
+                    log.debug(f"[{self.match_id}] → Extrayendo momentum (fallback visual)...")
+                    momentum = extraer_momentum(self.driver)
+                    momentum_local = momentum["momentum_local"]
+                    momentum_visitante = momentum["momentum_visitante"]
+                else:
+                    log.debug(f"[{self.match_id}] ✓ Momentum obtenido de API: {momentum_local}-{momentum_visitante}")
 
                 # Determinar estado del partido
                 if info["estado_partido"]:
@@ -1507,12 +1556,13 @@ class MatchDriver:
                     **odds_ou,
                     # Resultado Correcto
                     **odds_rc,
-                    # Estadísticas
+                    # Estadísticas (incluye momentum si API lo proporcionó)
                     **stats,
-                    # Volumen y Momentum
+                    # Volumen
                     "volumen_matched": volumen,
-                    "momentum_local": momentum["momentum_local"],
-                    "momentum_visitante": momentum["momentum_visitante"],
+                    # Momentum (sobrescribir con valores actualizados, ya sea de API o fallback visual)
+                    "momentum_local": momentum_local,
+                    "momentum_visitante": momentum_visitante,
                     # Meta
                     "url": self.url,
                 }
@@ -1798,12 +1848,23 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
     volumen = extraer_volumen(driver)
     log.info(f"[Tab {tab_info['index']}]   ✓ Volumen: {volumen or 'No capturado'}")
 
-    log.info(f"[Tab {tab_info['index']}] → Extrayendo momentum...")
-    momentum = extraer_momentum(driver)
-    momentum_count = sum([1 for v in momentum.values() if v])
-    log.info(f"[Tab {tab_info['index']}]   ✓ Momentum: {momentum_count}/2 valores capturados")
-    if momentum["momentum_local"] or momentum["momentum_visitante"]:
-        log.info(f"[Tab {tab_info['index']}]     - Local: {momentum['momentum_local']} | Visitante: {momentum['momentum_visitante']}")
+    # Momentum: Primero intentar desde API (ya viene en stats), fallback a método visual
+    momentum_local = stats.get("momentum_local", "")
+    momentum_visitante = stats.get("momentum_visitante", "")
+
+    if not momentum_local and not momentum_visitante:
+        # Fallback: Usar método visual si la API no tiene momentum
+        log.info(f"[Tab {tab_info['index']}] → Extrayendo momentum (fallback visual)...")
+        momentum = extraer_momentum(driver)
+        momentum_local = momentum["momentum_local"]
+        momentum_visitante = momentum["momentum_visitante"]
+        momentum_count = sum([1 for v in [momentum_local, momentum_visitante] if v])
+        log.info(f"[Tab {tab_info['index']}]   ✓ Momentum visual: {momentum_count}/2 valores capturados")
+    else:
+        log.info(f"[Tab {tab_info['index']}] ✓ Momentum obtenido de API")
+
+    if momentum_local or momentum_visitante:
+        log.info(f"[Tab {tab_info['index']}]     - Local: {momentum_local} | Visitante: {momentum_visitante}")
 
     # Determinar estado del partido
     # Primero intentar usar el estado detectado automáticamente
@@ -1904,6 +1965,8 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
         "corners_visitante": stats["corners_visitante"],
         "total_passes_local": stats["total_passes_local"],
         "total_passes_visitante": stats["total_passes_visitante"],
+        "fouls_conceded_local": stats["fouls_conceded_local"],
+        "fouls_conceded_visitante": stats["fouls_conceded_visitante"],
         "tarjetas_amarillas_local": stats["tarjetas_amarillas_local"],
         "tarjetas_amarillas_visitante": stats["tarjetas_amarillas_visitante"],
         "tarjetas_rojas_local": stats["tarjetas_rojas_local"],
@@ -1919,6 +1982,12 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
         "attacks_visitante": stats["attacks_visitante"],
         "hit_woodwork_local": stats["hit_woodwork_local"],
         "hit_woodwork_visitante": stats["hit_woodwork_visitante"],
+        "blocked_shots_local": stats["blocked_shots_local"],
+        "blocked_shots_visitante": stats["blocked_shots_visitante"],
+        "shooting_accuracy_local": stats["shooting_accuracy_local"],
+        "shooting_accuracy_visitante": stats["shooting_accuracy_visitante"],
+        "dangerous_attacks_local": stats["dangerous_attacks_local"],
+        "dangerous_attacks_visitante": stats["dangerous_attacks_visitante"],
         # Defence stats
         "tackles_local": stats["tackles_local"],
         "tackles_visitante": stats["tackles_visitante"],
@@ -1945,8 +2014,12 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
         "successful_passes_opp_half_visitante": stats["successful_passes_opp_half_visitante"],
         "successful_passes_final_third_local": stats["successful_passes_final_third_local"],
         "successful_passes_final_third_visitante": stats["successful_passes_final_third_visitante"],
-        "momentum_local": momentum["momentum_local"],
-        "momentum_visitante": momentum["momentum_visitante"],
+        "goal_kicks_local": stats["goal_kicks_local"],
+        "goal_kicks_visitante": stats["goal_kicks_visitante"],
+        "throw_ins_local": stats["throw_ins_local"],
+        "throw_ins_visitante": stats["throw_ins_visitante"],
+        "momentum_local": momentum_local,
+        "momentum_visitante": momentum_visitante,
         # Volumen y meta
         "volumen_matched": volumen,
         "url": tab_info["url"],

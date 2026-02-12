@@ -1,0 +1,282 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE HTML>
+<html id="innerHtml">
+<head>
+    <title>Reproductor de Betfair Video</title>
+    <script type="text/javascript" src="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/js/lib/platform.js?v=cd0c279" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/js/lib/jquery-3.1.0.min.js?v=cd0c279" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/js/swfobject.js?v=cd0c279" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/js/iframe_player.js?v=cd0c279" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/js/errors/js_error_es.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/js_error"></script>
+    <script type="text/javascript" src="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/js/core.js?v=cd0c279" crossorigin="anonymous"></script>
+    
+        <script type="text/javascript" src="//service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js"></script>
+    
+    
+    <link rel="icon" type="image/x-icon" href="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/bf/favicon.ico?v=cd0c279"/>
+    <link rel="stylesheet" type="text/css" href="https://assets.cdnppb.net/static/videoplayer/v2.86.0/resources/bf/css/style.css?v=cd0c279">
+
+    <script type="text/javascript">
+        dataLayer = [];
+
+        //info for client-side errors logging
+        setRequestInfoForClientSideLogging("StreamDetails{videoId=206481530, providerId=39, host='null', streamName='null', updateUrl='http://videoplayer.betfair.es/streamDetails', locale='es', country='ES', commLangs='null', qualities='HIGH', bufferingIntervals='0,0.5,1,3,5,10', playerAutoplayEnabled=false, connectionTimeout=15000, contentView='mstats', contentType=VIZ, requestUrl='null', params={isPerformMCCProvider=true, performMCCFixtureUUID=bomuidcdl673b8rje49cbj40k, streamUUID=bomuidcdl673b8rje49cbj40k, isContentPlayerProPlayer=true, performMCCHeight=270, isUSAEvent=false, appType=csb, fixtureUUID=bomuidcdl673b8rje49cbj40k, performMCCContentPlayerURL=//betfair.cpp.statsperform.com/api/iframeEmbedding, performMCCOutletAuthKey=1hegv772yrv901291e00xzm9rv, outletAuthKey=1hegv772yrv901291e00xzm9rv}, reqId='eID=35234028', sportId='1', sportName='Football', eventId='35234028', eventName='Sion v FC Basel', providerEventId='bomuidcdl673b8rje49cbj40k|id_split|bomuidcdl673b8rje49cbj40k', providerEventName='Sion v Basel', providerName='Perform', timeformRaceId='null', accountId=null, uuid='ie1-bvp01a-prd-prd-betfair-02122033-0000006870811', width=null, height=null, sizeRestrictionMaxsizeWidth=1080, relative=false, directStream=false, inlineStream=false, aspectRatio='0.5625', fullScreenAllowed=false, airPlayAllowed=false, defaultVideoQuality=HIGH, defaultBufferingInterval=1.0, videoPlayerConfig=null, competition=null, startDateTime=Thu Feb 12 19:30:00 UTC 2026, theme=null}", "206481530", "39",
+                "ES", "", "ie1-bvp01a-prd-prd-betfair-02122033-0000006870811");
+        window.playerType = "indirect";
+        window.channel = "web";
+        window.clientIpAddress = "79.117.185.57";
+        window.errorContainerCSSClass = "none";
+        window.gaParameters = {
+            
+                sportId:"1",
+            
+            
+                sportName:"Football",
+            
+            
+                providerEventId:"bomuidcdl673b8rje49cbj40k|id_split|bomuidcdl673b8rje49cbj40k",
+            
+            
+                providerEventName:"Sion v Basel",
+            
+            
+                eventName:"Sion v FC Basel",
+            
+            
+                eventId:"35234028",
+            
+            
+            
+
+                channel: "web",
+                provider: "39",
+                providerName: "Perform"
+        };
+        window.trackUserInteraction = "false" === 'true';
+        window.highLatencyIconSize = "";
+
+        function initPlayerPage () {
+            var rests = {
+                width: "",
+                height: "",
+                relative: false,
+                fullScreenAllowed: "false" === 'true',
+                maxWidth:"1080",
+                aspectRatio: "0.5625",
+                iframeSizerEnabled: "false" === 'true',
+                iframeSizerUnsupported: "" === 'true',
+                autoSize: "" === 'true',
+                isAutoplayAllowed: "false" === 'true',
+                bvpPath: "",
+            };
+
+            rests.directStream = false;
+
+            var widthParam = '',
+                heightParam = '';
+
+            LV.init(rests, widthParam, heightParam);
+            LV.setFrameSrc('');
+        }
+
+        //init Iframe on window load
+        window.addEventListener("load", initPlayerPage);
+
+        var isMobile = false;
+    </script>
+</head>
+
+<body id="innerBody">
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+        <script>
+            console.log("Analytics are disabled");
+        </script>
+    
+
+
+<script>
+    function triggerAnalyticsEvent(action, parameters) {
+        
+    }
+
+    function triggerAnalyticsPageLoadedEvent(isMobile) {
+        
+    }
+</script>
+
+
+
+
+
+<script>
+    function sendMessageToiOS(message) {
+        if (window && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.BRIDGE_MESSAGE && window.webkit.messageHandlers.BRIDGE_MESSAGE.postMessage) {
+            window.webkit.messageHandlers.BRIDGE_MESSAGE.postMessage(message);
+        }
+    }
+
+    function sendMessageToAndroid(message) {
+        if (window && window.androidBridge && window.androidBridge.postMessage) {
+            // Android needs the whole object serialised
+            window.androidBridge.postMessage(JSON.stringify(message));
+        }
+    }
+
+    function sendMessageToParent(message) {
+        if (window && window.parent && window.parent.postMessage) {
+            window.parent.postMessage(message, '*'); // '*' is for origin
+        }
+    }
+
+    function triggerBridgeEvent(action, params, isError, type) {
+        const userAgent = navigator.userAgent;
+        const webBridgeOnly = typeof window.webBridgeOnly === 'string'
+            ? window.webBridgeOnly.toLowerCase() === 'true'
+            : Boolean(window.webBridgeOnly);
+        const messageType = type ? type : isError ? 'error' : 'event';
+        const msg = {
+            type: messageType,
+            payload: {
+                action,
+                ...(params || {}),
+            },
+        };
+
+        // can remove console.info after testing
+        console.info('webBridgeOnly: ', webBridgeOnly);
+
+        if (!webBridgeOnly && userAgent.match(/iPhone|iPad|iPod/i)) {
+            console.info('ios: ', msg);
+            sendMessageToiOS(msg);
+        } else if (!webBridgeOnly && userAgent.match(/Android/i)) {
+            console.info('android: ', msg);
+            sendMessageToAndroid(msg);
+        } else {
+            console.info('web: ', msg);
+            sendMessageToParent(msg);
+        }
+    }
+</script>
+
+
+<script>
+    triggerAnalyticsPageLoadedEvent(isMobile);
+</script>
+
+<div id="playerContainer">
+    
+    
+    
+    
+    
+
+    
+
+    
+    
+
+    
+    
+
+    
+    
+        <script type="text/javascript">
+            triggerAnalyticsEvent('saw video', window.gaParameters);
+            sendUserAction('loaded');
+            setupUserActionsTracking('playing');
+        </script>
+
+        
+            
+                
+
+
+
+
+
+<style>
+    #playerContainer.mobile {
+        overflow-y: hidden
+    }
+
+    #cppContainer {
+        width: px;
+        height: 270px
+    }
+</style>
+
+
+<div id='playerFrame'>
+    <div id='cppContainer'>
+        <script
+                src='//betfair.cpp.statsperform.com/api/iframeEmbedding'
+                data-uuid='bomuidcdl673b8rje49cbj40k'
+                data-outletkey='1hegv772yrv901291e00xzm9rv'
+
+                
+                
+
+
+                
+                    
+                        
+                        
+                            data-redirectTo='stats/live-stats/summary'
+                        
+                    
+                    data-hideHeader='false'
+                
+
+                containerName='cppContainer'
+        ></script>
+    </div>
+
+</div>
+
+
+            
+            
+        
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    <div id="high-latency-overlay">
+        <div></div>
+    </div>
+</div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ccedbf01c87e2c2',t:'MTc3MDkyODM4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

@@ -56,6 +56,44 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
     setTimeout(() => setMessage(null), 6000)
   }
 
+  async function handleRestartBackend() {
+    if (!confirm("¿Reiniciar el backend del dashboard? Se aplicarán cambios en el código.")) {
+      return
+    }
+    setActing(true)
+    setMessage(null)
+    try {
+      const res = await api.restartBackend()
+      setMessage({ text: res.message, ok: res.ok })
+      // Wait for new backend to start before refreshing
+      await new Promise(r => setTimeout(r, 3000))
+      onRefresh()
+    } catch {
+      setMessage({ text: "Backend reiniciado - recargando página...", ok: true })
+      // If backend restarted successfully but connection failed, reload page
+      setTimeout(() => window.location.reload(), 2000)
+    }
+    setActing(false)
+  }
+
+  async function handleRestartFrontend() {
+    if (!confirm("¿Reiniciar el frontend del dashboard? La página se recargará automáticamente.")) {
+      return
+    }
+    setActing(true)
+    setMessage(null)
+    try {
+      const res = await api.restartFrontend()
+      setMessage({ text: res.message, ok: res.ok })
+      // Wait for frontend to restart, then reload page
+      setMessage({ text: "Frontend reiniciado - recargando página...", ok: true })
+      setTimeout(() => window.location.reload(), 4000)
+    } catch {
+      setMessage({ text: "Error reiniciando frontend", ok: false })
+      setActing(false)
+    }
+  }
+
   if (!status) {
     return (
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-zinc-500 text-sm">
@@ -139,6 +177,35 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
           {message.text}
         </div>
       )}
+
+      {/* Backend controls */}
+      <div className="border-t border-zinc-800 pt-3 space-y-2">
+        <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Backend & Frontend</div>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            onClick={handleRestartBackend}
+            disabled={acting}
+            className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <svg className={`w-3 h-3 ${acting ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {acting ? "..." : "Backend"}
+          </button>
+          <button
+            type="button"
+            onClick={handleRestartFrontend}
+            disabled={acting}
+            className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <svg className={`w-3 h-3 ${acting ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {acting ? "..." : "Frontend"}
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg bg-zinc-800/50 p-2.5">

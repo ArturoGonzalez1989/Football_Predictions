@@ -103,7 +103,8 @@ def load_games() -> list[dict]:
                 rows = _read_csv_rows(csv_path)
                 capture_count = len(rows)
                 if rows:
-                    ts = rows[-1].get("timestamp_utc", "")
+                    last_row = rows[-1]
+                    ts = last_row.get("timestamp_utc", "")
                     if ts:
                         last_capture = ts
                         try:
@@ -112,6 +113,26 @@ def load_games() -> list[dict]:
                             last_capture_ago_seconds = int((now_utc - last_dt).total_seconds())
                         except Exception:
                             pass
+
+                    # IMPORTANTE: Sobrescribir status si el CSV indica que el partido terminó
+                    estado_partido = last_row.get("estado_partido", "").strip()
+                    if estado_partido == "finalizado":
+                        status = "finished"
+                    elif estado_partido == "en_juego":
+                        status = "live"
+                        # Actualizar minuto desde CSV si está disponible
+                        minuto_csv = last_row.get("minuto", "").strip()
+                        if minuto_csv.isdigit():
+                            match_minute = int(minuto_csv)
+                    elif estado_partido == "descanso":
+                        status = "live"
+                        # Durante descanso, mostrar 45 o el minuto del CSV
+                        minuto_csv = last_row.get("minuto", "").strip()
+                        if minuto_csv.isdigit():
+                            match_minute = int(minuto_csv)
+                        else:
+                            match_minute = 45
+                    # Si estado_partido está vacío, mantener status basado en tiempo transcurrido
 
             games.append({
                 "name": name,
@@ -250,14 +271,66 @@ def load_match_detail(match_id: str) -> dict:
     last_rows = rows[-10:]
     captures = []
     for row in last_rows:
+        # Devolver TODAS las columnas individuales del CSV tal cual
         capture = {
             "timestamp": row.get("timestamp_utc", ""),
             "minuto": row.get("minuto", ""),
-            "goles": f"{row.get('goles_local', '?')}-{row.get('goles_visitante', '?')}",
-            "xg": f"{row.get('xg_local', '')}-{row.get('xg_visitante', '')}",
-            "posesion": f"{row.get('posesion_local', '')}-{row.get('posesion_visitante', '')}",
-            "corners": f"{row.get('corners_local', '')}-{row.get('corners_visitante', '')}",
-            "tiros": f"{row.get('tiros_local', '')}-{row.get('tiros_visitante', '')}",
+            "goles_local": row.get("goles_local", ""),
+            "goles_visitante": row.get("goles_visitante", ""),
+            "xg_local": row.get("xg_local", ""),
+            "xg_visitante": row.get("xg_visitante", ""),
+            "posesion_local": row.get("posesion_local", ""),
+            "posesion_visitante": row.get("posesion_visitante", ""),
+            "corners_local": row.get("corners_local", ""),
+            "corners_visitante": row.get("corners_visitante", ""),
+            "tiros_local": row.get("tiros_local", ""),
+            "tiros_visitante": row.get("tiros_visitante", ""),
+            "tiros_puerta_local": row.get("tiros_puerta_local", ""),
+            "tiros_puerta_visitante": row.get("tiros_puerta_visitante", ""),
+            "shots_off_target_local": row.get("shots_off_target_local", ""),
+            "shots_off_target_visitante": row.get("shots_off_target_visitante", ""),
+            "blocked_shots_local": row.get("blocked_shots_local", ""),
+            "blocked_shots_visitante": row.get("blocked_shots_visitante", ""),
+            "saves_local": row.get("saves_local", ""),
+            "saves_visitante": row.get("saves_visitante", ""),
+            "dangerous_attacks_local": row.get("dangerous_attacks_local", ""),
+            "dangerous_attacks_visitante": row.get("dangerous_attacks_visitante", ""),
+            "fouls_conceded_local": row.get("fouls_conceded_local", ""),
+            "fouls_conceded_visitante": row.get("fouls_conceded_visitante", ""),
+            "goal_kicks_local": row.get("goal_kicks_local", ""),
+            "goal_kicks_visitante": row.get("goal_kicks_visitante", ""),
+            "throw_ins_local": row.get("throw_ins_local", ""),
+            "throw_ins_visitante": row.get("throw_ins_visitante", ""),
+            "tarjetas_amarillas_local": row.get("tarjetas_amarillas_local", ""),
+            "tarjetas_amarillas_visitante": row.get("tarjetas_amarillas_visitante", ""),
+            "tarjetas_rojas_local": row.get("tarjetas_rojas_local", ""),
+            "tarjetas_rojas_visitante": row.get("tarjetas_rojas_visitante", ""),
+            "total_passes_local": row.get("total_passes_local", ""),
+            "total_passes_visitante": row.get("total_passes_visitante", ""),
+            "big_chances_local": row.get("big_chances_local", ""),
+            "big_chances_visitante": row.get("big_chances_visitante", ""),
+            "attacks_local": row.get("attacks_local", ""),
+            "attacks_visitante": row.get("attacks_visitante", ""),
+            "tackles_local": row.get("tackles_local", ""),
+            "tackles_visitante": row.get("tackles_visitante", ""),
+            "momentum_local": row.get("momentum_local", ""),
+            "momentum_visitante": row.get("momentum_visitante", ""),
+            "opta_points_local": row.get("opta_points_local", ""),
+            "opta_points_visitante": row.get("opta_points_visitante", ""),
+            "touches_box_local": row.get("touches_box_local", ""),
+            "touches_box_visitante": row.get("touches_box_visitante", ""),
+            "shooting_accuracy_local": row.get("shooting_accuracy_local", ""),
+            "shooting_accuracy_visitante": row.get("shooting_accuracy_visitante", ""),
+            "free_kicks_local": row.get("free_kicks_local", ""),
+            "free_kicks_visitante": row.get("free_kicks_visitante", ""),
+            "offsides_local": row.get("offsides_local", ""),
+            "offsides_visitante": row.get("offsides_visitante", ""),
+            "substitutions_local": row.get("substitutions_local", ""),
+            "substitutions_visitante": row.get("substitutions_visitante", ""),
+            "injuries_local": row.get("injuries_local", ""),
+            "injuries_visitante": row.get("injuries_visitante", ""),
+            "time_in_dangerous_attack_pct_local": row.get("time_in_dangerous_attack_pct_local", ""),
+            "time_in_dangerous_attack_pct_visitante": row.get("time_in_dangerous_attack_pct_visitante", ""),
         }
         captures.append(capture)
 

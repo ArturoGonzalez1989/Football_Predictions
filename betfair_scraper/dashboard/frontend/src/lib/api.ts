@@ -22,11 +22,62 @@ export interface Match {
 export interface Capture {
   timestamp: string
   minuto: string
-  goles: string
-  xg: string
-  posesion: string
-  corners: string
-  tiros: string
+  goles_local: string
+  goles_visitante: string
+  xg_local: string
+  xg_visitante: string
+  posesion_local: string
+  posesion_visitante: string
+  corners_local: string
+  corners_visitante: string
+  tiros_local: string
+  tiros_visitante: string
+  tiros_puerta_local: string
+  tiros_puerta_visitante: string
+  shots_off_target_local: string
+  shots_off_target_visitante: string
+  blocked_shots_local: string
+  blocked_shots_visitante: string
+  saves_local: string
+  saves_visitante: string
+  dangerous_attacks_local: string
+  dangerous_attacks_visitante: string
+  fouls_conceded_local: string
+  fouls_conceded_visitante: string
+  goal_kicks_local: string
+  goal_kicks_visitante: string
+  throw_ins_local: string
+  throw_ins_visitante: string
+  tarjetas_amarillas_local: string
+  tarjetas_amarillas_visitante: string
+  tarjetas_rojas_local: string
+  tarjetas_rojas_visitante: string
+  total_passes_local: string
+  total_passes_visitante: string
+  big_chances_local: string
+  big_chances_visitante: string
+  attacks_local: string
+  attacks_visitante: string
+  tackles_local: string
+  tackles_visitante: string
+  momentum_local: string
+  momentum_visitante: string
+  opta_points_local: string
+  opta_points_visitante: string
+  touches_box_local: string
+  touches_box_visitante: string
+  shooting_accuracy_local: string
+  shooting_accuracy_visitante: string
+  free_kicks_local: string
+  free_kicks_visitante: string
+  offsides_local: string
+  offsides_visitante: string
+  substitutions_local: string
+  substitutions_visitante: string
+  injuries_local: string
+  injuries_visitante: string
+  time_in_dangerous_attack_pct_local: string
+  time_in_dangerous_attack_pct_visitante: string
 }
 
 export interface MatchDetail {
@@ -99,4 +150,6 @@ export const api = {
   refreshMatches: () => post<{ clean: { ok: boolean; output: string } | null; find: { ok: boolean; output: string } | null }>("/system/refresh-matches"),
   startScraper: () => post<{ ok: boolean; message: string; pid: number | null }>("/system/scraper/start"),
   stopScraper: () => post<{ ok: boolean; message: string }>("/system/scraper/stop"),
+  restartBackend: () => post<{ ok: boolean; message: string; old_pid?: number; new_pid?: number }>("/system/backend/restart"),
+  restartFrontend: () => post<{ ok: boolean; message: string; pid?: number }>("/system/frontend/restart"),
 }

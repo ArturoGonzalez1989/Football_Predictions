@@ -57,7 +57,12 @@
       "mcp__plugin_playwright_playwright__browser_network_requests",
       "Bash(ping:*)",
       "mcp__plugin_playwright_playwright__browser_press_key",
-      "Bash(Select-Object -Last 30)"
+      "Bash(Select-Object -Last 30)",
+      "Bash(netstat:*)",
+      "Bash(tail:*)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\scraper_*.log\")",
+      "Bash(Sort-Object LastWriteTime -Descending)",
+      "Bash(Select-Object -First 1 -ExpandProperty FullName)"
     ]
   }
 }

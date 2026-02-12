@@ -485,6 +485,9 @@ def parse_momentum_html(html: str) -> Optional[Dict[str, Any]]:
 
     El momentum muestra probabilidades minuto a minuto de qué equipo domina.
     Es CRÍTICO para trading en vivo.
+
+    Returns:
+        dict con 'home', 'away', 'data_points' si tiene éxito, None si falla
     """
     try:
         # Buscar el script con los datos JSON
@@ -498,26 +501,43 @@ def parse_momentum_html(html: str) -> Optional[Dict[str, Any]]:
         data = json.loads(match.group(1))
         props = data.get('props', {}).get('pageProps', {})
 
-        # Momentum puede venir en diferentes estructuras
-        momentum_data = props.get('momentum', {}) or props.get('momentumData', {}) or props.get('chartData', {})
+        # Los datos de momentum están en el array 'predictions'
+        predictions = props.get('predictions', [])
 
-        if not momentum_data:
-            log.debug("No se encontró datos de momentum")
+        if not predictions or len(predictions) == 0:
+            log.debug("No se encontró datos de momentum (predictions vacío)")
             return None
 
-        # Detectar campos nuevos si momentum_data es un dict
-        if isinstance(momentum_data, dict):
-            known_fields_api = {
-                'home', 'away', 'time', 'minute', 'period', 'homeValue',
-                'awayValue', 'timestamp', 'chartPoints', 'dataPoints'
-            }
-            _detect_unknown_fields(momentum_data, known_fields_api, 'momentum')
+        # Calcular valores agregados sumando probabilidades
+        home_sum = 0.0
+        away_sum = 0.0
 
-        # Retornar los datos tal cual (puede ser array o dict según la API)
+        for item in predictions:
+            if item.get('type') != 'Momentum':
+                continue
+
+            prediction_list = item.get('prediction', [])
+            for pred in prediction_list:
+                prob = float(pred.get('probability', 0))
+                pred_type = pred.get('type', '')
+
+                if pred_type == 'Home':
+                    home_sum += prob
+                elif pred_type == 'Away':
+                    away_sum += prob
+
+        # Multiplicar por 1000 para tener valores en escala similar al método visual
+        # (el método visual suma alturas de divs que van de 0-100, aquí sumamos probabilidades 0-1)
+        home_value = home_sum * 1000
+        away_value = away_sum * 1000
+
         result = {
-            'momentum_data': momentum_data,
-            'available': momentum_data is not None and len(momentum_data) > 0
+            'home': home_value,
+            'away': away_value,
+            'data_points': len(predictions)
         }
+
+        log.debug(f"✅ Momentum calculado: Home={home_value:.2f}, Away={away_value:.2f} ({len(predictions)} puntos)")
 
         return result
 
@@ -841,181 +861,6 @@ def extract_stat_value(all_stats: Dict[str, Any], category: str, team: str, stat
         pass
 
     return default
-
-
-def extract_iframe_stats(driver, betfair_event_id: str) -> dict:
-    """
-    Extrae estadísticas del iframe de visualización cuando no hay Opta disponible.
-
-    Fallback para partidos sin eventId de Opta. Navega al iframe de estadísticas
-    y scrape los valores directamente del HTML renderizado.
-
-    Args:
-        driver: Instancia de Selenium WebDriver
-        betfair_event_id: ID del evento en Betfair (extraído de URL o HTML)
-
-    Returns:
-        dict: Diccionario con estadísticas extraídas (mismo formato que get_all_stats)
-    """
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-    from selenium.common.exceptions import TimeoutException, NoSuchElementException
-
-    stats = {}
-
-    try:
-        # Construir URL del iframe
-        iframe_url = (
-            f"https://videoplayer.betfair.es/GetPlayer.do"
-            f"?eID={betfair_event_id}"
-            f"&contentType=viz&contentView=mstats"
-            f"&statsToggle=hide&contentOnly=true"
-        )
-
-        log.debug(f"  → Extrayendo stats del iframe: {iframe_url}")
-
-        # Guardar ventana actual
-        original_window = driver.current_window_handle
-
-        # Abrir iframe en nueva pestaña (evita perder contexto del partido principal)
-        driver.execute_script(f"window.open('{iframe_url}', '_blank');")
-
-        # Cambiar a la nueva pestaña
-        new_window = [w for w in driver.window_handles if w != original_window][0]
-        driver.switch_to.window(new_window)
-
-        # Esperar a que carguen las stats (máximo 10s)
-        wait = WebDriverWait(driver, 10)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[class*='stat']")))
-
-        # Helper para extraer stats de formato "X LABEL Y"
-        def extract_dual_stat(label_text):
-            try:
-                elems = driver.find_elements(By.XPATH, f"//*[contains(text(), '{label_text}')]")
-                if not elems:
-                    return None, None
-                parent = elems[0].find_element(By.XPATH, "..")
-                nums = parent.find_elements(By.TAG_NAME, "div")
-                if len(nums) >= 2:
-                    home = nums[0].text.strip()
-                    away = nums[-1].text.strip()
-                    return home, away
-            except Exception:
-                pass
-            return None, None
-
-        # Helper para extraer stats de porcentaje "X% LABEL Y%"
-        def extract_percentage_stat(label_text):
-            try:
-                elems = driver.find_elements(By.XPATH, f"//*[contains(text(), '{label_text}')]")
-                if not elems:
-                    return None, None
-                parent = elems[0].find_element(By.XPATH, "..")
-                # Buscar elementos que contengan "%"
-                pcts = parent.find_elements(By.XPATH, ".//*[contains(text(), '%')]")
-                if len(pcts) >= 2:
-                    home = pcts[0].text.strip().replace("%", "")
-                    away = pcts[1].text.strip().replace("%", "")
-                    return home, away
-            except Exception:
-                pass
-            return None, None
-
-        # Extraer estadísticas disponibles en el iframe
-        # Mapeo de labels del iframe a campos del CSV
-
-        # Stats básicas (numéricas)
-        home_shots_on, away_shots_on = extract_dual_stat("Shots on target")
-        home_shots_off, away_shots_off = extract_dual_stat("Shots off target")
-        home_shots_blocked, away_shots_blocked = extract_dual_stat("Shots blocked")
-        home_corners, away_corners = extract_dual_stat("Corner kicks")
-        home_free_kicks, away_free_kicks = extract_dual_stat("Free kicks")
-        home_offsides, away_offsides = extract_dual_stat("Offsides")
-        home_goal_kicks, away_goal_kicks = extract_dual_stat("Goal kicks")
-        home_saves, away_saves = extract_dual_stat("Saves")
-        home_throw_ins, away_throw_ins = extract_dual_stat("Throw-ins")
-        home_fouls, away_fouls = extract_dual_stat("Fouls")
-
-        # Tarjetas (del componente "Cards")
-        try:
-            cards_elem = driver.find_element(By.XPATH, "//*[contains(text(), 'Cards')]")
-            cards_parent = cards_elem.find_element(By.XPATH, "..")
-            card_imgs = cards_parent.find_elements(By.TAG_NAME, "img")
-            # Contar amarillas y rojas por posición (las primeras son local, las últimas visitante)
-            # Este es un aproximado - puede necesitar ajuste según el HTML real
-            home_yellow = cards_parent.find_elements(By.XPATH, ".//img[contains(@src, 'yellow')]")[0:1]
-            away_yellow = cards_parent.find_elements(By.XPATH, ".//img[contains(@src, 'yellow')]")[1:2]
-            home_red = cards_parent.find_elements(By.XPATH, ".//img[contains(@src, 'red')]")[0:1]
-            away_red = cards_parent.find_elements(By.XPATH, ".//img[contains(@src, 'red')]")[1:2]
-        except Exception:
-            home_yellow = away_yellow = home_red = away_red = None
-
-        # Stats de porcentaje
-        home_poss, away_poss = extract_percentage_stat("Ball possession")
-        home_dangerous, away_dangerous = extract_percentage_stat("Time in dangerous attack")
-
-        # Ataques peligrosos (dangerous attacks)
-        try:
-            dangerous_elem = driver.find_element(By.XPATH, "//*[contains(text(), 'Dangerous Attack')]")
-            dangerous_parent = dangerous_elem.find_element(By.XPATH, "..")
-            nums = dangerous_parent.find_elements(By.CSS_SELECTOR, "[class*='number'], div")
-            if len(nums) >= 2:
-                home_attacks = nums[0].text.strip()
-                away_attacks = nums[-1].text.strip()
-            else:
-                home_attacks = away_attacks = None
-        except Exception:
-            home_attacks = away_attacks = None
-
-        # Construir diccionario de stats (mapeo a campos del CSV)
-        stats = {
-            # Básicas disponibles en iframe
-            "tiros_puerta_local": home_shots_on or "",
-            "tiros_puerta_visitante": away_shots_on or "",
-            "corners_local": home_corners or "",
-            "corners_visitante": away_corners or "",
-            "posesion_local": home_poss or "",
-            "posesion_visitante": away_poss or "",
-            "fouls_conceded_local": home_fouls or "",
-            "fouls_conceded_visitante": away_fouls or "",
-            "saves_local": home_saves or "",
-            "saves_visitante": away_saves or "",
-            "dangerous_attacks_local": home_attacks or "",
-            "dangerous_attacks_visitante": away_attacks or "",
-
-            # Calcular tiros totales (on + off + blocked)
-            "tiros_local": "",
-            "tiros_visitante": "",
-        }
-
-        # Calcular tiros totales si tenemos los componentes
-        try:
-            if home_shots_on and home_shots_off and home_shots_blocked:
-                stats["tiros_local"] = str(int(home_shots_on) + int(home_shots_off) + int(home_shots_blocked))
-            if away_shots_on and away_shots_off and away_shots_blocked:
-                stats["tiros_visitante"] = str(int(away_shots_on) + int(away_shots_off) + int(away_shots_blocked))
-        except (ValueError, TypeError):
-            pass
-
-        # Cerrar pestaña del iframe y volver a la original
-        driver.close()
-        driver.switch_to.window(original_window)
-
-        captured_count = sum(1 for v in stats.values() if v != "")
-        log.info(f"  ✓ Estadísticas del iframe capturadas: {captured_count} campos")
-
-    except TimeoutException:
-        log.warning("  × Timeout esperando estadísticas del iframe")
-        driver.switch_to.window(original_window)
-    except Exception as e:
-        log.error(f"  × Error extrayendo stats del iframe: {e}")
-        try:
-            driver.switch_to.window(original_window)
-        except Exception:
-            pass
-
-    return stats
 
 
 if __name__ == "__main__":
