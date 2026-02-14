@@ -1,0 +1,616 @@
+00:04:36 [INFO] 📝 Log guardándose en: logs/scraper_20260213_000436.log
+00:04:36 [INFO] Cargados 8 partidos desde games.csv
+00:04:36 [INFO] 📅 MODO SCHEDULING ACTIVADO
+00:04:36 [INFO]    Ventana tracking: 10 min antes → 150 min después
+00:04:36 [INFO]    Total en CSV: 8 partidos
+00:04:36 [INFO]    ✓ Partidos activos ahora: 8
+00:04:36 [INFO]    ⏰ Partidos futuros: 0
+00:04:36 [INFO]    ✅ Partidos finalizados: 0
+00:04:36 [INFO] 🚀 Sistema multi-driver: Creando 8 drivers independientes (sin límite de tabs)
+00:04:36 [INFO] 
+Iniciando observador con 8 partidos.
+00:04:36 [INFO] Ciclo: 30s | Output: data/
+00:04:36 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 5 ciclos (scheduling)
+00:04:36 [INFO] 🧹 Limpiando ventanas Betfair antiguas...
+00:04:36 [WARNING] Script de limpieza no encontrado: C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\close_betfair_windows.ps1
+00:04:36 [INFO] Cargados 8 partidos desde games.csv
+00:04:36 [INFO] 
+🚀 Iniciando 8 drivers Chrome (sistema multi-driver paralelo)...
+00:04:36 [INFO] 🔧 Creando driver de login: Athletico-PR - Santos
+00:04:36 [INFO] 🔧 Creando driver para: Athletico-PR - Santos
+00:04:45 [INFO] ✓ Cookies aceptadas automáticamente
+00:04:46 [INFO] ✓ Driver listo: athletico-pr-santos-apuestas-35207628
+00:04:46 [INFO] ============================================================
+00:04:46 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+00:04:46 [INFO] Tienes 0 segundos...
+00:04:46 [INFO] El scraper comenzará automáticamente después.
+00:04:46 [INFO] ============================================================
+00:04:46 [INFO] 🔧 Creando 7 drivers adicionales en paralelo...
+00:04:46 [INFO] 🔧 Creando driver para: Tigre - Aldosivi
+00:04:46 [INFO] 🔧 Creando driver para: Fluminense - Botafogo FR
+00:04:46 [INFO] 🔧 Creando driver para: Corinthians - Red Bull Bragantino
+00:04:46 [INFO] 🔧 Creando driver para: Argentinos Juniors - River Plate
+00:04:47 [INFO] 🔧 Creando driver para: Internacional - SE Palmeiras
+00:04:47 [INFO] 🔧 Creando driver para: Univ Catolica (Ecu) - Juventud De Las Piedras
+00:04:47 [INFO] 🔧 Creando driver para: Atletico Nacional Medellin - Fortaleza
+00:04:53 [INFO] ✓ Cookies aceptadas automáticamente
+00:04:54 [INFO] ✓ Driver listo: argentinos-juniors-river-plate-apuestas-35225017
+00:04:56 [INFO] ✓ Cookies aceptadas automáticamente
+00:04:56 [INFO] ✓ Cookies aceptadas automáticamente
+00:04:56 [INFO] ✓ Cookies aceptadas automáticamente
+00:04:56 [INFO] ✓ Cookies aceptadas automáticamente
+00:04:57 [INFO] ✓ Driver listo: corinthians-red-bull-bragantino-apuestas-35207556
+00:04:57 [INFO] ✓ Driver listo: univ-catolica-ecu-juventud-de-las-piedras-apuestas
+00:04:57 [INFO] ✓ Driver listo: internacional-se-palmeiras-apuestas-35224753
+00:04:57 [INFO] ✓ Driver listo: tigre-aldosivi-apuestas-35224990
+00:04:59 [INFO] ✓ Cookies aceptadas automáticamente
+00:05:00 [INFO] ✓ Driver listo: atletico-nacional-medellin-fortaleza-apuestas-3523
+00:05:06 [INFO] ✓ Cookies aceptadas automáticamente
+00:05:07 [INFO] ✓ Driver listo: fluminense-botafogo-fr-apuestas-35248598
+00:05:07 [INFO] ✓ 8 drivers creados exitosamente
+00:05:07 [INFO] ============================================================
+00:05:07 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+00:05:07 [INFO] ============================================================
+00:05:07 [INFO] 
+--- Ciclo #1 ---
+00:05:07 [INFO] 📸 Capturando 8 partidos en paralelo...
+00:05:07 [DEBUG] ✓ Actualizar clickeado: internacional-se-palmeiras-apuestas-35224753
+00:05:07 [DEBUG] ✓ Actualizar clickeado: atletico-nacional-medellin-fortaleza-apuestas-3523
+00:05:07 [DEBUG] ✓ Actualizar clickeado: fluminense-botafogo-fr-apuestas-35248598
+00:05:07 [DEBUG] ✓ Actualizar clickeado: tigre-aldosivi-apuestas-35224990
+00:05:07 [DEBUG] ✓ Actualizar clickeado: athletico-pr-santos-apuestas-35207628
+00:05:07 [DEBUG] ✓ Actualizar clickeado: univ-catolica-ecu-juventud-de-las-piedras-apuestas
+00:05:07 [DEBUG] ✓ Actualizar clickeado: argentinos-juniors-river-plate-apuestas-35225017
+00:05:07 [DEBUG] ✓ Actualizar clickeado: corinthians-red-bull-bragantino-apuestas-35207556
+00:05:07 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo información del partido...
+00:05:07 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo información del partido...
+00:05:07 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo información del partido...
+00:05:07 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo información del partido...
+00:05:07 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo información del partido...
+00:05:07 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo información del partido...
+00:05:07 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo información del partido...
+00:05:07 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo información del partido...
+00:05:15 [DEBUG]   ✓ Estado detectado: DESCANSO (CSS: 'Descanso')
+00:05:15 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo cuotas Match Odds...
+00:05:16 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo cuotas Match Odds...
+00:05:16 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo cuotas Match Odds...
+00:05:16 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo cuotas Match Odds...
+00:05:17 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo cuotas Over/Under...
+00:05:18 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo cuotas Over/Under...
+00:05:18 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo cuotas Over/Under...
+00:05:18 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo cuotas Over/Under...
+00:05:20 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo cuotas Resultado Correcto...
+00:05:21 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo cuotas Resultado Correcto...
+00:05:21 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo cuotas Resultado Correcto...
+00:05:21 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo cuotas Resultado Correcto...
+00:05:23 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo estadísticas del partido...
+00:05:23 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:23 [DEBUG] Betfair event ID extraído del HTML: 35207628
+00:05:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35207628&contentType=viz&contentView=mstats
+00:05:23 [INFO] EventId de Opta extraído: d0m65v8ef6kr49oendglubitw
+00:05:23 [DEBUG]   ✓ EventId extraído: d0m65v8ef6kr49oendglubitw
+00:05:23 [DEBUG]   → Obteniendo estadísticas de la API...
+00:05:23 [INFO] 📊 Obteniendo todas las estadísticas para eventId: d0m65v8ef6kr49oendglubitw
+00:05:24 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo estadísticas del partido...
+00:05:24 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:24 [DEBUG] Betfair event ID extraído del HTML: 35248598
+00:05:24 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35248598&contentType=viz&contentView=mstats
+00:05:24 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo estadísticas del partido...
+00:05:24 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:24 [DEBUG] Betfair event ID extraído del HTML: 35207556
+00:05:24 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35207556&contentType=viz&contentView=mstats
+00:05:24 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo estadísticas del partido...
+00:05:24 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:24 [DEBUG] Betfair event ID extraído del HTML: 35224990
+00:05:24 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35224990&contentType=viz&contentView=mstats
+00:05:24 [INFO] EventId de Opta extraído: cx1gg4b80dh0ffb7aiu8qxlp0
+00:05:24 [DEBUG]   ✓ EventId extraído: cx1gg4b80dh0ffb7aiu8qxlp0
+00:05:24 [DEBUG]   → Obteniendo estadísticas de la API...
+00:05:24 [INFO] 📊 Obteniendo todas las estadísticas para eventId: cx1gg4b80dh0ffb7aiu8qxlp0
+00:05:24 [DEBUG] ✅ Summary stats obtenidas para d0m65v8ef6kr49oendglubitw
+00:05:25 [INFO] EventId de Opta extraído: cymeu3h6qmxm2b4q9wrazvuac
+00:05:25 [DEBUG]   ✓ EventId extraído: cymeu3h6qmxm2b4q9wrazvuac
+00:05:25 [DEBUG]   → Obteniendo estadísticas de la API...
+00:05:25 [INFO] 📊 Obteniendo todas las estadísticas para eventId: cymeu3h6qmxm2b4q9wrazvuac
+00:05:25 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+00:05:25 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+00:05:25 [INFO]   → Extrayendo stats del iframe (fallback): eID=35224990
+00:05:25 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo cuotas Match Odds...
+00:05:25 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo cuotas Match Odds...
+00:05:25 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo cuotas Match Odds...
+00:05:25 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo cuotas Match Odds...
+00:05:25 [DEBUG] ✅ Summary stats obtenidas para cx1gg4b80dh0ffb7aiu8qxlp0
+00:05:25 [DEBUG] ✅ Momentum calculado: Home=611.08, Away=448.92 (53 puntos)
+00:05:25 [DEBUG] ✅ Momentum data obtenida para d0m65v8ef6kr49oendglubitw
+00:05:26 [DEBUG] ✅ Summary stats obtenidas para cymeu3h6qmxm2b4q9wrazvuac
+00:05:26 [DEBUG] ✅ Momentum calculado: Home=465.45, Away=280.10 (33 puntos)
+00:05:26 [DEBUG] ✅ Momentum data obtenida para cx1gg4b80dh0ffb7aiu8qxlp0
+00:05:26 [DEBUG] No se encontró teamStatsAttackingLv
+00:05:27 [DEBUG] ✅ Momentum calculado: Home=2.77, Away=5.65 (2 puntos)
+00:05:27 [DEBUG] ✅ Momentum data obtenida para cymeu3h6qmxm2b4q9wrazvuac
+00:05:27 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+00:05:27 [DEBUG]     ✓ 'Shots on target': 3-0
+00:05:27 [DEBUG]     ✓ 'Shots off target': 4-5
+00:05:27 [DEBUG]     ✓ 'Shots blocked': 0-1
+00:05:27 [DEBUG]     ✓ 'Corner kicks': 5-3
+00:05:27 [DEBUG] No se encontró teamStatsAttackingLv
+00:05:27 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo cuotas Over/Under...
+00:05:27 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo cuotas Over/Under...
+00:05:27 [DEBUG] No se encontró teamStatsDefenceLv
+00:05:27 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo cuotas Over/Under...
+00:05:28 [DEBUG] No se encontró teamStatsAttackingLv
+00:05:28 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo cuotas Over/Under...
+00:05:28 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x1045093
+	0x10450d4
+	0xe3b490
+	0xe858da
+	0xe85b7b
+	0xe7b041
+	0xea8204
+	0xe7af34
+	0xea8384
+	0xec5341
+	0xea7f56
+	0xe796c9
+	0xe7a484
+	0x1297e34
+	0x12930c9
+	0x12b0add
+	0x105db38
+	0x10658ad
+	0x104d848
+	0x104da12
+	0x10375fa
+	0x75a75d49
+	0x771ad83b
+	0x771ad7c1
+
+00:05:28 [DEBUG] No se encontró teamStatsDefenceLv
+00:05:28 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:05:28 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+00:05:28 [DEBUG]   → Mapeando estadísticas...
+00:05:28 [DEBUG]     → Momentum vía API: 611.08-448.92
+00:05:28 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+00:05:28 [DEBUG]     → xG: 1.222-0.3755, Corners: 3-1
+00:05:28 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo volumen matched...
+00:05:28 [DEBUG] No se encontró teamStatsDefenceLv
+00:05:29 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x1045093
+	0x10450d4
+	0xe3b490
+	0xe858da
+	0xe85b7b
+	0xe7b041
+	0xea8204
+	0xe7af34
+	0xea8384
+	0xec5341
+	0xea7f56
+	0xe796c9
+	0xe7a484
+	0x1297e34
+	0x12930c9
+	0x12b0add
+	0x105db38
+	0x10658ad
+	0x104d848
+	0x104da12
+	0x10375fa
+	0x75a75d49
+	0x771ad83b
+	0x771ad7c1
+
+00:05:29 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+00:05:29 [DEBUG]     × 'Free kicks' - valores vacíos
+00:05:29 [DEBUG]     × 'Offsides' - valores vacíos
+00:05:29 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:05:29 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+00:05:29 [DEBUG]   → Mapeando estadísticas...
+00:05:29 [DEBUG]     → Momentum vía API: 465.45-280.10
+00:05:29 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+00:05:29 [DEBUG]     → xG: 0.1006-0.0, Corners: 1-0
+00:05:29 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo volumen matched...
+00:05:29 [DEBUG]     × 'Goal kicks' - valores vacíos
+00:05:29 [DEBUG]     × 'Saves' - valores vacíos
+00:05:29 [DEBUG]     × 'Throw-ins' - valores vacíos
+00:05:29 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:05:29 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+00:05:29 [DEBUG]     × 'Substitutions' - valores vacíos
+00:05:29 [DEBUG]   → Mapeando estadísticas...
+00:05:29 [DEBUG]     → Momentum vía API: 2.77-5.65
+00:05:29 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+00:05:29 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:05:29 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo volumen matched...
+00:05:29 [DEBUG]     × 'Injuries' - valores vacíos
+00:05:29 [DEBUG]     × 'Fouls' - valores vacíos
+00:05:29 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+00:05:30 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '3', 'tiros_puerta_visitante': '0', 'corners_local': '5', 'corners_visitante': '3', 'posesion_local': '52', 'posesion_visitante': '48', 'shots_off_target_local': '4', 'shots_off_target_visitante': '5', 'blocked_shots_local': '0', 'blocked_shots_visitante': '1', 'time_in_dangerous_attack_pct_local': '63', 'time_in_dangerous_attack_pct_visitante': '37', 'tiros_local': '7', 'tiros_visitante': '6'}
+00:05:30 [DEBUG]   → Total stats en dict tras merge: 14
+00:05:30 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo volumen matched...
+00:05:30 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo cuotas Resultado Correcto...
+00:05:30 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo cuotas Resultado Correcto...
+00:05:30 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo cuotas Resultado Correcto...
+00:05:30 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo cuotas Resultado Correcto...
+00:05:33 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo estadísticas del partido...
+00:05:33 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:33 [DEBUG] Betfair event ID extraído de la URL: 35224753
+00:05:33 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35224753&contentType=viz&contentView=mstats
+00:05:33 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo estadísticas del partido...
+00:05:33 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:33 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo estadísticas del partido...
+00:05:33 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:33 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo estadísticas del partido...
+00:05:33 [DEBUG]   → Extrayendo eventId del HTML...
+00:05:33 [DEBUG] Betfair event ID extraído de la URL: 35233442
+00:05:33 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35233442&contentType=viz&contentView=mstats
+00:05:33 [DEBUG] Betfair event ID extraído de la URL: 35225017
+00:05:33 [DEBUG] Betfair event ID extraído de la URL: 35233418
+00:05:33 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35233418&contentType=viz&contentView=mstats
+00:05:33 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35225017&contentType=viz&contentView=mstats
+00:05:34 [INFO] EventId de Opta extraído: d03ygpwozekbek1ijpgwv3jtg
+00:05:34 [DEBUG]   ✓ EventId extraído: d03ygpwozekbek1ijpgwv3jtg
+00:05:34 [DEBUG]   → Obteniendo estadísticas de la API...
+00:05:34 [INFO] 📊 Obteniendo todas las estadísticas para eventId: d03ygpwozekbek1ijpgwv3jtg
+00:05:34 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35225017&contentType=viz&contentView=mstats
+00:05:34 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+00:05:34 [INFO]   → Extrayendo stats del iframe (fallback): eID=35225017
+00:05:34 [INFO] EventId de Opta extraído: 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:05:34 [DEBUG]   ✓ EventId extraído: 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:05:34 [DEBUG]   → Obteniendo estadísticas de la API...
+00:05:34 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:05:34 [INFO] EventId de Opta extraído: 45f89lzskdwrt4feiqyozt5w4
+00:05:34 [DEBUG]   ✓ EventId extraído: 45f89lzskdwrt4feiqyozt5w4
+00:05:34 [DEBUG]   → Obteniendo estadísticas de la API...
+00:05:34 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 45f89lzskdwrt4feiqyozt5w4
+00:05:35 [DEBUG] ✅ Summary stats obtenidas para d03ygpwozekbek1ijpgwv3jtg
+00:05:35 [DEBUG] ✅ Summary stats obtenidas para 45f89lzskdwrt4feiqyozt5w4
+00:05:35 [DEBUG] ✅ Summary stats obtenidas para 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:05:36 [DEBUG] No se encontró datos de momentum (predictions vacío)
+00:05:36 [DEBUG] No se encontró datos de momentum (predictions vacío)
+00:05:36 [DEBUG] No se encontró datos de momentum (predictions vacío)
+00:05:37 [DEBUG] No se encontró teamStatsAttackingLv
+00:05:37 [DEBUG] No se encontró teamStatsAttackingLv
+00:05:37 [DEBUG] No se encontró teamStatsAttackingLv
+00:05:37 [DEBUG] No se encontró teamStatsDefenceLv
+00:05:38 [DEBUG] No se encontró teamStatsDefenceLv
+00:05:38 [DEBUG] No se encontró teamStatsDefenceLv
+00:05:38 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:05:38 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+00:05:38 [DEBUG]   → Mapeando estadísticas...
+00:05:38 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+00:05:38 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:05:38 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo volumen matched...
+00:05:39 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:05:39 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+00:05:39 [DEBUG]   → Mapeando estadísticas...
+00:05:39 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+00:05:39 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:05:39 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo volumen matched...
+00:05:39 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:05:39 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+00:05:39 [DEBUG]   → Mapeando estadísticas...
+00:05:39 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+00:05:39 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:05:39 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo volumen matched...
+00:05:41 [DEBUG] [athletico-pr-santos-apuestas-35207628] ✓ Momentum obtenido de API: 611.08-448.92
+00:05:41 [INFO] ✓ [athletico-pr-santos-apuestas-35207628] Captura exitosa: descanso, min , 1-1
+00:05:42 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] ✓ Momentum obtenido de API: 2.77-5.65
+00:05:42 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] ✓ Momentum obtenido de API: 465.45-280.10
+00:05:42 [INFO] ✓ [corinthians-red-bull-bragantino-apuestas-35207556] Captura exitosa: en_juego, min 1, 0-0
+00:05:42 [INFO] ✓ [fluminense-botafogo-fr-apuestas-35248598] Captura exitosa: en_juego, min 32, 0-0
+00:05:43 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo momentum (fallback visual)...
+00:05:43 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+00:05:48 [WARNING]   × Timeout esperando estadísticas básicas
+00:05:48 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+00:05:49 [DEBUG]     × 'Shots on target' no encontrado en DOM
+00:05:50 [DEBUG]   × No se encontró URL del iframe de stats
+00:05:50 [INFO] ✓ [tigre-aldosivi-apuestas-35224990] Captura exitosa: en_juego, min 45, 1-0
+00:05:50 [DEBUG]     × 'Shots off target' no encontrado en DOM
+00:05:51 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+00:05:51 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo momentum (fallback visual)...
+00:05:51 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+00:05:51 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/watch/pitchView?&eventId=d03ygpwozekbek1ijp
+00:05:51 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=d03ygpwo
+00:05:51 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo momentum (fallback visual)...
+00:05:51 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+00:05:51 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/watch/pitchView?&eventId=45f89lzskdwrt4feiq
+00:05:51 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=45f89lzs
+00:05:51 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo momentum (fallback visual)...
+00:05:51 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+00:05:52 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/watch/pitchView?&eventId=4ja1sz1g7i8hcdc2hl
+00:05:52 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=4ja1sz1g
+00:05:52 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+00:05:55 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+00:05:55 [DEBUG]   → Divs: 1, Local: 0, Visit: 0
+00:05:56 [INFO] ✓ [atletico-nacional-medellin-fortaleza-apuestas-3523] Captura exitosa: pre_partido, min , -
+00:05:56 [DEBUG]   → Divs: 1, Local: 0, Visit: 0
+00:05:56 [INFO] ✓ [internacional-se-palmeiras-apuestas-35224753] Captura exitosa: pre_partido, min , -
+00:05:56 [DEBUG]   → Divs: 1, Local: 0, Visit: 0
+00:05:56 [INFO] ✓ [univ-catolica-ecu-juventud-de-las-piedras-apuestas] Captura exitosa: pre_partido, min , -
+00:05:56 [DEBUG]     × 'Free kicks' no encontrado en DOM
+00:05:57 [DEBUG]     × 'Offsides' no encontrado en DOM
+00:05:59 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+00:06:00 [DEBUG]     × 'Saves' no encontrado en DOM
+00:06:01 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+00:06:02 [DEBUG]     × 'Substitutions' no encontrado en DOM
+00:06:03 [DEBUG]     × 'Injuries' no encontrado en DOM
+00:06:04 [DEBUG]     × 'Fouls' no encontrado en DOM
+00:06:04 [WARNING]   × Fallback iframe no encontró estadísticas
+00:06:04 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo volumen matched...
+00:06:17 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo momentum (fallback visual)...
+00:06:17 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+00:06:24 [DEBUG]   × No se encontró URL del iframe de stats
+00:06:24 [INFO] ✓ [argentinos-juniors-river-plate-apuestas-35225017] Captura exitosa: pre_partido, min , -
+00:06:24 [INFO] ✓ Captura paralela completada en 77.0s (8/8 exitosos)
+00:06:24 [WARNING] Ciclo tardó 77.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+00:06:24 [INFO] 
+--- Ciclo #2 ---
+00:06:24 [INFO] 📸 Capturando 8 partidos en paralelo...
+00:06:24 [DEBUG] ✓ Actualizar clickeado: internacional-se-palmeiras-apuestas-35224753
+00:06:24 [DEBUG] ✓ Actualizar clickeado: atletico-nacional-medellin-fortaleza-apuestas-3523
+00:06:24 [DEBUG] ✓ Actualizar clickeado: argentinos-juniors-river-plate-apuestas-35225017
+00:06:24 [DEBUG] ✓ Actualizar clickeado: corinthians-red-bull-bragantino-apuestas-35207556
+00:06:24 [DEBUG] ✓ Actualizar clickeado: athletico-pr-santos-apuestas-35207628
+00:06:24 [DEBUG] ✓ Actualizar clickeado: tigre-aldosivi-apuestas-35224990
+00:06:24 [DEBUG] ✓ Actualizar clickeado: fluminense-botafogo-fr-apuestas-35248598
+00:06:24 [DEBUG] ✓ Actualizar clickeado: univ-catolica-ecu-juventud-de-las-piedras-apuestas
+00:06:24 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo información del partido...
+00:06:24 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo información del partido...
+00:06:24 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo información del partido...
+00:06:24 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo información del partido...
+00:06:24 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo información del partido...
+00:06:24 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo información del partido...
+00:06:24 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo información del partido...
+00:06:24 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo información del partido...
+00:06:32 [DEBUG]   ✓ Estado detectado: DESCANSO (CSS: 'Descanso')
+00:06:32 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo cuotas Match Odds...
+00:06:33 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo cuotas Match Odds...
+00:06:33 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo cuotas Match Odds...
+00:06:33 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo cuotas Match Odds...
+00:06:34 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo cuotas Over/Under...
+00:06:35 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo cuotas Over/Under...
+00:06:36 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo cuotas Over/Under...
+00:06:36 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo cuotas Over/Under...
+00:06:37 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo cuotas Resultado Correcto...
+00:06:38 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo cuotas Resultado Correcto...
+00:06:38 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo cuotas Resultado Correcto...
+00:06:38 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo cuotas Resultado Correcto...
+00:06:40 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo estadísticas del partido...
+00:06:40 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:40 [DEBUG] Betfair event ID extraído del HTML: 35224990
+00:06:40 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35224990&contentType=viz&contentView=mstats
+00:06:40 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo estadísticas del partido...
+00:06:40 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:40 [DEBUG] Betfair event ID extraído del HTML: 35207628
+00:06:40 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35207628&contentType=viz&contentView=mstats
+00:06:40 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+00:06:40 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+00:06:40 [INFO]   → Extrayendo stats del iframe (fallback): eID=35224990
+00:06:40 [INFO] EventId de Opta extraído: d0m65v8ef6kr49oendglubitw
+00:06:40 [DEBUG]   ✓ EventId extraído: d0m65v8ef6kr49oendglubitw
+00:06:40 [DEBUG]   → Obteniendo estadísticas de la API...
+00:06:40 [INFO] 📊 Obteniendo todas las estadísticas para eventId: d0m65v8ef6kr49oendglubitw
+00:06:41 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo estadísticas del partido...
+00:06:41 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:41 [DEBUG] Betfair event ID extraído del HTML: 35248598
+00:06:41 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35248598&contentType=viz&contentView=mstats
+00:06:41 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo estadísticas del partido...
+00:06:41 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:41 [DEBUG] Betfair event ID extraído del HTML: 35207556
+00:06:41 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35207556&contentType=viz&contentView=mstats
+00:06:41 [DEBUG] ✅ Summary stats obtenidas para d0m65v8ef6kr49oendglubitw
+00:06:41 [INFO] EventId de Opta extraído: cx1gg4b80dh0ffb7aiu8qxlp0
+00:06:41 [DEBUG]   ✓ EventId extraído: cx1gg4b80dh0ffb7aiu8qxlp0
+00:06:41 [DEBUG]   → Obteniendo estadísticas de la API...
+00:06:41 [INFO] 📊 Obteniendo todas las estadísticas para eventId: cx1gg4b80dh0ffb7aiu8qxlp0
+00:06:42 [INFO] EventId de Opta extraído: cymeu3h6qmxm2b4q9wrazvuac
+00:06:42 [DEBUG]   ✓ EventId extraído: cymeu3h6qmxm2b4q9wrazvuac
+00:06:42 [DEBUG]   → Obteniendo estadísticas de la API...
+00:06:42 [INFO] 📊 Obteniendo todas las estadísticas para eventId: cymeu3h6qmxm2b4q9wrazvuac
+00:06:42 [DEBUG] ✅ Summary stats obtenidas para cx1gg4b80dh0ffb7aiu8qxlp0
+00:06:42 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo cuotas Match Odds...
+00:06:43 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+00:06:43 [DEBUG] ✅ Momentum calculado: Home=611.08, Away=448.92 (53 puntos)
+00:06:43 [DEBUG] ✅ Momentum data obtenida para d0m65v8ef6kr49oendglubitw
+00:06:43 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo cuotas Match Odds...
+00:06:43 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo cuotas Match Odds...
+00:06:43 [DEBUG]     ✓ 'Shots on target': 3-0
+00:06:43 [DEBUG]     ✓ 'Shots off target': 4-6
+00:06:43 [DEBUG]     ✓ 'Shots blocked': 0-1
+00:06:43 [DEBUG]     ✓ 'Corner kicks': 5-3
+00:06:43 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo cuotas Match Odds...
+00:06:43 [DEBUG] ✅ Summary stats obtenidas para cymeu3h6qmxm2b4q9wrazvuac
+00:06:43 [DEBUG] ✅ Momentum calculado: Home=470.34, Away=290.92 (35 puntos)
+00:06:43 [DEBUG] ✅ Momentum data obtenida para cx1gg4b80dh0ffb7aiu8qxlp0
+00:06:44 [DEBUG] No se encontró teamStatsAttackingLv
+00:06:44 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x1045093
+	0x10450d4
+	0xe3b490
+	0xe858da
+	0xe85b7b
+	0xe7b041
+	0xea8204
+	0xe7af34
+	0xea8384
+	0xec5341
+	0xea7f56
+	0xe796c9
+	0xe7a484
+	0x1297e34
+	0x12930c9
+	0x12b0add
+	0x105db38
+	0x10658ad
+	0x104d848
+	0x104da12
+	0x10375fa
+	0x75a75d49
+	0x771ad83b
+	0x771ad7c1
+
+00:06:44 [DEBUG] ✅ Momentum calculado: Home=13.47, Away=23.98 (4 puntos)
+00:06:44 [DEBUG] ✅ Momentum data obtenida para cymeu3h6qmxm2b4q9wrazvuac
+00:06:44 [DEBUG] No se encontró teamStatsAttackingLv
+00:06:45 [DEBUG] No se encontró teamStatsDefenceLv
+00:06:45 [DEBUG] No se encontró teamStatsAttackingLv
+00:06:45 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x1045093
+	0x10450d4
+	0xe3b490
+	0xe858da
+	0xe85b7b
+	0xe7b041
+	0xea8204
+	0xe7af34
+	0xea8384
+	0xec5341
+	0xea7f56
+	0xe796c9
+	0xe7a484
+	0x1297e34
+	0x12930c9
+	0x12b0add
+	0x105db38
+	0x10658ad
+	0x104d848
+	0x104da12
+	0x10375fa
+	0x75a75d49
+	0x771ad83b
+	0x771ad7c1
+
+00:06:45 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+00:06:45 [DEBUG]     × 'Free kicks' - valores vacíos
+00:06:45 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo cuotas Over/Under...
+00:06:45 [DEBUG]     × 'Offsides' - valores vacíos
+00:06:45 [DEBUG]     × 'Goal kicks' - valores vacíos
+00:06:45 [DEBUG]     × 'Saves' - valores vacíos
+00:06:45 [DEBUG]     × 'Throw-ins' - valores vacíos
+00:06:45 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo cuotas Over/Under...
+00:06:45 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo cuotas Over/Under...
+00:06:45 [DEBUG]     × 'Substitutions' - valores vacíos
+00:06:45 [DEBUG]     × 'Injuries' - valores vacíos
+00:06:45 [DEBUG]     × 'Fouls' - valores vacíos
+00:06:45 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+00:06:45 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo cuotas Over/Under...
+00:06:45 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '3', 'tiros_puerta_visitante': '0', 'corners_local': '5', 'corners_visitante': '3', 'posesion_local': '52', 'posesion_visitante': '48', 'shots_off_target_local': '4', 'shots_off_target_visitante': '6', 'blocked_shots_local': '0', 'blocked_shots_visitante': '1', 'time_in_dangerous_attack_pct_local': '61', 'time_in_dangerous_attack_pct_visitante': '39', 'tiros_local': '7', 'tiros_visitante': '7'}
+00:06:45 [DEBUG]   → Total stats en dict tras merge: 14
+00:06:45 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo volumen matched...
+00:06:45 [DEBUG] No se encontró teamStatsDefenceLv
+00:06:46 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:06:46 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+00:06:46 [DEBUG]   → Mapeando estadísticas...
+00:06:46 [DEBUG]     → Momentum vía API: 611.08-448.92
+00:06:46 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+00:06:46 [DEBUG]     → xG: 1.222-0.3755, Corners: 3-1
+00:06:46 [DEBUG] [athletico-pr-santos-apuestas-35207628] → Extrayendo volumen matched...
+00:06:46 [DEBUG] No se encontró teamStatsDefenceLv
+00:06:46 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:06:46 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+00:06:46 [DEBUG]   → Mapeando estadísticas...
+00:06:46 [DEBUG]     → Momentum vía API: 470.34-290.92
+00:06:46 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+00:06:46 [DEBUG]     → xG: 0.1006-0.0, Corners: 1-0
+00:06:46 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] → Extrayendo volumen matched...
+00:06:47 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:06:47 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+00:06:47 [DEBUG]   → Mapeando estadísticas...
+00:06:47 [DEBUG]     → Momentum vía API: 13.47-23.98
+00:06:47 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+00:06:47 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:06:47 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] → Extrayendo volumen matched...
+00:06:47 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo cuotas Resultado Correcto...
+00:06:48 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo cuotas Resultado Correcto...
+00:06:48 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo cuotas Resultado Correcto...
+00:06:48 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo cuotas Resultado Correcto...
+00:06:49 [DEBUG] [argentinos-juniors-river-plate-apuestas-35225017] → Extrayendo estadísticas del partido...
+00:06:49 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:49 [DEBUG] Betfair event ID extraído de la URL: 35225017
+00:06:49 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35225017&contentType=viz&contentView=mstats
+00:06:50 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35225017&contentType=viz&contentView=mstats
+00:06:50 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+00:06:50 [INFO]   → Extrayendo stats del iframe (fallback): eID=35225017
+00:06:51 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo estadísticas del partido...
+00:06:51 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:51 [DEBUG] Betfair event ID extraído de la URL: 35233418
+00:06:51 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35233418&contentType=viz&contentView=mstats
+00:06:51 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo estadísticas del partido...
+00:06:51 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:51 [DEBUG] Betfair event ID extraído de la URL: 35224753
+00:06:51 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35224753&contentType=viz&contentView=mstats
+00:06:51 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo estadísticas del partido...
+00:06:51 [DEBUG]   → Extrayendo eventId del HTML...
+00:06:51 [DEBUG] Betfair event ID extraído de la URL: 35233442
+00:06:51 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35233442&contentType=viz&contentView=mstats
+00:06:51 [INFO] EventId de Opta extraído: 45f89lzskdwrt4feiqyozt5w4
+00:06:51 [DEBUG]   ✓ EventId extraído: 45f89lzskdwrt4feiqyozt5w4
+00:06:51 [DEBUG]   → Obteniendo estadísticas de la API...
+00:06:51 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 45f89lzskdwrt4feiqyozt5w4
+00:06:51 [INFO] EventId de Opta extraído: d03ygpwozekbek1ijpgwv3jtg
+00:06:51 [DEBUG]   ✓ EventId extraído: d03ygpwozekbek1ijpgwv3jtg
+00:06:51 [DEBUG]   → Obteniendo estadísticas de la API...
+00:06:51 [INFO] 📊 Obteniendo todas las estadísticas para eventId: d03ygpwozekbek1ijpgwv3jtg
+00:06:51 [INFO] EventId de Opta extraído: 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:06:51 [DEBUG]   ✓ EventId extraído: 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:06:51 [DEBUG]   → Obteniendo estadísticas de la API...
+00:06:51 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:06:52 [DEBUG] ✅ Summary stats obtenidas para 45f89lzskdwrt4feiqyozt5w4
+00:06:52 [DEBUG] ✅ Summary stats obtenidas para d03ygpwozekbek1ijpgwv3jtg
+00:06:52 [DEBUG] ✅ Summary stats obtenidas para 4ja1sz1g7i8hcdc2hl4tbqdjo
+00:06:53 [DEBUG] No se encontró datos de momentum (predictions vacío)
+00:06:53 [DEBUG] No se encontró datos de momentum (predictions vacío)
+00:06:53 [DEBUG] No se encontró datos de momentum (predictions vacío)
+00:06:54 [DEBUG] No se encontró teamStatsAttackingLv
+00:06:54 [DEBUG] No se encontró teamStatsAttackingLv
+00:06:54 [DEBUG] No se encontró teamStatsAttackingLv
+00:06:55 [DEBUG] No se encontró teamStatsDefenceLv
+00:06:55 [DEBUG] No se encontró teamStatsDefenceLv
+00:06:55 [DEBUG] No se encontró teamStatsDefenceLv
+00:06:56 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:06:56 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+00:06:56 [DEBUG]   → Mapeando estadísticas...
+00:06:56 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+00:06:56 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:06:56 [DEBUG] [atletico-nacional-medellin-fortaleza-apuestas-3523] → Extrayendo volumen matched...
+00:06:56 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:06:56 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+00:06:56 [DEBUG]   → Mapeando estadísticas...
+00:06:56 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+00:06:56 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:06:56 [DEBUG] [internacional-se-palmeiras-apuestas-35224753] → Extrayendo volumen matched...
+00:06:56 [DEBUG] No se encontró teamStatsXgLv ni xgData
+00:06:56 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+00:06:56 [DEBUG]   → Mapeando estadísticas...
+00:06:56 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+00:06:56 [DEBUG]     → xG: 0.0-0.0, Corners: 0-0
+00:06:56 [DEBUG] [univ-catolica-ecu-juventud-de-las-piedras-apuestas] → Extrayendo volumen matched...
+00:06:58 [DEBUG] [tigre-aldosivi-apuestas-35224990] → Extrayendo momentum (fallback visual)...
+00:06:58 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+00:06:58 [DEBUG] [athletico-pr-santos-apuestas-35207628] ✓ Momentum obtenido de API: 611.08-448.92
+00:06:58 [INFO] ✓ [athletico-pr-santos-apuestas-35207628] Captura exitosa: descanso, min , 1-1
+00:06:59 [DEBUG] [fluminense-botafogo-fr-apuestas-35248598] ✓ Momentum obtenido de API: 470.34-290.92
+00:06:59 [INFO] ✓ [fluminense-botafogo-fr-apuestas-35248598] Captura exitosa: en_juego, min 32, 0-0
+00:06:59 [DEBUG] [corinthians-red-bull-bragantino-apuestas-35207556] ✓ Momentum obtenido de API: 13.47-23.98
+00:06:59 [INFO] ✓ [corinthians-red-bull-bragantino-apuestas-35207556] Captura exitosa: en_juego, min 3, 0-0
+00:07:04 [WARNING]   × Timeout esperando estadísticas básicas
+00:07:04 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+00:07:05 [DEBUG]     × 'Shots on target' no encontrado en DOM
+00:07:05 [DEBUG]   × No se encontró URL del iframe de stats
+00:07:05 [INFO] ✓ [tigre-aldosivi-apuestas-35224990] Captura exitosa: en_juego, min 47, 1-0
+00:07:06 [DEBUG]     × 'Shots off target' no encontrado en DOM
+00:07:07 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+00:07:08 [DEBUG]     × 'Corner kicks' no encontrado en DOM

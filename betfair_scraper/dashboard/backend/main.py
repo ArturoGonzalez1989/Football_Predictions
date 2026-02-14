@@ -4,7 +4,10 @@ FastAPI server para monitorear el scraper de Betfair.
 """
 
 import sys
+import asyncio
+import subprocess
 from pathlib import Path
+from datetime import datetime
 
 # Asegurar que el directorio backend está en sys.path
 _backend_dir = Path(__file__).resolve().parent
@@ -16,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.matches import router as matches_router
 from api.system import router as system_router
+from api.analytics import router as analytics_router
 
 app = FastAPI(title="Furbo Monitor API", version="1.0.0")
 
@@ -29,8 +33,191 @@ app.add_middleware(
 
 app.include_router(matches_router)
 app.include_router(system_router)
+app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
 
+
+# ==================== AUTO REFRESH SCHEDULER ====================
+
+# Global state for scheduler
+_scheduler_task = None
+_is_refreshing = False
+_refresh_started_at = None  # Track when refresh started to detect stuck state
+_last_refresh_time = None
+_last_refresh_result = None
+_refresh_count = 0
+MAX_REFRESH_DURATION_SECONDS = 180  # Force-reset flag after 3 minutes
+
+SCRAPER_DIR = Path(__file__).resolve().parent.parent.parent
+SCRIPTS_DIR = SCRAPER_DIR / "scripts"
+REFRESH_INTERVAL_SECONDS = 10 * 60  # 10 minutes
+
+
+def _run_script_sync(script_path: Path, timeout: int = 120) -> dict:
+    """Run a script using subprocess.run (reliable on Windows).
+    This is the same method that manual refresh uses and is proven to work."""
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True, text=True,
+            timeout=timeout,
+            cwd=str(SCRAPER_DIR),
+        )
+        return {
+            "ok": proc.returncode == 0,
+            "output": (proc.stdout + proc.stderr).strip()[-1000:],
+            "returncode": proc.returncode,
+        }
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "output": f"Timeout ({timeout}s)", "returncode": -1}
+    except Exception as e:
+        return {"ok": False, "output": str(e), "returncode": -1}
+
+
+async def _run_script_async(script_path: Path, timeout: int = 120) -> dict:
+    """Run a script in a thread pool to not block the event loop.
+    Uses subprocess.run internally (proven reliable on Windows)."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _run_script_sync, script_path, timeout)
+
+
+async def auto_refresh_matches():
+    """Background task que ejecuta clean_games + find_matches cada 10 minutos."""
+    global _is_refreshing, _last_refresh_time, _last_refresh_result, _refresh_count
+
+    # Wait initial delay before first execution
+    print(f"[{datetime.now()}] Auto-refresh: Waiting 30s before first execution...")
+    await asyncio.sleep(30)
+
+    while True:
+        try:
+            # Check if manual refresh is running (with stuck detection)
+            if _is_refreshing:
+                if _refresh_started_at:
+                    elapsed = (datetime.now() - _refresh_started_at).total_seconds()
+                    if elapsed > MAX_REFRESH_DURATION_SECONDS:
+                        print(f"[{datetime.now()}] WARNING: Refresh stuck for {elapsed:.0f}s — force-resetting flag")
+                        _is_refreshing = False
+                        _refresh_started_at = None
+                    else:
+                        print(f"[{datetime.now()}] Auto-refresh skipped: refresh in progress ({elapsed:.0f}s)")
+                        await asyncio.sleep(60)
+                        continue
+                else:
+                    print(f"[{datetime.now()}] Auto-refresh skipped: refresh in progress (no timestamp)")
+                    _is_refreshing = False
+
+            _is_refreshing = True
+            _refresh_started_at = datetime.now()
+            _refresh_count += 1
+            cycle = _refresh_count
+            print(f"\n{'='*60}")
+            print(f"[{datetime.now()}] AUTO-REFRESH CYCLE #{cycle} STARTING")
+            print(f"{'='*60}")
+
+            results = {}
+
+            # 1. Execute clean_games.py
+            clean_script = SCRIPTS_DIR / "clean_games.py"
+            if clean_script.exists():
+                print(f"[{datetime.now()}] [1/2] Running clean_games.py...")
+                r = await _run_script_async(clean_script, timeout=30)
+                results["clean"] = r
+                if r["output"]:
+                    for line in r["output"].split("\n"):
+                        print(f"  | {line}")
+                print(f"[{datetime.now()}] clean_games: {'OK' if r['ok'] else 'FAILED (code ' + str(r['returncode']) + ')'}")
+            else:
+                print(f"[{datetime.now()}] clean_games.py not found at {clean_script}")
+
+            # 2. Execute find_matches.py
+            find_script = SCRIPTS_DIR / "find_matches.py"
+            if find_script.exists():
+                print(f"[{datetime.now()}] [2/2] Running find_matches.py...")
+                r = await _run_script_async(find_script, timeout=120)
+                results["find"] = r
+                if r["output"]:
+                    for line in r["output"].split("\n"):
+                        print(f"  | {line}")
+                print(f"[{datetime.now()}] find_matches: {'OK' if r['ok'] else 'FAILED (code ' + str(r['returncode']) + ')'}")
+            else:
+                print(f"[{datetime.now()}] find_matches.py not found at {find_script}")
+
+            _last_refresh_time = datetime.now().isoformat()
+            _last_refresh_result = results
+
+            print(f"[{datetime.now()}] Cycle #{cycle} completed. Next in {REFRESH_INTERVAL_SECONDS // 60} min")
+            print(f"{'='*60}\n")
+
+        except Exception as e:
+            print(f"[{datetime.now()}] Auto-refresh error: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            _is_refreshing = False
+            _refresh_started_at = None
+
+        # Wait for next execution
+        await asyncio.sleep(REFRESH_INTERVAL_SECONDS)
+
+
+async def _scheduler_watchdog():
+    """Watchdog: reinicia el scheduler si se cae inesperadamente."""
+    global _scheduler_task
+    while True:
+        await asyncio.sleep(30)
+        if _scheduler_task is None or _scheduler_task.done():
+            if _scheduler_task and _scheduler_task.done():
+                try:
+                    exc = _scheduler_task.exception()
+                    print(f"[{datetime.now()}] Scheduler task died! Exception: {exc}")
+                except (asyncio.CancelledError, asyncio.InvalidStateError):
+                    pass
+            print(f"[{datetime.now()}] Restarting auto-refresh scheduler...")
+            _scheduler_task = asyncio.create_task(auto_refresh_matches())
+
+
+@app.on_event("startup")
+async def start_scheduler():
+    """Start the auto-refresh scheduler on app startup."""
+    global _scheduler_task
+    print(f"\n{'='*60}")
+    print(f"[{datetime.now()}] STARTING AUTO-REFRESH SCHEDULER")
+    print(f"  Interval: {REFRESH_INTERVAL_SECONDS // 60} minutes")
+    print(f"  First execution in 30 seconds")
+    print(f"  Scripts dir: {SCRIPTS_DIR}")
+    print(f"  clean_games.py exists: {(SCRIPTS_DIR / 'clean_games.py').exists()}")
+    print(f"  find_matches.py exists: {(SCRIPTS_DIR / 'find_matches.py').exists()}")
+    print(f"  Python: {sys.executable}")
+    print(f"{'='*60}\n")
+    _scheduler_task = asyncio.create_task(auto_refresh_matches())
+    # Watchdog to auto-restart if scheduler crashes
+    asyncio.create_task(_scheduler_watchdog())
+
+
+@app.on_event("shutdown")
+async def stop_scheduler():
+    """Stop the auto-refresh scheduler on app shutdown."""
+    global _scheduler_task
+    if _scheduler_task:
+        print(f"[{datetime.now()}] Stopping auto-refresh scheduler...")
+        _scheduler_task.cancel()
+        try:
+            await _scheduler_task
+        except asyncio.CancelledError:
+            pass
+
+
+# ==================== HEALTH CHECK ====================
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "auto_refresh_enabled": True,
+        "refresh_interval_minutes": REFRESH_INTERVAL_SECONDS // 60,
+        "is_refreshing": _is_refreshing,
+        "refresh_count": _refresh_count,
+        "last_refresh_time": _last_refresh_time,
+        "last_refresh_result": _last_refresh_result,
+        "scheduler_alive": _scheduler_task is not None and not _scheduler_task.done() if _scheduler_task else False,
+    }

@@ -30,7 +30,7 @@ STAT_COLUMNS = [
 
 
 def _resolve_csv_path(match_id: str) -> Path:
-    """Find the CSV file for a match_id, handling URL-encoded filenames."""
+    """Find the CSV file for a match_id, handling URL-encoded filenames and truncated IDs."""
     path = DATA_DIR / f"partido_{match_id}.csv"
     if path.exists():
         return path
@@ -39,6 +39,17 @@ def _resolve_csv_path(match_id: str) -> Path:
     path2 = DATA_DIR / f"partido_{encoded}.csv"
     if path2.exists():
         return path2
+    # Fuzzy match: scraper sometimes truncates the numeric ID at the end
+    # e.g. match_id="team-apuestas-35241340" but file is "partido_team-apuestas-352413.csv"
+    prefix = re.sub(r"\d+$", "", match_id)  # "team-apuestas-"
+    if DATA_DIR.exists() and prefix:
+        for csv_file in DATA_DIR.glob(f"partido_{prefix}*.csv"):
+            return csv_file
+        # Also try with encoded prefix
+        encoded_prefix = re.sub(r"\d+$", "", encoded)
+        if encoded_prefix != prefix:
+            for csv_file in DATA_DIR.glob(f"partido_{encoded_prefix}*.csv"):
+                return csv_file
     return path  # fallback to original (will not exist)
 
 
@@ -53,7 +64,7 @@ def _to_float(val: str) -> Optional[float]:
 
 def _match_id_from_url(url: str) -> str:
     """Extrae el ID del partido de la URL de Betfair."""
-    m = re.search(r"([a-z0-9%-]+-apuestas-\d+)", url)
+    m = re.search(r"([a-zA-Z0-9%-]+-apuestas-\d+)", url)
     return m.group(1) if m else url.split("/")[-1]
 
 
@@ -95,7 +106,7 @@ def load_games() -> list[dict]:
                 else:
                     status = "upcoming"
 
-            csv_path = DATA_DIR / f"partido_{match_id}.csv"
+            csv_path = _resolve_csv_path(match_id)
             capture_count = 0
             last_capture = None
             last_capture_ago_seconds = None
@@ -120,13 +131,11 @@ def load_games() -> list[dict]:
                         status = "finished"
                     elif estado_partido == "en_juego":
                         status = "live"
-                        # Actualizar minuto desde CSV si está disponible
                         minuto_csv = last_row.get("minuto", "").strip()
                         if minuto_csv.isdigit():
                             match_minute = int(minuto_csv)
                     elif estado_partido == "descanso":
                         status = "live"
-                        # Durante descanso, mostrar 45 o el minuto del CSV
                         minuto_csv = last_row.get("minuto", "").strip()
                         if minuto_csv.isdigit():
                             match_minute = int(minuto_csv)
@@ -214,6 +223,40 @@ def _read_csv_rows(csv_path: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
+def _read_csv_summary(csv_path: Path) -> dict:
+    """Read only header + first + last row of a CSV for fast metadata.
+    Returns {count, first_row, last_row} without parsing the entire file."""
+    if not csv_path.exists():
+        return {"count": 0, "first_row": {}, "last_row": {}}
+
+    with open(csv_path, "r", encoding="utf-8") as f:
+        header = f.readline().strip()
+        if not header:
+            return {"count": 0, "first_row": {}, "last_row": {}}
+
+        fields = header.split(",")
+        first_line = f.readline().strip()
+        if not first_line:
+            return {"count": 0, "first_row": {}, "last_row": {}}
+
+        # Count remaining lines and track the last one
+        count = 1
+        last_line = first_line
+        for line in f:
+            line = line.strip()
+            if line:
+                last_line = line
+                count += 1
+
+    first_vals = first_line.split(",")
+    last_vals = last_line.split(",")
+
+    first_row = dict(zip(fields, first_vals)) if len(first_vals) == len(fields) else {}
+    last_row = dict(zip(fields, last_vals)) if len(last_vals) == len(fields) else {}
+
+    return {"count": count, "first_row": first_row, "last_row": last_row}
+
+
 def delete_match(match_id: str) -> dict:
     """Elimina un partido de games.csv y borra su CSV de datos."""
     deleted_from_csv = False
@@ -256,6 +299,86 @@ def delete_match(match_id: str) -> dict:
         "match_id": match_id,
         "deleted_from_csv": deleted_from_csv,
         "deleted_data": deleted_data,
+    }
+
+
+def load_all_captures(match_id: str) -> dict:
+    """Carga TODAS las capturas de un partido para vista detallada."""
+    csv_path = _resolve_csv_path(match_id)
+    rows = _read_csv_rows(csv_path)
+
+    if not rows:
+        return {"match_id": match_id, "rows": 0, "captures": []}
+
+    captures = []
+    for row in rows:
+        # Devolver TODAS las columnas individuales del CSV tal cual
+        capture = {
+            "timestamp": row.get("timestamp_utc", ""),
+            "minuto": row.get("minuto", ""),
+            "goles_local": row.get("goles_local", ""),
+            "goles_visitante": row.get("goles_visitante", ""),
+            "xg_local": row.get("xg_local", ""),
+            "xg_visitante": row.get("xg_visitante", ""),
+            "posesion_local": row.get("posesion_local", ""),
+            "posesion_visitante": row.get("posesion_visitante", ""),
+            "corners_local": row.get("corners_local", ""),
+            "corners_visitante": row.get("corners_visitante", ""),
+            "tiros_local": row.get("tiros_local", ""),
+            "tiros_visitante": row.get("tiros_visitante", ""),
+            "tiros_puerta_local": row.get("tiros_puerta_local", ""),
+            "tiros_puerta_visitante": row.get("tiros_puerta_visitante", ""),
+            "shots_off_target_local": row.get("shots_off_target_local", ""),
+            "shots_off_target_visitante": row.get("shots_off_target_visitante", ""),
+            "blocked_shots_local": row.get("blocked_shots_local", ""),
+            "blocked_shots_visitante": row.get("blocked_shots_visitante", ""),
+            "saves_local": row.get("saves_local", ""),
+            "saves_visitante": row.get("saves_visitante", ""),
+            "dangerous_attacks_local": row.get("dangerous_attacks_local", ""),
+            "dangerous_attacks_visitante": row.get("dangerous_attacks_visitante", ""),
+            "fouls_conceded_local": row.get("fouls_conceded_local", ""),
+            "fouls_conceded_visitante": row.get("fouls_conceded_visitante", ""),
+            "goal_kicks_local": row.get("goal_kicks_local", ""),
+            "goal_kicks_visitante": row.get("goal_kicks_visitante", ""),
+            "throw_ins_local": row.get("throw_ins_local", ""),
+            "throw_ins_visitante": row.get("throw_ins_visitante", ""),
+            "tarjetas_amarillas_local": row.get("tarjetas_amarillas_local", ""),
+            "tarjetas_amarillas_visitante": row.get("tarjetas_amarillas_visitante", ""),
+            "tarjetas_rojas_local": row.get("tarjetas_rojas_local", ""),
+            "tarjetas_rojas_visitante": row.get("tarjetas_rojas_visitante", ""),
+            "total_passes_local": row.get("total_passes_local", ""),
+            "total_passes_visitante": row.get("total_passes_visitante", ""),
+            "big_chances_local": row.get("big_chances_local", ""),
+            "big_chances_visitante": row.get("big_chances_visitante", ""),
+            "attacks_local": row.get("attacks_local", ""),
+            "attacks_visitante": row.get("attacks_visitante", ""),
+            "tackles_local": row.get("tackles_local", ""),
+            "tackles_visitante": row.get("tackles_visitante", ""),
+            "momentum_local": row.get("momentum_local", ""),
+            "momentum_visitante": row.get("momentum_visitante", ""),
+            "opta_points_local": row.get("opta_points_local", ""),
+            "opta_points_visitante": row.get("opta_points_visitante", ""),
+            "touches_box_local": row.get("touches_box_local", ""),
+            "touches_box_visitante": row.get("touches_box_visitante", ""),
+            "shooting_accuracy_local": row.get("shooting_accuracy_local", ""),
+            "shooting_accuracy_visitante": row.get("shooting_accuracy_visitante", ""),
+            "free_kicks_local": row.get("free_kicks_local", ""),
+            "free_kicks_visitante": row.get("free_kicks_visitante", ""),
+            "offsides_local": row.get("offsides_local", ""),
+            "offsides_visitante": row.get("offsides_visitante", ""),
+            "substitutions_local": row.get("substitutions_local", ""),
+            "substitutions_visitante": row.get("substitutions_visitante", ""),
+            "injuries_local": row.get("injuries_local", ""),
+            "injuries_visitante": row.get("injuries_visitante", ""),
+            "time_in_dangerous_attack_pct_local": row.get("time_in_dangerous_attack_pct_local", ""),
+            "time_in_dangerous_attack_pct_visitante": row.get("time_in_dangerous_attack_pct_visitante", ""),
+        }
+        captures.append(capture)
+
+    return {
+        "match_id": match_id,
+        "rows": len(rows),
+        "captures": captures
     }
 
 
@@ -334,10 +457,13 @@ def load_match_detail(match_id: str) -> dict:
         }
         captures.append(capture)
 
-    # Quality score
+    # Quality score (only in-play rows)
     total_filled = 0
     total_possible = 0
     for row in rows:
+        estado = row.get("estado_partido", "").strip()
+        if estado in ("pre_partido", ""):
+            continue
         for col in STAT_COLUMNS:
             total_possible += 1
             val = row.get(col, "")
@@ -512,8 +638,14 @@ def load_match_full(match_id: str) -> dict:
         seen_minutes.add(key)
 
         point = {"minute": minute_val}
-        for back_col, _ in ODDS_COLUMNS[:3]:  # Solo Match Odds para timeline
+        # Match Odds (back + lay)
+        for back_col, lay_col in ODDS_COLUMNS[:3]:
             point[back_col] = _to_float(row.get(back_col, ""))
+            point[lay_col] = _to_float(row.get(lay_col, ""))
+        # Over/Under 0.5 a 4.5 (back + lay)
+        for back_col, lay_col in ODDS_COLUMNS[3:13]:
+            point[back_col] = _to_float(row.get(back_col, ""))
+            point[lay_col] = _to_float(row.get(lay_col, ""))
         point["volumen_matched"] = _to_float(row.get("volumen_matched", ""))
         odds_timeline.append(point)
 
@@ -534,4 +666,570 @@ def load_match_full(match_id: str) -> dict:
         "volume_matched": volume,
         "first_capture": first_ts,
         "last_capture": last_ts,
+    }
+
+
+# ==================== ANALYTICS FUNCTIONS ====================
+
+# Cache for analytics: finished matches don't change, so cache aggressively
+_analytics_cache: dict = {}
+_analytics_cache_time: float = 0
+_ANALYTICS_CACHE_TTL = 300  # 5 minutes
+
+
+def _get_cached_finished_data() -> list[dict]:
+    """Get all finished matches with pre-loaded CSV rows. Cached for 5 min."""
+    global _analytics_cache, _analytics_cache_time
+    import time as _time
+
+    now = _time.time()
+    if _analytics_cache and (now - _analytics_cache_time) < _ANALYTICS_CACHE_TTL:
+        return _analytics_cache.get("finished", [])
+
+    # Rebuild cache
+    games = load_games()
+    finished = []
+    for game in games:
+        if game["status"] == "finished" and game["csv_exists"]:
+            csv_path = _resolve_csv_path(game["match_id"])
+            if csv_path.exists():
+                rows = _read_csv_rows(csv_path)
+                finished.append({
+                    "match_id": game["match_id"],
+                    "name": game["name"],
+                    "csv_path": csv_path,
+                    "rows": rows,
+                })
+
+    _analytics_cache = {"finished": finished}
+    _analytics_cache_time = now
+    return finished
+
+
+def _get_all_finished_matches() -> list[dict]:
+    """Get all finished matches with their CSV paths (backward compat)."""
+    return _get_cached_finished_data()
+
+
+def _calculate_match_quality(rows: list[dict]) -> float:
+    """Calculate quality score for a match (% of non-null stats).
+    Only counts in-play rows (en_juego, descanso, finalizado) to avoid
+    pre-match rows dragging down the quality score."""
+    if not rows:
+        return 0.0
+
+    total_filled = 0
+    total_possible = 0
+    for row in rows:
+        # Only count rows where the match is actually in progress or finished
+        estado = row.get("estado_partido", "").strip()
+        if estado in ("pre_partido", ""):
+            continue
+
+        for col in STAT_COLUMNS:
+            total_possible += 1
+            val = row.get(col, "")
+            if val and val.strip() not in ("", "N/A", "None"):
+                total_filled += 1
+
+    return round(total_filled / total_possible * 100, 1) if total_possible > 0 else 0.0
+
+
+def _calculate_match_gaps(rows: list[dict]) -> int:
+    """Calculate number of missing minutes in a match."""
+    minutes_captured = set()
+    for row in rows:
+        m = row.get("minuto", "")
+        if m:
+            try:
+                minutes_captured.add(int(m.replace("'", "").strip()))
+            except ValueError:
+                pass
+
+    if minutes_captured:
+        max_min = max(minutes_captured)
+        all_minutes = set(range(1, max_min + 1))
+        gaps = all_minutes - minutes_captured
+        return len(gaps)
+    return 0
+
+
+def analyze_quality_distribution() -> dict:
+    """Aggregate quality metrics across all finished matches."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "avg_quality": 0,
+            "total_matches": 0,
+            "quality_ranges": [],
+            "bins": []
+        }
+
+    qualities = []
+    bins_data = {
+        "0-20": [], "20-40": [], "40-60": [], "60-80": [], "80-100": []
+    }
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        quality = _calculate_match_quality(rows)
+        qualities.append(quality)
+
+        # Classify into bins
+        if quality < 20:
+            bins_data["0-20"].append(match["match_id"])
+        elif quality < 40:
+            bins_data["20-40"].append(match["match_id"])
+        elif quality < 60:
+            bins_data["40-60"].append(match["match_id"])
+        elif quality < 80:
+            bins_data["60-80"].append(match["match_id"])
+        else:
+            bins_data["80-100"].append(match["match_id"])
+
+    avg_quality = round(sum(qualities) / len(qualities), 1) if qualities else 0
+
+    # Quality ranges count
+    quality_ranges = [
+        {"range": "0-20%", "count": len(bins_data["0-20"])},
+        {"range": "20-40%", "count": len(bins_data["20-40"])},
+        {"range": "40-60%", "count": len(bins_data["40-60"])},
+        {"range": "60-80%", "count": len(bins_data["60-80"])},
+        {"range": "80-100%", "count": len(bins_data["80-100"])},
+    ]
+
+    # Bins for histogram
+    bins = [
+        {"label": "0-20%", "count": len(bins_data["0-20"]), "matches": bins_data["0-20"]},
+        {"label": "20-40%", "count": len(bins_data["20-40"]), "matches": bins_data["20-40"]},
+        {"label": "40-60%", "count": len(bins_data["40-60"]), "matches": bins_data["40-60"]},
+        {"label": "60-80%", "count": len(bins_data["60-80"]), "matches": bins_data["60-80"]},
+        {"label": "80-100%", "count": len(bins_data["80-100"]), "matches": bins_data["80-100"]},
+    ]
+
+    return {
+        "avg_quality": avg_quality,
+        "total_matches": len(finished_matches),
+        "quality_ranges": quality_ranges,
+        "bins": bins
+    }
+
+
+def analyze_gaps_distribution() -> dict:
+    """Analyze capture gaps across all matches."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "avg_gaps": 0,
+            "max_gaps": 0,
+            "distribution": []
+        }
+
+    all_gaps = []
+    gap_counts = {}
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        gaps = _calculate_match_gaps(rows)
+        all_gaps.append(gaps)
+
+        # Count matches by gap count
+        gap_counts[gaps] = gap_counts.get(gaps, 0) + 1
+
+    avg_gaps = round(sum(all_gaps) / len(all_gaps), 1) if all_gaps else 0
+    max_gaps = max(all_gaps) if all_gaps else 0
+
+    # Distribution
+    distribution = [
+        {"gap_count": gap, "match_count": count}
+        for gap, count in sorted(gap_counts.items())
+    ]
+
+    return {
+        "avg_gaps": avg_gaps,
+        "max_gaps": max_gaps,
+        "distribution": distribution
+    }
+
+
+def analyze_stats_coverage() -> dict:
+    """Calculate coverage percentage for each stat field across all matches."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {"fields": []}
+
+    # Count non-null values for each stat column
+    field_counts = {col: {"filled": 0, "total": 0} for col in STAT_COLUMNS}
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        for row in rows:
+            # Only count in-play rows
+            estado = row.get("estado_partido", "").strip()
+            if estado in ("pre_partido", ""):
+                continue
+            for col in STAT_COLUMNS:
+                field_counts[col]["total"] += 1
+                val = row.get(col, "")
+                if val and val.strip() not in ("", "N/A", "None"):
+                    field_counts[col]["filled"] += 1
+
+    # Calculate coverage percentage
+    fields = []
+    for col, counts in field_counts.items():
+        coverage_pct = round(counts["filled"] / counts["total"] * 100, 1) if counts["total"] > 0 else 0
+        fields.append({
+            "name": col,
+            "coverage_pct": coverage_pct
+        })
+
+    # Sort by coverage (lowest first to highlight problems)
+    fields.sort(key=lambda x: x["coverage_pct"])
+
+    return {"fields": fields}
+
+
+def get_low_quality_matches(threshold: int = 50) -> list[dict]:
+    """Return matches below quality threshold (for display only)."""
+    finished_matches = _get_all_finished_matches()
+
+    low_quality = []
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        quality = _calculate_match_quality(rows)
+        gaps = _calculate_match_gaps(rows)
+
+        if quality < threshold:
+            low_quality.append({
+                "match_id": match["match_id"],
+                "name": match["name"],
+                "quality": quality,
+                "total_captures": len(rows),
+                "gap_count": gaps
+            })
+
+    # Sort by quality (worst first)
+    low_quality.sort(key=lambda x: x["quality"])
+
+    return low_quality
+
+
+def analyze_momentum_patterns() -> dict:
+    """Find momentum comeback and swing patterns."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "avg_swing": 0,
+            "comeback_frequency": 0,
+            "top_swings": []
+        }
+
+    all_swings = []
+    top_swings = []
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        if not rows:
+            continue
+
+        # Extract momentum values
+        home_momentum_vals = []
+        away_momentum_vals = []
+        for row in rows:
+            home_mom = _to_float(row.get("momentum_local", ""))
+            away_mom = _to_float(row.get("momentum_visitante", ""))
+            if home_mom is not None:
+                home_momentum_vals.append(home_mom)
+            if away_mom is not None:
+                away_momentum_vals.append(away_mom)
+
+        # Calculate max swing (difference between consecutive momentum values)
+        max_swing = 0
+        if home_momentum_vals and len(home_momentum_vals) > 1:
+            for i in range(1, len(home_momentum_vals)):
+                prev_home = home_momentum_vals[i-1]
+                curr_home = home_momentum_vals[i]
+                prev_away = away_momentum_vals[i-1] if i-1 < len(away_momentum_vals) else 0
+                curr_away = away_momentum_vals[i] if i < len(away_momentum_vals) else 0
+
+                delta_home = abs(curr_home - prev_home)
+                delta_away = abs(curr_away - prev_away)
+                swing = max(delta_home, delta_away)
+                max_swing = max(max_swing, swing)
+
+        all_swings.append(max_swing)
+        top_swings.append({
+            "match_id": match["match_id"],
+            "name": match["name"],
+            "swing": round(max_swing, 1)
+        })
+
+    avg_swing = round(sum(all_swings) / len(all_swings), 1) if all_swings else 0
+
+    # Sort top swings
+    top_swings.sort(key=lambda x: x["swing"], reverse=True)
+
+    return {
+        "avg_swing": avg_swing,
+        "comeback_frequency": 0,  # Would need HT score data to calculate properly
+        "top_swings": top_swings[:10]
+    }
+
+
+def analyze_xg_accuracy() -> dict:
+    """Correlate xG with actual goal outcomes."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "correlation": 0,
+            "avg_accuracy": 0,
+            "scatter_data": []
+        }
+
+    scatter_data = []
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        if not rows:
+            continue
+
+        last_row = rows[-1]
+        xg_home = _to_float(last_row.get("xg_local", ""))
+        xg_away = _to_float(last_row.get("xg_visitante", ""))
+        goals_home_str = last_row.get("goles_local", "").strip()
+        goals_away_str = last_row.get("goles_visitante", "").strip()
+
+        try:
+            goals_home = int(goals_home_str) if goals_home_str else None
+            goals_away = int(goals_away_str) if goals_away_str else None
+        except ValueError:
+            goals_home = None
+            goals_away = None
+
+        if xg_home is not None and goals_home is not None:
+            scatter_data.append({
+                "xg": xg_home,
+                "actual": goals_home,
+                "match_id": match["match_id"],
+                "team": "home"
+            })
+
+        if xg_away is not None and goals_away is not None:
+            scatter_data.append({
+                "xg": xg_away,
+                "actual": goals_away,
+                "match_id": match["match_id"],
+                "team": "away"
+            })
+
+    # Calculate Pearson correlation
+    correlation = 0
+    if len(scatter_data) > 1:
+        xg_vals = [d["xg"] for d in scatter_data]
+        actual_vals = [d["actual"] for d in scatter_data]
+
+        # Simple Pearson correlation
+        n = len(xg_vals)
+        sum_xg = sum(xg_vals)
+        sum_actual = sum(actual_vals)
+        sum_xg_sq = sum(x**2 for x in xg_vals)
+        sum_actual_sq = sum(a**2 for a in actual_vals)
+        sum_xg_actual = sum(xg_vals[i] * actual_vals[i] for i in range(n))
+
+        numerator = n * sum_xg_actual - sum_xg * sum_actual
+        denominator_xg = n * sum_xg_sq - sum_xg**2
+        denominator_actual = n * sum_actual_sq - sum_actual**2
+
+        if denominator_xg > 0 and denominator_actual > 0:
+            correlation = numerator / (denominator_xg * denominator_actual)**0.5
+            correlation = round(correlation, 3)
+
+    # Average accuracy (absolute difference)
+    accuracies = [abs(d["xg"] - d["actual"]) for d in scatter_data]
+    avg_accuracy = round(sum(accuracies) / len(accuracies), 2) if accuracies else 0
+
+    return {
+        "correlation": correlation,
+        "avg_accuracy": avg_accuracy,
+        "scatter_data": scatter_data
+    }
+
+
+def analyze_odds_movements() -> dict:
+    """Analyze betting odds drift and contraction patterns."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "avg_drift": 0,
+            "drift_by_minute": [],
+            "top_movements": []
+        }
+
+    top_movements = []
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        if not rows or len(rows) < 2:
+            continue
+
+        first_row = rows[0]
+        last_row = rows[-1]
+
+        # Calculate drift for back_home odds
+        opening_home = _to_float(first_row.get("back_home", ""))
+        closing_home = _to_float(last_row.get("back_home", ""))
+
+        if opening_home and closing_home and opening_home > 0:
+            drift_pct = round(((closing_home - opening_home) / opening_home) * 100, 1)
+            movement = abs(drift_pct)
+
+            top_movements.append({
+                "match_id": match["match_id"],
+                "name": match["name"],
+                "movement": movement,
+                "drift_pct": drift_pct
+            })
+
+    # Sort by movement magnitude
+    top_movements.sort(key=lambda x: x["movement"], reverse=True)
+
+    avg_drift = round(sum(m["movement"] for m in top_movements) / len(top_movements), 1) if top_movements else 0
+
+    return {
+        "avg_drift": avg_drift,
+        "drift_by_minute": [],  # Would need minute-by-minute aggregation
+        "top_movements": top_movements[:10]
+    }
+
+
+def analyze_over_under_patterns() -> dict:
+    """Analyze Over/Under line hit rates."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "hit_rates": [],
+            "minute_probabilities": []
+        }
+
+    lines = [0.5, 1.5, 2.5, 3.5, 4.5]
+    line_hits = {line: 0 for line in lines}
+    total_matches = 0
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        if not rows:
+            continue
+
+        last_row = rows[-1]
+        goals_home_str = last_row.get("goles_local", "").strip()
+        goals_away_str = last_row.get("goles_visitante", "").strip()
+
+        # Skip matches with missing goal data (don't treat as 0-0)
+        if not goals_home_str or not goals_away_str:
+            continue
+
+        try:
+            goals_home = int(goals_home_str)
+            goals_away = int(goals_away_str)
+            total_goals = goals_home + goals_away
+
+            for line in lines:
+                if total_goals > line:
+                    line_hits[line] += 1
+
+            total_matches += 1
+        except ValueError:
+            continue
+
+    # Calculate hit rates
+    hit_rates = []
+    for line in lines:
+        hit_rate = round(line_hits[line] / total_matches * 100, 1) if total_matches > 0 else 0
+        hit_rates.append({
+            "line": f"Over {line}",
+            "hit_rate": hit_rate
+        })
+
+    return {
+        "hit_rates": hit_rates,
+        "minute_probabilities": []  # Would need minute-by-minute analysis
+    }
+
+
+def calculate_stat_correlations() -> dict:
+    """Calculate correlations between key match statistics."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "matrix": [],
+            "top_correlations": []
+        }
+
+    # Stat pairs to analyze
+    stat_pairs = [
+        ("posesion_local", "xg_local"),
+        ("corners_local", "xg_local"),
+        ("tiros_local", "xg_local"),
+        ("momentum_local", "xg_local"),
+        ("dangerous_attacks_local", "xg_local"),
+    ]
+
+    correlations = []
+
+    for stat1, stat2 in stat_pairs:
+        values1 = []
+        values2 = []
+
+        for match in finished_matches:
+            rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+            if not rows:
+                continue
+
+            last_row = rows[-1]
+            val1 = _to_float(last_row.get(stat1, ""))
+            val2 = _to_float(last_row.get(stat2, ""))
+
+            if val1 is not None and val2 is not None:
+                values1.append(val1)
+                values2.append(val2)
+
+        # Calculate correlation
+        if len(values1) > 1:
+            n = len(values1)
+            sum1 = sum(values1)
+            sum2 = sum(values2)
+            sum1_sq = sum(x**2 for x in values1)
+            sum2_sq = sum(x**2 for x in values2)
+            sum_product = sum(values1[i] * values2[i] for i in range(n))
+
+            numerator = n * sum_product - sum1 * sum2
+            denom1 = n * sum1_sq - sum1**2
+            denom2 = n * sum2_sq - sum2**2
+
+            if denom1 > 0 and denom2 > 0:
+                corr = numerator / (denom1 * denom2)**0.5
+                correlations.append({
+                    "stat1": stat1,
+                    "stat2": stat2,
+                    "correlation": round(corr, 3)
+                })
+
+    # Top correlations (by absolute value)
+    top_correlations = sorted(
+        [{"pair": f"{c['stat1']} vs {c['stat2']}", "value": c["correlation"]} for c in correlations],
+        key=lambda x: abs(x["value"]),
+        reverse=True
+    )
+
+    return {
+        "matrix": correlations,
+        "top_correlations": top_correlations
     }

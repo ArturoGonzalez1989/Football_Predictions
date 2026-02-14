@@ -18,6 +18,21 @@ LOGS_DIR = BASE_DIR / "logs"
 
 def get_scraper_status() -> dict:
     """Verifica si el scraper está corriendo y su estado."""
+    # Import auto-refresh status from main
+    try:
+        from main import _is_refreshing, REFRESH_INTERVAL_SECONDS
+        auto_refresh_info = {
+            "auto_refresh_enabled": True,
+            "refresh_interval_minutes": REFRESH_INTERVAL_SECONDS // 60,
+            "is_refreshing": _is_refreshing,
+        }
+    except ImportError:
+        auto_refresh_info = {
+            "auto_refresh_enabled": False,
+            "refresh_interval_minutes": None,
+            "is_refreshing": False,
+        }
+
     result = {
         "running": False,
         "pid": None,
@@ -26,6 +41,7 @@ def get_scraper_status() -> dict:
         "chrome_processes": 0,
         "last_log": None,
         "last_log_lines": [],
+        **auto_refresh_info,
     }
 
     if HAS_PSUTIL:

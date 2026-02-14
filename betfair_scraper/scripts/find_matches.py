@@ -1,223 +1,365 @@
 #!/usr/bin/env python3
 """
-Script de búsqueda de partidos en Betfair
-Busca en el exchange todos los partidos in-play y próximos
-y los añade automáticamente a games.csv
+Script de busqueda de partidos en Betfair
+Usa Playwright (no Selenium) para evitar deteccion anti-bot.
+Usa la pagina "Todos" (/futbol-apuestas-1) que muestra TODOS los partidos
+y recorre la paginacion (/2, /3...) para no perderse ninguno.
 """
 
 import csv
 from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.parse import quote, urlparse
 import time
 import re
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
-# Configuración
-BETFAIR_INPLAY_URL = "https://www.betfair.es/exchange/plus/inplay"
-GAMES_CSV = Path(__file__).parent.parent / "games.csv"  # Ruta al games.csv del proyecto
-HEADLESS = True  # Chrome sin GUI
-TIMEOUT = 10  # Segundos para esperar elementos
+# Configuracion
+# La pagina "Todos" muestra todos los partidos (en juego + hoy + proximos).
+# Las paginas /inplay y /today NO renderizan bien en headless (anti-bot).
+BETFAIR_TODOS_URL = "https://www.betfair.es/exchange/plus/es/f%C3%BAtbol-apuestas-1"
+GAMES_CSV = Path(__file__).parent.parent / "games.csv"
+HEADLESS = True
+TIMEOUT = 15000  # ms para Playwright
+MAX_PAGES = 10   # Maximo de paginas de paginacion a recorrer
 
 
-def setup_driver():
-    """Configura e inicializa el driver de Chrome"""
-    options = webdriver.ChromeOptions()
-
-    if HEADLESS:
-        options.add_argument("--headless")
-
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=options
+def setup_browser(playwright):
+    """Lanza Chromium con Playwright y calienta la sesion en Betfair."""
+    browser = playwright.chromium.launch(
+        headless=HEADLESS,
+        args=[
+            "--disable-blink-features=AutomationControlled",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-web-security",
+        ]
     )
+    context = browser.new_context(
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        viewport={"width": 1920, "height": 1080},
+        locale="es-ES",
+    )
+    # Eliminar navigator.webdriver para evitar deteccion
+    context.add_init_script("""
+        Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+    """)
+    page = context.new_page()
 
-    return driver
+    # Calentar sesion: navegar primero a la home de Betfair Exchange
+    print("[INFO] Calentando sesion en Betfair...")
+    page.goto("https://www.betfair.es/exchange/plus/es", wait_until="domcontentloaded", timeout=30000)
+    time.sleep(3)
+    _accept_cookies(page)
+    time.sleep(2)
+
+    return browser, context, page
+
+
+def _accept_cookies(page):
+    """Acepta cookies si aparece el banner de consentimiento."""
+    try:
+        for selector in [
+            "#onetrust-accept-btn-handler",
+            "button#onetrust-accept-btn-handler",
+            "button:has-text('Aceptar todas')",
+            "button:has-text('Aceptar')",
+            "button:has-text('Accept')",
+        ]:
+            btn = page.query_selector(selector)
+            if btn:
+                try:
+                    if btn.is_visible():
+                        btn.click()
+                        print("[INFO] Cookie consent aceptado")
+                        time.sleep(1)
+                        return
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+
+def _scrape_page(page, url, label):
+    """Navega a una URL y extrae partidos."""
+    print(f"[INFO] [{label}] Accediendo a: {url}")
+    page.goto(url, wait_until="domcontentloaded", timeout=30000)
+
+    # Aceptar cookies (por si no se acepto antes)
+    _accept_cookies(page)
+
+    # Esperar a que cargue contenido dinamico (SPA de Betfair)
+    time.sleep(5)
+
+    # Verificar si dice "No hay eventos"
+    no_events = page.query_selector("//*[contains(text(), 'No hay eventos')]")
+    if no_events:
+        print(f"[INFO] [{label}] No hay eventos que mostrar")
+        return []
+
+    # Esperar links de partidos
+    try:
+        page.wait_for_selector("a[href*='apuestas-']", timeout=TIMEOUT)
+    except PlaywrightTimeout:
+        print(f"[WARNING] [{label}] Timeout esperando links de partidos")
+        return []
+
+    # Esperar un poco mas para que se renderice todo el contenido SPA
+    time.sleep(3)
+
+    # Scroll para cargar lazy content
+    prev_height = 0
+    for _ in range(10):
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        time.sleep(1)
+        new_height = page.evaluate("document.body.scrollHeight")
+        if new_height == prev_height:
+            break
+        prev_height = new_height
+    page.evaluate("window.scrollTo(0, 0)")
+    time.sleep(1)
+
+    return extract_football_matches(page)
+
+
+def _scrape_with_pagination(page, base_url, label):
+    """Recorre todas las paginas de paginacion de Betfair.
+
+    Ejemplo: /futbol-apuestas-1 -> /futbol-apuestas-1/2 -> /3 -> ...
+    """
+    all_matches = {}  # name -> match dict (dedup)
+
+    for page_num in range(1, MAX_PAGES + 1):
+        if page_num == 1:
+            url = base_url
+        else:
+            url = f"{base_url}/{page_num}"
+
+        found = _scrape_page(page, url, f"{label} p{page_num}")
+        print(f"[INFO] [{label} p{page_num}] Encontrados {len(found)} partidos")
+
+        if not found:
+            break
+
+        new_count = 0
+        for m in found:
+            if m["name"] not in all_matches:
+                all_matches[m["name"]] = m
+                new_count += 1
+
+        if new_count == 0:
+            print(f"[INFO] [{label}] Pagina {page_num}: sin partidos nuevos, fin de paginacion")
+            break
+
+        # Verificar si hay boton "Siguiente"
+        next_btn = page.query_selector("a[title='Siguiente']")
+        if not next_btn:
+            print(f"[INFO] [{label}] No hay boton 'Siguiente' - fin de paginacion")
+            break
+
+    return list(all_matches.values())
 
 
 def find_matches_on_betfair():
     """
-    Accede a Betfair, busca todos los partidos in-play y futuros
-    Retorna lista de dicts: {name, url, start_time}
+    Busca partidos de futbol en Betfair usando Playwright.
+    Usa la pagina "Todos" (que SÍ renderiza en headless, a diferencia de /inplay)
+    y recorre la paginacion para obtener todos los partidos.
     """
-    driver = None
-    matches = []
+    all_matches = {}
 
     try:
-        print("[INFO] Iniciando búsqueda de partidos en Betfair...")
-        driver = setup_driver()
+        print("[INFO] Iniciando busqueda de partidos en Betfair (Playwright)...")
 
-        # Navegar a Betfair
-        print(f"[INFO] Accediendo a: {BETFAIR_INPLAY_URL}")
-        driver.get(BETFAIR_INPLAY_URL)
+        with sync_playwright() as pw:
+            browser, context, page = setup_browser(pw)
 
-        # Esperar a que cargue contenido dinámico
-        print("[INFO] Esperando carga de contenido...")
-        time.sleep(5)
+            try:
+                # Pagina "Todos" con paginacion
+                for m in _scrape_with_pagination(page, BETFAIR_TODOS_URL, "TODOS"):
+                    all_matches.setdefault(m["name"], m)
 
-        # Extraer partidos de fútbol
-        matches = extract_football_matches(driver)
+            finally:
+                context.close()
+                browser.close()
+
+        matches = list(all_matches.values())
 
         if matches:
-            print(f"[OK] Encontrados {len(matches)} partidos:")
+            print(f"\n[OK] Total: {len(matches)} partidos encontrados:")
             for match in matches:
                 print(f"   - {match['name']} ({match['start_time']})")
         else:
-            print("[INFO] No hay partidos de fútbol disponibles en este momento")
+            print("[INFO] No hay partidos de futbol disponibles en este momento")
 
         return matches
 
     except Exception as e:
         print(f"[ERROR] Error buscando partidos: {e}")
-        return []
-
-    finally:
-        if driver:
-            driver.quit()
+        import traceback
+        traceback.print_exc()
+        return list(all_matches.values())
 
 
-def extract_football_matches(driver):
+def extract_football_matches(page):
     """
-    Parsea la página de Betfair y extrae todos los partidos de fútbol
-    Retorna lista de dicts con: name, url, start_time
+    Parsea la pagina de Betfair y extrae todos los partidos de futbol.
+    Busca links <a> con URL que contenga 'apuestas-' + ID numerico largo.
     """
     matches = []
 
     try:
-        # Esperar a que carguen los partidos
-        # Betfair estructura: Cada partido está en un <ul class="runners">
-        WebDriverWait(driver, TIMEOUT).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "ul.runners"))
-        )
+        all_links = page.query_selector_all("a[href*='apuestas-']")
+        print(f"[DEBUG] Links con 'apuestas-': {len(all_links)}")
 
-        # Obtener todos los elementos que contienen partidos
-        runner_uls = driver.find_elements(By.CSS_SELECTOR, "ul.runners")
+        skip_count = {"no_futbol": 0, "no_id": 0, "no_text": 0, "no_teams": 0}
 
-        print(f"[DEBUG] Encontrados {len(runner_uls)} partidos de fútbol")
-
-        for ul in runner_uls:
+        for link in all_links:
             try:
-                # Obtener nombres de equipos (están en <li class="name">)
-                team_elements = ul.find_elements(By.CSS_SELECTOR, "li.name")
-                team_names = [team.text.strip() for team in team_elements if team.text.strip()]
+                href = link.get_attribute("href") or ""
 
-                # Validar que haya exactamente 2 equipos
-                if len(team_names) != 2:
+                # Filtro: solo futbol (URL encoded o texto plano con tilde)
+                href_lower = href.lower()
+                if not ("/futbol/" in href_lower or "/f%c3%batbol/" in href_lower
+                        or "tbol/" in href_lower):
+                    skip_count["no_futbol"] += 1
                     continue
 
-                # Construir nombre del partido
+                # Filtro: partido especifico con ID numerico largo
+                id_match = re.search(r"apuestas-(\d{7,})", href)
+                if not id_match:
+                    skip_count["no_id"] += 1
+                    continue
+
+                # Extraer texto del link
+                link_text = (link.text_content() or "").strip()
+                if not link_text:
+                    skip_count["no_text"] += 1
+                    continue
+
+                # Extraer equipos de sub-elementos <li>
+                li_elements = link.query_selector_all("li")
+                team_names = []
+                for li in li_elements:
+                    name = (li.text_content() or "").strip()
+                    if (name and len(name) > 1
+                            and not name.startswith("$")
+                            and "Apuestas" not in name
+                            and not name.startswith("Igualado")
+                            and "Betfair" not in name
+                            and "DAZN" not in name
+                            and "Movistar" not in name
+                            and "TV" not in name
+                            and "guelo" not in name):
+                        team_names.append(name)
+
+                if len(team_names) < 2:
+                    skip_count["no_teams"] += 1
+                    continue
+
                 match_name = f"{team_names[0]} - {team_names[1]}"
 
-                # Buscar el enlace del partido en la fila
-                parent_row = ul.find_element(By.XPATH, "./ancestor::tr")
-                match_link = parent_row.find_element(By.CSS_SELECTOR, "a.mod-link")
+                # URL completa
+                if href.startswith("http"):
+                    pass  # ya es absoluta
+                elif href.startswith("/"):
+                    # Absoluta sin dominio: /exchange/plus/es/...
+                    href = "https://www.betfair.es" + href
+                else:
+                    # Relativa: es/futbol/... -> necesita /exchange/plus/ prefijo
+                    href = "https://www.betfair.es/exchange/plus/" + href
 
-                href = match_link.get_attribute("href")
-                if not href:
-                    continue
-
-                # FILTRO: Solo partidos de fútbol
-                # Las URLs de fútbol contienen '/fútbol/' o '/futbol/' (puede estar URL encoded como f%C3%BAtbol)
-                href_lower = href.lower()
-                if not ("/futbol/" in href_lower or "/f%c3%batbol/" in href_lower):
-                    continue
+                # URL-encode caracteres Unicode (futbol -> f%C3%BAtbol, etc.)
+                parsed = urlparse(href)
+                encoded_path = quote(parsed.path, safe="/:@!$&'()*+,;=-._~")
+                href = f"{parsed.scheme}://{parsed.netloc}{encoded_path}"
 
                 # Extraer hora de inicio
-                start_time = extract_start_time(parent_row, match_name)
-
-                # Construir URL completa si es necesario
-                if not href.startswith("http"):
-                    href = "https://www.betfair.es" + href
+                start_time = extract_start_time_from_text(link_text)
 
                 matches.append({
                     "name": match_name,
                     "url": href,
-                    "start_time": start_time
+                    "start_time": start_time,
                 })
 
             except Exception as e:
-                print(f"[DEBUG] Error extrayendo partido individual: {e}")
+                print(f"[DEBUG] Error extrayendo partido: {e}")
                 continue
 
-        # Eliminar duplicados por nombre
+        print(f"[DEBUG] Skipped: {skip_count}")
+
+        # Deduplicar por nombre
         seen = set()
-        unique_matches = []
-        for match in matches:
-            if match["name"] not in seen:
-                seen.add(match["name"])
-                unique_matches.append(match)
+        unique = []
+        for m in matches:
+            if m["name"] not in seen:
+                seen.add(m["name"])
+                unique.append(m)
 
-        return unique_matches
+        return unique
 
-    except TimeoutException:
-        print("[WARNING] Timeout esperando elementos de partidos")
-        return []
     except Exception as e:
         print(f"[ERROR] Error extrayendo partidos: {e}")
         return []
 
 
-def extract_start_time(element, match_name):
-    """
-    Extrae la hora de inicio del partido
-    Formatos esperados:
-    - "Comienza en 5'" → hora actual + 5 minutos
-    - "Hoy 18:30" → hoy a las 18:30
-    - "DESC." o marcador → en juego (usar hora actual - 30 min)
-    - Sin hora visible → usar hora actual - 30 min (aproximación)
-    """
+def extract_start_time_from_text(text):
+    """Extrae hora de inicio a partir del texto visible del link."""
     try:
-        # Obtener todo el texto del elemento
-        full_text = element.text
+        # "Comienza en X'"
+        m = re.search(r"Comienza en (\d+)'", text)
+        if m:
+            return (datetime.now() + timedelta(minutes=int(m.group(1)))).strftime("%Y-%m-%d %H:%M")
 
-        # Buscar patrón "Comienza en X'"
-        match_in = re.search(r"Comienza en (\d+)'", full_text)
-        if match_in:
-            minutes = int(match_in.group(1))
-            start_time = datetime.now() + timedelta(minutes=minutes)
-            return start_time.strftime("%Y-%m-%d %H:%M")
+        # "Hoy HH:MM"
+        m = re.search(r"Hoy\s+(\d{1,2}):(\d{2})", text)
+        if m:
+            return datetime.now().replace(
+                hour=int(m.group(1)), minute=int(m.group(2)), second=0, microsecond=0
+            ).strftime("%Y-%m-%d %H:%M")
 
-        # Buscar patrón "Hoy HH:MM"
-        match_time = re.search(r"Hoy\s+(\d{1,2}):(\d{2})", full_text)
-        if match_time:
-            hour = int(match_time.group(1))
-            minute = int(match_time.group(2))
-            start_time = datetime.now().replace(hour=hour, minute=minute, second=0, microsecond=0)
-            return start_time.strftime("%Y-%m-%d %H:%M")
+        # "dom. HH:MM", "lun. HH:MM", etc.
+        m = re.search(r"(?:dom|lun|mar|mi[eé]|jue|vie|s[aá]b)\.\s+(\d{1,2}):(\d{2})", text)
+        if m:
+            tomorrow = datetime.now() + timedelta(days=1)
+            return tomorrow.replace(
+                hour=int(m.group(1)), minute=int(m.group(2)), second=0, microsecond=0
+            ).strftime("%Y-%m-%d %H:%M")
 
-        # Si tiene "DESC." o marcador (números), está en juego
-        if "DESC." in full_text or re.search(r"\d+-\d+", full_text):
-            # En juego: aproximar a hace 30 minutos (para estar en ventana de tracking)
-            start_time = datetime.now() - timedelta(minutes=30)
-            return start_time.strftime("%Y-%m-%d %H:%M")
+        # "Proximamente"
+        if "ximamente" in text.lower():
+            return (datetime.now() + timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M")
 
-        # Por defecto: usar hora actual - 30 min (en juego aproximado)
-        start_time = datetime.now() - timedelta(minutes=30)
-        return start_time.strftime("%Y-%m-%d %H:%M")
+        # En juego (marcador, minuto visible, descanso)
+        if "DESC." in text or re.search(r"\d+'\s", text) or re.search(r"\d+\s+\d+\s+\w", text):
+            return (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
 
-    except Exception as e:
-        print(f"[DEBUG] Error extrayendo hora: {e}")
-        # Valor por defecto: hace 30 minutos
-        start_time = datetime.now() - timedelta(minutes=30)
-        return start_time.strftime("%Y-%m-%d %H:%M")
+        # Default: en juego aproximado
+        return (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
+
+
+def _is_relevant_match(start_time_str):
+    """Determina si un partido es relevante para trackear.
+    Solo partidos en juego (pasados) o que empiezan dentro de 3 horas.
+    Excluye partidos de manana o mas alla."""
+    try:
+        start = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M")
+        now = datetime.now()
+        cutoff = now + timedelta(hours=3)
+        # Partidos en juego (start_time en el pasado) o empezando pronto
+        return start <= cutoff
+    except Exception:
+        return True  # En caso de error, incluir por si acaso
 
 
 def add_new_matches_to_csv(discovered_matches):
     """
-    Lee games.csv, compara con partidos descubiertos
-    Añade solo los nuevos, mantiene los existentes
+    Lee games.csv, compara con partidos descubiertos.
+    Añade solo los nuevos que sean relevantes (en juego o proximos 3h).
     """
-
     if not discovered_matches:
         print("[OK] Sin partidos nuevos para añadir")
         return 0
@@ -234,20 +376,25 @@ def add_new_matches_to_csv(discovered_matches):
         except Exception as e:
             print(f"[WARNING] Error leyendo games.csv: {e}")
 
-    # Identificar nuevos partidos
+    # Identificar nuevos partidos (solo relevantes: en juego o proximos 3h)
     added = 0
+    skipped_future = 0
     for match in discovered_matches:
         game_name = match["name"]
 
         if game_name not in existing_games:
-            # Nuevo partido
+            if not _is_relevant_match(match["start_time"]):
+                skipped_future += 1
+                continue
             existing_games[game_name] = {
                 "Game": game_name,
                 "url": match["url"],
-                "fecha_hora_inicio": match["start_time"]
+                "fecha_hora_inicio": match["start_time"],
             }
             added += 1
             print(f"   + {game_name} ({match['start_time']})")
+    if skipped_future:
+        print(f"   (omitidos {skipped_future} partidos futuros >3h)")
 
     # Guardar si hay cambios
     if added > 0:
@@ -258,7 +405,7 @@ def add_new_matches_to_csv(discovered_matches):
                 writer.writerows(existing_games.values())
 
             print(f"\n[BUSQUEDA COMPLETADA]")
-            print(f"   - Añadidos: {added} partidos nuevos")
+            print(f"   - Nuevos: {added} partidos")
             print(f"   - Total en games.csv: {len(existing_games)} partidos")
 
         except Exception as e:
@@ -271,19 +418,15 @@ def add_new_matches_to_csv(discovered_matches):
 
 
 def main():
-    """Función principal"""
-    print("\n" + "="*60)
-    print("BÚSQUEDA DE PARTIDOS EN BETFAIR")
-    print("="*60)
+    """Funcion principal"""
+    print("\n" + "=" * 60)
+    print("BUSQUEDA DE PARTIDOS EN BETFAIR (Playwright + paginacion)")
+    print("=" * 60)
 
-    # Buscar partidos
     matches = find_matches_on_betfair()
-
-    # Añadir a games.csv
     added = add_new_matches_to_csv(matches)
 
-    print("="*60 + "\n")
-
+    print("=" * 60 + "\n")
     return added
 
 

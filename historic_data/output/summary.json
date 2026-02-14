@@ -1,0 +1,206 @@
+{
+  "E0": {
+    "league": "Premier League",
+    "teams": 20,
+    "matches_played": 260,
+    "leader": "Arsenal",
+    "leader_pts": 57,
+    "leader_elo": 1634,
+    "file": "E0_Premier_League.csv"
+  },
+  "E1": {
+    "league": "Championship",
+    "teams": 24,
+    "matches_played": 374,
+    "leader": "Middlesbrough",
+    "leader_pts": 61,
+    "leader_elo": 1614,
+    "file": "E1_Championship.csv"
+  },
+  "E2": {
+    "league": "League One",
+    "teams": 24,
+    "matches_played": 356,
+    "leader": "Cardiff",
+    "leader_pts": 63,
+    "leader_elo": 1630,
+    "file": "E2_League_One.csv"
+  },
+  "E3": {
+    "league": "League Two",
+    "teams": 24,
+    "matches_played": 358,
+    "leader": "Bromley",
+    "leader_pts": 62,
+    "leader_elo": 1653,
+    "file": "E3_League_Two.csv"
+  },
+  "EC": {
+    "league": "National League",
+    "teams": 24,
+    "matches_played": 362,
+    "leader": "Rochdale",
+    "leader_pts": 73,
+    "leader_elo": 1693,
+    "file": "EC_National_League.csv"
+  },
+  "SC0": {
+    "league": "Scottish Premiership",
+    "teams": 12,
+    "matches_played": 152,
+    "leader": "Hearts",
+    "leader_pts": 57,
+    "leader_elo": 1622,
+    "file": "SC0_Scottish_Premiership.csv"
+  },
+  "SC1": {
+    "league": "Scottish Championship",
+    "teams": 10,
+    "matches_played": 116,
+    "leader": "St Johnstone",
+    "leader_pts": 46,
+    "leader_elo": 1579,
+    "file": "SC1_Scottish_Championship.csv"
+  },
+  "SC2": {
+    "league": "Scottish League One",
+    "teams": 10,
+    "matches_played": 114,
+    "leader": "Inverness C",
+    "leader_pts": 49,
+    "leader_elo": 1604,
+    "file": "SC2_Scottish_League_One.csv"
+  },
+  "SC3": {
+    "league": "Scottish League Two",
+    "teams": 10,
+    "matches_played": 112,
+    "leader": "Spartans",
+    "leader_pts": 41,
+    "leader_elo": 1568,
+    "file": "SC3_Scottish_League_Two.csv"
+  },
+  "D1": {
+    "league": "Bundesliga",
+    "teams": 18,
+    "matches_played": 188,
+    "leader": "Bayern Munich",
+    "leader_pts": 54,
+    "leader_elo": 1654,
+    "file": "D1_Bundesliga.csv"
+  },
+  "D2": {
+    "league": "2. Bundesliga",
+    "teams": 18,
+    "matches_played": 189,
+    "leader": "Darmstadt",
+    "leader_pts": 41,
+    "leader_elo": 1601,
+    "file": "D2_2_Bundesliga.csv"
+  },
+  "SP1": {
+    "league": "La Liga",
+    "teams": 20,
+    "matches_played": 228,
+    "leader": "Barcelona",
+    "leader_pts": 58,
+    "leader_elo": 1671,
+    "file": "SP1_La_Liga.csv"
+  },
+  "SP2": {
+    "league": "Segunda Division",
+    "teams": 22,
+    "matches_played": 274,
+    "leader": "Santander",
+    "leader_pts": 47,
+    "leader_elo": 1567,
+    "file": "SP2_Segunda_Division.csv"
+  },
+  "I1": {
+    "league": "Serie A",
+    "teams": 20,
+    "matches_played": 239,
+    "leader": "Inter",
+    "leader_pts": 58,
+    "leader_elo": 1668,
+    "file": "I1_Serie_A.csv"
+  },
+  "I2": {
+    "league": "Serie B",
+    "teams": 20,
+    "matches_played": 240,
+    "leader": "Venezia",
+    "leader_pts": 50,
+    "leader_elo": 1628,
+    "file": "I2_Serie_B.csv"
+  },
+  "F1": {
+    "league": "Ligue 1",
+    "teams": 18,
+    "matches_played": 189,
+    "leader": "Paris SG",
+    "leader_pts": 51,
+    "leader_elo": 1658,
+    "file": "F1_Ligue_1.csv"
+  },
+  "F2": {
+    "league": "Ligue 2",
+    "teams": 18,
+    "matches_played": 197,
+    "leader": "Troyes",
+    "leader_pts": 41,
+    "leader_elo": 1554,
+    "file": "F2_Ligue_2.csv"
+  },
+  "B1": {
+    "league": "Belgian Pro League",
+    "teams": 16,
+    "matches_played": 192,
+    "leader": "St. Gilloise",
+    "leader_pts": 52,
+    "leader_elo": 1622,
+    "file": "B1_Belgian_Pro_League.csv"
+  },
+  "N1": {
+    "league": "Eredivisie",
+    "teams": 18,
+    "matches_played": 198,
+    "leader": "PSV Eindhoven",
+    "leader_pts": 59,
+    "leader_elo": 1694,
+    "file": "N1_Eredivisie.csv"
+  },
+  "P1": {
+    "league": "Primeira Liga",
+    "teams": 18,
+    "matches_played": 189,
+    "leader": "Porto",
+    "leader_pts": 56,
+    "leader_elo": 1674,
+    "file": "P1_Primeira_Liga.csv"
+  },
+  "T1": {
+    "league": "Turkish Super Lig",
+    "teams": 18,
+    "matches_played": 189,
+    "leader": "Galatasaray",
+    "leader_pts": 52,
+    "leader_elo": 1650,
+    "file": "T1_Turkish_Super_Lig.csv"
+  },
+  "G1": {
+    "league": "Greek Super League",
+    "teams": 14,
+    "matches_played": 138,
+    "leader": "AEK",
+    "leader_pts": 48,
+    "leader_elo": 1639,
+    "file": "G1_Greek_Super_League.csv"
+  },
+  "_meta": {
+    "generated": "2026-02-14T13:56:48.398443",
+    "source": "https://www.football-data.co.uk/mmz4281/2526/all-euro-data-2025-2026.xlsx",
+    "total_matches": 4854,
+    "total_leagues": 21
+  }
+}

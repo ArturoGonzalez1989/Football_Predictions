@@ -4,6 +4,7 @@ Endpoints de la API para estado del sistema.
 
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -31,44 +32,65 @@ def get_status():
 @router.post("/refresh-matches")
 def refresh_matches():
     """Ejecuta clean_games.py y find_matches.py para actualizar partidos."""
-    python = sys.executable
-    results = {"clean": None, "find": None}
+    # Import global flag from main app
+    from main import _is_refreshing
 
-    # 1. Limpiar partidos terminados
-    clean_script = SCRIPTS_DIR / "clean_games.py"
-    if clean_script.exists():
-        try:
-            proc = subprocess.run(
-                [python, str(clean_script)],
-                capture_output=True, text=True, timeout=30,
-            )
-            results["clean"] = {
-                "ok": proc.returncode == 0,
-                "output": (proc.stdout + proc.stderr).strip()[-500:],
-            }
-        except subprocess.TimeoutExpired:
-            results["clean"] = {"ok": False, "output": "Timeout (30s)"}
-    else:
-        results["clean"] = {"ok": False, "output": f"Script not found: {clean_script}"}
+    # Check if auto-refresh is already running
+    if _is_refreshing:
+        return {
+            "clean": {"ok": False, "output": "Refresh already in progress (auto or manual)"},
+            "find": {"ok": False, "output": "Refresh already in progress (auto or manual)"}
+        }
 
-    # 2. Buscar nuevos partidos
-    find_script = SCRIPTS_DIR / "find_matches.py"
-    if find_script.exists():
-        try:
-            proc = subprocess.run(
-                [python, str(find_script)],
-                capture_output=True, text=True, timeout=120,
-            )
-            results["find"] = {
-                "ok": proc.returncode == 0,
-                "output": (proc.stdout + proc.stderr).strip()[-500:],
-            }
-        except subprocess.TimeoutExpired:
-            results["find"] = {"ok": False, "output": "Timeout (120s)"}
-    else:
-        results["find"] = {"ok": False, "output": f"Script not found: {find_script}"}
+    # Set flag to prevent concurrent executions
+    import main
+    main._is_refreshing = True
+    main._refresh_started_at = datetime.now()
 
-    return results
+    try:
+        python = sys.executable
+        results = {"clean": None, "find": None}
+
+        # 1. Limpiar partidos terminados
+        clean_script = SCRIPTS_DIR / "clean_games.py"
+        if clean_script.exists():
+            try:
+                proc = subprocess.run(
+                    [python, str(clean_script)],
+                    capture_output=True, text=True, timeout=30,
+                )
+                results["clean"] = {
+                    "ok": proc.returncode == 0,
+                    "output": (proc.stdout + proc.stderr).strip()[-500:],
+                }
+            except subprocess.TimeoutExpired:
+                results["clean"] = {"ok": False, "output": "Timeout (30s)"}
+        else:
+            results["clean"] = {"ok": False, "output": f"Script not found: {clean_script}"}
+
+        # 2. Buscar nuevos partidos
+        find_script = SCRIPTS_DIR / "find_matches.py"
+        if find_script.exists():
+            try:
+                proc = subprocess.run(
+                    [python, str(find_script)],
+                    capture_output=True, text=True, timeout=120,
+                )
+                results["find"] = {
+                    "ok": proc.returncode == 0,
+                    "output": (proc.stdout + proc.stderr).strip()[-500:],
+                }
+            except subprocess.TimeoutExpired:
+                results["find"] = {"ok": False, "output": "Timeout (120s)"}
+        else:
+            results["find"] = {"ok": False, "output": f"Script not found: {find_script}"}
+
+        return results
+
+    finally:
+        # Always release the flag
+        main._is_refreshing = False
+        main._refresh_started_at = None
 
 
 def _find_scraper_process():
@@ -148,47 +170,92 @@ def stop_scraper():
 
 @router.post("/backend/restart")
 def restart_backend():
-    """Reinicia el servidor backend (FastAPI/uvicorn)."""
+    """Reinicia el servidor backend matando uvicorn y relanzándolo."""
     import os
-    import time
+    import threading
 
-    if not HAS_PSUTIL:
-        return {"ok": False, "message": "psutil no está instalado"}
+    backend_dir = Path(__file__).resolve().parent.parent
+    current_pid = os.getpid()
+
+    # Detect port from sys.argv (default 8000)
+    port = "8000"
+    for i, arg in enumerate(sys.argv):
+        if arg == "--port" and i + 1 < len(sys.argv):
+            port = sys.argv[i + 1]
+            break
+        if arg.startswith("--port="):
+            port = arg.split("=", 1)[1]
+            break
+
+    # Detect host from sys.argv (default 0.0.0.0)
+    host = "0.0.0.0"
+    for i, arg in enumerate(sys.argv):
+        if arg == "--host" and i + 1 < len(sys.argv):
+            host = sys.argv[i + 1]
+            break
+        if arg.startswith("--host="):
+            host = arg.split("=", 1)[1]
+            break
 
     try:
-        # Obtener el PID del proceso actual (el backend)
-        current_pid = os.getpid()
-        current_proc = psutil.Process(current_pid)
-
-        # Obtener el comando usado para iniciar el backend
-        cmdline = current_proc.cmdline()
-
-        # Iniciar nuevo proceso backend en background
-        # Usar el mismo comando que se usó para iniciar este proceso
-        new_proc = subprocess.Popen(
-            cmdline,
-            cwd=str(SCRAPER_DIR / "dashboard" / "backend"),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+        # Spawn a helper script that:
+        # 1. Waits for the current process to die
+        # 2. Starts a new uvicorn with --reload
+        restart_code = (
+            "import time, subprocess, sys, os\n"
+            f"old_pid = {current_pid}\n"
+            "for _ in range(15):\n"
+            "    time.sleep(1)\n"
+            "    try:\n"
+            "        os.kill(old_pid, 0)\n"
+            "    except OSError:\n"
+            "        break\n"
+            "time.sleep(1)\n"
+            "subprocess.Popen(\n"
+            f"    [r'{sys.executable}', '-m', 'uvicorn', 'main:app', '--reload', '--host', '{host}', '--port', '{port}'],\n"
+            f"    cwd=r'{backend_dir}',\n"
+            "    creationflags=0x00000010,\n"  # CREATE_NEW_CONSOLE
+            ")\n"
         )
 
-        # Esperar un momento para que el nuevo proceso arranque
-        time.sleep(2)
+        # Launch the restart helper as a fully detached process
+        subprocess.Popen(
+            [sys.executable, "-c", restart_code],
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
-        # Programar terminación del proceso actual después de responder
-        def delayed_shutdown():
-            time.sleep(1)
-            current_proc.terminate()
+        # Kill ourselves after a short delay (so the HTTP response can be sent)
+        def _delayed_exit():
+            import time as _time
+            _time.sleep(1)
+            # Kill the entire uvicorn process tree
+            if HAS_PSUTIL:
+                try:
+                    parent = psutil.Process(current_pid)
+                    # If uvicorn --reload, our parent is the watcher
+                    pp = parent.parent()
+                    if pp and "uvicorn" in " ".join(pp.cmdline()).lower():
+                        # Kill the parent watcher (which kills us too)
+                        for child in pp.children(recursive=True):
+                            try:
+                                child.kill()
+                            except psutil.NoSuchProcess:
+                                pass
+                        pp.kill()
+                    else:
+                        parent.kill()
+                except Exception:
+                    pass
+            os._exit(0)
 
-        import threading
-        threading.Thread(target=delayed_shutdown, daemon=True).start()
+        threading.Thread(target=_delayed_exit, daemon=True).start()
 
         return {
             "ok": True,
-            "message": f"Backend reiniciándose (nuevo PID: {new_proc.pid}, terminando PID: {current_pid})",
+            "message": f"Backend reiniciando... Nuevo uvicorn con --reload en puerto {port}",
             "old_pid": current_pid,
-            "new_pid": new_proc.pid
         }
 
     except Exception as e:

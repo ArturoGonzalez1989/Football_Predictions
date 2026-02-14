@@ -106,6 +106,9 @@ export interface SystemStatus {
   chrome_processes: number
   last_log: string | null
   last_log_lines: string[]
+  auto_refresh_enabled?: boolean
+  refresh_interval_minutes?: number
+  is_refreshing?: boolean
 }
 
 async function post<T>(path: string): Promise<T> {
@@ -122,9 +125,38 @@ async function del<T>(path: string): Promise<T> {
 
 export interface OddsTimeline {
   minute: number | null
+  // Match Odds
   back_home: number | null
+  lay_home: number | null
   back_draw: number | null
+  lay_draw: number | null
   back_away: number | null
+  lay_away: number | null
+  // Over/Under 0.5
+  back_over05: number | null
+  lay_over05: number | null
+  back_under05: number | null
+  lay_under05: number | null
+  // Over/Under 1.5
+  back_over15: number | null
+  lay_over15: number | null
+  back_under15: number | null
+  lay_under15: number | null
+  // Over/Under 2.5
+  back_over25: number | null
+  lay_over25: number | null
+  back_under25: number | null
+  lay_under25: number | null
+  // Over/Under 3.5
+  back_over35: number | null
+  lay_over35: number | null
+  back_under35: number | null
+  lay_under35: number | null
+  // Over/Under 4.5
+  back_over45: number | null
+  lay_over45: number | null
+  back_under45: number | null
+  lay_under45: number | null
   volumen_matched: number | null
 }
 
@@ -140,11 +172,75 @@ export interface MatchFull {
   last_capture: string
 }
 
+export interface AllCaptures {
+  match_id: string
+  rows: number
+  captures: Capture[]
+}
+
+export interface QualityOverview {
+  avg_quality: number
+  total_matches: number
+  quality_ranges: { range: string; count: number }[]
+  bins: { label: string; count: number; matches: string[] }[]
+}
+
+export interface QualityDistribution {
+  bins: { label: string; count: number; matches: string[] }[]
+}
+
+export interface StatsCoverage {
+  fields: { name: string; coverage_pct: number }[]
+}
+
+export interface GapAnalysis {
+  avg_gaps: number
+  max_gaps: number
+  distribution: { gap_count: number; match_count: number }[]
+}
+
+export interface LowQualityMatch {
+  match_id: string
+  name: string
+  quality: number
+  total_captures: number
+  gap_count: number
+}
+
+export interface MomentumPatterns {
+  avg_swing: number
+  comeback_frequency: number
+  top_swings: { match_id: string; name: string; swing: number }[]
+}
+
+export interface XgAccuracy {
+  correlation: number
+  avg_accuracy: number
+  scatter_data: { xg: number; actual: number; match_id: string; team: string }[]
+}
+
+export interface OddsMovements {
+  avg_drift: number
+  drift_by_minute: { minute: number; avg_drift: number }[]
+  top_movements: { match_id: string; name: string; movement: number; drift_pct: number }[]
+}
+
+export interface OverUnderAnalysis {
+  hit_rates: { line: string; hit_rate: number }[]
+  minute_probabilities: { minute: number; probability: number }[]
+}
+
+export interface StatCorrelations {
+  matrix: { stat1: string; stat2: string; correlation: number }[]
+  top_correlations: { pair: string; value: number }[]
+}
+
 export const api = {
   getMatches: () => get<Match[]>("/matches"),
   getMatchDetail: (id: string) => get<MatchDetail>(`/matches/${id}`),
   getMatchMomentum: (id: string) => get<MomentumData>(`/matches/${id}/momentum`),
   getMatchFull: (id: string) => get<MatchFull>(`/matches/${id}/full`),
+  getAllCaptures: (id: string) => get<AllCaptures>(`/matches/${id}/all-captures`),
   getSystemStatus: () => get<SystemStatus>("/system/status"),
   deleteMatch: (id: string) => del<{ match_id: string; deleted_from_csv: boolean; deleted_data: boolean }>(`/matches/${id}`),
   refreshMatches: () => post<{ clean: { ok: boolean; output: string } | null; find: { ok: boolean; output: string } | null }>("/system/refresh-matches"),
@@ -152,4 +248,18 @@ export const api = {
   stopScraper: () => post<{ ok: boolean; message: string }>("/system/scraper/stop"),
   restartBackend: () => post<{ ok: boolean; message: string; old_pid?: number; new_pid?: number }>("/system/backend/restart"),
   restartFrontend: () => post<{ ok: boolean; message: string; pid?: number }>("/system/frontend/restart"),
+
+  // Quality endpoints
+  getQualityOverview: () => get<QualityOverview>("/analytics/quality/overview"),
+  getQualityDistribution: () => get<QualityDistribution>("/analytics/quality/distribution"),
+  getStatsCoverage: () => get<StatsCoverage>("/analytics/quality/stats-coverage"),
+  getGapAnalysis: () => get<GapAnalysis>("/analytics/quality/gaps"),
+  getLowQualityMatches: (threshold: number) => get<{ threshold: number; matches: LowQualityMatch[] }>(`/analytics/quality/low-quality-matches?threshold=${threshold}`),
+
+  // Insights endpoints
+  getMomentumPatterns: () => get<MomentumPatterns>("/analytics/insights/momentum-patterns"),
+  getXgAccuracy: () => get<XgAccuracy>("/analytics/insights/xg-accuracy"),
+  getOddsMovements: () => get<OddsMovements>("/analytics/insights/odds-movements"),
+  getOverUnderAnalysis: () => get<OverUnderAnalysis>("/analytics/insights/over-under"),
+  getStatCorrelations: () => get<StatCorrelations>("/analytics/insights/correlations"),
 }

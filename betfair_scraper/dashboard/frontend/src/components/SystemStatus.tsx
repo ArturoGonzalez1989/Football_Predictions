@@ -57,23 +57,43 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
   }
 
   async function handleRestartBackend() {
-    if (!confirm("¿Reiniciar el backend del dashboard? Se aplicarán cambios en el código.")) {
+    if (!confirm("¿Reiniciar el backend del dashboard? El proceso uvicorn se matará y relanzará con el código nuevo.")) {
       return
     }
     setActing(true)
     setMessage(null)
     try {
-      const res = await api.restartBackend()
-      setMessage({ text: res.message, ok: res.ok })
-      // Wait for new backend to start before refreshing
-      await new Promise(r => setTimeout(r, 3000))
-      onRefresh()
+      await api.restartBackend()
+      setMessage({ text: "Backend cerrándose... esperando nuevo proceso", ok: true })
     } catch {
-      setMessage({ text: "Backend reiniciado - recargando página...", ok: true })
-      // If backend restarted successfully but connection failed, reload page
-      setTimeout(() => window.location.reload(), 2000)
+      // Expected: connection drops when backend kills itself
+    }
+
+    // Poll until the new backend is ready (up to 30 seconds)
+    setMessage({ text: "Esperando nuevo backend...", ok: true })
+    let ready = false
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 1000))
+      try {
+        const res = await fetch("/api/health")
+        if (res.ok) {
+          ready = true
+          break
+        }
+      } catch {
+        // Still starting up
+      }
+      setMessage({ text: `Esperando nuevo backend... (${i + 1}s)`, ok: true })
+    }
+
+    if (ready) {
+      setMessage({ text: "Backend reiniciado correctamente", ok: true })
+      onRefresh()
+    } else {
+      setMessage({ text: "Backend no respondió en 30s - verifica manualmente", ok: false })
     }
     setActing(false)
+    setTimeout(() => setMessage(null), 8000)
   }
 
   async function handleRestartFrontend() {

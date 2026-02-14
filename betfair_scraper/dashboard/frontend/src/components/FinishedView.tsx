@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react"
-import { api, type Match, type MatchFull, type MomentumData } from "../lib/api"
+import { api, type Match, type MatchFull, type MomentumData, type AllCaptures } from "../lib/api"
 import { MomentumChart, XgChart } from "./MomentumChart"
 import { StatsBar } from "./StatsBar"
+import { SiegeMeter } from "./SiegeMeter"
+import { PriceVsReality } from "./PriceVsReality"
+import { MomentumSwings } from "./MomentumSwings"
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -16,19 +19,22 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [full, setFull] = useState<MatchFull | null>(null)
   const [momentum, setMomentum] = useState<MomentumData | null>(null)
+  const [allCaptures, setAllCaptures] = useState<AllCaptures | null>(null)
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    if (!selectedId) { setFull(null); setMomentum(null); return }
+    if (!selectedId) { setFull(null); setMomentum(null); setAllCaptures(null); return }
     setLoading(true)
     Promise.all([
       api.getMatchFull(selectedId),
       api.getMatchMomentum(selectedId),
-    ]).then(([f, m]) => {
+      api.getAllCaptures(selectedId),
+    ]).then(([f, m, a]) => {
       setFull(f)
       setMomentum(m)
+      setAllCaptures(a)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [selectedId])
 
@@ -122,7 +128,7 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
             Loading match data...
           </div>
         ) : full && full.rows > 0 ? (
-          <MatchDetail match={selected} full={full} momentum={momentum} />
+          <MatchDetail match={selected} full={full} momentum={momentum} allCaptures={allCaptures} />
         ) : full ? (
           <div className="flex items-center justify-center h-full text-zinc-500">
             No capture data available for this match
@@ -133,7 +139,7 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
   )
 }
 
-function MatchDetail({ match, full, momentum }: { match: Match; full: MatchFull; momentum: MomentumData | null }) {
+function MatchDetail({ match, full, momentum, allCaptures }: { match: Match; full: MatchFull; momentum: MomentumData | null; allCaptures: AllCaptures | null }) {
   const [home, away] = match.name.split(" - ")
   const s = full.final_stats ?? {}
   const golesH = String(s.goles_local ?? "?")
@@ -181,6 +187,39 @@ function MatchDetail({ match, full, momentum }: { match: Match; full: MatchFull;
           <StatsBar label="Dang. Attacks" homeValue={fmt(s.dangerous_attacks_local)} awayValue={fmt(s.dangerous_attacks_visitante)} />
         </div>
       </section>
+
+      {/* ── Trading Intelligence ── */}
+      {allCaptures && allCaptures.captures.length >= 5 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/40 to-transparent" />
+            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">
+              Trading Intelligence
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-l from-fuchsia-500/40 to-transparent" />
+          </div>
+
+          <SiegeMeter
+            captures={allCaptures.captures}
+            homeName={home ?? "Home"}
+            awayName={away ?? "Away"}
+          />
+
+          {full.odds_timeline && full.odds_timeline.length > 0 && (
+            <PriceVsReality
+              captures={allCaptures.captures}
+              oddsTimeline={full.odds_timeline}
+              homeName={home ?? "Home"}
+            />
+          )}
+
+          <MomentumSwings
+            captures={allCaptures.captures}
+            homeName={home ?? "Home"}
+            awayName={away ?? "Away"}
+          />
+        </section>
+      )}
 
       {/* Momentum */}
       <MomentumChart data={momentum} />
@@ -248,6 +287,89 @@ function MatchDetail({ match, full, momentum }: { match: Match; full: MatchFull;
               <Legend iconType="line" wrapperStyle={{ fontSize: 11, color: "#a1a1aa" }} />
             </LineChart>
           </ResponsiveContainer>
+        </section>
+      )}
+
+      {/* All Captures Table */}
+      {allCaptures && allCaptures.captures.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            All Captures ({allCaptures.captures.length} rows)
+          </h3>
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-zinc-800 z-10">
+                  <tr className="border-b border-zinc-700">
+                    <th className="px-3 py-2 text-left font-semibold text-zinc-300 sticky left-0 bg-zinc-800">Min</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Score</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">xG H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">xG A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Poss H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Poss A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Shots H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Shots A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">On Tgt H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">On Tgt A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Corners H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Corners A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Big Ch H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Big Ch A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Passes H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Passes A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Attacks H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Attacks A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Dang Att H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Dang Att A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Fouls H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Fouls A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">YC H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">YC A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">RC H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">RC A</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Momentum H</th>
+                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Momentum A</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/50">
+                  {allCaptures.captures.map((cap, idx) => (
+                    <tr key={idx} className="hover:bg-zinc-800/30">
+                      <td className="px-3 py-2 font-mono text-zinc-100 sticky left-0 bg-zinc-900/95">{cap.minuto || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-100 whitespace-nowrap">
+                        {cap.goles_local || "0"} - {cap.goles_visitante || "0"}
+                      </td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.xg_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.xg_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.posesion_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.posesion_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_puerta_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_puerta_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.corners_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.corners_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.big_chances_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.big_chances_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.total_passes_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.total_passes_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.attacks_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.attacks_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.dangerous_attacks_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.dangerous_attacks_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.fouls_conceded_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.fouls_conceded_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_amarillas_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_amarillas_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_rojas_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_rojas_visitante || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.momentum_local || "-"}</td>
+                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.momentum_visitante || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
       )}
     </div>

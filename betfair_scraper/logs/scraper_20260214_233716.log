@@ -1,0 +1,88 @@
+23:37:16 [INFO] 📝 Log guardándose en: logs/scraper_20260214_233716.log
+23:37:16 [INFO] Cargados 22 partidos desde games.csv
+23:37:16 [INFO] 📅 MODO SCHEDULING ACTIVADO
+23:37:16 [INFO]    Ventana tracking: 10 min antes → 150 min después
+23:37:16 [INFO]    Total en CSV: 22 partidos
+23:37:16 [INFO]    ✓ Partidos activos ahora: 22
+23:37:16 [INFO]    ⏰ Partidos futuros: 0
+23:37:16 [INFO]    ✅ Partidos finalizados: 0
+23:37:16 [INFO] 🚀 Sistema multi-driver: Creando 22 drivers independientes (sin límite de tabs)
+23:37:16 [INFO] 
+Iniciando observador con 22 partidos.
+23:37:16 [INFO] Ciclo: 30s | Output: data/
+23:37:16 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 5 ciclos (scheduling)
+23:37:16 [INFO] 🧹 Limpiando ventanas Betfair antiguas...
+23:37:16 [WARNING] Script de limpieza no encontrado: C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\close_betfair_windows.ps1
+23:37:16 [INFO] Cargados 22 partidos desde games.csv
+23:37:16 [INFO] 
+🚀 Iniciando 22 drivers Chrome (sistema multi-driver paralelo)...
+23:37:16 [INFO] 🔧 Creando driver de login: Girona - FC Barcelona
+23:37:16 [INFO] 🔧 Creando driver para: Girona - FC Barcelona
+23:37:23 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:24 [INFO] ✓ Driver listo: girona-fc-barcelona-apuestas-35216932
+23:37:24 [INFO] ============================================================
+23:37:24 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+23:37:24 [INFO] Tienes 0 segundos...
+23:37:24 [INFO] El scraper comenzará automáticamente después.
+23:37:24 [INFO] ============================================================
+23:37:24 [INFO] 🔧 Creando 21 drivers adicionales en paralelo...
+23:37:24 [INFO] 🔧 Creando driver para: Levante - Villarreal
+23:37:24 [INFO] 🔧 Creando driver para: Athletic de Bilbao - Elche
+23:37:24 [INFO] 🔧 Creando driver para: Real Sociedad - Oviedo
+23:37:24 [INFO] 🔧 Creando driver para: Osasuna - Real Madrid
+23:37:24 [INFO] 🔧 Creando driver para: Cagliari - Lecce
+23:37:24 [INFO] 🔧 Creando driver para: Sassuolo - Verona
+23:37:24 [INFO] 🔧 Creando driver para: Juventus - Como
+23:37:24 [INFO] 🔧 Creando driver para: Lecce - Inter
+23:37:33 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:33 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:34 [INFO] ✓ Driver listo: athletic-de-bilbao-elche-apuestas-35245234
+23:37:34 [INFO] 🔧 Creando driver para: Macclesfield - Brentford
+23:37:34 [INFO] ✓ Driver listo: osasuna-real-madrid-apuestas-35244726
+23:37:34 [INFO] 🔧 Creando driver para: Sociedad B - Málaga
+23:37:37 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:38 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:38 [INFO] ✓ Driver listo: levante-villarreal-apuestas-35242977
+23:37:38 [INFO] 🔧 Creando driver para: Mainz - Hamburgo
+23:37:39 [INFO] ✓ Driver listo: cagliari-lecce-apuestas-35216885
+23:37:39 [INFO] 🔧 Creando driver para: Unión Berlín - Leverkusen
+23:37:40 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:41 [INFO] ✓ Driver listo: juventus-como-apuestas-35243177
+23:37:41 [INFO] 🔧 Creando driver para: Bayern Múnich - Eintracht Frankfurt
+23:37:41 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:42 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:42 [INFO] ✓ Cookies aceptadas automáticamente
+23:37:42 [INFO] ✓ Driver listo: real-sociedad-oviedo-apuestas-35244721
+23:37:42 [INFO] 🔧 Creando driver para: Colonia - Hoffenheim
+23:37:43 [INFO] ✓ Driver listo: lecce-inter-apuestas-35243175
+23:37:43 [INFO] 🔧 Creando driver para: Wolfsburgo - Augsburgo
+23:37:43 [INFO] ✓ Driver listo: sassuolo-verona-apuestas-35245328
+23:37:43 [INFO] 🔧 Creando driver para: RB Leipzig - Borussia Dortmund
+23:37:59 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:00 [INFO] ✓ Driver listo: mainz-hamburgo-apuestas-35244047
+23:38:00 [INFO] 🔧 Creando driver para: Friburgo - B Mönchengladbach
+23:38:09 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:10 [INFO] ✓ Driver listo: sociedad-b-m%C3%A1laga-apuestas-35248844
+23:38:10 [INFO] 🔧 Creando driver para: St Pauli - Werder Bremen
+23:38:11 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:12 [INFO] ✓ Driver listo: macclesfield-brentford-apuestas-35172764
+23:38:12 [INFO] 🔧 Creando driver para: Inter - Juventus
+23:38:12 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:13 [INFO] ✓ Driver listo: uni%C3%B3n-berl%C3%ADn-leverkusen-apuestas-3524414
+23:38:13 [INFO] 🔧 Creando driver para: Cagliari - Lazio
+23:38:30 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:31 [INFO] ✓ Driver listo: rb-leipzig-borussia-dortmund-apuestas-35244054
+23:38:31 [INFO] 🔧 Creando driver para: Atlético de Madrid - Espanyol
+23:38:32 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:33 [INFO] ✓ Driver listo: st-pauli-werder-bremen-apuestas-35244116
+23:38:37 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:38 [INFO] ✓ Driver listo: wolfsburgo-augsburgo-apuestas-35244044
+23:38:46 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:47 [INFO] ✓ Driver listo: colonia-hoffenheim-apuestas-35244049
+23:38:58 [INFO] ✓ Cookies aceptadas automáticamente
+23:38:59 [INFO] ✓ Driver listo: atl%C3%A9tico-de-madrid-espanyol-apuestas-35244577
+23:39:06 [INFO] ✓ Cookies aceptadas automáticamente
+23:39:07 [INFO] ✓ Driver listo: inter-juventus-apuestas-35215842
+23:39:44 [INFO] ✓ Cookies aceptadas automáticamente
+23:39:45 [INFO] ✓ Driver listo: cagliari-lazio-apuestas-35243857
+23:40:24 [WARNING] Timeout esperando drivers. Continuando con 20 drivers creados.

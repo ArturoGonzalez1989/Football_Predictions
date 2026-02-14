@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback } from "react"
-import { api, type Match, type MatchDetail, type MomentumData, type MatchFull } from "../lib/api"
+import { api, type Match, type MatchDetail, type MomentumData, type MatchFull, type AllCaptures } from "../lib/api"
 import { formatTimeTo } from "../lib/utils"
 import { StatusBadge } from "./StatusBadge"
 import { CaptureIndicator } from "./CaptureIndicator"
 import { StatsBar } from "./StatsBar"
 import { MomentumChart, XgChart } from "./MomentumChart"
-import { OddsTable } from "./OddsChart"
+import { OddsTable, OverUnderTable } from "./OddsChart"
 import { CaptureTable } from "./CaptureTable"
 import { GapAnalysis } from "./GapAnalysis"
+import { SiegeMeter } from "./SiegeMeter"
+import { PriceVsReality } from "./PriceVsReality"
+import { MomentumSwings } from "./MomentumSwings"
 
 interface MatchCardProps {
   match: Match
@@ -21,20 +24,23 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
   const [detail, setDetail] = useState<MatchDetail | null>(null)
   const [momentum, setMomentum] = useState<MomentumData | null>(null)
   const [fullData, setFullData] = useState<MatchFull | null>(null)
+  const [allCaptures, setAllCaptures] = useState<AllCaptures | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
 
   const loadDetail = useCallback(async () => {
     if (!expanded) return
     setLoadingDetail(true)
     try {
-      const [d, m, f] = await Promise.all([
+      const [d, m, f, ac] = await Promise.all([
         api.getMatchDetail(match.match_id),
         api.getMatchMomentum(match.match_id),
         api.getMatchFull(match.match_id),
+        api.getAllCaptures(match.match_id),
       ])
       setDetail(d)
       setMomentum(m)
       setFullData(f)
+      setAllCaptures(ac)
     } catch {
       /* ignore */
     } finally {
@@ -164,6 +170,41 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
             </div>
           )}
 
+          {/* ── Trading Intelligence ── */}
+          {allCaptures && allCaptures.captures.length >= 5 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1">
+                <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/40 to-transparent" />
+                <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">
+                  Trading Intelligence
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-l from-fuchsia-500/40 to-transparent" />
+              </div>
+
+              <SiegeMeter
+                captures={allCaptures.captures}
+                homeName={home ?? "Home"}
+                awayName={away ?? "Away"}
+              />
+
+              {fullData?.odds_timeline && fullData.odds_timeline.length > 0 && (
+                <PriceVsReality
+                  captures={allCaptures.captures}
+                  oddsTimeline={fullData.odds_timeline}
+                  homeName={home ?? "Home"}
+                />
+              )}
+
+              <MomentumSwings
+                captures={allCaptures.captures}
+                homeName={home ?? "Home"}
+                awayName={away ?? "Away"}
+              />
+            </div>
+          )}
+
+          {/* ── Classic Analytics ── */}
+
           {/* Momentum Chart */}
           <MomentumChart data={momentum} loading={loadingDetail && !momentum} />
 
@@ -173,6 +214,14 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
           {/* Odds Table */}
           {fullData && fullData.odds_timeline && (
             <OddsTable
+              data={fullData.odds_timeline}
+              loading={loadingDetail && !fullData}
+            />
+          )}
+
+          {/* Over/Under Table */}
+          {fullData && fullData.odds_timeline && (
+            <OverUnderTable
               data={fullData.odds_timeline}
               loading={loadingDetail && !fullData}
             />

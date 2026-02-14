@@ -42,17 +42,30 @@ export function LiveView({ liveMatches, upcomingMatches, allMatches, system, onR
     <div className="p-6">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-lg font-semibold text-zinc-100">En Vivo</h1>
-        <button
-          type="button"
-          onClick={handleRefreshMatches}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors cursor-pointer disabled:opacity-50"
-        >
-          <svg className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          {refreshing ? "Searching..." : "Find Matches"}
-        </button>
+        <div className="flex items-center gap-3">
+          {system?.auto_refresh_enabled && (
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse-dot" />
+                Auto-refresh every {system.refresh_interval_minutes}m
+              </span>
+              {system.is_refreshing && (
+                <span className="text-blue-400 font-medium">(Running...)</span>
+              )}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleRefreshMatches}
+            disabled={refreshing || system?.is_refreshing}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <svg className={`w-3.5 h-3.5 ${refreshing || system?.is_refreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {refreshing || system?.is_refreshing ? "Searching..." : "Find Matches"}
+          </button>
+        </div>
       </div>
 
       {refreshResult && (

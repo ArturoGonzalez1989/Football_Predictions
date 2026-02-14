@@ -1255,6 +1255,32 @@ class CSVWriter:
             self._archivos_abiertos[tab_id] = f
             self._writers[tab_id] = w
 
+        # Verificar si ya existe una captura para este minuto
+        minuto_nuevo = datos.get("minuto", "").strip()
+        estado_nuevo = datos.get("estado_partido", "").strip()
+
+        # Solo verificar duplicados si es un partido en juego/descanso/finalizado con minuto
+        if minuto_nuevo and minuto_nuevo != "-" and estado_nuevo in ("en_juego", "descanso", "finalizado"):
+            # Leer última línea del CSV para comparar minuto
+            try:
+                with open(ruta, "r", encoding="utf-8") as f_check:
+                    lines = f_check.readlines()
+                    if len(lines) > 1:  # Si hay más que solo el header
+                        ultima_linea = lines[-1].strip()
+                        if ultima_linea:
+                            # Parsear la última fila
+                            reader = csv.DictReader([lines[0], ultima_linea])
+                            ultima_fila = list(reader)[-1]
+                            minuto_anterior = ultima_fila.get("minuto", "").strip()
+
+                            # Si el minuto es el mismo, saltar escritura
+                            if minuto_anterior == minuto_nuevo:
+                                log.debug(f"[{tab_id}] Minuto {minuto_nuevo} ya capturado, saltando duplicado")
+                                return
+            except Exception as e:
+                # Si hay error leyendo, continuar con la escritura normal
+                log.debug(f"Error verificando duplicados para {tab_id}: {e}")
+
         self._writers[tab_id].writerow(datos)
         self._archivos_abiertos[tab_id].flush()
 
@@ -1823,11 +1849,33 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
     rc_count = sum([1 for k, v in odds_rc.items() if v])
     log.info(f"[Tab {tab_info['index']}]   ✓ Resultado Correcto: {rc_count}/30 valores capturados")
 
-    log.info(f"[Tab {tab_info['index']}] → Extrayendo estadísticas del partido...")
-    stats = extraer_estadisticas(driver)
-    stats_count = sum([1 for k, v in stats.items() if v])
-    log.info(f"[Tab {tab_info['index']}]   ✓ Estadísticas: {stats_count}/54 valores capturados")
-    log.info(f"[Tab {tab_info['index']}]     - Summary: xG {stats['xg_local']}/{stats['xg_visitante']} | Opta {stats['opta_points_local']}/{stats['opta_points_visitante']} | Posesión {stats['posesion_local']}/{stats['posesion_visitante']}")
+    # Saltar estadísticas en partidos pre_partido para acelerar ciclos
+    estado_partido = info.get("estado_partido", "").strip()
+    if estado_partido in ("pre_partido", ""):
+        log.debug(f"[Tab {tab_info['index']}] Partido en pre_partido, saltando extracción de estadísticas")
+        stats = {k: "" for k in [
+            "xg_local", "xg_visitante", "posesion_local", "posesion_visitante",
+            "corners_local", "corners_visitante", "tiros_local", "tiros_visitante",
+            "tiros_puerta_local", "tiros_puerta_visitante", "faltas_local", "faltas_visitante",
+            "saques_esquina_local", "saques_esquina_visitante", "fueras_juego_local", "fueras_juego_visitante",
+            "momentum_local", "momentum_visitante", "opta_points_local", "opta_points_visitante",
+            "big_chances_local", "big_chances_visitante", "shots_off_target_local", "shots_off_target_visitante",
+            "attacks_local", "attacks_visitante", "dangerous_attacks_local", "dangerous_attacks_visitante",
+            "hit_woodwork_local", "hit_woodwork_visitante", "tackles_local", "tackles_visitante",
+            "duels_won_local", "duels_won_visitante", "saves_local", "saves_visitante",
+            "interceptions_local", "interceptions_visitante", "pass_success_pct_local", "pass_success_pct_visitante",
+            "crosses_local", "crosses_visitante", "successful_passes_opp_half_local", "successful_passes_opp_half_visitante",
+            "throw_ins_local", "throw_ins_visitante", "goal_kicks_local", "goal_kicks_visitante",
+            "free_kicks_local", "free_kicks_visitante", "injuries_local", "injuries_visitante",
+            "shots_blocked_local", "shots_blocked_visitante", "substitutions_local", "substitutions_visitante"
+        ]}
+        stats_count = 0
+    else:
+        log.info(f"[Tab {tab_info['index']}] → Extrayendo estadísticas del partido...")
+        stats = extraer_estadisticas(driver)
+        stats_count = sum([1 for k, v in stats.items() if v])
+        log.info(f"[Tab {tab_info['index']}]   ✓ Estadísticas: {stats_count}/54 valores capturados")
+        log.info(f"[Tab {tab_info['index']}]     - Summary: xG {stats['xg_local']}/{stats['xg_visitante']} | Opta {stats['opta_points_local']}/{stats['opta_points_visitante']} | Posesión {stats['posesion_local']}/{stats['posesion_visitante']}")
 
     # Log de Attacking stats (si se capturaron)
     attacking_captured = sum([1 for k in ["big_chances_local", "shots_off_target_local", "attacks_local", "hit_woodwork_local"] if stats[k]])
@@ -2306,16 +2354,24 @@ def main():
                 md = crear_match_driver(partido)
                 return (partido["url"], md) if md else (partido["url"], None)
 
-            with ThreadPoolExecutor(max_workers=min(8, len(partidos_activos) - 1)) as executor:
-                futures = [
-                    executor.submit(crear_driver_worker, p)
-                    for p in partidos_activos[1:]
-                ]
+            executor = ThreadPoolExecutor(max_workers=min(8, len(partidos_activos) - 1))
+            futures = [
+                executor.submit(crear_driver_worker, p)
+                for p in partidos_activos[1:]
+            ]
 
-                for future in as_completed(futures):
-                    url, md = future.result()
-                    if md:
-                        match_drivers[md.match_id] = md
+            try:
+                for future in as_completed(futures, timeout=180):
+                    try:
+                        url, md = future.result(timeout=10)
+                        if md:
+                            match_drivers[md.match_id] = md
+                    except Exception as e:
+                        log.warning(f"Error obteniendo resultado de driver: {e}")
+            except TimeoutError:
+                log.warning(f"Timeout esperando drivers. Continuando con {len(match_drivers)} drivers creados.")
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
 
         log.info(f"✓ {len(match_drivers)} drivers creados exitosamente")
 

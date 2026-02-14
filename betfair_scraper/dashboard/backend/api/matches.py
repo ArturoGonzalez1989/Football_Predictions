@@ -3,7 +3,7 @@ Endpoints de la API para partidos.
 """
 
 from fastapi import APIRouter
-from utils.csv_reader import load_games, load_match_detail, load_momentum_data, load_all_stats, load_match_full, delete_match
+from utils.csv_reader import load_games, load_match_detail, load_momentum_data, load_all_stats, load_match_full, delete_match, load_all_captures
 
 router = APIRouter(prefix="/api/matches", tags=["matches"])
 
@@ -36,6 +36,12 @@ def get_match_stats(match_id: str):
 def get_match_full(match_id: str):
     """Resumen completo: stats finales, cuotas apertura/cierre, timeline."""
     return load_match_full(match_id)
+
+
+@router.get("/{match_id}/all-captures")
+def get_all_captures(match_id: str):
+    """Todas las capturas minuto a minuto del partido."""
+    return load_all_captures(match_id)
 
 
 @router.delete("/{match_id}")
