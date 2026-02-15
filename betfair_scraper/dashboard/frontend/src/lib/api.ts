@@ -241,6 +241,45 @@ export interface StatCorrelations {
   top_correlations: { pair: string; value: number }[]
 }
 
+export interface StrategyBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  back_draw: number | null
+  xg_total: number | null
+  xg_max: number | null
+  sot_total: number | null
+  poss_diff: number | null
+  shots_total: number | null
+  bfed_prematch: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  passes_v2: boolean
+  passes_v15: boolean
+  passes_v2r: boolean
+}
+
+export interface StrategySummaryBlock {
+  bets: number
+  wins: number
+  win_pct: number
+  pl: number
+  roi: number
+}
+
+export interface StrategyBackDraw00 {
+  total_matches: number
+  with_trigger: number
+  summary: {
+    base: StrategySummaryBlock
+    v15: StrategySummaryBlock
+    v2: StrategySummaryBlock
+    v2r: StrategySummaryBlock
+  }
+  bets: StrategyBet[]
+}
+
 export const api = {
   getMatches: () => get<MatchesGrouped>("/matches"),
   getMatchDetail: (id: string) => get<MatchDetail>(`/matches/${id}`),
@@ -268,4 +307,7 @@ export const api = {
   getOddsMovements: () => get<OddsMovements>("/analytics/insights/odds-movements"),
   getOverUnderAnalysis: () => get<OverUnderAnalysis>("/analytics/insights/over-under"),
   getStatCorrelations: () => get<StatCorrelations>("/analytics/insights/correlations"),
+
+  // Strategy tracking endpoints
+  getStrategyBackDraw00: () => get<StrategyBackDraw00>("/analytics/strategies/back-draw-00"),
 }

@@ -78,7 +78,13 @@
       "Bash(for pid in 55696 109540 108576)",
       "Bash(do taskkill //F //PID $pid)",
       "Bash(where:*)",
-      "Bash(/c/Users/agonz/miniconda3/python:*)"
+      "Bash(/c/Users/agonz/miniconda3/python:*)",
+      "Bash(google-chrome:*)",
+      "Bash(\"C:/Program Files/Google/Chrome/Application/chrome.exe\" --version)",
+      "Bash(\"C:/Program Files \\(x86\\)/Google/Chrome/Application/chrome.exe\" --version)",
+      "Bash(/c/Users/agonz/miniconda3/python.exe:*)",
+      "Bash(for f in partido_*.csv)",
+      "Bash(do grep \"finalizado\" \"$f\")"
     ]
   }
 }

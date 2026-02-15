@@ -23,7 +23,7 @@ PAUSA_LOGIN_SEG = 0           # Sin pausa de login - las cuotas son públicas
 OUTPUT_DIR = "data"           # Carpeta donde se guardan los CSV
 
 # ── Chrome / Selenium ───────────────────────────────────────────────────────
-HEADLESS = False              # False = ventana visible (recomendado para login)
+HEADLESS = True               # True = sin ventana (ahorra desktop heap de Windows)
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"

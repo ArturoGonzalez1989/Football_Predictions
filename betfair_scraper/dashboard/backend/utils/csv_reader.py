@@ -1242,3 +1242,130 @@ def calculate_stat_correlations() -> dict:
         "matrix": correlations,
         "top_correlations": top_correlations
     }
+
+
+def analyze_strategy_back_draw_00() -> dict:
+    """Analyze the 'Back Draw at 0-0 from min 30' strategy across all finished matches."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {"total_matches": 0, "with_trigger": 0, "bets": [], "summary": {}}
+
+    bets = []
+    matches_with_data = 0
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        if not rows or len(rows) < 5:
+            continue
+
+        matches_with_data += 1
+
+        # Find first row where min >= 30 and score is 0-0
+        trigger_row = None
+        for row in rows:
+            minuto = _to_float(row.get("minuto", ""))
+            gl = _to_float(row.get("goles_local", ""))
+            gv = _to_float(row.get("goles_visitante", ""))
+            if minuto is not None and gl is not None and gv is not None:
+                if minuto >= 30 and int(gl) == 0 and int(gv) == 0:
+                    trigger_row = row
+                    break
+
+        if trigger_row is None:
+            continue
+
+        # Extract in-play data at trigger
+        back_draw = _to_float(trigger_row.get("back_draw", ""))
+        xg_l = _to_float(trigger_row.get("xg_local", ""))
+        xg_v = _to_float(trigger_row.get("xg_visitante", ""))
+        xg_total = ((xg_l or 0) + (xg_v or 0)) if (xg_l is not None or xg_v is not None) else None
+        xg_max = max(xg_l or 0, xg_v or 0) if (xg_l is not None or xg_v is not None) else None
+
+        sot_l = _to_float(trigger_row.get("tiros_puerta_local", ""))
+        sot_v = _to_float(trigger_row.get("tiros_puerta_visitante", ""))
+        sot_total = (int(sot_l or 0) + int(sot_v or 0)) if (sot_l is not None or sot_v is not None) else None
+
+        poss_l = _to_float(trigger_row.get("posesion_local", ""))
+        poss_v = _to_float(trigger_row.get("posesion_visitante", ""))
+        poss_diff = abs((poss_l or 50) - (poss_v or 50)) if (poss_l is not None or poss_v is not None) else None
+
+        shots_l = _to_float(trigger_row.get("tiros_local", ""))
+        shots_v = _to_float(trigger_row.get("tiros_visitante", ""))
+        shots_total = (int(shots_l or 0) + int(shots_v or 0)) if (shots_l is not None or shots_v is not None) else None
+
+        minuto_trigger = _to_float(trigger_row.get("minuto", ""))
+        bfed = _to_float(trigger_row.get("BFED", "")) or _to_float(trigger_row.get("bfed_prematch", ""))
+
+        # Final result from last row
+        last_row = rows[-1]
+        gl_final = _to_float(last_row.get("goles_local", ""))
+        gv_final = _to_float(last_row.get("goles_visitante", ""))
+        if gl_final is None or gv_final is None:
+            continue
+
+        draw_won = int(gl_final) == int(gv_final)
+        ft_score = f"{int(gl_final)}-{int(gv_final)}"
+
+        # P/L calculation (stake 10, 5% commission on winnings)
+        stake = 10
+        if draw_won and back_draw:
+            gross = (back_draw - 1) * stake
+            pl = gross * 0.95  # net of commission
+        else:
+            pl = -stake
+
+        # Check strategy filters
+        passes_xg_05 = xg_total is not None and xg_total < 0.5
+        passes_xg_06 = xg_total is not None and xg_total < 0.6
+        passes_poss_20 = poss_diff is not None and poss_diff < 20
+        passes_poss_25 = poss_diff is not None and poss_diff < 25
+        passes_shots = shots_total is not None and shots_total < 8
+
+        passes_v2 = passes_xg_05 and passes_poss_20 and passes_shots
+        passes_v15 = passes_xg_06 and passes_poss_25  # V1.5: xG<0.6 + PD<25%
+        passes_v2r = passes_xg_06 and passes_poss_20 and passes_shots  # V2r: xG<0.6 + PD<20% + shots<8
+
+        bets.append({
+            "match": match["name"],
+            "match_id": match["match_id"],
+            "minuto": minuto_trigger,
+            "back_draw": round(back_draw, 2) if back_draw else None,
+            "xg_total": round(xg_total, 2) if xg_total is not None else None,
+            "xg_max": round(xg_max, 2) if xg_max is not None else None,
+            "sot_total": sot_total,
+            "poss_diff": round(poss_diff, 1) if poss_diff is not None else None,
+            "shots_total": shots_total,
+            "bfed_prematch": bfed,
+            "ft_score": ft_score,
+            "won": draw_won,
+            "pl": round(pl, 2),
+            "passes_v2": passes_v2,
+            "passes_v15": passes_v15,
+            "passes_v2r": passes_v2r,
+        })
+
+    # Summary stats helper
+    def _make_summary(subset):
+        n = len(subset)
+        w = sum(1 for b in subset if b["won"])
+        pl = sum(b["pl"] for b in subset)
+        return {
+            "bets": n,
+            "wins": w,
+            "win_pct": round(w / n * 100, 1) if n else 0,
+            "pl": round(pl, 2),
+            "roi": round(pl / (n * 10) * 100, 1) if n else 0,
+        }
+
+    return {
+        "total_matches": matches_with_data,
+        "with_trigger": len(bets),
+        "summary": {
+            "base": _make_summary(bets),
+            "v15": _make_summary([b for b in bets if b["passes_v15"]]),
+            "v2": _make_summary([b for b in bets if b["passes_v2"]]),
+            "v2r": _make_summary([b for b in bets if b["passes_v2r"]]),
+        },
+        "bets": bets,
+    }

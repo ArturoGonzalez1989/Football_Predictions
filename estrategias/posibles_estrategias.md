@@ -25,35 +25,30 @@ Analisis completo, simulacion, filtros y regla final: **[back_empate_0-0.md](bac
 
 ### TIER 2 - Estrategias Secundarias (necesitan mas datos)
 
-### 2. xG Underperformance - Regresion a la Media (potencial alto, sin ROI directo)
+### 2. xG Underperformance - Back Over Goals (ROI: +34.9% base, +111.5% filtrado)
 
-**Concepto**: Cuando un equipo tiene xG significativamente mayor que sus goles reales (exceso >= 0.5), apostar a que ese equipo acabara marcando.
+**Concepto**: Cuando un equipo tiene xG significativamente mayor que sus goles reales (exceso >= 0.5), apostar a que habra MAS GOLES (Back Over).
 
-**Resultados**:
-- 45 instancias donde xG supera goles por 0.5+
-- El equipo marca mas goles despues: 57.8% (26/45)
+**Resultados actualizados** (38 partidos con xG):
+- 26 triggers detectados (xG - goles >= 0.5)
+- El equipo marca despues: 46.2% (12/26)
+- Algun gol mas se marca: **73.1%** (19/26)
 
-**Desglose por momento de deteccion**:
+**Mercado correcto: Back Over (total+0.5)**
+- 15 apuestas con cuota disponible, 80% WR, ROI +34.9%
+- Back Team: -59.6% ROI (descartado)
+- Lay Draw: -45.4% ROI (descartado)
 
-| Deteccion | Casos | Marca despues | % | Valoracion |
-|---|---|---|---|---|
-| ~Min 20 | 3 | 3 | 100% | Muestra minima |
-| ~Min 30 | 8 | 7 | 87.5% | Muy prometedor |
-| ~Min 45 | 14 | 9 | 64.3% | Bueno |
-| ~Min 60 | 20 | 7 | 35.0% | Tarde para actuar |
+**Filtro clave: equipo va PERDIENDO**
+- 7 triggers donde el equipo underperformer pierde: **100% WR, +111.5% ROI**
+- Sin outlier (min 90): 6 triggers, 100% WR, +41.5% ROI
+- Logica: equipo perdiendo + creando ocasiones = presion ofensiva = mas goles
 
-**Desglose por magnitud del exceso xG**:
+**Regla propuesta**: xG_equipo - goles >= 0.5 + equipo perdiendo -> Back Over (total+0.5)
 
-| Exceso xG | Casos | Marca despues | % | Cuota promedio |
-|---|---|---|---|---|
-| 0.5-1.0 | 33 | 20 | 60.6% | 7.38 |
-| 1.0-2.0 | 12 | 6 | 50.0% | 7.20 |
+**Limitaciones**: Muestra MUY pequena (7 triggers con filtro). Necesita +200 triggers para validar.
 
-**Por que es interesante**: La logica es solida. El xG mide la calidad de las ocasiones creadas. Un equipo que crea buenas ocasiones pero no marca esta "en deuda" estadistica: la regresion a la media dice que acabara convirtiendo. Detectarlo temprano (min 20-30) da una ventana de actuacion con cuotas todavia favorables.
-
-**Limitaciones**: Muestra muy pequena en deteccion temprana (3-8 casos). No tiene ROI directo calculado porque depende del mercado concreto al que apuestes (proximo gol, resultado final, handicap). Necesita +200 partidos para validar.
-
-**Relacion con estrategia principal**: Combinable con la estrategia del empate. Si un equipo va 0-0 pero tiene xG de 1.2, es menos probable que termine empate. Y viceversa: un 0-0 con ambos xG bajos refuerza el trigger de empate.
+Analisis completo: **[xg_underperformance.md](xg_underperformance.md)**
 
 ---
 
@@ -145,7 +140,7 @@ Intervalos con menos goles: min 0-9 (5.4%), min 10-19 (4.8%).
 | Estrategia | Documento | Estado |
 |---|---|---|
 | Back Empate 0-0 | [back_empate_0-0.md](back_empate_0-0.md) | Analisis completo |
-| xG Underperformance | Pendiente | Necesita mas datos |
+| xG Underperformance | [xg_underperformance.md](xg_underperformance.md) | Analisis inicial |
 | Odds Drift | Pendiente | Necesita mas datos |
 
 ---

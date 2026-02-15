@@ -73,3 +73,11 @@ async def get_over_under_analysis() -> Dict[str, Any]:
 async def get_stat_correlations() -> Dict[str, Any]:
     """Calculate correlations between key match statistics."""
     return csv_reader.calculate_stat_correlations()
+
+
+# ==================== STRATEGY TRACKING ENDPOINTS ====================
+
+@router.get("/strategies/back-draw-00")
+async def get_strategy_back_draw_00() -> Dict[str, Any]:
+    """Track the 'Back Draw at 0-0 from min 30' strategy."""
+    return csv_reader.analyze_strategy_back_draw_00()

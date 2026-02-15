@@ -24,16 +24,19 @@ import {
   type OddsMovements,
   type OverUnderAnalysis,
   type StatCorrelations,
+  type StrategyBackDraw00,
+  type StrategyBet,
 } from "../lib/api"
 import { SiegeMeter } from "./SiegeMeter"
 import { PriceVsReality } from "./PriceVsReality"
 import { MomentumSwings } from "./MomentumSwings"
 
-type Tab = "trading" | "momentum" | "xg" | "odds" | "overunder" | "correlations"
+type Tab = "strategies" | "trading" | "momentum" | "xg" | "odds" | "overunder" | "correlations"
 
 export function InsightsView() {
-  const [activeTab, setActiveTab] = useState<Tab>("trading")
+  const [activeTab, setActiveTab] = useState<Tab>("strategies")
   const [momentum, setMomentum] = useState<MomentumPatterns | null>(null)
+  const [strategyDraw, setStrategyDraw] = useState<StrategyBackDraw00 | null>(null)
   const [xg, setXg] = useState<XgAccuracy | null>(null)
   const [odds, setOdds] = useState<OddsMovements | null>(null)
   const [overUnder, setOverUnder] = useState<OverUnderAnalysis | null>(null)
@@ -51,21 +54,24 @@ export function InsightsView() {
     const load = async () => {
       setLoading(true)
       try {
-        const [m, x, o, ou, c, allMatches] = await Promise.all([
+        const [m, x, o, ou, c, allMatches, sd] = await Promise.all([
           api.getMomentumPatterns(),
           api.getXgAccuracy(),
           api.getOddsMovements(),
           api.getOverUnderAnalysis(),
           api.getStatCorrelations(),
           api.getMatches(),
+          api.getStrategyBackDraw00(),
         ])
         setMomentum(m)
         setXg(x)
         setOdds(o)
         setOverUnder(ou)
         setCorrelations(c)
+        setStrategyDraw(sd)
         // Only matches with CSV data
-        const withData = allMatches.filter(m => m.csv_exists && m.capture_count >= 5)
+        const flat = [...allMatches.live, ...allMatches.upcoming, ...allMatches.finished]
+        const withData = flat.filter(m => m.csv_exists && m.capture_count >= 5)
         setMatches(withData)
         // Auto-select the match with most captures
         if (withData.length > 0) {
@@ -114,10 +120,15 @@ export function InsightsView() {
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b border-zinc-800 overflow-x-auto">
         <TabButton
+          active={activeTab === "strategies"}
+          onClick={() => setActiveTab("strategies")}
+          label="Strategies"
+          accent
+        />
+        <TabButton
           active={activeTab === "trading"}
           onClick={() => setActiveTab("trading")}
           label="Trading Intelligence"
-          accent
         />
         <TabButton
           active={activeTab === "momentum"}
@@ -147,6 +158,7 @@ export function InsightsView() {
       </div>
 
       {/* Tab Content */}
+      {activeTab === "strategies" && strategyDraw && <StrategyDrawTab data={strategyDraw} />}
       {activeTab === "trading" && (
         <TradingTab
           matches={matches}
@@ -688,6 +700,227 @@ function CorrelationsTab({ data }: { data: StatCorrelations }) {
       )}
     </div>
   )
+}
+
+type StrategyVersion = "v1" | "v15" | "v2r" | "v2"
+
+const STRATEGY_VERSIONS: { key: StrategyVersion; label: string; desc: string; filterKey?: keyof StrategyBet }[] = [
+  { key: "v1", label: "V1 — Base", desc: "0-0 min 30+" },
+  { key: "v15", label: "V1.5", desc: "xG<0.6 + PD<25%", filterKey: "passes_v15" },
+  { key: "v2r", label: "V2r", desc: "xG<0.6 + PD<20% + Sh<8", filterKey: "passes_v2r" },
+  { key: "v2", label: "V2", desc: "xG<0.5 + PD<20% + Sh<8", filterKey: "passes_v2" },
+]
+
+function StrategyDrawTab({ data }: { data: StrategyBackDraw00 }) {
+  const { summary, bets, total_matches, with_trigger } = data
+  const [version, setVersion] = useState<StrategyVersion>("v1")
+
+  const activeVersion = STRATEGY_VERSIONS.find(v => v.key === version)!
+  const filteredBets = activeVersion.filterKey
+    ? bets.filter(b => b[activeVersion.filterKey!])
+    : bets
+  const stats = summary[version] ?? summary.base
+
+  // Cumulative P/L for filtered bets
+  const cumPl = filteredBets.reduce<{ match: string; pl: number; cumPl: number }[]>((acc, b) => {
+    const prev = acc.length > 0 ? acc[acc.length - 1].cumPl : 0
+    const shortName = b.match.length > 20 ? b.match.slice(0, 18) + "..." : b.match
+    acc.push({ match: shortName, pl: b.pl, cumPl: round2(prev + b.pl) })
+    return acc
+  }, [])
+
+  const vLabel = activeVersion.label
+
+  return (
+    <div className="space-y-6">
+      {/* Header + Version Selector */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-base font-semibold text-zinc-200">Back Empate 0-0 (min 30+)</h2>
+            <p className="text-xs text-zinc-500 mt-1">
+              Stake fijo 10 EUR, comision Betfair 5%.
+            </p>
+          </div>
+          <span className="text-[10px] text-zinc-600 font-mono">
+            {total_matches} partidos analizados
+          </span>
+        </div>
+        {/* Version selector */}
+        <div className="flex gap-2 flex-wrap">
+          {STRATEGY_VERSIONS.map(v => (
+            <button
+              key={v.key}
+              type="button"
+              onClick={() => setVersion(v.key)}
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                version === v.key
+                  ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                  : "bg-zinc-800 text-zinc-500 border border-zinc-700 hover:text-zinc-300"
+              }`}
+            >
+              {v.label}
+              <span className="ml-1.5 text-[10px] opacity-70">{v.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <MetricCard
+          title="Triggers"
+          value={`${stats.bets} / ${with_trigger}`}
+          description={version === "v1" ? `${total_matches > 0 ? Math.round(with_trigger / total_matches * 100) : 0}% de los partidos` : `${with_trigger > 0 ? Math.round(stats.bets / with_trigger * 100) : 0}% de los triggers`}
+        />
+        <MetricCard
+          title="Win Rate"
+          value={stats.bets > 0 ? `${stats.win_pct}%` : "N/A"}
+          description={stats.bets > 0 ? `${stats.wins}/${stats.bets} ganadas` : "Sin apuestas"}
+        />
+        <MetricCard
+          title="P/L neto"
+          value={stats.bets > 0 ? `${stats.pl >= 0 ? "+" : ""}${stats.pl} EUR` : "N/A"}
+          description={stats.bets > 0 ? `ROI: ${stats.roi >= 0 ? "+" : ""}${stats.roi}%` : "Sin apuestas"}
+        />
+        <MetricCard
+          title="Regla"
+          value={vLabel}
+          description={version === "v1" ? "Todos los triggers 0-0" : activeVersion.desc}
+        />
+      </div>
+
+      {/* Cumulative P/L Chart */}
+      {cumPl.length > 0 && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-zinc-300 mb-1">P/L Acumulado ({vLabel})</h2>
+          <p className="text-xs text-zinc-500 mb-4">
+            {version === "v1"
+              ? "Todos los triggers 0-0 al min 30+, stake 10 EUR."
+              : `Solo triggers que cumplen ${activeVersion.desc}.`
+            }
+          </p>
+          <ResponsiveContainer width="100%" height={250}>
+            <ComposedChart data={cumPl} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis dataKey="match" tick={false} axisLine={{ stroke: "#27272a" }} />
+              <YAxis
+                tick={{ fill: "#71717a", fontSize: 11 }}
+                axisLine={{ stroke: "#27272a" }}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#18181b",
+                  border: "1px solid #27272a",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                formatter={(value: number, name: string) =>
+                  name === "cumPl" ? [`${value} EUR`, "P/L acumulado"] : [`${value} EUR`, "Apuesta"]
+                }
+                labelFormatter={(label) => label}
+              />
+              <ReferenceLine y={0} stroke="#52525b" strokeDasharray="3 3" />
+              <Bar dataKey="pl" radius={[2, 2, 0, 0]}>
+                {cumPl.map((entry, i) => (
+                  <Cell key={i} fill={entry.pl >= 0 ? "#10b981" : "#ef4444"} opacity={0.5} />
+                ))}
+              </Bar>
+              <Line
+                type="monotone"
+                dataKey="cumPl"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={false}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Bets Detail Table */}
+      {filteredBets.length > 0 && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-zinc-300 mb-1">Detalle de apuestas ({vLabel})</h2>
+          <p className="text-xs text-zinc-500 mb-4">
+            {version === "v1"
+              ? "Cada fila es un trigger (0-0 al min 30+)."
+              : `Solo apuestas que cumplen ${activeVersion.desc}.`
+            }
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800">
+                  <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Partido</th>
+                  <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">Min</th>
+                  <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">Back</th>
+                  <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">xG</th>
+                  <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">PD%</th>
+                  <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">Sh</th>
+                  <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">SoT</th>
+                  <th className="text-center py-2 px-2 text-xs font-medium text-zinc-500">FT</th>
+                  {version === "v1" && <th className="text-center py-2 px-2 text-xs font-medium text-zinc-500">Mejor</th>}
+                  <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">P/L</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBets.map((b) => (
+                  <tr
+                    key={b.match_id}
+                    className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
+                  >
+                    <td className="py-2 px-2 text-zinc-300 text-xs max-w-[180px] truncate" title={b.match}>{b.match}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.minuto ?? "-"}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.back_draw?.toFixed(2) ?? "-"}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.xg_total?.toFixed(2) ?? "-"}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.poss_diff != null ? `${b.poss_diff.toFixed(0)}%` : "-"}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.shots_total ?? "-"}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.sot_total ?? "-"}</td>
+                    <td className="py-2 px-2 text-center text-xs">
+                      <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
+                    </td>
+                    {version === "v1" && (
+                      <td className="py-2 px-2 text-center text-xs">
+                        {b.passes_v2 ? (
+                          <span className="text-green-400">V2</span>
+                        ) : b.passes_v2r ? (
+                          <span className="text-cyan-400">V2r</span>
+                        ) : b.passes_v15 ? (
+                          <span className="text-yellow-400">V1.5</span>
+                        ) : (
+                          <span className="text-zinc-600">-</span>
+                        )}
+                      </td>
+                    )}
+                    <td className="py-2 px-2 text-right text-xs font-medium">
+                      <span className={b.pl >= 0 ? "text-green-400" : "text-red-400"}>
+                        {b.pl >= 0 ? "+" : ""}{b.pl}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {filteredBets.length === 0 && (
+        <div className="text-center py-12 text-zinc-500 text-sm">
+          {version === "v1"
+            ? "Ningun partido finalizado cumple el trigger (0-0 al min 30+)."
+            : `Ningun partido finalizado cumple los filtros de ${activeVersion.label} (${activeVersion.desc}).`
+          }
+        </div>
+      )}
+    </div>
+  )
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100
 }
 
 function MetricCard({

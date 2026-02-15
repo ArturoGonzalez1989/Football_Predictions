@@ -1369,6 +1369,71 @@ class CSVWriter:
 
 # ── Driver Chrome ────────────────────────────────────────────────────────────
 
+# Retry tracking: {url: failure_count}
+_driver_creation_failures: dict = {}
+MAX_DRIVER_RETRIES = 5  # Stop retrying after this many consecutive failures per match
+
+
+def _get_active_chromedriver_pids(match_drivers: dict) -> set:
+    """Get PIDs of chromedriver processes that belong to active MatchDrivers."""
+    pids = set()
+    for md in match_drivers.values():
+        try:
+            if md.driver and md.driver.service and md.driver.service.process:
+                pids.add(md.driver.service.process.pid)
+        except Exception:
+            pass
+    return pids
+
+
+def limpiar_chromedrivers_huerfanos(match_drivers: dict):
+    """
+    Kill orphaned chromedriver.exe processes that don't belong to active MatchDrivers.
+    This prevents zombie process accumulation when driver creation fails repeatedly.
+    """
+    import subprocess
+    import platform
+
+    if platform.system() != "Windows":
+        return
+
+    try:
+        # Get all chromedriver.exe PIDs
+        result = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq chromedriver.exe", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, timeout=10
+        )
+        if not result.stdout.strip():
+            return
+
+        all_pids = set()
+        for line in result.stdout.strip().split('\n'):
+            parts = line.strip().strip('"').split('","')
+            if len(parts) >= 2:
+                try:
+                    all_pids.add(int(parts[1].strip('"')))
+                except ValueError:
+                    pass
+
+        active_pids = _get_active_chromedriver_pids(match_drivers)
+        orphan_pids = all_pids - active_pids
+
+        if orphan_pids:
+            log.info(f"🧹 Limpiando {len(orphan_pids)} chromedrivers huérfanos (activos: {len(active_pids)})...")
+            for pid in orphan_pids:
+                try:
+                    subprocess.run(
+                        ["taskkill", "/F", "/PID", str(pid)],
+                        capture_output=True, timeout=5
+                    )
+                except Exception:
+                    pass
+            log.info(f"✓ Limpieza completada")
+
+    except Exception as e:
+        log.debug(f"Error en limpieza de chromedrivers: {e}")
+
+
 def crear_driver() -> webdriver.Chrome:
     """Crea instancia de Chrome con opciones anti-detección básicas."""
     opciones = Options()
@@ -1414,13 +1479,24 @@ def crear_driver() -> webdriver.Chrome:
         })
 
     # Usar webdriver-manager si está disponible
+    servicio = None
     if ChromeDriverManager is not None:
         try:
             servicio = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=servicio, options=opciones)
         except Exception as e:
             log.warning(f"webdriver-manager falló ({e}), intentando chromedriver del PATH...")
-            driver = webdriver.Chrome(options=opciones)
+            # Clean up any orphaned service process from the failed attempt
+            try:
+                if servicio and hasattr(servicio, 'process') and servicio.process:
+                    servicio.process.kill()
+            except Exception:
+                pass
+            try:
+                driver = webdriver.Chrome(options=opciones)
+            except Exception as e2:
+                log.error(f"Chromedriver del PATH también falló: {e2}")
+                raise
     else:
         log.info("webdriver-manager no instalado, usando chromedriver del PATH.")
         driver = webdriver.Chrome(options=opciones)
@@ -1501,6 +1577,7 @@ class MatchDriver:
         self.created_at = time.time()
         self.last_capture = None
         self._lock = threading.Lock()
+        self._consecutive_failures = 0
 
     def iniciar(self):
         """Crea el driver Chrome y abre el partido."""
@@ -1510,9 +1587,27 @@ class MatchDriver:
             self.driver.get(self.url)
             aceptar_cookies(self.driver)
             log.info(f"✓ Driver listo: {self.match_id}")
+            self._consecutive_failures = 0
             return True
         except Exception as e:
             log.error(f"✗ Error creando driver para {self.match_id}: {e}")
+            return False
+
+    def reiniciar(self):
+        """Close and recreate the driver after a crash. Returns True on success."""
+        log.warning(f"🔄 Reiniciando driver para: {self.game[:50]}")
+        self.cerrar()
+        return self.iniciar()
+
+    def esta_vivo(self):
+        """Check if the driver is still responsive."""
+        if not self.driver:
+            return False
+        try:
+            # Quick check - just access the title (fast, doesn't navigate)
+            _ = self.driver.title
+            return True
+        except Exception:
             return False
 
     def cerrar(self):
@@ -1659,10 +1754,25 @@ class MatchDriver:
                 }
 
                 self.last_capture = time.time()
+                self._consecutive_failures = 0
                 log.info(f"✓ [{self.match_id}] Captura exitosa: {estado_partido}, min {info['minuto']}, {info['goles_local']}-{info['goles_visitante']}")
                 return datos
 
+            except WebDriverException as e:
+                self._consecutive_failures += 1
+                log.error(f"Error de driver capturando {self.match_id} (fallo #{self._consecutive_failures}): {e}")
+                # Mark driver as dead so it can be restarted
+                if self._consecutive_failures >= 3:
+                    log.warning(f"💀 [{self.match_id}] Driver muerto tras {self._consecutive_failures} fallos consecutivos, marcando para reinicio")
+                    try:
+                        if self.driver:
+                            self.driver.quit()
+                    except Exception:
+                        pass
+                    self.driver = None
+                return None
             except Exception as e:
+                self._consecutive_failures += 1
                 log.error(f"Error capturando {self.match_id}: {e}", exc_info=True)
                 return None
 
@@ -1700,12 +1810,13 @@ def capturar_match_driver(match_driver: MatchDriver) -> tuple:
         return (match_driver.match_id, None)
 
 
-def captura_paralela_multidriver(match_drivers: list, writer: CSVWriter):
+def captura_paralela_multidriver(match_drivers: list, writer: CSVWriter) -> int:
     """
     Captura datos de todos los match_drivers en paralelo usando ThreadPoolExecutor.
+    Returns: number of successful captures.
     """
     if not match_drivers:
-        return
+        return 0
 
     log.info(f"📸 Capturando {len(match_drivers)} partidos en paralelo...")
     inicio = time.time()
@@ -1727,6 +1838,7 @@ def captura_paralela_multidriver(match_drivers: list, writer: CSVWriter):
 
     duracion = time.time() - inicio
     log.info(f"✓ Captura paralela completada en {duracion:.1f}s ({len(resultados)}/{len(match_drivers)} exitosos)")
+    return len(resultados)
 
 
 # ── Lógica principal ─────────────────────────────────────────────────────────
@@ -2357,6 +2469,11 @@ def main():
 
     # Limpiar ventanas Betfair antiguas antes de crear nuevos drivers
     limpiar_ventanas_betfair_existentes()
+    # Also clean up orphaned chromedriver processes from previous runs
+    limpiar_chromedrivers_huerfanos({})
+
+    # Reset retry counters on fresh start
+    _driver_creation_failures.clear()
 
     # Crear lista de partidos inicial para MatchDrivers
     partidos_csv = leer_games_csv("games.csv")
@@ -2449,68 +2566,167 @@ def main():
         log.info("CAPTURA INICIADA - Presiona Ctrl+C para detener")
         log.info("=" * 60)
 
+        # Heartbeat file for external monitoring
+        heartbeat_path = os.path.join(args.output, ".heartbeat")
+        consecutive_all_fail = 0  # Track cycles where ALL drivers fail
+
         # Loop principal
         while ejecutando:
             ciclo_num += 1
             inicio_ciclo = time.time()
 
-            log.info(f"\n--- Ciclo #{ciclo_num} ---")
+            try:
+                log.info(f"\n--- Ciclo #{ciclo_num} ---")
 
-            # Captura paralela de todos los match_drivers
-            if match_drivers:
-                captura_paralela_multidriver(list(match_drivers.values()), writer)
-            else:
-                log.info("⏰ Sin partidos activos para capturar en este ciclo")
+                # ── Captura paralela ──
+                capturas_exitosas = 0
+                if match_drivers:
+                    capturas_exitosas = captura_paralela_multidriver(list(match_drivers.values()), writer)
+                else:
+                    log.info("⏰ Sin partidos activos para capturar en este ciclo")
 
-            # Recarga periódica de games.csv para detectar cambios
-            if args.reload_interval > 0 and ciclo_num % args.reload_interval == 0:
-                log.info(f"🔄 Revisando games.csv para detectar cambios...")
+                # ── P0: Detect silent failure (all drivers dead) ──
+                if match_drivers and capturas_exitosas == 0:
+                    consecutive_all_fail += 1
+                    if consecutive_all_fail >= 3:
+                        log.error(f"🚨 {consecutive_all_fail} ciclos consecutivos sin capturas exitosas! Intentando recuperación...")
+                        limpiar_chromedrivers_huerfanos(match_drivers)
+                        # Try to restart all dead drivers
+                        for match_id, md in list(match_drivers.items()):
+                            if not md.esta_vivo():
+                                if md.reiniciar():
+                                    log.info(f"   ✓ Recuperado: {md.game[:40]}")
+                                else:
+                                    log.warning(f"   ✗ No se pudo recuperar: {md.game[:40]}")
+                        consecutive_all_fail = 0
+                else:
+                    consecutive_all_fail = 0
 
-                partidos_csv = leer_games_csv("games.csv")
-                if partidos_csv:
-                    # Filtrar partidos que necesitan driver (en vivo o próximos)
-                    partidos_necesitan_driver = filtrar_partidos_para_drivers(
-                        partidos_csv, args.ventana_antes, args.ventana_despues, args.output
-                    )
+                # ── P0: Auto-restart dead drivers ──
+                drivers_muertos = [
+                    (match_id, md) for match_id, md in match_drivers.items()
+                    if md.driver is None and md._consecutive_failures >= 3
+                ]
+                if drivers_muertos:
+                    log.info(f"🔄 Reiniciando {len(drivers_muertos)} drivers muertos...")
+                    limpiar_chromedrivers_huerfanos(match_drivers)
+                    for match_id, md in drivers_muertos:
+                        if md.reiniciar():
+                            log.info(f"   ✓ Reiniciado: {md.game[:40]}")
+                        else:
+                            log.warning(f"   ✗ Reinicio fallido: {md.game[:40]}")
 
-                    # Identificar drivers a cerrar (partidos que ya no necesitan driver)
-                    urls_necesitan_driver = {p["url"] for p in partidos_necesitan_driver}
-                    drivers_a_cerrar = [
-                        match_id for match_id, md in match_drivers.items()
-                        if md.url not in urls_necesitan_driver
-                    ]
+                # ── P2: Periodic zombie cleanup (every 30 cycles) ──
+                if ciclo_num % 30 == 0:
+                    limpiar_chromedrivers_huerfanos(match_drivers)
 
-                    if drivers_a_cerrar:
-                        log.info(f"🗑️  Cerrando {len(drivers_a_cerrar)} drivers (partidos finalizados o futuros)...")
-                        for match_id in drivers_a_cerrar:
-                            md = match_drivers.pop(match_id)
-                            md.cerrar()
-                            log.debug(f"   - Cerrado: {match_id}")
+                # ── Recarga periódica de games.csv ──
+                if args.reload_interval > 0 and ciclo_num % args.reload_interval == 0:
+                    log.info(f"🔄 Revisando games.csv para detectar cambios...")
 
-                    # Identificar partidos nuevos a abrir (próximos que ahora necesitan driver)
-                    urls_existentes = {md.url for md in match_drivers.values()}
-                    partidos_nuevos = [
-                        p for p in partidos_necesitan_driver
-                        if p["url"] not in urls_existentes
-                    ]
+                    partidos_csv = leer_games_csv("games.csv")
+                    if partidos_csv:
+                        # Filtrar partidos que necesitan driver (en vivo o próximos)
+                        partidos_necesitan_driver = filtrar_partidos_para_drivers(
+                            partidos_csv, args.ventana_antes, args.ventana_despues, args.output
+                        )
 
-                    if partidos_nuevos:
-                        log.info(f"➕ Abriendo {len(partidos_nuevos)} nuevos partidos...")
+                        # Identificar drivers a cerrar (partidos que ya no necesitan driver)
+                        urls_necesitan_driver = {p["url"] for p in partidos_necesitan_driver}
+                        drivers_a_cerrar = [
+                            match_id for match_id, md in match_drivers.items()
+                            if md.url not in urls_necesitan_driver
+                        ]
 
-                        with ThreadPoolExecutor(max_workers=min(8, len(partidos_nuevos))) as executor:
-                            futures = [
-                                executor.submit(crear_match_driver, p)
-                                for p in partidos_nuevos
-                            ]
+                        if drivers_a_cerrar:
+                            log.info(f"🗑️  Cerrando {len(drivers_a_cerrar)} drivers (partidos finalizados o futuros)...")
+                            for match_id in drivers_a_cerrar:
+                                md = match_drivers.pop(match_id)
+                                md.cerrar()
+                                log.debug(f"   - Cerrado: {match_id}")
 
-                            for future in as_completed(futures):
-                                md = future.result()
-                                if md:
-                                    match_drivers[md.match_id] = md
-                                    log.info(f"   - {md.game[:40]}")
+                        # Clean up retry counters for URLs no longer in games.csv
+                        urls_csv = {p["url"] for p in partidos_csv}
+                        stale_urls = [u for u in _driver_creation_failures if u not in urls_csv]
+                        for u in stale_urls:
+                            del _driver_creation_failures[u]
 
-                    if drivers_a_cerrar or partidos_nuevos:
-                        log.info(f"✓ Drivers actualizados: {len(match_drivers)} partidos activos")
+                        # Identificar partidos nuevos a abrir (próximos que ahora necesitan driver)
+                        urls_existentes = {md.url for md in match_drivers.values()}
+                        partidos_nuevos = [
+                            p for p in partidos_necesitan_driver
+                            if p["url"] not in urls_existentes
+                        ]
+
+                        # Filter out matches that have exceeded retry limit
+                        if partidos_nuevos:
+                            partidos_a_intentar = []
+                            for p in partidos_nuevos:
+                                url = p["url"]
+                                failures = _driver_creation_failures.get(url, 0)
+                                if failures >= MAX_DRIVER_RETRIES:
+                                    log.debug(f"⏭️  Saltando {p['game'][:40]} ({failures} intentos fallidos)")
+                                    continue
+                                partidos_a_intentar.append(p)
+
+                            if not partidos_a_intentar and partidos_nuevos:
+                                log.warning(f"⚠️  {len(partidos_nuevos)} partidos pendientes excedieron el límite de reintentos ({MAX_DRIVER_RETRIES})")
+                            partidos_nuevos = partidos_a_intentar
+
+                        if partidos_nuevos:
+                            # Clean up zombie chromedriver processes before creating new ones
+                            limpiar_chromedrivers_huerfanos(match_drivers)
+
+                            log.info(f"➕ Abriendo {len(partidos_nuevos)} nuevos partidos...")
+
+                            with ThreadPoolExecutor(max_workers=min(8, len(partidos_nuevos))) as executor:
+                                futures = {
+                                    executor.submit(crear_match_driver, p): p
+                                    for p in partidos_nuevos
+                                }
+
+                                for future in as_completed(futures):
+                                    partido = futures[future]
+                                    md = future.result()
+                                    if md:
+                                        match_drivers[md.match_id] = md
+                                        # Reset failure counter on success
+                                        _driver_creation_failures.pop(partido["url"], None)
+                                        log.info(f"   - {md.game[:40]}")
+                                    else:
+                                        # Track failure
+                                        url = partido["url"]
+                                        _driver_creation_failures[url] = _driver_creation_failures.get(url, 0) + 1
+                                        count = _driver_creation_failures[url]
+                                        log.warning(f"   ✗ {partido['game'][:40]} (intento {count}/{MAX_DRIVER_RETRIES})")
+
+                        if drivers_a_cerrar or partidos_nuevos:
+                            log.info(f"✓ Drivers actualizados: {len(match_drivers)} partidos activos")
+
+                # ── P2: Write heartbeat file ──
+                try:
+                    import json
+                    drivers_vivos = sum(1 for md in match_drivers.values() if md.driver is not None)
+                    heartbeat = {
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "cycle": ciclo_num,
+                        "pid": os.getpid(),
+                        "active_drivers": len(match_drivers),
+                        "alive_drivers": drivers_vivos,
+                        "successful_captures": capturas_exitosas if match_drivers else -1,
+                        "consecutive_all_fail": consecutive_all_fail,
+                    }
+                    with open(heartbeat_path, "w") as f:
+                        json.dump(heartbeat, f)
+                except Exception:
+                    pass
+
+            except Exception as e:
+                # P0: Single cycle failure should NOT kill the scraper
+                log.error(f"❌ Error en ciclo #{ciclo_num}: {e}", exc_info=True)
+                log.info("Continuando al siguiente ciclo...")
+                time.sleep(2)  # Brief pause to avoid tight error loops
+                continue
 
             # Calcular tiempo restante del ciclo
             duracion = time.time() - inicio_ciclo

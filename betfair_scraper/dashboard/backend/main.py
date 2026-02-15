@@ -176,10 +176,84 @@ async def _scheduler_watchdog():
             _scheduler_task = asyncio.create_task(auto_refresh_matches())
 
 
+# ==================== SCRAPER WATCHDOG ====================
+
+HEARTBEAT_PATH = SCRAPER_DIR / "data" / ".heartbeat"
+SCRAPER_WATCHDOG_INTERVAL = 60  # Check every 60 seconds
+HEARTBEAT_STALE_THRESHOLD = 120  # Heartbeat older than 2 min = scraper is dead/stuck
+_scraper_watchdog_task = None
+_scraper_auto_restarts = 0
+
+
+async def _scraper_watchdog():
+    """Monitor the scraper heartbeat and auto-restart if dead."""
+    global _scraper_auto_restarts
+    import json
+
+    # Wait for scraper to have time to start
+    await asyncio.sleep(90)
+
+    while True:
+        try:
+            # Read heartbeat file
+            heartbeat = None
+            if HEARTBEAT_PATH.exists():
+                try:
+                    with open(HEARTBEAT_PATH) as f:
+                        heartbeat = json.load(f)
+                except Exception:
+                    pass
+
+            # Check if scraper process is running
+            scraper_running = False
+            try:
+                import psutil
+                for proc in psutil.process_iter(["pid", "cmdline"]):
+                    cmdline = proc.info.get("cmdline") or []
+                    if any("main.py" in str(c) for c in cmdline) and any("python" in str(c).lower() for c in cmdline):
+                        if str(SCRAPER_DIR) in " ".join(str(c) for c in cmdline):
+                            scraper_running = True
+                            break
+            except Exception:
+                pass
+
+            if not scraper_running:
+                # Scraper process is not running — auto-restart
+                print(f"[{datetime.now()}] 🚨 WATCHDOG: Scraper process not running! Auto-restarting...")
+                try:
+                    proc = subprocess.Popen(
+                        [sys.executable, str(SCRAPER_DIR / "main.py")],
+                        cwd=str(SCRAPER_DIR),
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                    )
+                    _scraper_auto_restarts += 1
+                    print(f"[{datetime.now()}] ✅ WATCHDOG: Scraper restarted (PID {proc.pid}), auto-restart #{_scraper_auto_restarts}")
+                except Exception as e:
+                    print(f"[{datetime.now()}] ❌ WATCHDOG: Failed to restart scraper: {e}")
+
+            elif heartbeat:
+                # Scraper is running — check if heartbeat is stale
+                try:
+                    hb_time = datetime.fromisoformat(heartbeat["timestamp"])
+                    from datetime import timezone as tz
+                    age_seconds = (datetime.now(tz.utc) - hb_time).total_seconds()
+                    if age_seconds > HEARTBEAT_STALE_THRESHOLD:
+                        print(f"[{datetime.now()}] ⚠️ WATCHDOG: Scraper heartbeat stale ({age_seconds:.0f}s old), drivers alive: {heartbeat.get('alive_drivers', '?')}/{heartbeat.get('active_drivers', '?')}")
+                except Exception:
+                    pass
+
+        except Exception as e:
+            print(f"[{datetime.now()}] WATCHDOG error: {e}")
+
+        await asyncio.sleep(SCRAPER_WATCHDOG_INTERVAL)
+
+
 @app.on_event("startup")
 async def start_scheduler():
-    """Start the auto-refresh scheduler on app startup."""
-    global _scheduler_task
+    """Start the auto-refresh scheduler and scraper watchdog on app startup."""
+    global _scheduler_task, _scraper_watchdog_task
     print(f"\n{'='*60}")
     print(f"[{datetime.now()}] STARTING AUTO-REFRESH SCHEDULER")
     print(f"  Interval: {REFRESH_INTERVAL_SECONDS // 60} minutes")
@@ -192,6 +266,9 @@ async def start_scheduler():
     _scheduler_task = asyncio.create_task(auto_refresh_matches())
     # Watchdog to auto-restart if scheduler crashes
     asyncio.create_task(_scheduler_watchdog())
+    # Scraper watchdog: auto-restart if scraper dies
+    _scraper_watchdog_task = asyncio.create_task(_scraper_watchdog())
+    print(f"[{datetime.now()}] 🐕 Scraper watchdog started (checks every {SCRAPER_WATCHDOG_INTERVAL}s)")
 
 
 @app.on_event("shutdown")
@@ -211,6 +288,17 @@ async def stop_scheduler():
 
 @app.get("/api/health")
 def health_check():
+    import json
+
+    # Read scraper heartbeat
+    scraper_heartbeat = None
+    if HEARTBEAT_PATH.exists():
+        try:
+            with open(HEARTBEAT_PATH) as f:
+                scraper_heartbeat = json.load(f)
+        except Exception:
+            pass
+
     return {
         "status": "ok",
         "auto_refresh_enabled": True,
@@ -220,4 +308,7 @@ def health_check():
         "last_refresh_time": _last_refresh_time,
         "last_refresh_result": _last_refresh_result,
         "scheduler_alive": _scheduler_task is not None and not _scheduler_task.done() if _scheduler_task else False,
+        "scraper_watchdog_alive": _scraper_watchdog_task is not None and not _scraper_watchdog_task.done() if _scraper_watchdog_task else False,
+        "scraper_auto_restarts": _scraper_auto_restarts,
+        "scraper_heartbeat": scraper_heartbeat,
     }
