@@ -81,3 +81,21 @@ async def get_stat_correlations() -> Dict[str, Any]:
 async def get_strategy_back_draw_00() -> Dict[str, Any]:
     """Track the 'Back Draw at 0-0 from min 30' strategy."""
     return csv_reader.analyze_strategy_back_draw_00()
+
+
+@router.get("/strategies/xg-underperformance")
+async def get_strategy_xg_underperformance() -> Dict[str, Any]:
+    """Track the 'xG Underperformance - Back Over' strategy."""
+    return csv_reader.analyze_strategy_xg_underperformance()
+
+
+@router.get("/strategies/odds-drift")
+async def get_strategy_odds_drift() -> Dict[str, Any]:
+    """Track the 'Odds Drift Contrarian - Back Winning Team' strategy."""
+    return csv_reader.analyze_strategy_odds_drift()
+
+
+@router.get("/strategies/cartera")
+async def get_strategy_cartera() -> Dict[str, Any]:
+    """Combined portfolio view of all strategies."""
+    return csv_reader.analyze_cartera()

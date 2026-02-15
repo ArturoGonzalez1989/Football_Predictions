@@ -129,9 +129,12 @@ def load_games() -> list[dict]:
                         except Exception:
                             pass
 
-                    # IMPORTANTE: Sobrescribir status basándose en el estado real del partido
+                    # Check if ANY row has "finalizado" (match may revert to "pre_partido" after ending)
+                    was_finished = any(r.get("estado_partido", "").strip() == "finalizado" for r in rows)
+                    was_live = any(r.get("estado_partido", "").strip() in ("en_juego", "descanso") for r in rows)
+
                     estado_partido = last_row.get("estado_partido", "").strip()
-                    if estado_partido == "finalizado":
+                    if was_finished:
                         status = "finished"
                     elif estado_partido == "en_juego":
                         status = "live"
@@ -145,8 +148,10 @@ def load_games() -> list[dict]:
                             match_minute = int(minuto_csv)
                         else:
                             match_minute = 45
+                    elif estado_partido == "pre_partido" and was_live:
+                        # Was live but now shows pre_partido → match ended, Betfair reverted
+                        status = "finished"
                     elif estado_partido == "pre_partido":
-                        # Partido aún no ha empezado, marcarlo como upcoming
                         status = "upcoming"
                         match_minute = None
                     # Si estado_partido está vacío, mantener status basado en tiempo transcurrido
@@ -684,18 +689,24 @@ def load_match_full(match_id: str) -> dict:
 _analytics_cache: dict = {}
 _analytics_cache_time: float = 0
 _ANALYTICS_CACHE_TTL = 300  # 5 minutes
+# Result cache: stores computed results of analytics functions
+_result_cache: dict = {}
+_result_cache_time: float = 0
 
 
 def _get_cached_finished_data() -> list[dict]:
     """Get all finished matches with pre-loaded CSV rows. Cached for 5 min."""
-    global _analytics_cache, _analytics_cache_time
+    global _analytics_cache, _analytics_cache_time, _result_cache, _result_cache_time
     import time as _time
 
     now = _time.time()
     if _analytics_cache and (now - _analytics_cache_time) < _ANALYTICS_CACHE_TTL:
         return _analytics_cache.get("finished", [])
 
-    # Rebuild cache
+    # Rebuild cache - also invalidate result cache
+    _result_cache = {}
+    _result_cache_time = now
+
     games = load_games()
     finished = []
     for game in games:
@@ -713,6 +724,20 @@ def _get_cached_finished_data() -> list[dict]:
     _analytics_cache = {"finished": finished}
     _analytics_cache_time = now
     return finished
+
+
+def _cached_result(key: str):
+    """Decorator to cache the result of an analytics function."""
+    def decorator(fn):
+        def wrapper(*args, **kwargs):
+            global _result_cache
+            if key in _result_cache:
+                return _result_cache[key]
+            result = fn(*args, **kwargs)
+            _result_cache[key] = result
+            return result
+        return wrapper
+    return decorator
 
 
 def _get_all_finished_matches() -> list[dict]:
@@ -763,6 +788,7 @@ def _calculate_match_gaps(rows: list[dict]) -> int:
     return 0
 
 
+@_cached_result("quality_distribution")
 def analyze_quality_distribution() -> dict:
     """Aggregate quality metrics across all finished matches."""
     finished_matches = _get_all_finished_matches()
@@ -825,6 +851,7 @@ def analyze_quality_distribution() -> dict:
     }
 
 
+@_cached_result("gaps_distribution")
 def analyze_gaps_distribution() -> dict:
     """Analyze capture gaps across all matches."""
     finished_matches = _get_all_finished_matches()
@@ -863,6 +890,7 @@ def analyze_gaps_distribution() -> dict:
     }
 
 
+@_cached_result("stats_coverage")
 def analyze_stats_coverage() -> dict:
     """Calculate coverage percentage for each stat field across all matches."""
     finished_matches = _get_all_finished_matches()
@@ -926,6 +954,7 @@ def get_low_quality_matches(threshold: int = 50) -> list[dict]:
     return low_quality
 
 
+@_cached_result("momentum_patterns")
 def analyze_momentum_patterns() -> dict:
     """Find momentum comeback and swing patterns."""
     finished_matches = _get_all_finished_matches()
@@ -989,6 +1018,7 @@ def analyze_momentum_patterns() -> dict:
     }
 
 
+@_cached_result("xg_accuracy")
 def analyze_xg_accuracy() -> dict:
     """Correlate xG with actual goal outcomes."""
     finished_matches = _get_all_finished_matches()
@@ -1069,6 +1099,7 @@ def analyze_xg_accuracy() -> dict:
     }
 
 
+@_cached_result("odds_movements")
 def analyze_odds_movements() -> dict:
     """Analyze betting odds drift and contraction patterns."""
     finished_matches = _get_all_finished_matches()
@@ -1117,6 +1148,7 @@ def analyze_odds_movements() -> dict:
     }
 
 
+@_cached_result("over_under_patterns")
 def analyze_over_under_patterns() -> dict:
     """Analyze Over/Under line hit rates."""
     finished_matches = _get_all_finished_matches()
@@ -1172,6 +1204,7 @@ def analyze_over_under_patterns() -> dict:
     }
 
 
+@_cached_result("stat_correlations")
 def calculate_stat_correlations() -> dict:
     """Calculate correlations between key match statistics."""
     finished_matches = _get_all_finished_matches()
@@ -1244,6 +1277,7 @@ def calculate_stat_correlations() -> dict:
     }
 
 
+@_cached_result("strategy_back_draw_00")
 def analyze_strategy_back_draw_00() -> dict:
     """Analyze the 'Back Draw at 0-0 from min 30' strategy across all finished matches."""
     finished_matches = _get_all_finished_matches()
@@ -1343,6 +1377,7 @@ def analyze_strategy_back_draw_00() -> dict:
             "passes_v2": passes_v2,
             "passes_v15": passes_v15,
             "passes_v2r": passes_v2r,
+            "timestamp_utc": trigger_row.get("timestamp_utc", ""),
         })
 
     # Summary stats helper
@@ -1368,4 +1403,394 @@ def analyze_strategy_back_draw_00() -> dict:
             "v2r": _make_summary([b for b in bets if b["passes_v2r"]]),
         },
         "bets": bets,
+    }
+
+
+# ── xG Underperformance Strategy ────────────────────────────────────────
+
+def _get_over_odds_field(total_goals: int) -> str:
+    """Return CSV column name for Back Over (total_goals + 0.5)."""
+    return {0: "back_over05", 1: "back_over15", 2: "back_over25",
+            3: "back_over35", 4: "back_over45"}.get(total_goals, "")
+
+
+@_cached_result("strategy_xg_underperformance")
+def analyze_strategy_xg_underperformance() -> dict:
+    """Analyze the 'xG Underperformance - Back Over' strategy across all finished matches.
+
+    Trigger: team xG - goals >= 0.5 AND team is currently LOSING.
+    Bet: Back Over (total_goals_at_trigger + 0.5).
+    """
+    finished_matches = _get_all_finished_matches()
+    if not finished_matches:
+        return {"total_matches": 0, "with_trigger": 0, "bets": [], "summary": {}}
+
+    bets = []
+    matches_with_xg = 0
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        if not rows or len(rows) < 5:
+            continue
+
+        # Final result
+        last_row = rows[-1]
+        gl_final = _to_float(last_row.get("goles_local", ""))
+        gv_final = _to_float(last_row.get("goles_visitante", ""))
+        if gl_final is None or gv_final is None:
+            continue
+        ft_gl, ft_gv = int(gl_final), int(gv_final)
+        ft_total = ft_gl + ft_gv
+        ft_score = f"{ft_gl}-{ft_gv}"
+
+        # Check match has xG data
+        has_xg = any(_to_float(r.get("xg_local")) is not None for r in rows)
+        if not has_xg:
+            continue
+        matches_with_xg += 1
+
+        # One trigger per team per match
+        triggered = {"home": False, "away": False}
+
+        for row in rows:
+            minuto = _to_float(row.get("minuto", ""))
+            if minuto is None or minuto < 15:
+                continue
+
+            xg_h = _to_float(row.get("xg_local", ""))
+            xg_a = _to_float(row.get("xg_visitante", ""))
+            gl = _to_float(row.get("goles_local", ""))
+            gv = _to_float(row.get("goles_visitante", ""))
+            if xg_h is None or xg_a is None or gl is None or gv is None:
+                continue
+            gl_i, gv_i = int(gl), int(gv)
+
+            for team, team_xg, team_goals, opp_goals in [
+                ("home", xg_h, gl_i, gv_i),
+                ("away", xg_a, gv_i, gl_i),
+            ]:
+                if triggered[team]:
+                    continue
+
+                xg_excess = team_xg - team_goals
+                if xg_excess < 0.5 or opp_goals <= team_goals:
+                    continue
+
+                triggered[team] = True
+                total_at_trigger = gl_i + gv_i
+                score_at_trigger = f"{gl_i}-{gv_i}"
+
+                # Team stats
+                sfx = "_local" if team == "home" else "_visitante"
+                sot_t = _to_float(row.get(f"tiros_puerta{sfx}", ""))
+                sot_int = int(sot_t) if sot_t is not None else None
+                poss_t = _to_float(row.get(f"posesion{sfx}", ""))
+                shots_t = _to_float(row.get(f"tiros{sfx}", ""))
+                shots_int = int(shots_t) if shots_t is not None else None
+
+                # Over odds
+                over_field = _get_over_odds_field(total_at_trigger)
+                back_over = _to_float(row.get(over_field, "")) if over_field else None
+
+                # Win = at least 1 more goal scored
+                more_goals = ft_total > total_at_trigger
+
+                # P/L
+                stake = 10
+                if more_goals and back_over and back_over > 1:
+                    pl = round((back_over - 1) * stake * 0.95, 2)
+                else:
+                    pl = -stake
+
+                passes_v2 = sot_int is not None and sot_int >= 2
+
+                bets.append({
+                    "match": match["name"],
+                    "match_id": match["match_id"],
+                    "minuto": minuto,
+                    "score_at_trigger": score_at_trigger,
+                    "team": team,
+                    "team_xg": round(team_xg, 2),
+                    "team_goals": team_goals,
+                    "xg_excess": round(xg_excess, 2),
+                    "back_over_odds": round(back_over, 2) if back_over else None,
+                    "over_line": f"Over {total_at_trigger + 0.5}",
+                    "sot_team": sot_int,
+                    "poss_team": round(poss_t, 1) if poss_t is not None else None,
+                    "shots_team": shots_int,
+                    "ft_score": ft_score,
+                    "won": more_goals,
+                    "pl": round(pl, 2),
+                    "passes_v2": passes_v2,
+                    "timestamp_utc": row.get("timestamp_utc", ""),
+                })
+
+    def _make_summary(subset):
+        n = len(subset)
+        w = sum(1 for b in subset if b["won"])
+        total_pl = sum(b["pl"] for b in subset)
+        return {
+            "bets": n, "wins": w,
+            "win_pct": round(w / n * 100, 1) if n else 0,
+            "pl": round(total_pl, 2),
+            "roi": round(total_pl / (n * 10) * 100, 1) if n else 0,
+        }
+
+    return {
+        "total_matches": matches_with_xg,
+        "with_trigger": len(bets),
+        "summary": {
+            "base": _make_summary(bets),
+            "v2": _make_summary([b for b in bets if b["passes_v2"]]),
+        },
+        "bets": bets,
+    }
+
+
+# ── Odds Drift Contrarian Strategy ──────────────────────────────────────
+
+@_cached_result("strategy_odds_drift")
+def analyze_strategy_odds_drift() -> dict:
+    """Analyze the 'Odds Drift Contrarian' strategy across all finished matches.
+
+    Trigger: team's back odds increase >30% within 10 min AND team is currently WINNING.
+    Bet: Back that team to win (Match Odds market).
+    Versions:
+      - V1 (base): drift >30% + winning
+      - V2: V1 + goal advantage >= 2
+      - V3: V1 + drift >= 100%
+      - V4: V1 + odds <= 5 + minute > 45
+    """
+    finished_matches = _get_all_finished_matches()
+    if not finished_matches:
+        return {"total_matches": 0, "with_trigger": 0, "bets": [], "summary": {}}
+
+    DRIFT_MIN = 0.30
+    WINDOW_MIN = 10
+    MIN_MINUTE = 5
+    MAX_MINUTE = 80
+    MIN_ODDS = 1.50
+    MAX_ODDS = 30.0
+    COMMISSION = 0.05
+    STAKE = 10
+
+    bets = []
+    total_matches = 0
+
+    for match in finished_matches:
+        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
+        if not rows or len(rows) < 10:
+            continue
+
+        last_row = rows[-1]
+        gl_final = _to_float(last_row.get("goles_local", ""))
+        gv_final = _to_float(last_row.get("goles_visitante", ""))
+        if gl_final is None or gv_final is None:
+            continue
+        ft_gl, ft_gv = int(gl_final), int(gv_final)
+        ft_score = f"{ft_gl}-{ft_gv}"
+        total_matches += 1
+
+        # Build list of (minuto, row) with valid data
+        data_points = []
+        for row in rows:
+            m = _to_float(row.get("minuto", ""))
+            if m is None:
+                continue
+            bh = _to_float(row.get("back_home", ""))
+            ba = _to_float(row.get("back_away", ""))
+            data_points.append((m, row, bh, ba))
+
+        triggered = {"home": False, "away": False}
+
+        for idx in range(1, len(data_points)):
+            curr_min, curr_row, curr_bh, curr_ba = data_points[idx]
+            if curr_min < MIN_MINUTE or curr_min > MAX_MINUTE:
+                continue
+
+            gl = _to_float(curr_row.get("goles_local", ""))
+            gv = _to_float(curr_row.get("goles_visitante", ""))
+            if gl is None or gv is None:
+                continue
+            gl_i, gv_i = int(gl), int(gv)
+
+            # Look back within window
+            for prev_idx in range(idx - 1, -1, -1):
+                prev_min, prev_row, prev_bh, prev_ba = data_points[prev_idx]
+                if curr_min - prev_min > WINDOW_MIN:
+                    break
+                if curr_min - prev_min < 2:
+                    continue
+
+                for team, prev_odds, curr_odds, team_goals, opp_goals in [
+                    ("home", prev_bh, curr_bh, gl_i, gv_i),
+                    ("away", prev_ba, curr_ba, gv_i, gl_i),
+                ]:
+                    if triggered[team]:
+                        continue
+                    if prev_odds is None or curr_odds is None or prev_odds <= 0:
+                        continue
+
+                    drift = (curr_odds - prev_odds) / prev_odds
+                    if drift < DRIFT_MIN or curr_odds < MIN_ODDS or curr_odds > MAX_ODDS:
+                        continue
+
+                    # KEY: team must be WINNING
+                    if team_goals <= opp_goals:
+                        continue
+
+                    triggered[team] = True
+                    goal_diff = team_goals - opp_goals
+                    score_at = f"{gl_i}-{gv_i}"
+
+                    # Check if team wins the match
+                    if team == "home":
+                        won = ft_gl > ft_gv
+                    else:
+                        won = ft_gv > ft_gl
+
+                    if won:
+                        pl = round((curr_odds - 1) * STAKE * (1 - COMMISSION), 2)
+                    else:
+                        pl = -STAKE
+
+                    # Stats at trigger
+                    sfx = "_local" if team == "home" else "_visitante"
+                    osfx = "_visitante" if team == "home" else "_local"
+                    sot_t = _to_float(curr_row.get(f"tiros_puerta{sfx}", ""))
+                    poss_t = _to_float(curr_row.get(f"posesion{sfx}", ""))
+                    shots_t = _to_float(curr_row.get(f"tiros{sfx}", ""))
+
+                    # Version filters
+                    passes_v2 = goal_diff >= 2
+                    passes_v3 = drift >= 1.0  # drift >= 100%
+                    passes_v4 = curr_odds <= 5.0 and curr_min > 45
+
+                    bets.append({
+                        "match": match["name"],
+                        "match_id": match["match_id"],
+                        "minuto": curr_min,
+                        "score_at_trigger": score_at,
+                        "team": team,
+                        "goal_diff": goal_diff,
+                        "odds_before": round(prev_odds, 2),
+                        "back_odds": round(curr_odds, 2),
+                        "drift_pct": round(drift * 100, 1),
+                        "sot_team": int(sot_t) if sot_t is not None else None,
+                        "poss_team": round(poss_t, 1) if poss_t is not None else None,
+                        "shots_team": int(shots_t) if shots_t is not None else None,
+                        "ft_score": ft_score,
+                        "won": won,
+                        "pl": round(pl, 2),
+                        "passes_v2": passes_v2,
+                        "passes_v3": passes_v3,
+                        "passes_v4": passes_v4,
+                        "timestamp_utc": curr_row.get("timestamp_utc", ""),
+                    })
+                    break  # found trigger for this team at this row
+
+            if triggered["home"] and triggered["away"]:
+                break
+
+    def _make_summary(subset):
+        n = len(subset)
+        w = sum(1 for b in subset if b["won"])
+        total_pl = sum(b["pl"] for b in subset)
+        return {
+            "bets": n, "wins": w,
+            "win_pct": round(w / n * 100, 1) if n else 0,
+            "pl": round(total_pl, 2),
+            "roi": round(total_pl / (n * 10) * 100, 1) if n else 0,
+        }
+
+    return {
+        "total_matches": total_matches,
+        "with_trigger": len(bets),
+        "summary": {
+            "v1": _make_summary(bets),
+            "v2": _make_summary([b for b in bets if b["passes_v2"]]),
+            "v3": _make_summary([b for b in bets if b["passes_v3"]]),
+            "v4": _make_summary([b for b in bets if b["passes_v4"]]),
+        },
+        "bets": bets,
+    }
+
+
+# ── Cartera (Portfolio) ─────────────────────────────────────────────────
+
+@_cached_result("cartera")
+def analyze_cartera() -> dict:
+    """Combined portfolio view of all strategies with flat and managed bankroll simulations."""
+    draw_data = analyze_strategy_back_draw_00()
+    xg_data = analyze_strategy_xg_underperformance()
+    drift_data = analyze_strategy_odds_drift()
+
+    all_bets = []
+    for b in draw_data.get("bets", []):
+        all_bets.append({**b, "strategy": "back_draw_00", "strategy_label": "Back Empate"})
+    for b in xg_data.get("bets", []):
+        all_bets.append({**b, "strategy": "xg_underperformance", "strategy_label": "xG Underperf"})
+    for b in drift_data.get("bets", []):
+        all_bets.append({**b, "strategy": "odds_drift", "strategy_label": "Odds Drift"})
+
+    all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))
+
+    # Flat staking: 10 EUR per bet
+    flat_cum = []
+    flat_total = 0
+    for b in all_bets:
+        flat_total += b["pl"]
+        flat_cum.append(round(flat_total, 2))
+
+    # Managed bankroll: 500 EUR initial, 2% per bet
+    initial_bankroll = 500
+    pct = 0.02
+    bankroll = initial_bankroll
+    managed_cum = []
+    managed_pls = []
+    for b in all_bets:
+        bet_size = round(bankroll * pct, 2)
+        odds = b.get("back_draw") or b.get("back_over_odds") or 1
+        if b["won"] and odds and odds > 1:
+            profit = round((odds - 1) * bet_size * 0.95, 2)
+        else:
+            profit = -bet_size
+        bankroll += profit
+        managed_pls.append(profit)
+        managed_cum.append(round(bankroll - initial_bankroll, 2))
+
+    n = len(all_bets)
+    flat_pl = round(sum(b["pl"] for b in all_bets), 2)
+    managed_pl = managed_cum[-1] if managed_cum else 0
+
+    def _strat_summary(subset):
+        nn = len(subset)
+        ww = sum(1 for b in subset if b["won"])
+        pp = sum(b["pl"] for b in subset)
+        return {"bets": nn, "wins": ww,
+                "win_pct": round(ww / nn * 100, 1) if nn else 0,
+                "pl": round(pp, 2),
+                "roi": round(pp / (nn * 10) * 100, 1) if nn else 0}
+
+    return {
+        "total_bets": n,
+        "flat": {
+            "pl": flat_pl,
+            "roi": round(flat_pl / (n * 10) * 100, 1) if n else 0,
+            "cumulative": flat_cum,
+        },
+        "managed": {
+            "initial_bankroll": initial_bankroll,
+            "bankroll_pct": round(pct * 100, 1),
+            "final_bankroll": round(bankroll, 2),
+            "pl": managed_pl,
+            "roi": round(managed_pl / initial_bankroll * 100, 1) if initial_bankroll else 0,
+            "cumulative": managed_cum,
+        },
+        "by_strategy": {
+            "back_draw_00": _strat_summary([b for b in all_bets if b["strategy"] == "back_draw_00"]),
+            "xg_underperformance": _strat_summary([b for b in all_bets if b["strategy"] == "xg_underperformance"]),
+            "odds_drift": _strat_summary([b for b in all_bets if b["strategy"] == "odds_drift"]),
+        },
+        "bets": all_bets,
     }

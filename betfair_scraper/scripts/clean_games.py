@@ -29,8 +29,37 @@ def parse_date(date_str):
     return None
 
 
-def is_match_finished(start_time):
-    """Verifica si un partido ha terminado (inicio + MATCH_DURATION_MINUTES < ahora)"""
+DATA_DIR = Path(__file__).parent.parent / "data"
+
+
+def is_match_finished(start_time, url=""):
+    """Verifica si un partido ha terminado: por CSV status o por tiempo transcurrido."""
+    # Check 1: Look at the match CSV for actual status
+    if url:
+        match_id = url.rstrip("/").split("/")[-1]
+        csv_candidates = list(DATA_DIR.glob(f"partido_{match_id[:50]}*"))
+        if not csv_candidates:
+            # Try shorter prefix
+            csv_candidates = list(DATA_DIR.glob(f"partido_{match_id[:30]}*"))
+        for csv_path in csv_candidates:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    rows = list(reader)
+                    if not rows:
+                        continue
+                    # If any row has "finalizado" → match is done
+                    if any(r.get("estado_partido", "").strip() == "finalizado" for r in rows):
+                        return True
+                    # If was live but reverted to pre_partido → match ended
+                    was_live = any(r.get("estado_partido", "").strip() in ("en_juego", "descanso") for r in rows)
+                    last_status = rows[-1].get("estado_partido", "").strip()
+                    if was_live and last_status == "pre_partido":
+                        return True
+            except Exception:
+                pass
+
+    # Check 2: Fallback to time-based
     if start_time is None:
         return False
 
@@ -73,8 +102,9 @@ def clean_games():
             activos.append(partido)
             continue
 
-        # Verificar si terminó
-        if is_match_finished(start_time):
+        # Verificar si terminó (por CSV status o por tiempo)
+        url = partido.get("url", "")
+        if is_match_finished(start_time, url):
             eliminados.append(partido)
         else:
             activos.append(partido)

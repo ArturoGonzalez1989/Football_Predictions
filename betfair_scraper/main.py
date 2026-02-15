@@ -1419,11 +1419,11 @@ def limpiar_chromedrivers_huerfanos(match_drivers: dict):
         orphan_pids = all_pids - active_pids
 
         if orphan_pids:
-            log.info(f"🧹 Limpiando {len(orphan_pids)} chromedrivers huérfanos (activos: {len(active_pids)})...")
+            log.info(f"🧹 Limpiando {len(orphan_pids)} chromedrivers huérfanos + sus chrome hijos (activos: {len(active_pids)})...")
             for pid in orphan_pids:
                 try:
                     subprocess.run(
-                        ["taskkill", "/F", "/PID", str(pid)],
+                        ["taskkill", "/F", "/T", "/PID", str(pid)],
                         capture_output=True, timeout=5
                     )
                 except Exception:
@@ -1611,15 +1611,33 @@ class MatchDriver:
             return False
 
     def cerrar(self):
-        """Cierra el driver de forma segura."""
+        """Cierra el driver de forma segura, matando procesos zombie en Windows."""
+        service_pid = None
         try:
             if self.driver:
+                # Capture chromedriver PID before quit() so we can force-kill zombies
+                try:
+                    if self.driver.service and self.driver.service.process:
+                        service_pid = self.driver.service.process.pid
+                except Exception:
+                    pass
                 self.driver.quit()
                 log.debug(f"✓ Driver cerrado: {self.match_id}")
         except Exception as e:
             log.debug(f"Error cerrando driver {self.match_id}: {e}")
         finally:
             self.driver = None
+            # Force-kill entire process tree (chromedriver + all chrome children)
+            if service_pid:
+                import subprocess, platform
+                if platform.system() == "Windows":
+                    try:
+                        subprocess.run(
+                            ["taskkill", "/F", "/T", "/PID", str(service_pid)],
+                            capture_output=True, timeout=5
+                        )
+                    except Exception:
+                        pass
 
     def capturar(self) -> dict:
         """Captura datos del partido usando el driver dedicado."""
@@ -2645,6 +2663,11 @@ def main():
                                 md.cerrar()
                                 log.debug(f"   - Cerrado: {match_id}")
 
+                        # Reset retry counters when drivers are freed (resources available again)
+                        if drivers_a_cerrar and _driver_creation_failures:
+                            log.info(f"Reseteando {len(_driver_creation_failures)} contadores de reintentos (se liberaron {len(drivers_a_cerrar)} drivers)")
+                            _driver_creation_failures.clear()
+
                         # Clean up retry counters for URLs no longer in games.csv
                         urls_csv = {p["url"] for p in partidos_csv}
                         stale_urls = [u for u in _driver_creation_failures if u not in urls_csv]
@@ -2679,7 +2702,7 @@ def main():
 
                             log.info(f"➕ Abriendo {len(partidos_nuevos)} nuevos partidos...")
 
-                            with ThreadPoolExecutor(max_workers=min(8, len(partidos_nuevos))) as executor:
+                            with ThreadPoolExecutor(max_workers=min(2, len(partidos_nuevos))) as executor:
                                 futures = {
                                     executor.submit(crear_match_driver, p): p
                                     for p in partidos_nuevos

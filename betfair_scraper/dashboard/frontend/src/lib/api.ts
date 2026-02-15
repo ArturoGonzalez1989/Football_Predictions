@@ -280,6 +280,114 @@ export interface StrategyBackDraw00 {
   bets: StrategyBet[]
 }
 
+export interface StrategyXGBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  score_at_trigger: string
+  team: "home" | "away"
+  team_xg: number | null
+  team_goals: number
+  xg_excess: number | null
+  back_over_odds: number | null
+  over_line: string
+  sot_team: number | null
+  poss_team: number | null
+  shots_team: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  passes_v2: boolean
+}
+
+export interface StrategyXGUnderperformance {
+  total_matches: number
+  with_trigger: number
+  summary: {
+    base: StrategySummaryBlock
+    v2: StrategySummaryBlock
+  }
+  bets: StrategyXGBet[]
+}
+
+export interface StrategyOddsDriftBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  score_at_trigger: string
+  team: "home" | "away"
+  goal_diff: number
+  odds_before: number
+  back_odds: number
+  drift_pct: number
+  sot_team: number | null
+  poss_team: number | null
+  shots_team: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  passes_v2: boolean
+  passes_v3: boolean
+  passes_v4: boolean
+}
+
+export interface StrategyOddsDrift {
+  total_matches: number
+  with_trigger: number
+  summary: {
+    v1: StrategySummaryBlock
+    v2: StrategySummaryBlock
+    v3: StrategySummaryBlock
+    v4: StrategySummaryBlock
+  }
+  bets: StrategyOddsDriftBet[]
+}
+
+export interface CarteraBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  strategy: string
+  strategy_label: string
+  timestamp_utc: string
+  back_draw?: number | null
+  back_over_odds?: number | null
+  over_line?: string
+  team?: string
+  xg_excess?: number | null
+  passes_v2?: boolean
+  passes_v15?: boolean
+  passes_v2r?: boolean
+  // odds drift fields
+  back_odds?: number | null
+  drift_pct?: number | null
+  goal_diff?: number | null
+  passes_v3?: boolean
+  passes_v4?: boolean
+}
+
+export interface Cartera {
+  total_bets: number
+  flat: { pl: number; roi: number; cumulative: number[] }
+  managed: {
+    initial_bankroll: number
+    bankroll_pct: number
+    final_bankroll: number
+    pl: number
+    roi: number
+    cumulative: number[]
+  }
+  by_strategy: {
+    back_draw_00: StrategySummaryBlock
+    xg_underperformance: StrategySummaryBlock
+    odds_drift: StrategySummaryBlock
+  }
+  bets: CarteraBet[]
+}
+
 export const api = {
   getMatches: () => get<MatchesGrouped>("/matches"),
   getMatchDetail: (id: string) => get<MatchDetail>(`/matches/${id}`),
@@ -310,4 +418,7 @@ export const api = {
 
   // Strategy tracking endpoints
   getStrategyBackDraw00: () => get<StrategyBackDraw00>("/analytics/strategies/back-draw-00"),
+  getStrategyXGUnderperformance: () => get<StrategyXGUnderperformance>("/analytics/strategies/xg-underperformance"),
+  getStrategyOddsDrift: () => get<StrategyOddsDrift>("/analytics/strategies/odds-drift"),
+  getCartera: () => get<Cartera>("/analytics/strategies/cartera"),
 }

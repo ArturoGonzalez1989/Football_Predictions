@@ -314,8 +314,39 @@ def extract_football_matches(page):
         return []
 
 
+_DAY_ABBR_MAP = {"lun": 0, "mar": 1, "mié": 2, "mie": 2, "mi\u00e9": 2,
+                  "jue": 3, "vie": 4, "sáb": 5, "sab": 5, "s\u00e1b": 5, "dom": 6}
+_MONTH_ABBR_MAP = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+                    "jul": 7, "ago": 8, "sep": 9, "oct": 10, "nov": 11, "dic": 12}
+
+
+def _next_weekday(day_abbr, hour, minute):
+    """Calcula la proxima fecha que corresponde a un dia de la semana."""
+    target_wd = _DAY_ABBR_MAP.get(day_abbr.lower().rstrip("."))
+    if target_wd is None:
+        return None
+    now = datetime.now()
+    current_wd = now.weekday()
+    days_ahead = (target_wd - current_wd) % 7
+    if days_ahead == 0:
+        candidate = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if candidate < now - timedelta(hours=2):
+            days_ahead = 7  # ya paso hoy, sera la proxima semana
+    result = now + timedelta(days=days_ahead)
+    return result.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+
 def extract_start_time_from_text(text):
-    """Extrae hora de inicio a partir del texto visible del link."""
+    """Extrae hora de inicio a partir del texto visible del link.
+
+    Formatos de Betfair:
+    - "Comienza en X'"                        → ahora + X minutos
+    - "Hoy 20:45"                             → hoy a esa hora
+    - "mar. 17 feb., 20:45"                   → fecha completa
+    - "mar. 20:45"                            → proximo martes a esa hora
+    - "Proximamente"                          → ~15 min
+    - "45' 1 0", "DESC.", "90' +3"            → en juego
+    """
     try:
         # "Comienza en X'"
         m = re.search(r"Comienza en (\d+)'", text)
@@ -329,13 +360,32 @@ def extract_start_time_from_text(text):
                 hour=int(m.group(1)), minute=int(m.group(2)), second=0, microsecond=0
             ).strftime("%Y-%m-%d %H:%M")
 
-        # "dom. HH:MM", "lun. HH:MM", etc.
-        m = re.search(r"(?:dom|lun|mar|mi[eé]|jue|vie|s[aá]b)\.\s+(\d{1,2}):(\d{2})", text)
+        # "mar. 17 feb., 20:45" — dia semana + dia mes + mes + hora
+        m = re.search(
+            r"(?:dom|lun|mar|mi[eé]|jue|vie|s[aá]b)\.?\s+(\d{1,2})\s+"
+            r"(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\.?,?\s+"
+            r"(\d{1,2}):(\d{2})", text
+        )
         if m:
-            tomorrow = datetime.now() + timedelta(days=1)
-            return tomorrow.replace(
-                hour=int(m.group(1)), minute=int(m.group(2)), second=0, microsecond=0
-            ).strftime("%Y-%m-%d %H:%M")
+            day = int(m.group(1))
+            month = _MONTH_ABBR_MAP.get(m.group(2).lower(), 1)
+            hour = int(m.group(3))
+            minute = int(m.group(4))
+            year = datetime.now().year
+            # Si la fecha ya paso este año, sera el proximo
+            candidate = datetime(year, month, day, hour, minute)
+            if candidate < datetime.now() - timedelta(days=1):
+                candidate = datetime(year + 1, month, day, hour, minute)
+            return candidate.strftime("%Y-%m-%d %H:%M")
+
+        # "dom. 20:45", "lun. 18:00" — dia semana + hora (sin fecha)
+        m = re.search(
+            r"(dom|lun|mar|mi[eé]|jue|vie|s[aá]b)\.?\s+(\d{1,2}):(\d{2})", text
+        )
+        if m:
+            result = _next_weekday(m.group(1), int(m.group(2)), int(m.group(3)))
+            if result:
+                return result.strftime("%Y-%m-%d %H:%M")
 
         # "Proximamente"
         if "ximamente" in text.lower():
@@ -349,10 +399,12 @@ def extract_start_time_from_text(text):
             re.search(r"\s\d+'\s", text)):     # " 71' " en medio
             return (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
 
-        # Default: en juego aproximado
-        return (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
+        # Default: NO asumir en juego — marcar como futuro lejano para que
+        # _is_relevant_match lo descarte
+        print(f"[DEBUG] Hora no reconocida, descartando: {text[:80]!r}")
+        return (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M")
     except Exception:
-        return (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
+        return (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M")
 
 
 def _is_relevant_match(start_time_str):
