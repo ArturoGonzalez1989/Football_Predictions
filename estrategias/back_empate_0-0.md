@@ -157,16 +157,7 @@ Partido equilibrado en posesion = empate mas probable. Cuando un equipo domina c
 
 ### Filtro 2: Cuotas pre-partido
 
-Solo 14 de los 27 partidos tienen cuotas pre-partido (los demas empezaron a capturarse en vivo). Los datos son insuficientes para conclusiones firmes:
-
-| Filtro | N | Win | Win% | P/L neto | ROI |
-|---|---|---|---|---|---|
-| Draw pre < 3.00 | 2 | 0 | 0% | -20.00 EUR | -100.0% |
-| Draw pre 3.00-3.50 | 7 | 2 | 28.6% | -16.75 EUR | -23.9% |
-| **Draw pre 3.50-4.00** | **3** | **3** | **100%** | **+52.82 EUR** | **+176.1%** |
-| Draw pre 4.00+ | 2 | 0 | 0% | -20.00 EUR | -100.0% |
-
-La tendencia sugiere que partidos con draw pre ~3.50-4.00 funcionan mejor (empate "posible pero no favorito"), pero solo hay 3 casos. Necesita mucha mas muestra.
+Solo 14 de los 27 partidos scrapeados tienen cuotas pre-partido. Los datos in-play son insuficientes (3 casos en el mejor tramo). Sin embargo, un analisis historico offline con 1,418 partidos resuelve esta hipotesis — ver seccion 3b.
 
 ### Filtros combinados - Top 5 mejores reglas
 
@@ -177,6 +168,56 @@ La tendencia sugiere que partidos con draw pre ~3.50-4.00 funcionan mejor (empat
 | xG < 0.8 + SoT < 2 | 10 | 6 | 60.0% | +68.87 EUR | +68.9% |
 | xG total < 0.5 | 14 | 8 | 57.1% | +79.65 EUR | +56.9% |
 | SoT <= 2 + poss diff < 15% | 15 | 8 | 53.3% | +70.12 EUR | +46.8% |
+
+### 3b. Analisis historico offline: cuotas pre-partido (version no-live)
+
+Analisis complementario usando datos historicos de football-data.co.uk (temporada 2025-2026, 22 ligas europeas). No usa datos del scraper — se basa en el resultado al descanso (HT) como proxy del trigger "0-0 al min 30". La muestra es mucho mayor pero no incluye filtros in-play (xG, tiros a puerta en el momento).
+
+**Fuente**: `historic_data/all-euro-data-2025-2026.xlsx` (4,854 partidos, 1,418 iban 0-0 al HT).
+
+#### Cuota BFED pre-match vs probabilidad de empate final
+
+| Cuota BFED pre | N | Empate final% | 0-0 final% | Edge vs mercado |
+|---|---|---|---|---|
+| < 2.80 | 39 | 35.9% | 15.4% | -23.9% |
+| **2.80-3.20** | **202** | **49.5%** | **33.7%** | **+16.8%** |
+| 3.20-3.50 | 414 | 40.6% | 24.6% | +10.6% |
+| 3.50-3.80 | 367 | 37.3% | 20.4% | +9.6% |
+| 3.80-4.20 | 192 | 35.4% | 22.4% | +10.0% |
+| 4.20-5.00 | 115 | 40.0% | 16.5% | +17.6% |
+| 5.00+ | 89 | 28.1% | 13.5% | +12.6% |
+
+El tramo BFED 2.80-3.20 es el claro ganador: 49.5% de empate final con 202 casos. Esto **contradice** la hipotesis preliminar de los datos live (3 casos sugerian BFED 3.50-4.00).
+
+#### Refinamiento: equilibrio del partido
+
+Dentro de BFED 2.80-3.20, el ratio de equilibrio (cuota menor / cuota mayor entre home y away) mejora aun mas el filtro:
+
+| Equilibrio | N | Draw% | Significado |
+|---|---|---|---|
+| < 0.55 (desequilibrado) | 30 | 40.0% | Hay favorito claro |
+| 0.55-0.70 | 50 | 48.0% | Moderado |
+| 0.70-0.85 | 63 | 49.2% | Bastante equilibrado |
+| **>= 0.85 (muy equilibrado)** | **58** | **56.9%** | **Ninguno domina** |
+
+Break-even con comision: cuota in-play >= 1.85. Un 0-0 al descanso en partido equilibrado suele cotizar entre 2.00-2.50 in-play, asi que hay margen.
+
+#### Senales de peligro confirmadas (muestra grande)
+
+- BFED >= 5.00: solo 28.1% empate (el favorito acaba marcando)
+- BFED < 2.80: 35.9% (paradojicamente peor — posible efecto "trampa de valor")
+- Partido muy desequilibrado (ratio < 0.40): 35.8%
+
+#### Limitaciones de este analisis
+
+- El trigger es "0-0 al HT" (~min 45), no "0-0 al min 30" como la regla live
+- No tiene filtros in-play (xG, SoT, posesion al momento del trigger)
+- Los BFED son de Betfair Exchange pre-match, no de cuotas capturadas por el scraper
+- No se pudo cruzar de forma fiable con los CSVs live (solo 5 partidos en la interseccion)
+
+#### Conclusion
+
+Para la version live, el scraper deberia capturar la cuota pre-match de empate BFED antes de que arranque el partido. Asi se podra usar como filtro adicional a los filtros in-play (xG, SoT) sin depender de matching externo. El rango objetivo es **BFED 2.80-3.20 en partido equilibrado**.
 
 ---
 
@@ -203,6 +244,7 @@ Apostar Back Empate cuando:
 2. xG total combinado < 0.5 (o en su defecto, ningun equipo con xG > 0.6)
 3. Diferencia de posesion < 20%
 4. Menos de 8 tiros totales
+5. *(Pendiente validacion live)* Cuota pre-match empate BFED entre 2.80-3.20, partido equilibrado (ver seccion 3b)
 
 ### Patrones complementarios relevantes
 
@@ -225,7 +267,7 @@ Apostar Back Empate cuando:
 5. Confirmar que el 0-0 sigue siendo significativamente mejor que 1-1 y 2-2
 6. Bankroll management: flat stake 3-5% del bankroll
 7. Confirmar filtros de xG y tiros a puerta con mas datos
-8. Analizar cuotas pre-partido con muestra suficiente
+8. Validar filtro BFED 2.80-3.20 con datos live (capturar cuota pre-match en el scraper)
 
 ### Fase 3: Automatizacion (500+ partidos validados)
 9. Alertas en tiempo real cuando se detecte: min >= 30, marcador 0-0, xG < 0.5
@@ -243,7 +285,8 @@ Apostar Back Empate cuando:
 - **Script de simulacion**: `simulate_draw_strategy.py` (simulacion base con stake fijo)
 - **Script de filtros**: `simulate_draw_filters.py` (analisis de filtros estadisticos y pre-partido)
 - **Script de patrones**: `analyze_patterns.py` (analisis general de patrones de apuestas)
-- **Datos**: `betfair_scraper/data/partido_*.csv` (CSVs minuto a minuto)
+- **Datos live**: `betfair_scraper/data/partido_*.csv` (CSVs minuto a minuto)
+- **Datos historicos**: `historic_data/all-euro-data-2025-2026.xlsx` (4,854 partidos, 22 ligas europeas, football-data.co.uk)
 - **Comision aplicada**: 5% sobre beneficios netos (Betfair Exchange)
 
 ---

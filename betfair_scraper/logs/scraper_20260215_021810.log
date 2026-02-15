@@ -42053,3 +42053,1752 @@ Symbols not available. Dumping unresolved backtrace:
 04:46:23 [WARNING] ⟳ [monterrey-leon-apuestas-35216584] Match Odds incompletos (0/3), refrescando...
 04:46:23 [WARNING] ⟳ [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] Match Odds incompletos (0/3), refrescando...
 04:46:23 [WARNING] ⟳ [independiente-rivadavia-belgrano-apuestas-35225054] Match Odds incompletos (0/3), refrescando...
+04:46:51 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:46:51 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:46:51 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:46:51 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:47:11 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo cuotas Over/Under...
+04:47:11 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:47:11 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo cuotas Over/Under...
+04:47:11 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo cuotas Over/Under...
+04:47:12 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo cuotas Resultado Correcto...
+04:47:12 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:47:12 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo cuotas Resultado Correcto...
+04:47:12 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo cuotas Resultado Correcto...
+04:47:13 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo estadísticas del partido...
+04:47:13 [DEBUG]   → Extrayendo eventId del HTML...
+04:47:13 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:47:13 [DEBUG]   → Extrayendo eventId del HTML...
+04:47:13 [DEBUG] Betfair event ID extraído de la URL: 35216584
+04:47:13 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35216584&contentType=viz&contentView=mstats
+04:47:13 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:47:13 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:47:13 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo estadísticas del partido...
+04:47:13 [DEBUG]   → Extrayendo eventId del HTML...
+04:47:13 [DEBUG] Betfair event ID extraído de la URL: 35225161
+04:47:13 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35225161&contentType=viz&contentView=mstats
+04:47:13 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo estadísticas del partido...
+04:47:13 [DEBUG]   → Extrayendo eventId del HTML...
+04:47:13 [DEBUG] Betfair event ID extraído de la URL: 35225054
+04:47:13 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35225054&contentType=viz&contentView=mstats
+04:47:14 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:47:14 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:47:14 [INFO]   → Extrayendo stats del iframe (fallback): eID=35216584
+04:47:14 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:47:14 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:47:14 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:47:14 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:47:14 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:47:14 [INFO]   → Extrayendo stats del iframe (fallback): eID=35225161
+04:47:14 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:47:14 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:47:14 [INFO]   → Extrayendo stats del iframe (fallback): eID=35225054
+04:47:22 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:47:22 [DEBUG]     ✓ 'Shots on target': 8-0
+04:47:22 [DEBUG]     ✓ 'Shots off target': 6-3
+04:47:22 [DEBUG]     ✓ 'Shots blocked': 1-1
+04:47:22 [DEBUG]     ✓ 'Corner kicks': 7-2
+04:47:23 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:47:23 [DEBUG]     ✓ 'Shots on target': 4-2
+04:47:23 [DEBUG]     ✓ 'Shots off target': 9-2
+04:47:23 [DEBUG]     ✓ 'Shots blocked': 3-3
+04:47:23 [DEBUG]     ✓ 'Corner kicks': 8-4
+04:47:23 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:24 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:47:24 [DEBUG]     ✓ 'Shots on target': 2-4
+04:47:24 [DEBUG]     ✓ 'Shots off target': 3-5
+04:47:24 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:47:24 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:24 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:47:24 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:47:24 [DEBUG]     ✓ 'Shots on target': 2-3
+04:47:24 [DEBUG]     ✓ 'Shots off target': 8-4
+04:47:24 [DEBUG]     ✓ 'Shots blocked': 2-2
+04:47:24 [DEBUG]     ✓ 'Corner kicks': 8-5
+04:47:24 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:24 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:47:24 [DEBUG]     × 'Free kicks' - valores vacíos
+04:47:24 [DEBUG]     × 'Offsides' - valores vacíos
+04:47:24 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:47:24 [DEBUG]     × 'Saves' - valores vacíos
+04:47:24 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:47:24 [DEBUG]     × 'Substitutions' - valores vacíos
+04:47:24 [DEBUG]     × 'Injuries' - valores vacíos
+04:47:24 [DEBUG]     × 'Fouls' - valores vacíos
+04:47:24 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:47:25 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:25 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:47:25 [DEBUG]     × 'Free kicks' - valores vacíos
+04:47:25 [DEBUG]     × 'Offsides' - valores vacíos
+04:47:25 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:25 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:47:25 [DEBUG]     × 'Saves' - valores vacíos
+04:47:25 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:47:25 [DEBUG]     × 'Substitutions' - valores vacíos
+04:47:25 [DEBUG]     × 'Injuries' - valores vacíos
+04:47:25 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:25 [DEBUG]     × 'Fouls' - valores vacíos
+04:47:25 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:47:26 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '4', 'tiros_puerta_visitante': '2', 'corners_local': '8', 'corners_visitante': '4', 'posesion_local': '55', 'posesion_visitante': '45', 'shots_off_target_local': '9', 'shots_off_target_visitante': '2', 'blocked_shots_local': '3', 'blocked_shots_visitante': '3', 'time_in_dangerous_attack_pct_local': '80', 'time_in_dangerous_attack_pct_visitante': '20', 'tiros_local': '16', 'tiros_visitante': '7'}
+04:47:26 [DEBUG]   → Total stats en dict tras merge: 14
+04:47:26 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo volumen matched...
+04:47:26 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:26 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:47:26 [DEBUG]     × 'Free kicks' - valores vacíos
+04:47:26 [DEBUG]     × 'Offsides' - valores vacíos
+04:47:26 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:47:26 [DEBUG]     × 'Saves' - valores vacíos
+04:47:26 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:47:26 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:47:26 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:47:26 [DEBUG]     × 'Free kicks' - valores vacíos
+04:47:26 [DEBUG]     × 'Substitutions' - valores vacíos
+04:47:26 [DEBUG]     × 'Offsides' - valores vacíos
+04:47:26 [DEBUG]     × 'Injuries' - valores vacíos
+04:47:26 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:47:26 [DEBUG]     × 'Fouls' - valores vacíos
+04:47:26 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:47:26 [DEBUG]     × 'Saves' - valores vacíos
+04:47:26 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:47:26 [DEBUG]     × 'Substitutions' - valores vacíos
+04:47:26 [DEBUG]     × 'Injuries' - valores vacíos
+04:47:26 [DEBUG]     × 'Fouls' - valores vacíos
+04:47:26 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:47:27 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:47:27 [DEBUG]   → Total stats en dict tras merge: 14
+04:47:27 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+04:47:28 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '3', 'corners_local': '8', 'corners_visitante': '5', 'posesion_local': '46', 'posesion_visitante': '54', 'shots_off_target_local': '8', 'shots_off_target_visitante': '4', 'blocked_shots_local': '2', 'blocked_shots_visitante': '2', 'time_in_dangerous_attack_pct_local': '54', 'time_in_dangerous_attack_pct_visitante': '46', 'tiros_local': '12', 'tiros_visitante': '9'}
+04:47:28 [DEBUG]   → Total stats en dict tras merge: 14
+04:47:28 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo volumen matched...
+04:47:29 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '8', 'tiros_puerta_visitante': '0', 'corners_local': '7', 'corners_visitante': '2', 'posesion_local': '48', 'posesion_visitante': '52', 'shots_off_target_local': '6', 'shots_off_target_visitante': '3', 'blocked_shots_local': '1', 'blocked_shots_visitante': '1', 'time_in_dangerous_attack_pct_local': '78', 'time_in_dangerous_attack_pct_visitante': '22', 'tiros_local': '15', 'tiros_visitante': '4'}
+04:47:29 [DEBUG]   → Total stats en dict tras merge: 14
+04:47:29 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo volumen matched...
+04:47:38 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo momentum (fallback visual)...
+04:47:38 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:47:40 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+04:47:40 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:47:41 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo momentum (fallback visual)...
+04:47:41 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:47:42 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo momentum (fallback visual)...
+04:47:42 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:47:45 [DEBUG]   × No se encontró URL del iframe de stats
+04:47:45 [INFO] ✓ [monterrey-leon-apuestas-35216584] Captura exitosa: pre_partido, min , -
+04:47:46 [DEBUG]   × No se encontró URL del iframe de stats
+04:47:46 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+04:47:47 [DEBUG]   × No se encontró URL del iframe de stats
+04:47:47 [INFO] ✓ [independiente-rivadavia-belgrano-apuestas-35225054] Captura exitosa: pre_partido, min , -
+04:47:48 [DEBUG]   × No se encontró URL del iframe de stats
+04:47:48 [INFO] ✓ [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] Captura exitosa: pre_partido, min , -
+04:47:48 [INFO] ✓ Captura paralela completada en 112.6s (4/4 exitosos)
+04:47:48 [WARNING] Ciclo tardó 112.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+04:47:48 [INFO] 
+--- Ciclo #90 ---
+04:47:48 [INFO] 📸 Capturando 4 partidos en paralelo...
+04:47:56 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo información del partido...
+04:47:56 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo información del partido...
+04:47:56 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+04:47:56 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo información del partido...
+04:48:14 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo cuotas Match Odds...
+04:48:14 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo cuotas Match Odds...
+04:48:14 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+04:48:14 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo cuotas Match Odds...
+04:48:15 [WARNING] ⟳ [independiente-rivadavia-belgrano-apuestas-35225054] Match Odds incompletos (0/3), refrescando...
+04:48:15 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+04:48:15 [WARNING] ⟳ [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] Match Odds incompletos (0/3), refrescando...
+04:48:15 [WARNING] ⟳ [monterrey-leon-apuestas-35216584] Match Odds incompletos (0/3), refrescando...
+04:48:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:48:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:48:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:48:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:49:03 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo cuotas Over/Under...
+04:49:03 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo cuotas Over/Under...
+04:49:03 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:49:04 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo cuotas Over/Under...
+04:49:04 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo cuotas Resultado Correcto...
+04:49:04 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo cuotas Resultado Correcto...
+04:49:04 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:49:05 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo cuotas Resultado Correcto...
+04:49:05 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo estadísticas del partido...
+04:49:05 [DEBUG]   → Extrayendo eventId del HTML...
+04:49:06 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo estadísticas del partido...
+04:49:06 [DEBUG]   → Extrayendo eventId del HTML...
+04:49:06 [DEBUG] Betfair event ID extraído de la URL: 35225161
+04:49:06 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35225161&contentType=viz&contentView=mstats
+04:49:06 [DEBUG] Betfair event ID extraído de la URL: 35225054
+04:49:06 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35225054&contentType=viz&contentView=mstats
+04:49:06 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:49:06 [DEBUG]   → Extrayendo eventId del HTML...
+04:49:06 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:49:06 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:49:06 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo estadísticas del partido...
+04:49:06 [DEBUG]   → Extrayendo eventId del HTML...
+04:49:06 [DEBUG] Betfair event ID extraído de la URL: 35216584
+04:49:06 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35216584&contentType=viz&contentView=mstats
+04:49:06 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:49:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:49:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35225161
+04:49:06 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:49:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:49:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35225054
+04:49:06 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:49:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:49:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:49:06 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:49:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:49:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35216584
+04:49:12 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:49:12 [DEBUG]     ✓ 'Shots on target': 8-0
+04:49:12 [DEBUG]     ✓ 'Shots off target': 6-3
+04:49:13 [DEBUG]     ✓ 'Shots blocked': 1-1
+04:49:13 [DEBUG]     ✓ 'Corner kicks': 7-2
+04:49:13 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:49:13 [DEBUG]     ✓ 'Shots on target': 2-3
+04:49:13 [DEBUG]     ✓ 'Shots off target': 8-4
+04:49:13 [DEBUG]     ✓ 'Shots blocked': 2-2
+04:49:13 [DEBUG]     ✓ 'Corner kicks': 8-5
+04:49:14 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:14 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:15 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:15 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:49:15 [DEBUG]     × 'Free kicks' - valores vacíos
+04:49:15 [DEBUG]     × 'Offsides' - valores vacíos
+04:49:15 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:49:15 [DEBUG]     × 'Saves' - valores vacíos
+04:49:15 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:49:15 [DEBUG]     × 'Substitutions' - valores vacíos
+04:49:15 [DEBUG]     × 'Injuries' - valores vacíos
+04:49:15 [DEBUG]     × 'Fouls' - valores vacíos
+04:49:15 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:49:15 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:15 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:49:15 [DEBUG]     × 'Free kicks' - valores vacíos
+04:49:15 [DEBUG]     × 'Offsides' - valores vacíos
+04:49:15 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:49:15 [DEBUG]     × 'Saves' - valores vacíos
+04:49:15 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:49:15 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '8', 'tiros_puerta_visitante': '0', 'corners_local': '7', 'corners_visitante': '2', 'posesion_local': '48', 'posesion_visitante': '52', 'shots_off_target_local': '6', 'shots_off_target_visitante': '3', 'blocked_shots_local': '1', 'blocked_shots_visitante': '1', 'time_in_dangerous_attack_pct_local': '78', 'time_in_dangerous_attack_pct_visitante': '22', 'tiros_local': '15', 'tiros_visitante': '4'}
+04:49:15 [DEBUG]     × 'Substitutions' - valores vacíos
+04:49:15 [DEBUG]   → Total stats en dict tras merge: 14
+04:49:15 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo volumen matched...
+04:49:15 [DEBUG]     × 'Injuries' - valores vacíos
+04:49:15 [DEBUG]     × 'Fouls' - valores vacíos
+04:49:15 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:49:16 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '3', 'corners_local': '8', 'corners_visitante': '5', 'posesion_local': '46', 'posesion_visitante': '54', 'shots_off_target_local': '8', 'shots_off_target_visitante': '4', 'blocked_shots_local': '2', 'blocked_shots_visitante': '2', 'time_in_dangerous_attack_pct_local': '54', 'time_in_dangerous_attack_pct_visitante': '46', 'tiros_local': '12', 'tiros_visitante': '9'}
+04:49:16 [DEBUG]   → Total stats en dict tras merge: 14
+04:49:16 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo volumen matched...
+04:49:16 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:49:16 [DEBUG]     ✓ 'Shots on target': 2-4
+04:49:16 [DEBUG]     ✓ 'Shots off target': 3-5
+04:49:16 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:49:16 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:49:17 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:49:17 [DEBUG]     ✓ 'Shots on target': 4-2
+04:49:17 [DEBUG]     ✓ 'Shots off target': 9-2
+04:49:17 [DEBUG]     ✓ 'Shots blocked': 3-3
+04:49:17 [DEBUG]     ✓ 'Corner kicks': 8-4
+04:49:18 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:18 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:19 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:19 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:49:19 [DEBUG]     × 'Free kicks' - valores vacíos
+04:49:19 [DEBUG]     × 'Offsides' - valores vacíos
+04:49:19 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:49:19 [DEBUG]     × 'Saves' - valores vacíos
+04:49:19 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:49:19 [DEBUG]     × 'Substitutions' - valores vacíos
+04:49:19 [DEBUG]     × 'Injuries' - valores vacíos
+04:49:19 [DEBUG]     × 'Fouls' - valores vacíos
+04:49:19 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:49:19 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:49:19 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:49:19 [DEBUG]     × 'Free kicks' - valores vacíos
+04:49:19 [DEBUG]     × 'Offsides' - valores vacíos
+04:49:19 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:49:19 [DEBUG]     × 'Saves' - valores vacíos
+04:49:19 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:49:19 [DEBUG]     × 'Substitutions' - valores vacíos
+04:49:19 [DEBUG]     × 'Injuries' - valores vacíos
+04:49:19 [DEBUG]     × 'Fouls' - valores vacíos
+04:49:19 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:49:20 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '4', 'tiros_puerta_visitante': '2', 'corners_local': '8', 'corners_visitante': '4', 'posesion_local': '55', 'posesion_visitante': '45', 'shots_off_target_local': '9', 'shots_off_target_visitante': '2', 'blocked_shots_local': '3', 'blocked_shots_visitante': '3', 'time_in_dangerous_attack_pct_local': '80', 'time_in_dangerous_attack_pct_visitante': '20', 'tiros_local': '16', 'tiros_visitante': '7'}
+04:49:20 [DEBUG]   → Total stats en dict tras merge: 14
+04:49:20 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo volumen matched...
+04:49:23 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:49:23 [DEBUG]   → Total stats en dict tras merge: 14
+04:49:23 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+04:49:28 [DEBUG] [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] → Extrayendo momentum (fallback visual)...
+04:49:28 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:49:29 [DEBUG] [independiente-rivadavia-belgrano-apuestas-35225054] → Extrayendo momentum (fallback visual)...
+04:49:29 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:49:33 [DEBUG] [monterrey-leon-apuestas-35216584] → Extrayendo momentum (fallback visual)...
+04:49:33 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:49:35 [DEBUG]   × No se encontró URL del iframe de stats
+04:49:35 [INFO] ✓ [atl-tucuman-estudiantes-rio-cuarto-apuestas-352251] Captura exitosa: pre_partido, min , -
+04:49:35 [DEBUG]   × No se encontró URL del iframe de stats
+04:49:35 [INFO] ✓ [independiente-rivadavia-belgrano-apuestas-35225054] Captura exitosa: pre_partido, min , -
+04:49:36 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+04:49:36 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:49:40 [DEBUG]   × No se encontró URL del iframe de stats
+04:49:40 [INFO] ✓ [monterrey-leon-apuestas-35216584] Captura exitosa: pre_partido, min , -
+04:49:43 [DEBUG]   × No se encontró URL del iframe de stats
+04:49:43 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+04:49:43 [INFO] ✓ Captura paralela completada en 114.4s (4/4 exitosos)
+04:49:43 [INFO] 🔄 Revisando games.csv para detectar cambios...
+04:49:43 [INFO] Cargados 13 partidos desde games.csv
+04:49:43 [INFO] 🗑️  Cerrando 3 drivers (partidos finalizados o futuros)...
+04:49:45 [DEBUG] ✓ Driver cerrado: monterrey-leon-apuestas-35216584
+04:49:45 [DEBUG]    - Cerrado: monterrey-leon-apuestas-35216584
+04:49:47 [DEBUG] ✓ Driver cerrado: atl-tucuman-estudiantes-rio-cuarto-apuestas-352251
+04:49:47 [DEBUG]    - Cerrado: atl-tucuman-estudiantes-rio-cuarto-apuestas-352251
+04:49:50 [DEBUG] ✓ Driver cerrado: independiente-rivadavia-belgrano-apuestas-35225054
+04:49:50 [DEBUG]    - Cerrado: independiente-rivadavia-belgrano-apuestas-35225054
+04:49:50 [INFO] ✓ Drivers actualizados: 1 partidos activos
+04:49:50 [WARNING] Ciclo tardó 121.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+04:49:50 [INFO] 
+--- Ciclo #91 ---
+04:49:50 [INFO] 📸 Capturando 1 partidos en paralelo...
+04:49:58 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+04:50:16 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+04:50:17 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+04:50:46 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:51:06 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:51:07 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:51:08 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:51:08 [DEBUG]   → Extrayendo eventId del HTML...
+04:51:08 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:51:08 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:51:08 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:51:08 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:51:08 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:51:13 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:51:13 [DEBUG]     ✓ 'Shots on target': 2-4
+04:51:13 [DEBUG]     ✓ 'Shots off target': 3-5
+04:51:13 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:51:13 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:51:14 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:51:15 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:51:15 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:51:15 [DEBUG]     × 'Free kicks' - valores vacíos
+04:51:15 [DEBUG]     × 'Offsides' - valores vacíos
+04:51:15 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:51:15 [DEBUG]     × 'Saves' - valores vacíos
+04:51:16 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:51:16 [DEBUG]     × 'Substitutions' - valores vacíos
+04:51:16 [DEBUG]     × 'Injuries' - valores vacíos
+04:51:16 [DEBUG]     × 'Fouls' - valores vacíos
+04:51:16 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:51:16 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:51:16 [DEBUG]   → Total stats en dict tras merge: 14
+04:51:16 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+04:51:29 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+04:51:29 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:51:35 [DEBUG]   × No se encontró URL del iframe de stats
+04:51:35 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+04:51:35 [INFO] ✓ Captura paralela completada en 105.0s (1/1 exitosos)
+04:51:35 [WARNING] Ciclo tardó 105.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+04:51:35 [INFO] 
+--- Ciclo #92 ---
+04:51:35 [INFO] 📸 Capturando 1 partidos en paralelo...
+04:51:43 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+04:52:01 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+04:52:02 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+04:52:31 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:52:50 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:52:52 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:52:53 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:52:53 [DEBUG]   → Extrayendo eventId del HTML...
+04:52:53 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:52:53 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:52:53 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:52:53 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:52:53 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:52:58 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:52:58 [DEBUG]     ✓ 'Shots on target': 2-4
+04:52:58 [DEBUG]     ✓ 'Shots off target': 3-5
+04:52:58 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:52:58 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:52:59 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:53:00 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:53:00 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:53:00 [DEBUG]     × 'Free kicks' - valores vacíos
+04:53:00 [DEBUG]     × 'Offsides' - valores vacíos
+04:53:00 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:53:00 [DEBUG]     × 'Saves' - valores vacíos
+04:53:00 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:53:00 [DEBUG]     × 'Substitutions' - valores vacíos
+04:53:00 [DEBUG]     × 'Injuries' - valores vacíos
+04:53:00 [DEBUG]     × 'Fouls' - valores vacíos
+04:53:00 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:53:00 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:53:01 [DEBUG]   → Total stats en dict tras merge: 14
+04:53:01 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+04:53:14 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+04:53:14 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:53:20 [DEBUG]   × No se encontró URL del iframe de stats
+04:53:20 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+04:53:20 [INFO] ✓ Captura paralela completada en 104.8s (1/1 exitosos)
+04:53:20 [WARNING] Ciclo tardó 104.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+04:53:20 [INFO] 
+--- Ciclo #93 ---
+04:53:20 [INFO] 📸 Capturando 1 partidos en paralelo...
+04:53:28 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+04:53:46 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+04:53:47 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+04:54:15 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:54:35 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:54:36 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:54:37 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:54:37 [DEBUG]   → Extrayendo eventId del HTML...
+04:54:37 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:54:37 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:54:38 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:54:38 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:54:38 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:54:42 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:54:42 [DEBUG]     ✓ 'Shots on target': 2-4
+04:54:42 [DEBUG]     ✓ 'Shots off target': 3-5
+04:54:42 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:54:42 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:54:43 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:54:44 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:54:44 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:54:44 [DEBUG]     × 'Free kicks' - valores vacíos
+04:54:44 [DEBUG]     × 'Offsides' - valores vacíos
+04:54:44 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:54:44 [DEBUG]     × 'Saves' - valores vacíos
+04:54:44 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:54:44 [DEBUG]     × 'Substitutions' - valores vacíos
+04:54:44 [DEBUG]     × 'Injuries' - valores vacíos
+04:54:44 [DEBUG]     × 'Fouls' - valores vacíos
+04:54:44 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:54:45 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:54:45 [DEBUG]   → Total stats en dict tras merge: 14
+04:54:45 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+04:54:57 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+04:54:57 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:55:04 [DEBUG]   × No se encontró URL del iframe de stats
+04:55:04 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+04:55:04 [INFO] ✓ Captura paralela completada en 103.7s (1/1 exitosos)
+04:55:04 [WARNING] Ciclo tardó 103.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+04:55:04 [INFO] 
+--- Ciclo #94 ---
+04:55:04 [INFO] 📸 Capturando 1 partidos en paralelo...
+04:55:12 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+04:55:30 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+04:55:31 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+04:55:59 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:56:19 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:56:20 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:56:21 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:56:21 [DEBUG]   → Extrayendo eventId del HTML...
+04:56:21 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:56:21 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:56:21 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:56:21 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:56:21 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:56:26 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:56:26 [DEBUG]     ✓ 'Shots on target': 2-4
+04:56:26 [DEBUG]     ✓ 'Shots off target': 3-5
+04:56:26 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:56:26 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:56:27 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:56:28 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:56:28 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:56:28 [DEBUG]     × 'Free kicks' - valores vacíos
+04:56:28 [DEBUG]     × 'Offsides' - valores vacíos
+04:56:28 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:56:28 [DEBUG]     × 'Saves' - valores vacíos
+04:56:28 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:56:28 [DEBUG]     × 'Substitutions' - valores vacíos
+04:56:28 [DEBUG]     × 'Injuries' - valores vacíos
+04:56:28 [DEBUG]     × 'Fouls' - valores vacíos
+04:56:28 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:56:29 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:56:29 [DEBUG]   → Total stats en dict tras merge: 14
+04:56:29 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+04:56:41 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+04:56:41 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:56:48 [DEBUG]   × No se encontró URL del iframe de stats
+04:56:48 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+04:56:48 [INFO] ✓ Captura paralela completada en 104.3s (1/1 exitosos)
+04:56:48 [WARNING] Ciclo tardó 104.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+04:56:48 [INFO] 
+--- Ciclo #95 ---
+04:56:48 [INFO] 📸 Capturando 1 partidos en paralelo...
+04:56:56 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+04:57:14 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+04:57:15 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+04:57:43 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:58:03 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:58:04 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:58:05 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:58:05 [DEBUG]   → Extrayendo eventId del HTML...
+04:58:05 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:58:05 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:58:06 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:58:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:58:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:58:10 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:58:10 [DEBUG]     ✓ 'Shots on target': 2-4
+04:58:10 [DEBUG]     ✓ 'Shots off target': 3-5
+04:58:10 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:58:10 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:58:11 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:58:12 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:58:12 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:58:12 [DEBUG]     × 'Free kicks' - valores vacíos
+04:58:12 [DEBUG]     × 'Offsides' - valores vacíos
+04:58:12 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:58:12 [DEBUG]     × 'Saves' - valores vacíos
+04:58:12 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:58:12 [DEBUG]     × 'Substitutions' - valores vacíos
+04:58:12 [DEBUG]     × 'Injuries' - valores vacíos
+04:58:12 [DEBUG]     × 'Fouls' - valores vacíos
+04:58:12 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:58:12 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:58:12 [DEBUG]   → Total stats en dict tras merge: 14
+04:58:12 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+04:58:25 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+04:58:25 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+04:58:32 [DEBUG]   × No se encontró URL del iframe de stats
+04:58:32 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+04:58:32 [INFO] ✓ Captura paralela completada en 103.6s (1/1 exitosos)
+04:58:32 [INFO] 🔄 Revisando games.csv para detectar cambios...
+04:58:32 [INFO] Cargados 13 partidos desde games.csv
+04:58:32 [WARNING] Ciclo tardó 103.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+04:58:32 [INFO] 
+--- Ciclo #96 ---
+04:58:32 [INFO] 📸 Capturando 1 partidos en paralelo...
+04:58:40 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+04:58:57 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+04:58:58 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+04:59:27 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+04:59:47 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+04:59:48 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+04:59:49 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+04:59:49 [DEBUG]   → Extrayendo eventId del HTML...
+04:59:49 [DEBUG] Betfair event ID extraído de la URL: 35256912
+04:59:49 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+04:59:49 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+04:59:49 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+04:59:49 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+04:59:55 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+04:59:55 [DEBUG]     ✓ 'Shots on target': 2-4
+04:59:55 [DEBUG]     ✓ 'Shots off target': 3-5
+04:59:55 [DEBUG]     ✓ 'Shots blocked': 1-0
+04:59:55 [DEBUG]     ✓ 'Corner kicks': 7-5
+04:59:56 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:59:57 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+04:59:57 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+04:59:57 [DEBUG]     × 'Free kicks' - valores vacíos
+04:59:57 [DEBUG]     × 'Offsides' - valores vacíos
+04:59:57 [DEBUG]     × 'Goal kicks' - valores vacíos
+04:59:57 [DEBUG]     × 'Saves' - valores vacíos
+04:59:57 [DEBUG]     × 'Throw-ins' - valores vacíos
+04:59:57 [DEBUG]     × 'Substitutions' - valores vacíos
+04:59:57 [DEBUG]     × 'Injuries' - valores vacíos
+04:59:57 [DEBUG]     × 'Fouls' - valores vacíos
+04:59:57 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+04:59:57 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+04:59:57 [DEBUG]   → Total stats en dict tras merge: 14
+04:59:57 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+05:00:10 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+05:00:10 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+05:00:17 [DEBUG]   × No se encontró URL del iframe de stats
+05:00:17 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+05:00:17 [INFO] ✓ Captura paralela completada en 105.3s (1/1 exitosos)
+05:00:17 [WARNING] Ciclo tardó 105.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+05:00:17 [INFO] 
+--- Ciclo #97 ---
+05:00:17 [INFO] 📸 Capturando 1 partidos en paralelo...
+05:00:25 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+05:00:43 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+05:00:44 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+05:01:12 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+05:01:32 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+05:01:33 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+05:01:34 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+05:01:34 [DEBUG]   → Extrayendo eventId del HTML...
+05:01:34 [DEBUG] Betfair event ID extraído de la URL: 35256912
+05:01:34 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+05:01:34 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+05:01:34 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+05:01:34 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+05:01:40 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+05:01:40 [DEBUG]     ✓ 'Shots on target': 2-4
+05:01:40 [DEBUG]     ✓ 'Shots off target': 3-5
+05:01:40 [DEBUG]     ✓ 'Shots blocked': 1-0
+05:01:40 [DEBUG]     ✓ 'Corner kicks': 7-5
+05:01:41 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:01:42 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:01:42 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+05:01:42 [DEBUG]     × 'Free kicks' - valores vacíos
+05:01:42 [DEBUG]     × 'Offsides' - valores vacíos
+05:01:42 [DEBUG]     × 'Goal kicks' - valores vacíos
+05:01:42 [DEBUG]     × 'Saves' - valores vacíos
+05:01:42 [DEBUG]     × 'Throw-ins' - valores vacíos
+05:01:42 [DEBUG]     × 'Substitutions' - valores vacíos
+05:01:42 [DEBUG]     × 'Injuries' - valores vacíos
+05:01:42 [DEBUG]     × 'Fouls' - valores vacíos
+05:01:42 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+05:01:42 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+05:01:42 [DEBUG]   → Total stats en dict tras merge: 14
+05:01:42 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+05:01:55 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+05:01:55 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+05:02:02 [DEBUG]   × No se encontró URL del iframe de stats
+05:02:02 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+05:02:02 [INFO] ✓ Captura paralela completada en 105.0s (1/1 exitosos)
+05:02:02 [WARNING] Ciclo tardó 105.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+05:02:02 [INFO] 
+--- Ciclo #98 ---
+05:02:02 [INFO] 📸 Capturando 1 partidos en paralelo...
+05:02:10 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+05:02:28 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+05:02:29 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+05:02:57 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+05:03:17 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+05:03:18 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+05:03:19 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+05:03:19 [DEBUG]   → Extrayendo eventId del HTML...
+05:03:19 [DEBUG] Betfair event ID extraído de la URL: 35256912
+05:03:19 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+05:03:19 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+05:03:19 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+05:03:19 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+05:03:25 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+05:03:25 [DEBUG]     ✓ 'Shots on target': 2-4
+05:03:25 [DEBUG]     ✓ 'Shots off target': 3-5
+05:03:25 [DEBUG]     ✓ 'Shots blocked': 1-0
+05:03:25 [DEBUG]     ✓ 'Corner kicks': 7-5
+05:03:26 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:03:27 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:03:27 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+05:03:27 [DEBUG]     × 'Free kicks' - valores vacíos
+05:03:27 [DEBUG]     × 'Offsides' - valores vacíos
+05:03:27 [DEBUG]     × 'Goal kicks' - valores vacíos
+05:03:27 [DEBUG]     × 'Saves' - valores vacíos
+05:03:27 [DEBUG]     × 'Throw-ins' - valores vacíos
+05:03:27 [DEBUG]     × 'Substitutions' - valores vacíos
+05:03:27 [DEBUG]     × 'Injuries' - valores vacíos
+05:03:27 [DEBUG]     × 'Fouls' - valores vacíos
+05:03:27 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+05:03:27 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+05:03:27 [DEBUG]   → Total stats en dict tras merge: 14
+05:03:27 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+05:03:40 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+05:03:40 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+05:03:47 [DEBUG]   × No se encontró URL del iframe de stats
+05:03:47 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+05:03:47 [INFO] ✓ Captura paralela completada en 104.9s (1/1 exitosos)
+05:03:47 [WARNING] Ciclo tardó 104.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+05:03:47 [INFO] 
+--- Ciclo #99 ---
+05:03:47 [INFO] 📸 Capturando 1 partidos en paralelo...
+05:03:55 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+05:04:13 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+05:04:14 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+05:04:42 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+05:05:02 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+05:05:03 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+05:05:04 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+05:05:04 [DEBUG]   → Extrayendo eventId del HTML...
+05:05:04 [DEBUG] Betfair event ID extraído de la URL: 35256912
+05:05:04 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+05:05:04 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+05:05:04 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+05:05:04 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+05:05:12 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+05:05:12 [DEBUG]     ✓ 'Shots on target': 2-4
+05:05:12 [DEBUG]     ✓ 'Shots off target': 3-5
+05:05:12 [DEBUG]     ✓ 'Shots blocked': 1-0
+05:05:12 [DEBUG]     ✓ 'Corner kicks': 7-5
+05:05:13 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:05:14 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:05:14 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+05:05:14 [DEBUG]     × 'Free kicks' - valores vacíos
+05:05:14 [DEBUG]     × 'Offsides' - valores vacíos
+05:05:14 [DEBUG]     × 'Goal kicks' - valores vacíos
+05:05:14 [DEBUG]     × 'Saves' - valores vacíos
+05:05:14 [DEBUG]     × 'Throw-ins' - valores vacíos
+05:05:14 [DEBUG]     × 'Substitutions' - valores vacíos
+05:05:14 [DEBUG]     × 'Injuries' - valores vacíos
+05:05:14 [DEBUG]     × 'Fouls' - valores vacíos
+05:05:14 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+05:05:14 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+05:05:14 [DEBUG]   → Total stats en dict tras merge: 14
+05:05:14 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+05:05:27 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+05:05:27 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+05:05:34 [DEBUG]   × No se encontró URL del iframe de stats
+05:05:34 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+05:05:34 [INFO] ✓ Captura paralela completada en 107.1s (1/1 exitosos)
+05:05:34 [WARNING] Ciclo tardó 107.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+05:05:34 [INFO] 
+--- Ciclo #100 ---
+05:05:34 [INFO] 📸 Capturando 1 partidos en paralelo...
+05:05:42 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+05:06:00 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+05:06:01 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+05:06:29 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+05:06:49 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+05:06:50 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+05:06:51 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+05:06:51 [DEBUG]   → Extrayendo eventId del HTML...
+05:06:51 [DEBUG] Betfair event ID extraído de la URL: 35256912
+05:06:51 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+05:06:52 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+05:06:52 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+05:06:52 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
+05:06:56 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+05:06:56 [DEBUG]     ✓ 'Shots on target': 2-4
+05:06:56 [DEBUG]     ✓ 'Shots off target': 3-5
+05:06:56 [DEBUG]     ✓ 'Shots blocked': 1-0
+05:06:56 [DEBUG]     ✓ 'Corner kicks': 7-5
+05:06:57 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:06:58 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=144.0.7559.133); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x5f5093
+	0x5f50d4
+	0x3eb490
+	0x4358da
+	0x435b7b
+	0x42b041
+	0x458204
+	0x42af34
+	0x458384
+	0x475341
+	0x457f56
+	0x4296c9
+	0x42a484
+	0x847e34
+	0x8430c9
+	0x860add
+	0x60db38
+	0x6158ad
+	0x5fd848
+	0x5fda12
+	0x5e75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+05:06:58 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+05:06:58 [DEBUG]     × 'Free kicks' - valores vacíos
+05:06:58 [DEBUG]     × 'Offsides' - valores vacíos
+05:06:58 [DEBUG]     × 'Goal kicks' - valores vacíos
+05:06:58 [DEBUG]     × 'Saves' - valores vacíos
+05:06:58 [DEBUG]     × 'Throw-ins' - valores vacíos
+05:06:59 [DEBUG]     × 'Substitutions' - valores vacíos
+05:06:59 [DEBUG]     × 'Injuries' - valores vacíos
+05:06:59 [DEBUG]     × 'Fouls' - valores vacíos
+05:06:59 [INFO]   ✓ Fallback iframe exitoso: 14 campos capturados
+05:06:59 [DEBUG]   → Iframe stats capturados: {'tiros_puerta_local': '2', 'tiros_puerta_visitante': '4', 'corners_local': '7', 'corners_visitante': '5', 'posesion_local': '63', 'posesion_visitante': '37', 'shots_off_target_local': '3', 'shots_off_target_visitante': '5', 'blocked_shots_local': '1', 'blocked_shots_visitante': '0', 'time_in_dangerous_attack_pct_local': '60', 'time_in_dangerous_attack_pct_visitante': '40', 'tiros_local': '6', 'tiros_visitante': '9'}
+05:06:59 [DEBUG]   → Total stats en dict tras merge: 14
+05:06:59 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo volumen matched...
+05:07:12 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo momentum (fallback visual)...
+05:07:12 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+05:07:18 [DEBUG]   × No se encontró URL del iframe de stats
+05:07:18 [INFO] ✓ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Captura exitosa: pre_partido, min , -
+05:07:18 [INFO] ✓ Captura paralela completada en 104.4s (1/1 exitosos)
+05:07:18 [INFO] 🔄 Revisando games.csv para detectar cambios...
+05:07:18 [INFO] Cargados 13 partidos desde games.csv
+05:07:18 [WARNING] Ciclo tardó 104.4s (> 30s). Iniciando siguiente ciclo inmediatamente.
+05:07:18 [INFO] 
+--- Ciclo #101 ---
+05:07:18 [INFO] 📸 Capturando 1 partidos en paralelo...
+05:07:26 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo información del partido...
+05:07:44 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Match Odds...
+05:07:45 [WARNING] ⟳ [deportivo-pasto-internacional-de-bogot%C3%A1-apues] Match Odds incompletos (0/3), refrescando...
+05:08:14 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+05:08:34 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Over/Under...
+05:08:35 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo cuotas Resultado Correcto...
+05:08:36 [DEBUG] [deportivo-pasto-internacional-de-bogot%C3%A1-apues] → Extrayendo estadísticas del partido...
+05:08:36 [DEBUG]   → Extrayendo eventId del HTML...
+05:08:36 [DEBUG] Betfair event ID extraído de la URL: 35256912
+05:08:36 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35256912&contentType=viz&contentView=mstats
+05:08:36 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+05:08:36 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+05:08:36 [INFO]   → Extrayendo stats del iframe (fallback): eID=35256912
