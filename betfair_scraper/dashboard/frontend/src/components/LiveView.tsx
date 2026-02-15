@@ -18,6 +18,22 @@ export function LiveView({ liveMatches, system, onRefresh }: LiveViewProps) {
     (m) => m.last_capture_ago_seconds != null && m.last_capture_ago_seconds > 600
   ).length
 
+  // Freshness buckets
+  const freshCount = liveMatches.filter(
+    (m) => m.last_capture_ago_seconds != null && m.last_capture_ago_seconds < 60
+  ).length
+  const laggyCount = liveMatches.filter(
+    (m) => m.last_capture_ago_seconds != null && m.last_capture_ago_seconds >= 60 && m.last_capture_ago_seconds < 180
+  ).length
+  const slowCount = liveMatches.filter(
+    (m) => m.last_capture_ago_seconds != null && m.last_capture_ago_seconds >= 180 && m.last_capture_ago_seconds < 600
+  ).length
+  // Average cycle time
+  const matchesWithCapture = liveMatches.filter((m) => m.last_capture_ago_seconds != null)
+  const avgCycleSeconds = matchesWithCapture.length > 0
+    ? Math.round(matchesWithCapture.reduce((sum, m) => sum + m.last_capture_ago_seconds!, 0) / matchesWithCapture.length)
+    : null
+
   async function handleRefreshMatches() {
     setRefreshing(true)
     setRefreshResult(null)
@@ -73,11 +89,50 @@ export function LiveView({ liveMatches, system, onRefresh }: LiveViewProps) {
       )}
 
       {/* Top stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
         <MetricCard label="Live" value={liveMatches.length} color={liveMatches.length > 0 ? "green" : "zinc"} />
         <MetricCard label="Captures" value={totalCaptures} color="blue" />
         <MetricCard label="Stalled" value={stalledCount} color={stalledCount > 0 ? "red" : "green"} />
+        <MetricCard label="Avg Cycle" value={avgCycleSeconds != null ? `${avgCycleSeconds}s` : "—"} color={avgCycleSeconds != null && avgCycleSeconds <= 60 ? "green" : avgCycleSeconds != null && avgCycleSeconds <= 120 ? "yellow" : "red"} />
+        <MetricCard label="No Data" value={liveMatches.filter((m) => m.capture_count === 0).length} color={liveMatches.some((m) => m.capture_count === 0) ? "red" : "green"} />
+        <MetricCard label="Min Cap" value={matchesWithCapture.length > 0 ? Math.min(...matchesWithCapture.map((m) => m.capture_count)) : 0} color="zinc" />
       </div>
+
+      {/* Freshness bar */}
+      {liveMatches.length > 0 && (
+        <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Capture Freshness</span>
+            <span className="text-[10px] text-zinc-600">{liveMatches.length} matches</span>
+          </div>
+          <div className="flex h-3 rounded-full overflow-hidden bg-zinc-800">
+            {freshCount > 0 && (
+              <div className="bg-green-500 transition-all duration-500" style={{ width: `${(freshCount / liveMatches.length) * 100}%` }} title={`< 1m: ${freshCount}`} />
+            )}
+            {laggyCount > 0 && (
+              <div className="bg-yellow-500 transition-all duration-500" style={{ width: `${(laggyCount / liveMatches.length) * 100}%` }} title={`1-3m: ${laggyCount}`} />
+            )}
+            {slowCount > 0 && (
+              <div className="bg-orange-500 transition-all duration-500" style={{ width: `${(slowCount / liveMatches.length) * 100}%` }} title={`3-10m: ${slowCount}`} />
+            )}
+            {stalledCount > 0 && (
+              <div className="bg-red-500 transition-all duration-500" style={{ width: `${(stalledCount / liveMatches.length) * 100}%` }} title={`> 10m: ${stalledCount}`} />
+            )}
+            {liveMatches.filter((m) => m.last_capture_ago_seconds == null).length > 0 && (
+              <div className="bg-zinc-600 transition-all duration-500" style={{ width: `${(liveMatches.filter((m) => m.last_capture_ago_seconds == null).length / liveMatches.length) * 100}%` }} title="No data" />
+            )}
+          </div>
+          <div className="flex items-center gap-4 mt-2 text-[10px]">
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-green-500" /> &lt;1m: {freshCount}</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" /> 1-3m: {laggyCount}</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> 3-10m: {slowCount}</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" /> &gt;10m: {stalledCount}</span>
+            {liveMatches.some((m) => m.last_capture_ago_seconds == null) && (
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-zinc-600" /> No data: {liveMatches.filter((m) => m.last_capture_ago_seconds == null).length}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
@@ -103,10 +158,11 @@ export function LiveView({ liveMatches, system, onRefresh }: LiveViewProps) {
   )
 }
 
-function MetricCard({ label, value, color }: { label: string; value: number; color: string }) {
+function MetricCard({ label, value, color }: { label: string; value: number | string; color: string }) {
   const colors: Record<string, string> = {
     green: "text-green-400", blue: "text-blue-400",
     red: "text-red-400", zinc: "text-zinc-400",
+    yellow: "text-yellow-400", orange: "text-orange-400",
   }
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
