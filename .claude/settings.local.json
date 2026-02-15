@@ -74,7 +74,9 @@
       "Bash(py -c:*)",
       "Bash(# Check if there''s another uvicorn process that might be conflicting ps aux | grep uvicorn || tasklist)",
       "Bash(# Kill all python processes \\(the backend\\) taskkill //F //IM python.exe sleep 2 # Start fresh without --reload to avoid watcher issues cd \"\"c:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/dashboard/backend\"\" && python -m uvicorn main:app --host 0.0.0.0 --port 8000 2>&1 & sleep 4 curl -s --max-time 5 http://localhost:8000/api/health 2>&1)",
-      "Bash(# Check if scraper is running tasklist)"
+      "Bash(# Check if scraper is running tasklist)",
+      "Bash(for pid in 55696 109540 108576)",
+      "Bash(do taskkill //F //PID $pid)"
     ]
   }
 }

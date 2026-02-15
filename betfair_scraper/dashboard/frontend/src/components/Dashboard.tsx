@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from "react"
-import { api, type Match, type SystemStatus as SystemStatusType } from "../lib/api"
+import { api, type MatchesGrouped, type SystemStatus as SystemStatusType } from "../lib/api"
 import { LiveView } from "./LiveView"
+import { UpcomingView } from "./UpcomingView"
 import { FinishedView } from "./FinishedView"
 import { DataQualityView } from "./DataQualityView"
 import { InsightsView } from "./InsightsView"
 
-type View = "live" | "finished" | "quality" | "insights"
+type View = "live" | "upcoming" | "finished" | "quality" | "insights"
 
 export function Dashboard() {
   const [view, setView] = useState<View>("live")
-  const [matches, setMatches] = useState<Match[]>([])
+  const [matches, setMatches] = useState<MatchesGrouped>({ live: [], upcoming: [], finished: [] })
   const [system, setSystem] = useState<SystemStatusType | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [error, setError] = useState<string | null>(null)
@@ -35,10 +36,6 @@ export function Dashboard() {
     return () => clearInterval(interval)
   }, [refresh])
 
-  const liveMatches = matches.filter((m) => m.status === "live")
-  const upcomingMatches = matches.filter((m) => m.status === "upcoming")
-  const finishedMatches = matches.filter((m) => m.status === "finished")
-
   return (
     <div className="min-h-screen bg-[var(--bg)] flex">
       {/* Sidebar */}
@@ -62,8 +59,20 @@ export function Dashboard() {
               </svg>
             }
             label="En Vivo"
-            badge={liveMatches.length + upcomingMatches.length > 0 ? liveMatches.length + upcomingMatches.length : undefined}
-            badgeColor={liveMatches.length > 0 ? "green" : "blue"}
+            badge={matches.live.length > 0 ? matches.live.length : undefined}
+            badgeColor="green"
+          />
+          <NavItem
+            active={view === "upcoming"}
+            onClick={() => setView("upcoming")}
+            icon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            label="Próximos"
+            badge={matches.upcoming.length > 0 ? matches.upcoming.length : undefined}
+            badgeColor="blue"
           />
           <NavItem
             active={view === "finished"}
@@ -74,7 +83,7 @@ export function Dashboard() {
               </svg>
             }
             label="Finalizados"
-            badge={finishedMatches.length > 0 ? finishedMatches.length : undefined}
+            badge={matches.finished.length > 0 ? matches.finished.length : undefined}
             badgeColor="zinc"
           />
 
@@ -125,17 +134,17 @@ export function Dashboard() {
 
         {view === "live" && (
           <LiveView
-            liveMatches={liveMatches}
-            upcomingMatches={upcomingMatches}
-            allMatches={matches}
+            liveMatches={matches.live}
             system={system}
             onRefresh={refresh}
           />
         )}
 
+        {view === "upcoming" && <UpcomingView matches={matches.upcoming} />}
+
         {view === "finished" && (
           <FinishedView
-            matches={finishedMatches}
+            matches={matches.finished}
             onRefresh={refresh}
           />
         )}

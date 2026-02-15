@@ -10,8 +10,19 @@ router = APIRouter(prefix="/api/matches", tags=["matches"])
 
 @router.get("")
 def get_matches():
-    """Lista todos los partidos de games.csv con su estado."""
-    return load_games()
+    """Lista todos los partidos de games.csv separados por estado (live/upcoming/finished)."""
+    all_games = load_games()
+
+    # Separar por estado
+    live = [g for g in all_games if g["status"] == "live"]
+    upcoming = [g for g in all_games if g["status"] == "upcoming"]
+    finished = [g for g in all_games if g["status"] == "finished"]
+
+    return {
+        "live": live,
+        "upcoming": upcoming,
+        "finished": finished
+    }
 
 
 @router.get("/{match_id}")

@@ -16,8 +16,9 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 # Configuracion
 # La pagina "Todos" muestra todos los partidos (en juego + hoy + proximos).
-# Las paginas /inplay y /today NO renderizan bien en headless (anti-bot).
+# La pagina "En Juego" muestra solo partidos que estan en vivo AHORA.
 BETFAIR_TODOS_URL = "https://www.betfair.es/exchange/plus/es/f%C3%BAtbol-apuestas-1"
+BETFAIR_EN_JUEGO_URL = "https://www.betfair.es/exchange/plus/inplay/football"
 GAMES_CSV = Path(__file__).parent.parent / "games.csv"
 HEADLESS = True
 TIMEOUT = 15000  # ms para Playwright
@@ -163,8 +164,9 @@ def _scrape_with_pagination(page, base_url, label):
 def find_matches_on_betfair():
     """
     Busca partidos de futbol en Betfair usando Playwright.
-    Usa la pagina "Todos" (que SÍ renderiza en headless, a diferencia de /inplay)
-    y recorre la paginacion para obtener todos los partidos.
+    Busca en DOS paginas:
+    1. "En Juego" - partidos en vivo AHORA
+    2. "Todos" - todos los partidos (en juego + futuros)
     """
     all_matches = {}
 
@@ -175,7 +177,14 @@ def find_matches_on_betfair():
             browser, context, page = setup_browser(pw)
 
             try:
-                # Pagina "Todos" con paginacion
+                # 1. Buscar primero en "En Juego" (partidos en vivo)
+                print("\n[INFO] === Buscando en 'En Juego' (partidos en vivo) ===")
+                for m in _scrape_with_pagination(page, BETFAIR_EN_JUEGO_URL, "EN_JUEGO"):
+                    # Confiar en extract_start_time_from_text() para detectar si es en vivo
+                    all_matches.setdefault(m["name"], m)
+
+                # 2. Buscar en "Todos" (partidos futuros + en juego)
+                print("\n[INFO] === Buscando en 'Todos' (partidos futuros) ===")
                 for m in _scrape_with_pagination(page, BETFAIR_TODOS_URL, "TODOS"):
                     all_matches.setdefault(m["name"], m)
 
@@ -221,8 +230,9 @@ def extract_football_matches(page):
                 # Filtro: solo futbol (URL encoded o texto plano con tilde)
                 href_lower = href.lower()
                 if not ("/futbol/" in href_lower or "/f%c3%batbol/" in href_lower
-                        or "tbol/" in href_lower):
+                        or "tbol/" in href_lower or "/football/" in href_lower):
                     skip_count["no_futbol"] += 1
+                    # print(f"[DEBUG] Skipped (no futbol): {href}")  # Uncomment for debugging
                     continue
 
                 # Filtro: partido especifico con ID numerico largo
@@ -332,7 +342,11 @@ def extract_start_time_from_text(text):
             return (datetime.now() + timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M")
 
         # En juego (marcador, minuto visible, descanso)
-        if "DESC." in text or re.search(r"\d+'\s", text) or re.search(r"\d+\s+\d+\s+\w", text):
+        # Patrones: "90' +3", "DESC.", "71' 2 0", etc.
+        if ("DESC." in text or
+            re.search(r"\d+'\s*\+", text) or  # "90' +3"
+            re.search(r"^\d+'\s", text) or     # "71' " al inicio
+            re.search(r"\s\d+'\s", text)):     # " 71' " en medio
             return (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
 
         # Default: en juego aproximado

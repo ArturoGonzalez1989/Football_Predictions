@@ -365,6 +365,71 @@ def filtrar_partidos_activos(partidos: list, ventana_antes_min: int = 10, ventan
     return (activos, futuros, finalizados)
 
 
+def filtrar_partidos_para_drivers(partidos: list, ventana_antes_min: int = 10, ventana_despues_min: int = 120, output_dir = None) -> list:
+    """
+    Filtra partidos que necesitan driver Chrome AHORA.
+
+    Criterios:
+    - Partidos con capturas recientes (<5 min): SIEMPRE incluir (están en vivo)
+    - Partidos sin capturas próximos a empezar (<15 min): incluir
+    - Partidos futuros (>15 min): NO incluir
+    - Partidos finalizados (>ventana_despues_min): NO incluir
+
+    Args:
+        partidos: Lista de dicts con 'url', 'game', 'fecha_hora_inicio'
+        ventana_antes_min: Minutos antes del inicio para empezar a trackear
+        ventana_despues_min: Minutos después del inicio para dejar de trackear
+        output_dir: Directorio donde están los CSVs de partidos (Path o str)
+
+    Returns:
+        Lista de partidos que necesitan driver Chrome
+    """
+    ahora = datetime.now()
+    partidos_con_driver = []
+
+    if output_dir is None:
+        output_dir = OUTPUT_DIR
+    else:
+        output_dir = Path(output_dir)
+
+    for partido in partidos:
+        # Si no tiene fecha_hora_inicio, trackear siempre (modo legacy)
+        if partido["fecha_hora_inicio"] is None:
+            partidos_con_driver.append(partido)
+            continue
+
+        # Calcular diferencia en minutos
+        tiempo_hasta_inicio = (partido["fecha_hora_inicio"] - ahora).total_seconds() / 60
+
+        # Verificar si ya tiene capturas recientes (partido en vivo)
+        match_id = extraer_id_partido(partido["url"])
+        csv_path = output_dir / f"partido_{match_id}.csv"
+        tiene_capturas_recientes = False
+
+        if csv_path.exists():
+            try:
+                # Verificar última modificación del CSV
+                tiempo_desde_modificacion = (ahora.timestamp() - csv_path.stat().st_mtime) / 60
+                if tiempo_desde_modificacion < 5:
+                    tiene_capturas_recientes = True
+            except Exception:
+                pass
+
+        # Decisión de incluir:
+        if tiene_capturas_recientes:
+            # Partido con capturas recientes: mantener driver (está en vivo)
+            partidos_con_driver.append(partido)
+        elif tiempo_hasta_inicio > 15:
+            # Partido futuro (faltan >15 min): NO crear driver
+            continue
+        elif tiempo_hasta_inicio >= -ventana_despues_min:
+            # Partido próximo a empezar o recién empezado: crear driver
+            partidos_con_driver.append(partido)
+        # else: partido finalizado (>ventana_despues_min), no incluir
+
+    return partidos_con_driver
+
+
 def limpiar_precio(texto: str) -> str:
     """Limpia texto de precio: elimina espacios, convierte coma a punto."""
     if not texto:
@@ -2220,8 +2285,8 @@ def main():
         help="Minutos antes del inicio del partido para empezar a trackear (default: 10)"
     )
     parser.add_argument(
-        "--ventana-despues", type=int, default=150,
-        help="Minutos después del inicio del partido para dejar de trackear (default: 150)"
+        "--ventana-despues", type=int, default=120,
+        help="Minutos después del inicio del partido para dejar de trackear (default: 120)"
     )
     parser.add_argument(
         "--max-tabs", type=int, default=8,
@@ -2295,26 +2360,27 @@ def main():
 
     # Crear lista de partidos inicial para MatchDrivers
     partidos_csv = leer_games_csv("games.csv")
-    partidos_activos, _, _ = filtrar_partidos_activos(
-        partidos_csv, args.ventana_antes, args.ventana_despues
-    ) if partidos_csv else ([], [], [])
+    # Filtrar partidos que necesitan driver Chrome (en vivo o próximos a empezar)
+    partidos_para_drivers = filtrar_partidos_para_drivers(
+        partidos_csv, args.ventana_antes, args.ventana_despues, args.output
+    ) if partidos_csv else []
 
     # Si no hay scheduling, crear partidos desde urls_iniciales
     if not usar_scheduling and urls_iniciales:
-        partidos_activos = [
+        partidos_para_drivers = [
             {"url": url, "game": extraer_id_partido(url), "fecha_hora_inicio": None}
             for url in urls_iniciales
         ]
 
-    # Crear MatchDrivers para partidos activos (sin límite max_tabs)
-    log.info(f"\n🚀 Iniciando {len(partidos_activos)} drivers Chrome (sistema multi-driver paralelo)...")
+    # Crear MatchDrivers solo para partidos que necesitan driver (en vivo o próximos)
+    log.info(f"\n🚀 Iniciando {len(partidos_para_drivers)} drivers Chrome (partidos en vivo o próximos)...")
     match_drivers = {}
     driver_login = None  # Driver para login manual
 
     try:
         # Crear primer driver para login manual
-        if partidos_activos:
-            primer_partido = partidos_activos[0]
+        if partidos_para_drivers:
+            primer_partido = partidos_para_drivers[0]
             log.info(f"🔧 Creando driver de login: {primer_partido['game'][:50]}")
             driver_login = MatchDriver(
                 url=primer_partido["url"],
@@ -2347,17 +2413,17 @@ def main():
             return
 
         # Crear resto de drivers en paralelo
-        if len(partidos_activos) > 1:
-            log.info(f"🔧 Creando {len(partidos_activos) - 1} drivers adicionales en paralelo...")
+        if len(partidos_para_drivers) > 1:
+            log.info(f"🔧 Creando {len(partidos_para_drivers) - 1} drivers adicionales en paralelo...")
 
             def crear_driver_worker(partido):
                 md = crear_match_driver(partido)
                 return (partido["url"], md) if md else (partido["url"], None)
 
-            executor = ThreadPoolExecutor(max_workers=min(8, len(partidos_activos) - 1))
+            executor = ThreadPoolExecutor(max_workers=min(8, len(partidos_para_drivers) - 1))
             futures = [
                 executor.submit(crear_driver_worker, p)
-                for p in partidos_activos[1:]
+                for p in partidos_para_drivers[1:]
             ]
 
             try:
@@ -2402,28 +2468,29 @@ def main():
 
                 partidos_csv = leer_games_csv("games.csv")
                 if partidos_csv:
-                    partidos_activos_nuevos, _, _ = filtrar_partidos_activos(
-                        partidos_csv, args.ventana_antes, args.ventana_despues
+                    # Filtrar partidos que necesitan driver (en vivo o próximos)
+                    partidos_necesitan_driver = filtrar_partidos_para_drivers(
+                        partidos_csv, args.ventana_antes, args.ventana_despues, args.output
                     )
 
-                    # Identificar drivers a cerrar (partidos finalizados)
-                    urls_activas = {p["url"] for p in partidos_activos_nuevos}
+                    # Identificar drivers a cerrar (partidos que ya no necesitan driver)
+                    urls_necesitan_driver = {p["url"] for p in partidos_necesitan_driver}
                     drivers_a_cerrar = [
                         match_id for match_id, md in match_drivers.items()
-                        if md.url not in urls_activas
+                        if md.url not in urls_necesitan_driver
                     ]
 
                     if drivers_a_cerrar:
-                        log.info(f"🗑️  Cerrando {len(drivers_a_cerrar)} drivers de partidos finalizados...")
+                        log.info(f"🗑️  Cerrando {len(drivers_a_cerrar)} drivers (partidos finalizados o futuros)...")
                         for match_id in drivers_a_cerrar:
                             md = match_drivers.pop(match_id)
                             md.cerrar()
                             log.debug(f"   - Cerrado: {match_id}")
 
-                    # Identificar partidos nuevos a abrir
+                    # Identificar partidos nuevos a abrir (próximos que ahora necesitan driver)
                     urls_existentes = {md.url for md in match_drivers.values()}
                     partidos_nuevos = [
-                        p for p in partidos_activos_nuevos
+                        p for p in partidos_necesitan_driver
                         if p["url"] not in urls_existentes
                     ]
 

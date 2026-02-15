@@ -1,0 +1,31 @@
+00:56:25 [INFO] \U0001f4dd Log guardándose en: logs/scraper_20260215_005625.log
+00:56:25 [INFO] Cargados 22 partidos desde games.csv
+00:56:25 [INFO] \U0001f4c5 MODO SCHEDULING ACTIVADO
+00:56:25 [INFO]    Ventana tracking: 10 min antes \u2192 120 min después
+00:56:25 [INFO]    Total en CSV: 22 partidos
+00:56:25 [INFO]    \u2713 Partidos activos ahora: 22
+00:56:25 [INFO]    \u23f0 Partidos futuros: 0
+00:56:25 [INFO]    \u2705 Partidos finalizados: 0
+00:56:25 [INFO] \U0001f680 Sistema multi-driver: Creando 22 drivers independientes (sin límite de tabs)
+00:56:25 [INFO] 
+Iniciando observador con 22 partidos.
+00:56:25 [INFO] Ciclo: 30s | Output: data/
+00:56:25 [INFO] \U0001f504 Recarga dinámica: Revisando games.csv cada 5 ciclos (scheduling)
+00:56:25 [INFO] \U0001f9f9 Limpiando ventanas Betfair antiguas...
+00:56:25 [WARNING] Script de limpieza no encontrado: C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\close_betfair_windows.ps1
+00:56:25 [INFO] Cargados 22 partidos desde games.csv
+Traceback (most recent call last):
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 2555, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 2362, in main
+    partidos_para_drivers = filtrar_partidos_para_drivers(
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        partidos_csv, args.ventana_antes, args.ventana_despues, args.output
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) if partidos_csv else []
+    ^
+  File "C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\main.py", line 404, in filtrar_partidos_para_drivers
+    csv_path = output_dir / f"partido_{match_id}.csv"
+               ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for /: 'str' and 'str'

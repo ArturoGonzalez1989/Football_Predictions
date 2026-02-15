@@ -19,6 +19,12 @@ export interface Match {
   csv_exists: boolean
 }
 
+export interface MatchesGrouped {
+  live: Match[]
+  upcoming: Match[]
+  finished: Match[]
+}
+
 export interface Capture {
   timestamp: string
   minuto: string
@@ -236,7 +242,7 @@ export interface StatCorrelations {
 }
 
 export const api = {
-  getMatches: () => get<Match[]>("/matches"),
+  getMatches: () => get<MatchesGrouped>("/matches"),
   getMatchDetail: (id: string) => get<MatchDetail>(`/matches/${id}`),
   getMatchMomentum: (id: string) => get<MomentumData>(`/matches/${id}/momentum`),
   getMatchFull: (id: string) => get<MatchFull>(`/matches/${id}/full`),

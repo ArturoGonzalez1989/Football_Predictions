@@ -5,19 +5,17 @@ import { SystemStatus } from "./SystemStatus"
 
 interface LiveViewProps {
   liveMatches: Match[]
-  upcomingMatches: Match[]
-  allMatches: Match[]
   system: SystemStatusType | null
   onRefresh: () => void
 }
 
-export function LiveView({ liveMatches, upcomingMatches, allMatches, system, onRefresh }: LiveViewProps) {
+export function LiveView({ liveMatches, system, onRefresh }: LiveViewProps) {
   const [refreshing, setRefreshing] = useState(false)
   const [refreshResult, setRefreshResult] = useState<string | null>(null)
 
-  const totalCaptures = allMatches.reduce((sum, m) => sum + m.capture_count, 0)
-  const stalledCount = allMatches.filter(
-    (m) => m.status === "live" && m.last_capture_ago_seconds != null && m.last_capture_ago_seconds > 600
+  const totalCaptures = liveMatches.reduce((sum, m) => sum + m.capture_count, 0)
+  const stalledCount = liveMatches.filter(
+    (m) => m.last_capture_ago_seconds != null && m.last_capture_ago_seconds > 600
   ).length
 
   async function handleRefreshMatches() {
@@ -75,45 +73,24 @@ export function LiveView({ liveMatches, upcomingMatches, allMatches, system, onR
       )}
 
       {/* Top stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
         <MetricCard label="Live" value={liveMatches.length} color={liveMatches.length > 0 ? "green" : "zinc"} />
         <MetricCard label="Captures" value={totalCaptures} color="blue" />
-        <MetricCard label="Upcoming" value={upcomingMatches.length} color="blue" />
         <MetricCard label="Stalled" value={stalledCount} color={stalledCount > 0 ? "red" : "green"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
-          {liveMatches.length > 0 && (
-            <section>
-              <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 px-1">
-                Live Matches
-              </h2>
-              <div className="space-y-3">
-                {liveMatches.map((m) => (
-                  <MatchCard key={m.match_id} match={m} onDelete={onRefresh} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {upcomingMatches.length > 0 && (
-            <section className={liveMatches.length > 0 ? "mt-6" : ""}>
-              <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 px-1">
-                Upcoming
-              </h2>
-              <div className="space-y-3">
-                {upcomingMatches.map((m) => (
-                  <MatchCard key={m.match_id} match={m} onDelete={onRefresh} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {liveMatches.length === 0 && upcomingMatches.length === 0 && (
+          {liveMatches.length > 0 ? (
+            <div className="space-y-3">
+              {liveMatches.map((m) => (
+                <MatchCard key={m.match_id} match={m} onDelete={onRefresh} />
+              ))}
+            </div>
+          ) : (
             <div className="text-center py-16 text-zinc-500">
-              <p className="text-lg mb-1">No live or upcoming matches</p>
-              <p className="text-sm">Add matches to games.csv to start tracking</p>
+              <p className="text-lg mb-1">No hay partidos en vivo</p>
+              <p className="text-sm">Los partidos aparecerán cuando estén en juego</p>
             </div>
           )}
         </div>

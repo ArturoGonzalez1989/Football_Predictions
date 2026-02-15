@@ -41,12 +41,14 @@ def _resolve_csv_path(match_id: str) -> Path:
         return path2
     # Fuzzy match: scraper sometimes truncates the numeric ID at the end
     # e.g. match_id="team-apuestas-35241340" but file is "partido_team-apuestas-352413.csv"
-    prefix = re.sub(r"\d+$", "", match_id)  # "team-apuestas-"
+    #      or match_id="team-apuestas-35241340" but file is "partido_team-apuestas.csv"
+    prefix = re.sub(r"-?\d+$", "", match_id)  # "team-apuestas" (remove trailing dash and digits)
     if DATA_DIR.exists() and prefix:
+        # Try with trailing wildcard (matches "apuestas.csv" and "apuestas-123.csv")
         for csv_file in DATA_DIR.glob(f"partido_{prefix}*.csv"):
             return csv_file
         # Also try with encoded prefix
-        encoded_prefix = re.sub(r"\d+$", "", encoded)
+        encoded_prefix = re.sub(r"-?\d+$", "", encoded)
         if encoded_prefix != prefix:
             for csv_file in DATA_DIR.glob(f"partido_{encoded_prefix}*.csv"):
                 return csv_file
@@ -95,14 +97,16 @@ def load_games() -> list[dict]:
             now_utc = datetime.utcnow()
             status = "upcoming"
             match_minute = None
+
+            # Si han pasado >120 min desde start_time, IGNORAR este partido
             if start_time:
+                elapsed = (now - start_time).total_seconds() / 60
+                if elapsed > 120:
+                    continue  # No incluir partidos con >120 min transcurridos
+
                 if now >= start_time:
-                    elapsed = (now - start_time).total_seconds() / 60
-                    if elapsed <= 130:
-                        status = "live"
-                        match_minute = int(min(elapsed, 90))
-                    else:
-                        status = "finished"
+                    status = "live"
+                    match_minute = int(min(elapsed, 90))
                 else:
                     status = "upcoming"
 
@@ -125,7 +129,7 @@ def load_games() -> list[dict]:
                         except Exception:
                             pass
 
-                    # IMPORTANTE: Sobrescribir status si el CSV indica que el partido terminó
+                    # IMPORTANTE: Sobrescribir status basándose en el estado real del partido
                     estado_partido = last_row.get("estado_partido", "").strip()
                     if estado_partido == "finalizado":
                         status = "finished"
@@ -141,7 +145,12 @@ def load_games() -> list[dict]:
                             match_minute = int(minuto_csv)
                         else:
                             match_minute = 45
+                    elif estado_partido == "pre_partido":
+                        # Partido aún no ha empezado, marcarlo como upcoming
+                        status = "upcoming"
+                        match_minute = None
                     # Si estado_partido está vacío, mantener status basado en tiempo transcurrido
+            # Si no hay CSV, mantener el status basado en start_time (live si ya empezó, upcoming si no)
 
             games.append({
                 "name": name,
