@@ -99,3 +99,22 @@ async def get_strategy_odds_drift() -> Dict[str, Any]:
 async def get_strategy_cartera() -> Dict[str, Any]:
     """Combined portfolio view of all strategies."""
     return csv_reader.analyze_cartera()
+
+@router.get("/strategies/goal-clustering")
+async def get_strategy_goal_clustering() -> Dict[str, Any]:
+    """Goal Clustering V2: Back Over after goal + SoT >= 3."""
+    return csv_reader.analyze_strategy_goal_clustering()
+
+@router.get("/strategies/pressure-cooker")
+async def get_strategy_pressure_cooker() -> Dict[str, Any]:
+    """Pressure Cooker V1: Back Over on drawn matches (1-1+) at min 65-75."""
+    return csv_reader.analyze_strategy_pressure_cooker()
+
+
+# ==================== BETTING SIGNALS ENDPOINT ====================
+
+@router.get("/signals/betting-opportunities")
+async def get_betting_signals() -> Dict[str, Any]:
+    """Detect live betting opportunities based on portfolio strategies."""
+    return csv_reader.detect_betting_signals()
+

@@ -117,8 +117,12 @@ export interface SystemStatus {
   is_refreshing?: boolean
 }
 
-async function post<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { method: "POST" })
+async function post<T>(path: string, body?: any): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  })
   if (!res.ok) throw new Error(`API error: ${res.status}`)
   return res.json()
 }
@@ -343,6 +347,61 @@ export interface StrategyOddsDrift {
   bets: StrategyOddsDriftBet[]
 }
 
+export interface StrategyGoalClusteringBet {
+  match: string
+  match_id: string
+  minuto: number
+  score: string
+  sot_max: number
+  over_odds: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  timestamp_utc: string
+}
+
+export interface StrategyGoalClustering {
+  total_matches: number
+  total_goal_events: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyGoalClusteringBet[]
+}
+
+export interface StrategyPressureCookerBet {
+  match: string
+  match_id: string
+  minuto: number
+  score: string
+  back_over_odds: number | null
+  over_line: string
+  ft_score: string
+  won: boolean
+  pl: number
+  sot_delta: number
+  corners_delta: number
+  shots_delta: number
+  timestamp_utc: string
+}
+
+export interface StrategyPressureCooker {
+  total_matches: number
+  draws_65_75: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyPressureCookerBet[]
+}
+
 export interface CarteraBet {
   match: string
   match_id: string
@@ -388,6 +447,91 @@ export interface Cartera {
   bets: CarteraBet[]
 }
 
+export interface BettingSignal {
+  match_id: string
+  match_name: string
+  match_url: string
+  strategy: string
+  strategy_name: string
+  minute: number
+  score: string
+  recommendation: string
+  back_odds: number | null
+  confidence: "high" | "medium" | "low"
+  entry_conditions: Record<string, any>
+  thresholds: Record<string, string>
+  // Enhanced fields (when available)
+  min_odds?: number
+  expected_value?: number
+  odds_favorable?: boolean
+  win_rate_historical?: number
+  roi_historical?: number
+  sample_size?: number
+  description?: string
+}
+
+export interface BettingSignals {
+  total_signals: number
+  live_matches: number
+  signals: BettingSignal[]
+}
+
+export interface PlaceBetRequest {
+  match_id: string
+  match_name: string
+  match_url: string
+  strategy: string
+  strategy_name: string
+  minute: number
+  score: string
+  recommendation: string
+  back_odds: number | null
+  min_odds?: number
+  expected_value?: number
+  confidence: string
+  win_rate_historical?: number
+  roi_historical?: number
+  sample_size?: number
+  // User input fields
+  bet_type: "paper" | "real"
+  stake: number
+  notes?: string
+}
+
+export interface PlacedBet {
+  id: number
+  timestamp_utc: string
+  match_id: string
+  match_name: string
+  match_url: string
+  strategy: string
+  strategy_name: string
+  minute: number
+  score: string
+  recommendation: string
+  back_odds: number | null
+  min_odds?: number
+  expected_value?: number
+  confidence: string
+  win_rate_historical?: number
+  roi_historical?: number
+  sample_size?: number
+  bet_type: "paper" | "real"
+  stake: number
+  notes?: string
+  status: "pending" | "won" | "lost"
+  result?: string
+  pl?: number
+}
+
+export interface PlacedBetsResponse {
+  total: number
+  pending: number
+  won: number
+  lost: number
+  bets: PlacedBet[]
+}
+
 export const api = {
   getMatches: () => get<MatchesGrouped>("/matches"),
   getMatchDetail: (id: string) => get<MatchDetail>(`/matches/${id}`),
@@ -420,5 +564,14 @@ export const api = {
   getStrategyBackDraw00: () => get<StrategyBackDraw00>("/analytics/strategies/back-draw-00"),
   getStrategyXGUnderperformance: () => get<StrategyXGUnderperformance>("/analytics/strategies/xg-underperformance"),
   getStrategyOddsDrift: () => get<StrategyOddsDrift>("/analytics/strategies/odds-drift"),
+  getStrategyGoalClustering: () => get<StrategyGoalClustering>("/analytics/strategies/goal-clustering"),
+  getStrategyPressureCooker: () => get<StrategyPressureCooker>("/analytics/strategies/pressure-cooker"),
   getCartera: () => get<Cartera>("/analytics/strategies/cartera"),
+
+  // Betting signals
+  getBettingSignals: () => get<BettingSignals>("/analytics/signals/betting-opportunities"),
+
+  // Placed bets tracking
+  placeBet: (bet: PlaceBetRequest) => post<PlacedBet>("/bets/place", bet),
+  getPlacedBets: () => get<PlacedBetsResponse>("/bets/placed"),
 }

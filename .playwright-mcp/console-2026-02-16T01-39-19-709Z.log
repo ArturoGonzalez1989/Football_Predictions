@@ -1,0 +1,6 @@
+[  508134ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/BettingSignalsView.tsx?t=1771206467830:0
+[  508134ms] [ERROR] [vite] Failed to reload /src/components/BettingSignalsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  521023ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/BettingSignalsView.tsx?t=1771206480721:0
+[  521023ms] [ERROR] [vite] Failed to reload /src/components/BettingSignalsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  536447ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/BettingSignalsView.tsx?t=1771206496145:0
+[  536448ms] [ERROR] [vite] Failed to reload /src/components/BettingSignalsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808

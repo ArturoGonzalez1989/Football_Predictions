@@ -1,0 +1,18 @@
+[  310718ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202361281:0
+[  310719ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  313226ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202363799:0
+[  313226ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  327220ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202377794:0
+[  327222ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  337850ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202388418:0
+[  337854ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  350817ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202401388:0
+[  350818ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  359383ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202409956:0
+[  359385ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  383244ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202433819:0
+[  383245ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  393153ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202443724:0
+[  393154ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808
+[  424418ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/InsightsView.tsx?t=1771202474992:0
+[  424418ms] [ERROR] [vite] Failed to reload /src/components/InsightsView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808

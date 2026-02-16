@@ -374,7 +374,30 @@ Estos patrones tienen valor estadístico pero no se convirtieron en estrategias 
 
 ---
 
+### ✅ Goal Clustering - CONVERTIDA EN ESTRATEGIA (ROI: +72.7%)
+
+**Concepto**: Después de un gol, apostar a Over (total_actual + 0.5) aprovechando el efecto clustering
+
+**Exploración adicional (186 partidos)**:
+Tras descartar Momentum y Goles Tardíos, se validó Goal Clustering como estrategia rentable.
+
+**Resultados Goal Clustering V2** (Tras gol + SoT max >= 3):
+- 44 apuestas detectadas
+- Win Rate: **75.0%**
+- ROI: **+72.7%**
+- P/L: **+320.04 EUR** (stake 10 EUR)
+- Cuotas medias: 2.96
+- Tiempo promedio hasta siguiente gol: 14.6 minutos
+
+**Conclusión**: El efecto clustering de goles es REAL y las cuotas Over no lo reflejan completamente. Estrategia con lógica sólida (psicología + táctica del fútbol), muestra robusta y ROI excelente.
+
+**Versión final implementada**: **Goal Clustering V2** (incluida en cartera ampliada)
+
+---
+
 ### Resumen: Por Qué Se Descartaron
+
+**Exploración inicial (153 partidos):**
 
 | Estrategia | Razón de Descarte |
 |------------|-------------------|
@@ -384,20 +407,61 @@ Estos patrones tienen valor estadístico pero no se convirtieron en estrategias 
 | Tarjetas Amarillas | Correlación negativa con goles (opuesto a hipótesis) |
 | Drift Back Perdedor | Hipótesis incorrecta, ROI negativo (-18.9%) |
 
-**Lección clave**: De 8 hipótesis iniciales, solo 3 resultaron rentables tras filtrado riguroso. El 62.5% de ideas iniciales se descartaron por datos.
+**Exploración adicional (186 partidos):**
+
+| Estrategia | Razón de Descarte |
+|------------|-------------------|
+| Momentum + xG | Muestra insuficiente (3 apuestas), no viable |
+| Goles Tardíos (75+) | ROI negativo (-23.5%), cuotas Over muy ajustadas |
+
+**Lección clave**: De 11 hipótesis totales exploradas, solo 4 resultaron rentables tras filtrado riguroso. El 63.6% de ideas se descartaron por datos.
 
 ---
 
-## 8. Conclusión
+## 8. Pressure Cooker - Back Over en empates con goles (min 65-75) [NUEVA]
 
-La cartera óptima identificada combina:
+### Estado: EN PRUEBA (validacion en curso, muestra insuficiente)
+
+**Concepto**: Cuando un partido esta empatado **con goles** (1-1, 2-2, etc.) entre el minuto 65 y 75, apostar Back Over en la linea actual (total_goles + 0.5).
+
+**Hallazgo clave del backtest**: Los filtros de momentum (SoT, corners, dangerous attacks propuestos por Gemini) no aportan edge. Lo que funciona es simplemente excluir los 0-0.
+
+| Metrica | Valor |
+|---|---|
+| Triggers | 16 (empates 1-1+ con cuotas) |
+| Win Rate | 81.2% |
+| ROI | +81.9% |
+| P/L (10 EUR) | +131.01 EUR |
+| Avg odds | 2.41 |
+
+**Por marcador**:
+- 0-0: WR 50%, ROI -32.5% (descartado)
+- 1-1: WR 90%, ROI +74.0%
+- 2-2+: WR 67%, ROI +95.1%
+
+**Reglas**: Min 65-75 + Empate 1-1+ + Back Over (score+0.5)
+
+**Limitacion**: Solo 16 triggers en 3 dias. Necesita 50+ para validar. Documentacion completa en `estrategias/pressure_cooker.md`.
+
+---
+
+## 9. Conclusión
+
+La cartera óptima identificada combina **5 estrategias** (4 validadas + 1 en prueba):
 - **Back Empate V2r**: Sólida (50% ROI) en partidos de bajo xG
 - **xG Underperf V2**: Excelente (24.7% ROI) cuando equipo pierde pero ataca
 - **Odds Drift V1**: Excepcional (142% ROI) cuando mercado abandona al ganador
+- **Goal Clustering V2**: Excelente (72.7% ROI) tras goles con intensidad (SoT >= 3)
+- **Pressure Cooker V1** [EN PRUEBA]: Prometedora (81.9% ROI) en empates con goles al 65-75
 
-**Para validación inicial** → Stake fijo 10 EUR, esperado **+446 EUR** en 45 apuestas
+**Para validación inicial** → Stake fijo 10 EUR
+- Cartera original (3 estrategias): **+446 EUR** en 45 apuestas
+- **Cartera ampliada (4 estrategias): +766 EUR** en 89 apuestas
+- **Cartera completa (5 estrategias): Pendiente de acumulacion de datos**
 
-**Para largo plazo** → Half-Kelly, esperado **+1638 EUR** en 45 apuestas (3.9x más)
+**Para largo plazo** → Half-Kelly
+- Cartera original: **+1638 EUR** en 45 apuestas
+- **Cartera ampliada: Pendiente de simulación** (se estima >+2200 EUR)
 
 El éxito depende de:
 1. ✅ Disciplina estricta en criterios de entrada

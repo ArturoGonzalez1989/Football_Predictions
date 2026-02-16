@@ -1,0 +1,138 @@
+{
+  "total_matches": 186,
+  "with_data": 34,
+  "combinations": {
+    "Mom>=20_xG>=0.15": {
+      "mom_threshold": 20,
+      "xg_threshold": 0.15,
+      "total_bets": 5,
+      "home_wins": 3,
+      "draws": 2,
+      "win_rate": 60.0,
+      "total_pl": -3.47,
+      "roi": -6.9,
+      "avg_odds": 1.65
+    },
+    "Mom>=20_xG>=0.2": {
+      "mom_threshold": 20,
+      "xg_threshold": 0.2,
+      "total_bets": 4,
+      "home_wins": 2,
+      "draws": 2,
+      "win_rate": 50.0,
+      "total_pl": -3.75,
+      "roi": -9.4,
+      "avg_odds": 1.8
+    },
+    "Mom>=20_xG>=0.25": {
+      "mom_threshold": 20,
+      "xg_threshold": 0.25,
+      "total_bets": 4,
+      "home_wins": 2,
+      "draws": 2,
+      "win_rate": 50.0,
+      "total_pl": -3.75,
+      "roi": -9.4,
+      "avg_odds": 1.8
+    },
+    "Mom>=20_xG>=0.3": {
+      "mom_threshold": 20,
+      "xg_threshold": 0.3,
+      "total_bets": 3,
+      "home_wins": 2,
+      "draws": 1,
+      "win_rate": 66.7,
+      "total_pl": 6.25,
+      "roi": 20.8,
+      "avg_odds": 1.61
+    },
+    "Mom>=25_xG>=0.15": {
+      "mom_threshold": 25,
+      "xg_threshold": 0.15,
+      "total_bets": 4,
+      "home_wins": 2,
+      "draws": 2,
+      "win_rate": 50.0,
+      "total_pl": -18.86,
+      "roi": -47.1,
+      "avg_odds": 1.4
+    },
+    "Mom>=25_xG>=0.2": {
+      "mom_threshold": 25,
+      "xg_threshold": 0.2,
+      "total_bets": 3,
+      "home_wins": 1,
+      "draws": 2,
+      "win_rate": 33.3,
+      "total_pl": -19.14,
+      "roi": -63.8,
+      "avg_odds": 1.53
+    },
+    "Mom>=25_xG>=0.25": {
+      "mom_threshold": 25,
+      "xg_threshold": 0.25,
+      "total_bets": 3,
+      "home_wins": 1,
+      "draws": 2,
+      "win_rate": 33.3,
+      "total_pl": -19.14,
+      "roi": -63.8,
+      "avg_odds": 1.53
+    },
+    "Mom>=25_xG>=0.3": {
+      "mom_threshold": 25,
+      "xg_threshold": 0.3,
+      "total_bets": 2,
+      "home_wins": 1,
+      "draws": 1,
+      "win_rate": 50.0,
+      "total_pl": -9.14,
+      "roi": -45.7,
+      "avg_odds": 1.11
+    },
+    "Mom>=30_xG>=0.15": {
+      "mom_threshold": 30,
+      "xg_threshold": 0.15,
+      "total_bets": 4,
+      "home_wins": 2,
+      "draws": 2,
+      "win_rate": 50.0,
+      "total_pl": -18.86,
+      "roi": -47.1,
+      "avg_odds": 1.4
+    },
+    "Mom>=30_xG>=0.2": {
+      "mom_threshold": 30,
+      "xg_threshold": 0.2,
+      "total_bets": 3,
+      "home_wins": 1,
+      "draws": 2,
+      "win_rate": 33.3,
+      "total_pl": -19.14,
+      "roi": -63.8,
+      "avg_odds": 1.53
+    },
+    "Mom>=30_xG>=0.25": {
+      "mom_threshold": 30,
+      "xg_threshold": 0.25,
+      "total_bets": 3,
+      "home_wins": 1,
+      "draws": 2,
+      "win_rate": 33.3,
+      "total_pl": -19.14,
+      "roi": -63.8,
+      "avg_odds": 1.53
+    },
+    "Mom>=30_xG>=0.3": {
+      "mom_threshold": 30,
+      "xg_threshold": 0.3,
+      "total_bets": 2,
+      "home_wins": 1,
+      "draws": 1,
+      "win_rate": 50.0,
+      "total_pl": -9.14,
+      "roi": -45.7,
+      "avg_odds": 1.11
+    }
+  }
+}

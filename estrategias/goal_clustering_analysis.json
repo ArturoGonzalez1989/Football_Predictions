@@ -1,0 +1,42 @@
+{
+  "total_matches": 186,
+  "total_goal_events": 64,
+  "analysis": {
+    "v1": {
+      "total": 55,
+      "wins": 41,
+      "wr": 74.5,
+      "pl": 384.5,
+      "roi": 69.9,
+      "avg_odds": 2.83,
+      "avg_time_to_next": 14.4
+    },
+    "v2": {
+      "total": 44,
+      "wins": 33,
+      "wr": 75.0,
+      "pl": 320.04,
+      "roi": 72.7,
+      "avg_odds": 2.96,
+      "avg_time_to_next": 14.6
+    },
+    "v3": {
+      "total": 33,
+      "wins": 25,
+      "wr": 75.8,
+      "pl": 286.2,
+      "roi": 86.7,
+      "avg_odds": 3.26,
+      "avg_time_to_next": 13.8
+    },
+    "v4": {
+      "total": 26,
+      "wins": 20,
+      "wr": 76.9,
+      "pl": 224.19,
+      "roi": 86.2,
+      "avg_odds": 3.11,
+      "avg_time_to_next": 14.2
+    }
+  }
+}

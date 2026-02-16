@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from "react"
 import { api, type MatchesGrouped, type SystemStatus as SystemStatusType } from "../lib/api"
+import { BettingSignalsView } from "./BettingSignalsView"
 import { LiveView } from "./LiveView"
 import { UpcomingView } from "./UpcomingView"
 import { FinishedView } from "./FinishedView"
 import { DataQualityView } from "./DataQualityView"
 import { InsightsView } from "./InsightsView"
 
-type View = "live" | "upcoming" | "finished" | "quality" | "insights"
+type View = "signals" | "live" | "upcoming" | "finished" | "quality" | "insights"
 
 export function Dashboard() {
-  const [view, setView] = useState<View>("live")
+  const [view, setView] = useState<View>("signals")
   const [matches, setMatches] = useState<MatchesGrouped>({ live: [], upcoming: [], finished: [] })
   const [system, setSystem] = useState<SystemStatusType | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
@@ -49,6 +50,17 @@ export function Dashboard() {
         </div>
 
         <nav className="flex-1 p-2 space-y-1">
+          <NavItem
+            active={view === "signals"}
+            onClick={() => setView("signals")}
+            icon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            }
+            label="Señales"
+            badgeColor="amber"
+          />
           <NavItem
             active={view === "live"}
             onClick={() => setView("live")}
@@ -132,6 +144,8 @@ export function Dashboard() {
           </div>
         )}
 
+        {view === "signals" && <BettingSignalsView />}
+
         {view === "live" && (
           <LiveView
             liveMatches={matches.live}
@@ -176,6 +190,7 @@ function NavItem({
     green: "bg-green-500/20 text-green-400",
     blue: "bg-blue-500/20 text-blue-400",
     red: "bg-red-500/20 text-red-400",
+    amber: "bg-amber-500/20 text-amber-400",
     zinc: "bg-zinc-700 text-zinc-400",
   }
 

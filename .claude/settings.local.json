@@ -84,7 +84,8 @@
       "Bash(\"C:/Program Files \\(x86\\)/Google/Chrome/Application/chrome.exe\" --version)",
       "Bash(/c/Users/agonz/miniconda3/python.exe:*)",
       "Bash(for f in partido_*.csv)",
-      "Bash(do grep \"finalizado\" \"$f\")"
+      "Bash(do grep \"finalizado\" \"$f\")",
+      "Bash(pkill:*)"
     ]
   }
 }

@@ -1,0 +1,2769 @@
+08:58:03 [INFO] 📝 Log guardándose en: logs/scraper_20260216_085803.log
+08:58:03 [INFO] Cargados 0 partidos desde games.csv
+08:58:03 [INFO] Usando URLs desde config.MATCH_URLS (sin scheduling)
+08:58:03 [INFO] 
+Iniciando observador con 1 partidos.
+08:58:03 [INFO] Ciclo: 30s | Output: data/
+08:58:03 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 5 ciclos (detección de cambios)
+08:58:03 [INFO] 🧹 Limpiando ventanas Betfair antiguas...
+08:58:03 [WARNING] Script de limpieza no encontrado: C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\close_betfair_windows.ps1
+08:58:03 [INFO] Cargados 0 partidos desde games.csv
+08:58:03 [INFO] 
+🚀 Iniciando 1 drivers Chrome (partidos en vivo o próximos)...
+08:58:03 [INFO] 🔧 Creando driver de login: utrecht-feyenoord-apuestas-35189654
+08:58:03 [INFO] 🔧 Creando driver para: utrecht-feyenoord-apuestas-35189654
+08:58:08 [INFO] ✓ Cookies aceptadas automáticamente
+08:58:09 [INFO] ✓ Driver listo: utrecht-feyenoord-apuestas-35189654
+08:58:09 [INFO] ============================================================
+08:58:09 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+08:58:09 [INFO] Tienes 0 segundos...
+08:58:09 [INFO] El scraper comenzará automáticamente después.
+08:58:09 [INFO] ============================================================
+08:58:09 [INFO] ✓ 1 drivers creados exitosamente
+08:58:09 [INFO] ============================================================
+08:58:09 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+08:58:09 [INFO] ============================================================
+08:58:09 [INFO] 
+--- Ciclo #1 ---
+08:58:09 [INFO] 📸 Capturando 1 partidos en paralelo...
+08:58:17 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+08:58:35 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+08:58:36 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+08:59:04 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+08:59:24 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+08:59:25 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+08:59:26 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+08:59:26 [DEBUG]   → Extrayendo eventId del HTML...
+08:59:26 [DEBUG] Betfair event ID extraído de la URL: 35189654
+08:59:26 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+08:59:26 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+08:59:26 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+08:59:26 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+08:59:44 [WARNING]   × Timeout esperando estadísticas básicas
+08:59:44 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+08:59:45 [DEBUG]     × 'Shots on target' no encontrado en DOM
+08:59:46 [DEBUG]     × 'Shots off target' no encontrado en DOM
+08:59:47 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+08:59:48 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+08:59:52 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+08:59:53 [DEBUG]     × 'Free kicks' no encontrado en DOM
+08:59:54 [DEBUG]     × 'Offsides' no encontrado en DOM
+08:59:55 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+08:59:56 [DEBUG]     × 'Saves' no encontrado en DOM
+08:59:57 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+08:59:58 [DEBUG]     × 'Substitutions' no encontrado en DOM
+08:59:59 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:00:00 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:00:00 [WARNING]   × Fallback iframe no encontró estadísticas
+09:00:00 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:00:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:00:13 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:00:20 [DEBUG]   × No se encontró URL del iframe de stats
+09:00:20 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:00:20 [INFO] ✓ Captura paralela completada en 131.0s (1/1 exitosos)
+09:00:20 [WARNING] Ciclo tardó 131.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:00:20 [INFO] 
+--- Ciclo #2 ---
+09:00:20 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:00:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:00:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:00:46 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:01:15 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:01:35 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:01:36 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:01:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:01:37 [DEBUG]   → Extrayendo eventId del HTML...
+09:01:37 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:01:37 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:01:37 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:01:37 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:01:37 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:01:53 [WARNING]   × Timeout esperando estadísticas básicas
+09:01:53 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:01:54 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:01:55 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:01:56 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:01:57 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:02:01 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:02:02 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:02:03 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:02:04 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:02:05 [DEBUG]     × 'Saves' no encontrado en DOM
+09:02:06 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:02:07 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:02:08 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:02:09 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:02:09 [WARNING]   × Fallback iframe no encontró estadísticas
+09:02:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:02:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:02:22 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:02:29 [DEBUG]   × No se encontró URL del iframe de stats
+09:02:29 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:02:29 [INFO] ✓ Captura paralela completada en 128.9s (1/1 exitosos)
+09:02:29 [WARNING] Ciclo tardó 128.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:02:29 [INFO] 
+--- Ciclo #3 ---
+09:02:29 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:02:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:02:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:02:56 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:03:24 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:03:44 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:03:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:03:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:03:46 [DEBUG]   → Extrayendo eventId del HTML...
+09:03:46 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:03:46 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:03:46 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:03:46 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:03:46 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:04:02 [WARNING]   × Timeout esperando estadísticas básicas
+09:04:02 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:04:03 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:04:04 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:04:05 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:04:06 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:04:09 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:04:10 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:04:11 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:04:13 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:04:14 [DEBUG]     × 'Saves' no encontrado en DOM
+09:04:15 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:04:16 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:04:17 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:04:18 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:04:18 [WARNING]   × Fallback iframe no encontró estadísticas
+09:04:18 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:04:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:04:31 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:04:37 [DEBUG]   × No se encontró URL del iframe de stats
+09:04:37 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:04:37 [INFO] ✓ Captura paralela completada en 128.5s (1/1 exitosos)
+09:04:37 [WARNING] Ciclo tardó 128.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:04:37 [INFO] 
+--- Ciclo #4 ---
+09:04:37 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:04:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:05:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:05:04 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:05:32 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:05:52 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:05:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:05:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:05:54 [DEBUG]   → Extrayendo eventId del HTML...
+09:05:54 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:05:54 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:05:55 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:05:55 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:05:55 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:06:10 [WARNING]   × Timeout esperando estadísticas básicas
+09:06:10 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:06:11 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:06:12 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:06:13 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:06:15 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:06:18 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:06:19 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:06:20 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:06:21 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:06:22 [DEBUG]     × 'Saves' no encontrado en DOM
+09:06:23 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:06:24 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:06:25 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:06:26 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:06:26 [WARNING]   × Fallback iframe no encontró estadísticas
+09:06:26 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:06:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:06:39 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:06:46 [DEBUG]   × No se encontró URL del iframe de stats
+09:06:46 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:06:46 [INFO] ✓ Captura paralela completada en 128.6s (1/1 exitosos)
+09:06:46 [WARNING] Ciclo tardó 128.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:06:46 [INFO] 
+--- Ciclo #5 ---
+09:06:46 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:06:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:07:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:07:13 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:07:41 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:08:01 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:08:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:08:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:08:03 [DEBUG]   → Extrayendo eventId del HTML...
+09:08:03 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:08:03 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:08:03 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:08:03 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:08:03 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:08:21 [WARNING]   × Timeout esperando estadísticas básicas
+09:08:21 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:08:22 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:08:23 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:08:24 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:08:25 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:08:28 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:08:29 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:08:30 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:08:31 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:08:32 [DEBUG]     × 'Saves' no encontrado en DOM
+09:08:33 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:08:34 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:08:35 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:08:36 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:08:36 [WARNING]   × Fallback iframe no encontró estadísticas
+09:08:36 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:08:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:08:49 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:08:56 [DEBUG]   × No se encontró URL del iframe de stats
+09:08:56 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:08:56 [INFO] ✓ Captura paralela completada en 130.1s (1/1 exitosos)
+09:08:56 [INFO] 🔄 Revisando games.csv para detectar cambios...
+09:08:56 [INFO] Cargados 0 partidos desde games.csv
+09:08:56 [WARNING] Ciclo tardó 130.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:08:56 [INFO] 
+--- Ciclo #6 ---
+09:08:56 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:09:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:09:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:09:23 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:09:51 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:10:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:10:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:10:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:10:13 [DEBUG]   → Extrayendo eventId del HTML...
+09:10:13 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:10:13 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:10:13 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:10:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:10:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:10:30 [WARNING]   × Timeout esperando estadísticas básicas
+09:10:30 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:10:31 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:10:32 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:10:34 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:10:35 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:10:38 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:10:39 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:10:40 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:10:41 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:10:42 [DEBUG]     × 'Saves' no encontrado en DOM
+09:10:43 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:10:44 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:10:45 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:10:46 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:10:46 [WARNING]   × Fallback iframe no encontró estadísticas
+09:10:47 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:11:00 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:11:00 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:11:06 [DEBUG]   × No se encontró URL del iframe de stats
+09:11:06 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:11:06 [INFO] ✓ Captura paralela completada en 130.6s (1/1 exitosos)
+09:11:06 [WARNING] Ciclo tardó 130.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:11:06 [INFO] 
+--- Ciclo #7 ---
+09:11:06 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:11:14 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:11:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:11:33 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:12:01 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:12:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:12:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:12:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:12:23 [DEBUG]   → Extrayendo eventId del HTML...
+09:12:23 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:12:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:12:24 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:12:24 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:12:24 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:12:40 [WARNING]   × Timeout esperando estadísticas básicas
+09:12:40 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:12:41 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:12:42 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:12:43 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:12:44 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:12:47 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:12:48 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:12:50 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:12:51 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:12:52 [DEBUG]     × 'Saves' no encontrado en DOM
+09:12:53 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:12:54 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:12:55 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:12:56 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:12:56 [WARNING]   × Fallback iframe no encontró estadísticas
+09:12:56 [ERROR]   × Error volviendo a URL original: Message: unknown error: net::ERR_CONNECTION_CLOSED
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7c5093
+	0x7c50d4
+	0x5bb490
+	0x5b899e
+	0x5abac4
+	0x5ad51c
+	0x5abf67
+	0x5ab895
+	0x5ab595
+	0x5a96a8
+	0x5a9dba
+	0x5bef1e
+	0x645e84
+	0x6281bc
+	0x645341
+	0x627f56
+	0x5f96c9
+	0x5fa484
+	0xa17e34
+	0xa130c9
+	0xa30add
+	0x7ddb38
+	0x7e58ad
+	0x7cd848
+	0x7cda12
+	0x7b75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+09:12:56 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:13:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:13:09 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:13:15 [DEBUG]   × No se encontró URL del iframe de stats
+09:13:15 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:13:15 [INFO] ✓ Captura paralela completada en 128.6s (1/1 exitosos)
+09:13:15 [WARNING] Ciclo tardó 128.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:13:15 [INFO] 
+--- Ciclo #8 ---
+09:13:15 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:13:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:13:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:13:42 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:14:10 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:14:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:14:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:14:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:14:32 [DEBUG]   → Extrayendo eventId del HTML...
+09:14:32 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:14:32 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:14:32 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:14:32 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:14:32 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:14:48 [WARNING]   × Timeout esperando estadísticas básicas
+09:14:48 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:14:49 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:14:50 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:14:51 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:14:52 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:14:55 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:14:56 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:14:57 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:14:58 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:14:59 [DEBUG]     × 'Saves' no encontrado en DOM
+09:15:00 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:15:01 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:15:02 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:15:03 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:15:03 [WARNING]   × Fallback iframe no encontró estadísticas
+09:15:05 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:15:17 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:15:17 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:15:24 [DEBUG]   × No se encontró URL del iframe de stats
+09:15:24 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:15:24 [INFO] ✓ Captura paralela completada en 128.6s (1/1 exitosos)
+09:15:24 [WARNING] Ciclo tardó 128.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:15:24 [INFO] 
+--- Ciclo #9 ---
+09:15:24 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:15:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:15:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:15:50 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:16:19 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:16:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:16:40 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:16:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:16:41 [DEBUG]   → Extrayendo eventId del HTML...
+09:16:41 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:16:41 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:16:41 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:16:41 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:16:41 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:16:58 [WARNING]   × Timeout esperando estadísticas básicas
+09:16:58 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:16:59 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:17:00 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:17:01 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:17:02 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:17:06 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:17:07 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:17:08 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:17:09 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:17:10 [DEBUG]     × 'Saves' no encontrado en DOM
+09:17:11 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:17:12 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:17:13 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:17:14 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:17:14 [WARNING]   × Fallback iframe no encontró estadísticas
+09:17:14 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:17:27 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:17:27 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:17:33 [DEBUG]   × No se encontró URL del iframe de stats
+09:17:33 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:17:33 [INFO] ✓ Captura paralela completada en 129.6s (1/1 exitosos)
+09:17:33 [WARNING] Ciclo tardó 129.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:17:33 [INFO] 
+--- Ciclo #10 ---
+09:17:33 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:17:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:17:59 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:18:00 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:18:28 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:18:48 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:18:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:18:50 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:18:50 [DEBUG]   → Extrayendo eventId del HTML...
+09:18:50 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:18:50 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:18:51 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:18:51 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:18:51 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:19:07 [WARNING]   × Timeout esperando estadísticas básicas
+09:19:07 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:19:08 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:19:09 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:19:10 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:19:11 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:19:14 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:19:15 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:19:16 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:19:17 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:19:18 [DEBUG]     × 'Saves' no encontrado en DOM
+09:19:19 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:19:20 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:19:21 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:19:22 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:19:22 [WARNING]   × Fallback iframe no encontró estadísticas
+09:19:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:19:35 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:19:35 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:19:42 [DEBUG]   × No se encontró URL del iframe de stats
+09:19:42 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:19:42 [INFO] ✓ Captura paralela completada en 128.7s (1/1 exitosos)
+09:19:42 [INFO] 🔄 Revisando games.csv para detectar cambios...
+09:19:42 [INFO] Cargados 0 partidos desde games.csv
+09:19:42 [WARNING] Ciclo tardó 128.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:19:42 [INFO] 
+--- Ciclo #11 ---
+09:19:42 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:19:50 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:20:08 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:20:09 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:20:37 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:20:57 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:20:58 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:20:59 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:20:59 [DEBUG]   → Extrayendo eventId del HTML...
+09:20:59 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:20:59 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:20:59 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:20:59 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:20:59 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:21:16 [WARNING]   × Timeout esperando estadísticas básicas
+09:21:16 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:21:17 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:21:19 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:21:20 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:21:21 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:21:24 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:21:25 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:21:26 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:21:27 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:21:28 [DEBUG]     × 'Saves' no encontrado en DOM
+09:21:29 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:21:30 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:21:31 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:21:32 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:21:32 [WARNING]   × Fallback iframe no encontró estadísticas
+09:21:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:21:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:21:45 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:21:52 [DEBUG]   × No se encontró URL del iframe de stats
+09:21:52 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:21:52 [INFO] ✓ Captura paralela completada en 129.7s (1/1 exitosos)
+09:21:52 [WARNING] Ciclo tardó 129.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:21:52 [INFO] 
+--- Ciclo #12 ---
+09:21:52 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:22:00 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:22:17 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:22:18 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:22:47 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:23:07 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:23:08 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:23:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:23:09 [DEBUG]   → Extrayendo eventId del HTML...
+09:23:09 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:23:09 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:23:09 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:23:09 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:23:09 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:23:25 [WARNING]   × Timeout esperando estadísticas básicas
+09:23:25 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:23:26 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:23:27 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:23:28 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:23:29 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:23:33 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:23:34 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:23:35 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:23:36 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:23:37 [DEBUG]     × 'Saves' no encontrado en DOM
+09:23:38 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:23:39 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:23:40 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:23:41 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:23:41 [WARNING]   × Fallback iframe no encontró estadísticas
+09:23:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:23:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:23:54 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:24:00 [DEBUG]   × No se encontró URL del iframe de stats
+09:24:00 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:24:01 [INFO] ✓ Captura paralela completada en 128.9s (1/1 exitosos)
+09:24:01 [WARNING] Ciclo tardó 128.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:24:01 [INFO] 
+--- Ciclo #13 ---
+09:24:01 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:24:08 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:24:26 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:24:27 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:24:55 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:25:15 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:25:16 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:25:17 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:25:17 [DEBUG]   → Extrayendo eventId del HTML...
+09:25:17 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:25:17 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:25:18 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:25:18 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:25:18 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:25:37 [WARNING]   × Timeout esperando estadísticas básicas
+09:25:37 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:25:38 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:25:39 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:25:40 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:25:41 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:25:44 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:25:45 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:25:46 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:25:47 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:25:48 [DEBUG]     × 'Saves' no encontrado en DOM
+09:25:50 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:25:51 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:25:52 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:25:53 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:25:53 [WARNING]   × Fallback iframe no encontró estadísticas
+09:25:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:26:07 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:26:07 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:26:13 [DEBUG]   × No se encontró URL del iframe de stats
+09:26:13 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:26:13 [INFO] ✓ Captura paralela completada en 132.7s (1/1 exitosos)
+09:26:13 [WARNING] Ciclo tardó 132.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:26:13 [INFO] 
+--- Ciclo #14 ---
+09:26:13 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:26:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:26:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:26:40 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:27:08 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:27:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:27:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:27:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:27:30 [DEBUG]   → Extrayendo eventId del HTML...
+09:27:30 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:27:30 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:27:31 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:27:31 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:27:31 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:27:47 [WARNING]   × Timeout esperando estadísticas básicas
+09:27:47 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:27:48 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:27:49 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:27:50 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:27:51 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:27:54 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:27:55 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:27:56 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:27:57 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:27:58 [DEBUG]     × 'Saves' no encontrado en DOM
+09:27:59 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:28:00 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:28:01 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:28:02 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:28:02 [WARNING]   × Fallback iframe no encontró estadísticas
+09:28:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:28:15 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:28:15 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:28:22 [DEBUG]   × No se encontró URL del iframe de stats
+09:28:22 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:28:22 [INFO] ✓ Captura paralela completada en 128.5s (1/1 exitosos)
+09:28:22 [WARNING] Ciclo tardó 128.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:28:22 [INFO] 
+--- Ciclo #15 ---
+09:28:22 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:28:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:28:48 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:28:49 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:29:17 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:29:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:29:38 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:29:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:29:39 [DEBUG]   → Extrayendo eventId del HTML...
+09:29:39 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:29:39 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:29:39 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:29:39 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:29:39 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:29:55 [WARNING]   × Timeout esperando estadísticas básicas
+09:29:55 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:29:56 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:29:57 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:29:58 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:29:59 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:30:03 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:30:04 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:30:05 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:30:06 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:30:07 [DEBUG]     × 'Saves' no encontrado en DOM
+09:30:08 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:30:09 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:30:10 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:30:11 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:30:11 [WARNING]   × Fallback iframe no encontró estadísticas
+09:30:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:30:24 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:30:24 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:30:30 [DEBUG]   × No se encontró URL del iframe de stats
+09:30:30 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:30:30 [INFO] ✓ Captura paralela completada en 128.8s (1/1 exitosos)
+09:30:30 [INFO] 🔄 Revisando games.csv para detectar cambios...
+09:30:30 [INFO] Cargados 0 partidos desde games.csv
+09:30:30 [WARNING] Ciclo tardó 128.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:30:30 [INFO] 
+--- Ciclo #16 ---
+09:30:30 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:30:38 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:30:56 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:30:57 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:31:26 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:31:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:31:47 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:31:48 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:31:48 [DEBUG]   → Extrayendo eventId del HTML...
+09:31:48 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:31:48 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:31:48 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:31:48 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:31:48 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:32:03 [WARNING]   × Timeout esperando estadísticas básicas
+09:32:03 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:32:04 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:32:05 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:32:06 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:32:07 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:32:10 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:32:11 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:32:12 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:32:13 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:32:14 [DEBUG]     × 'Saves' no encontrado en DOM
+09:32:15 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:32:16 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:32:17 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:32:18 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:32:18 [WARNING]   × Fallback iframe no encontró estadísticas
+09:32:18 [ERROR]   × Error volviendo a URL original: Message: unknown error: net::ERR_CONNECTION_CLOSED
+  (Session info: chrome=144.0.7559.133)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7c5093
+	0x7c50d4
+	0x5bb490
+	0x5b899e
+	0x5abac4
+	0x5ad51c
+	0x5abf67
+	0x5ab895
+	0x5ab595
+	0x5a96a8
+	0x5a9dba
+	0x5bef1e
+	0x645e84
+	0x6281bc
+	0x645341
+	0x627f56
+	0x5f96c9
+	0x5fa484
+	0xa17e34
+	0xa130c9
+	0xa30add
+	0x7ddb38
+	0x7e58ad
+	0x7cd848
+	0x7cda12
+	0x7b75fa
+	0x74dd5d49
+	0x76edd83b
+	0x76edd7c1
+
+09:32:18 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:32:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:32:31 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:32:37 [DEBUG]   × No se encontró URL del iframe de stats
+09:32:37 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:32:37 [INFO] ✓ Captura paralela completada en 126.7s (1/1 exitosos)
+09:32:37 [WARNING] Ciclo tardó 126.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:32:37 [INFO] 
+--- Ciclo #17 ---
+09:32:37 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:32:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:33:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:33:04 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:33:32 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:33:52 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:33:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:33:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:33:54 [DEBUG]   → Extrayendo eventId del HTML...
+09:33:54 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:33:54 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:33:55 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:33:55 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:33:55 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:34:12 [WARNING]   × Timeout esperando estadísticas básicas
+09:34:12 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:34:13 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:34:14 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:34:15 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:34:16 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:34:19 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:34:20 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:34:21 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:34:22 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:34:23 [DEBUG]     × 'Saves' no encontrado en DOM
+09:34:24 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:34:25 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:34:27 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:34:28 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:34:28 [WARNING]   × Fallback iframe no encontró estadísticas
+09:34:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:34:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:34:41 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:34:47 [DEBUG]   × No se encontró URL del iframe de stats
+09:34:47 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:34:47 [INFO] ✓ Captura paralela completada en 129.7s (1/1 exitosos)
+09:34:47 [WARNING] Ciclo tardó 129.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:34:47 [INFO] 
+--- Ciclo #18 ---
+09:34:47 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:34:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:35:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:35:14 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:35:42 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:36:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:36:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:36:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:36:04 [DEBUG]   → Extrayendo eventId del HTML...
+09:36:04 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:36:04 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:36:05 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:36:05 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:36:05 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:36:20 [WARNING]   × Timeout esperando estadísticas básicas
+09:36:20 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:36:21 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:36:22 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:36:23 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:36:24 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:36:28 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:36:29 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:36:30 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:36:31 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:36:32 [DEBUG]     × 'Saves' no encontrado en DOM
+09:36:33 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:36:34 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:36:35 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:36:36 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:36:36 [WARNING]   × Fallback iframe no encontró estadísticas
+09:36:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:36:50 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:36:50 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:36:56 [DEBUG]   × No se encontró URL del iframe de stats
+09:36:56 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:36:56 [INFO] ✓ Captura paralela completada en 129.5s (1/1 exitosos)
+09:36:56 [WARNING] Ciclo tardó 129.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:36:56 [INFO] 
+--- Ciclo #19 ---
+09:36:56 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:37:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:37:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:37:23 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:37:51 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:38:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:38:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:38:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:38:13 [DEBUG]   → Extrayendo eventId del HTML...
+09:38:13 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:38:13 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:38:14 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:38:14 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:38:14 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:38:33 [WARNING]   × Timeout esperando estadísticas básicas
+09:38:33 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:38:34 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:38:35 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:38:36 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:38:37 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:38:40 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:38:41 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:38:42 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:38:43 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:38:44 [DEBUG]     × 'Saves' no encontrado en DOM
+09:38:45 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:38:47 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:38:48 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:38:49 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:38:49 [WARNING]   × Fallback iframe no encontró estadísticas
+09:38:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:39:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:39:02 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:39:08 [DEBUG]   × No se encontró URL del iframe de stats
+09:39:08 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:39:08 [INFO] ✓ Captura paralela completada en 131.7s (1/1 exitosos)
+09:39:08 [WARNING] Ciclo tardó 131.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:39:08 [INFO] 
+--- Ciclo #20 ---
+09:39:08 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:39:16 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:39:34 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:39:35 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:40:03 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:40:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:40:24 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:40:25 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:40:25 [DEBUG]   → Extrayendo eventId del HTML...
+09:40:25 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:40:25 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:40:25 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:40:25 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:40:25 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:40:41 [WARNING]   × Timeout esperando estadísticas básicas
+09:40:41 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:40:42 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:40:43 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:40:44 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:40:45 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:40:48 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:40:49 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:40:50 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:40:51 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:40:52 [DEBUG]     × 'Saves' no encontrado en DOM
+09:40:53 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:40:54 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:40:55 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:40:56 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:40:56 [WARNING]   × Fallback iframe no encontró estadísticas
+09:40:56 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:41:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:41:09 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:41:16 [DEBUG]   × No se encontró URL del iframe de stats
+09:41:16 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:41:16 [INFO] ✓ Captura paralela completada en 127.8s (1/1 exitosos)
+09:41:16 [INFO] 🔄 Revisando games.csv para detectar cambios...
+09:41:16 [INFO] Cargados 0 partidos desde games.csv
+09:41:16 [WARNING] Ciclo tardó 127.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:41:16 [INFO] 
+--- Ciclo #21 ---
+09:41:16 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:41:24 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:41:42 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:41:43 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:42:11 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:42:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:42:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:42:33 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:42:33 [DEBUG]   → Extrayendo eventId del HTML...
+09:42:33 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:42:33 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:42:34 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:42:34 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:42:34 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:42:54 [WARNING]   × Timeout esperando estadísticas básicas
+09:42:54 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:42:55 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:42:56 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:42:57 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:42:58 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:43:01 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:43:02 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:43:03 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:43:04 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:43:05 [DEBUG]     × 'Saves' no encontrado en DOM
+09:43:06 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:43:07 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:43:08 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:43:09 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:43:09 [WARNING]   × Fallback iframe no encontró estadísticas
+09:43:10 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:43:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:43:23 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:43:29 [DEBUG]   × No se encontró URL del iframe de stats
+09:43:29 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:43:29 [INFO] ✓ Captura paralela completada en 133.0s (1/1 exitosos)
+09:43:29 [WARNING] Ciclo tardó 133.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:43:29 [INFO] 
+--- Ciclo #22 ---
+09:43:29 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:43:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:43:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:43:56 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:44:24 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:44:44 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:44:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:44:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:44:46 [DEBUG]   → Extrayendo eventId del HTML...
+09:44:46 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:44:46 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:44:46 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:44:46 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:44:46 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:45:02 [WARNING]   × Timeout esperando estadísticas básicas
+09:45:02 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:45:04 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:45:05 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:45:06 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:45:07 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:45:10 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:45:11 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:45:12 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:45:13 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:45:14 [DEBUG]     × 'Saves' no encontrado en DOM
+09:45:15 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:45:16 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:45:17 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:45:18 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:45:18 [WARNING]   × Fallback iframe no encontró estadísticas
+09:45:18 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:45:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:45:31 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:45:38 [DEBUG]   × No se encontró URL del iframe de stats
+09:45:38 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:45:38 [INFO] ✓ Captura paralela completada en 128.7s (1/1 exitosos)
+09:45:38 [WARNING] Ciclo tardó 128.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:45:38 [INFO] 
+--- Ciclo #23 ---
+09:45:38 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:45:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:46:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:46:05 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:46:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:46:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:46:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:46:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:46:55 [DEBUG]   → Extrayendo eventId del HTML...
+09:46:55 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:46:55 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:46:55 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:46:55 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:46:55 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:47:12 [WARNING]   × Timeout esperando estadísticas básicas
+09:47:12 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:47:13 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:47:14 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:47:15 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:47:16 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:47:19 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:47:20 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:47:21 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:47:22 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:47:23 [DEBUG]     × 'Saves' no encontrado en DOM
+09:47:24 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:47:25 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:47:26 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:47:27 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:47:27 [WARNING]   × Fallback iframe no encontró estadísticas
+09:47:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:47:40 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:47:40 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:47:47 [DEBUG]   × No se encontró URL del iframe de stats
+09:47:47 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:47:47 [INFO] ✓ Captura paralela completada en 129.1s (1/1 exitosos)
+09:47:47 [WARNING] Ciclo tardó 129.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:47:47 [INFO] 
+--- Ciclo #24 ---
+09:47:47 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:47:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:48:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:48:14 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:48:42 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:49:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:49:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:49:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:49:04 [DEBUG]   → Extrayendo eventId del HTML...
+09:49:04 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:49:04 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:49:04 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:49:04 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:49:04 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:49:20 [WARNING]   × Timeout esperando estadísticas básicas
+09:49:20 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:49:21 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:49:22 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:49:23 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:49:24 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:49:28 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:49:29 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:49:30 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:49:31 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:49:32 [DEBUG]     × 'Saves' no encontrado en DOM
+09:49:33 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:49:34 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:49:35 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:49:36 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:49:36 [WARNING]   × Fallback iframe no encontró estadísticas
+09:49:36 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:49:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:49:49 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:49:56 [DEBUG]   × No se encontró URL del iframe de stats
+09:49:56 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:49:56 [INFO] ✓ Captura paralela completada en 128.8s (1/1 exitosos)
+09:49:56 [WARNING] Ciclo tardó 128.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:49:56 [INFO] 
+--- Ciclo #25 ---
+09:49:56 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:50:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:50:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:50:22 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:50:50 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:51:10 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:51:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:51:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:51:12 [DEBUG]   → Extrayendo eventId del HTML...
+09:51:12 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:51:12 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:51:13 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:51:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:51:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:51:29 [WARNING]   × Timeout esperando estadísticas básicas
+09:51:29 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:51:30 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:51:31 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:51:32 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:51:33 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:51:36 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:51:37 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:51:38 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:51:39 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:51:40 [DEBUG]     × 'Saves' no encontrado en DOM
+09:51:41 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:51:42 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:51:44 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:51:45 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:51:45 [WARNING]   × Fallback iframe no encontró estadísticas
+09:51:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:51:58 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:51:58 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:52:04 [DEBUG]   × No se encontró URL del iframe de stats
+09:52:04 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:52:04 [INFO] ✓ Captura paralela completada en 128.5s (1/1 exitosos)
+09:52:04 [INFO] 🔄 Revisando games.csv para detectar cambios...
+09:52:04 [INFO] Cargados 0 partidos desde games.csv
+09:52:04 [WARNING] Ciclo tardó 128.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:52:04 [INFO] 
+--- Ciclo #26 ---
+09:52:04 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:52:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:52:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:52:31 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:52:59 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:53:19 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:53:20 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:53:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:53:21 [DEBUG]   → Extrayendo eventId del HTML...
+09:53:21 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:53:21 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:53:21 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:53:21 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:53:21 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:53:38 [WARNING]   × Timeout esperando estadísticas básicas
+09:53:38 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:53:39 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:53:40 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:53:41 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:53:42 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:53:45 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:53:46 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:53:47 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:53:48 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:53:49 [DEBUG]     × 'Saves' no encontrado en DOM
+09:53:51 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:53:52 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:53:53 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:53:54 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:53:54 [WARNING]   × Fallback iframe no encontró estadísticas
+09:53:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:54:07 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:54:07 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:54:13 [DEBUG]   × No se encontró URL del iframe de stats
+09:54:13 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:54:13 [INFO] ✓ Captura paralela completada en 128.8s (1/1 exitosos)
+09:54:13 [WARNING] Ciclo tardó 128.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:54:13 [INFO] 
+--- Ciclo #27 ---
+09:54:13 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:54:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:54:38 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:54:39 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:55:08 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:55:27 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:55:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:55:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:55:29 [DEBUG]   → Extrayendo eventId del HTML...
+09:55:29 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:55:29 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:55:30 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:55:30 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:55:30 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:55:47 [WARNING]   × Timeout esperando estadísticas básicas
+09:55:47 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:55:48 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:55:49 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:55:50 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:55:51 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:55:54 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:55:55 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:55:56 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:55:57 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:55:58 [DEBUG]     × 'Saves' no encontrado en DOM
+09:55:59 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:56:00 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:56:01 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:56:02 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:56:02 [WARNING]   × Fallback iframe no encontró estadísticas
+09:56:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:56:16 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:56:16 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:56:22 [DEBUG]   × No se encontró URL del iframe de stats
+09:56:22 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:56:22 [INFO] ✓ Captura paralela completada en 128.9s (1/1 exitosos)
+09:56:22 [WARNING] Ciclo tardó 128.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:56:22 [INFO] 
+--- Ciclo #28 ---
+09:56:22 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:56:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:56:47 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:56:48 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:57:17 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:57:36 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:57:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:57:38 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:57:38 [DEBUG]   → Extrayendo eventId del HTML...
+09:57:38 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:57:38 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:57:39 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:57:39 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:57:39 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+09:57:55 [WARNING]   × Timeout esperando estadísticas básicas
+09:57:55 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+09:57:56 [DEBUG]     × 'Shots on target' no encontrado en DOM
+09:57:57 [DEBUG]     × 'Shots off target' no encontrado en DOM
+09:57:58 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+09:57:59 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+09:58:02 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+09:58:03 [DEBUG]     × 'Free kicks' no encontrado en DOM
+09:58:04 [DEBUG]     × 'Offsides' no encontrado en DOM
+09:58:05 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+09:58:06 [DEBUG]     × 'Saves' no encontrado en DOM
+09:58:07 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+09:58:08 [DEBUG]     × 'Substitutions' no encontrado en DOM
+09:58:09 [DEBUG]     × 'Injuries' no encontrado en DOM
+09:58:10 [DEBUG]     × 'Fouls' no encontrado en DOM
+09:58:10 [WARNING]   × Fallback iframe no encontró estadísticas
+09:58:10 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+09:58:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+09:58:23 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+09:58:29 [DEBUG]   × No se encontró URL del iframe de stats
+09:58:29 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+09:58:29 [INFO] ✓ Captura paralela completada en 127.6s (1/1 exitosos)
+09:58:29 [WARNING] Ciclo tardó 127.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+09:58:29 [INFO] 
+--- Ciclo #29 ---
+09:58:29 [INFO] 📸 Capturando 1 partidos en paralelo...
+09:58:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+09:58:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+09:58:56 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+09:59:24 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+09:59:44 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+09:59:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+09:59:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+09:59:46 [DEBUG]   → Extrayendo eventId del HTML...
+09:59:46 [DEBUG] Betfair event ID extraído de la URL: 35189654
+09:59:46 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:59:47 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+09:59:47 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+09:59:47 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:00:06 [WARNING]   × Timeout esperando estadísticas básicas
+10:00:06 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:00:07 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:00:08 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:00:09 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:00:10 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:00:13 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:00:14 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:00:15 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:00:16 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:00:17 [DEBUG]     × 'Saves' no encontrado en DOM
+10:00:18 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:00:19 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:00:20 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:00:21 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:00:21 [WARNING]   × Fallback iframe no encontró estadísticas
+10:00:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:00:34 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:00:34 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:00:41 [DEBUG]   × No se encontró URL del iframe de stats
+10:00:41 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:00:41 [INFO] ✓ Captura paralela completada en 131.1s (1/1 exitosos)
+10:00:41 [WARNING] Ciclo tardó 131.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:00:41 [INFO] 
+--- Ciclo #30 ---
+10:00:41 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:00:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:01:06 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:01:07 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:01:36 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:01:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:01:56 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:01:57 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:01:57 [DEBUG]   → Extrayendo eventId del HTML...
+10:01:57 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:01:57 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:01:58 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:01:58 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:01:58 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:02:14 [WARNING]   × Timeout esperando estadísticas básicas
+10:02:14 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:02:15 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:02:16 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:02:17 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:02:18 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:02:21 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:02:22 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:02:23 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:02:24 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:02:25 [DEBUG]     × 'Saves' no encontrado en DOM
+10:02:26 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:02:27 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:02:28 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:02:29 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:02:29 [WARNING]   × Fallback iframe no encontró estadísticas
+10:02:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:02:42 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:02:42 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:02:49 [DEBUG]   × No se encontró URL del iframe de stats
+10:02:49 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:02:49 [INFO] ✓ Captura paralela completada en 128.0s (1/1 exitosos)
+10:02:49 [INFO] 🔄 Revisando games.csv para detectar cambios...
+10:02:49 [INFO] Cargados 0 partidos desde games.csv
+10:02:49 [WARNING] Ciclo tardó 128.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:02:49 [INFO] 
+--- Ciclo #31 ---
+10:02:49 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:02:57 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:03:14 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:03:15 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:03:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:04:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:04:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:04:05 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:04:05 [DEBUG]   → Extrayendo eventId del HTML...
+10:04:05 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:04:05 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:04:06 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:04:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:04:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:04:23 [WARNING]   × Timeout esperando estadísticas básicas
+10:04:23 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:04:24 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:04:25 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:04:26 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:04:27 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:04:30 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:04:31 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:04:32 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:04:34 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:04:35 [DEBUG]     × 'Saves' no encontrado en DOM
+10:04:36 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:04:37 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:04:38 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:04:39 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:04:39 [WARNING]   × Fallback iframe no encontró estadísticas
+10:04:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:04:52 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:04:52 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:04:58 [DEBUG]   × No se encontró URL del iframe de stats
+10:04:58 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:04:58 [INFO] ✓ Captura paralela completada en 129.1s (1/1 exitosos)
+10:04:58 [WARNING] Ciclo tardó 129.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:04:58 [INFO] 
+--- Ciclo #32 ---
+10:04:58 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:05:06 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:05:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:05:24 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:05:53 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:06:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:06:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:06:14 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:06:14 [DEBUG]   → Extrayendo eventId del HTML...
+10:06:14 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:06:14 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:06:15 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:06:15 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:06:15 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:06:29 [WARNING]   × Timeout esperando estadísticas básicas
+10:06:29 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:06:30 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:06:31 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:06:33 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:06:34 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:06:37 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:06:38 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:06:39 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:06:40 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:06:41 [DEBUG]     × 'Saves' no encontrado en DOM
+10:06:42 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:06:43 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:06:44 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:06:45 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:06:45 [WARNING]   × Fallback iframe no encontró estadísticas
+10:06:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:06:58 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:06:58 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:07:04 [DEBUG]   × No se encontró URL del iframe de stats
+10:07:04 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:07:04 [INFO] ✓ Captura paralela completada en 126.2s (1/1 exitosos)
+10:07:04 [WARNING] Ciclo tardó 126.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:07:04 [INFO] 
+--- Ciclo #33 ---
+10:07:04 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:07:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:07:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:07:31 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:07:59 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:08:18 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:08:19 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:08:20 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:08:20 [DEBUG]   → Extrayendo eventId del HTML...
+10:08:20 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:08:20 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:08:21 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:08:21 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:08:21 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:08:38 [WARNING]   × Timeout esperando estadísticas básicas
+10:08:38 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:08:39 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:08:40 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:08:41 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:08:42 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:08:45 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:08:46 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:08:47 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:08:48 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:08:49 [DEBUG]     × 'Saves' no encontrado en DOM
+10:08:50 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:08:52 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:08:53 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:08:54 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:08:54 [WARNING]   × Fallback iframe no encontró estadísticas
+10:08:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:09:07 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:09:07 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:09:13 [DEBUG]   × No se encontró URL del iframe de stats
+10:09:13 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:09:13 [INFO] ✓ Captura paralela completada en 128.8s (1/1 exitosos)
+10:09:13 [WARNING] Ciclo tardó 128.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:09:13 [INFO] 
+--- Ciclo #34 ---
+10:09:13 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:09:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:09:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:09:40 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:10:08 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:10:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:10:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:10:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:10:30 [DEBUG]   → Extrayendo eventId del HTML...
+10:10:30 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:10:30 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:10:30 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:10:30 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:10:30 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:10:46 [WARNING]   × Timeout esperando estadísticas básicas
+10:10:46 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:10:47 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:10:48 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:10:49 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:10:50 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:10:53 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:10:54 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:10:55 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:10:56 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:10:58 [DEBUG]     × 'Saves' no encontrado en DOM
+10:10:59 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:11:00 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:11:01 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:11:02 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:11:02 [WARNING]   × Fallback iframe no encontró estadísticas
+10:11:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:11:15 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:11:15 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:11:21 [DEBUG]   × No se encontró URL del iframe de stats
+10:11:21 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:11:21 [INFO] ✓ Captura paralela completada en 127.9s (1/1 exitosos)
+10:11:21 [WARNING] Ciclo tardó 127.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:11:21 [INFO] 
+--- Ciclo #35 ---
+10:11:21 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:11:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:11:47 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:11:48 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:12:16 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:12:36 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:12:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:12:38 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:12:38 [DEBUG]   → Extrayendo eventId del HTML...
+10:12:38 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:12:38 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:12:38 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:12:38 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:12:38 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:12:56 [WARNING]   × Timeout esperando estadísticas básicas
+10:12:56 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:12:57 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:12:58 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:13:00 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:13:01 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:13:04 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:13:05 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:13:06 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:13:07 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:13:08 [DEBUG]     × 'Saves' no encontrado en DOM
+10:13:09 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:13:10 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:13:11 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:13:12 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:13:12 [WARNING]   × Fallback iframe no encontró estadísticas
+10:13:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:13:25 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:13:25 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:13:31 [DEBUG]   × No se encontró URL del iframe de stats
+10:13:31 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:13:31 [INFO] ✓ Captura paralela completada en 130.2s (1/1 exitosos)
+10:13:31 [INFO] 🔄 Revisando games.csv para detectar cambios...
+10:13:31 [INFO] Cargados 0 partidos desde games.csv
+10:13:31 [WARNING] Ciclo tardó 130.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:13:31 [INFO] 
+--- Ciclo #36 ---
+10:13:31 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:13:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:13:57 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:13:58 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:14:26 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:14:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:14:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:14:47 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:14:47 [DEBUG]   → Extrayendo eventId del HTML...
+10:14:47 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:14:47 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:14:48 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:14:48 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:14:48 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:15:03 [WARNING]   × Timeout esperando estadísticas básicas
+10:15:03 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:15:04 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:15:05 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:15:06 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:15:07 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:15:10 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:15:11 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:15:12 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:15:14 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:15:15 [DEBUG]     × 'Saves' no encontrado en DOM
+10:15:16 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:15:17 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:15:18 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:15:19 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:15:19 [WARNING]   × Fallback iframe no encontró estadísticas
+10:15:19 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:15:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:15:32 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:15:38 [DEBUG]   × No se encontró URL del iframe de stats
+10:15:38 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:15:38 [INFO] ✓ Captura paralela completada en 127.1s (1/1 exitosos)
+10:15:38 [WARNING] Ciclo tardó 127.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:15:38 [INFO] 
+--- Ciclo #37 ---
+10:15:38 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:15:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:16:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:16:05 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:16:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:16:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:16:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:16:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:16:55 [DEBUG]   → Extrayendo eventId del HTML...
+10:16:55 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:16:55 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:16:56 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:16:56 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:16:56 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:17:13 [WARNING]   × Timeout esperando estadísticas básicas
+10:17:13 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:17:14 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:17:15 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:17:16 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:17:17 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:17:20 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:17:21 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:17:22 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:17:23 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:17:24 [DEBUG]     × 'Saves' no encontrado en DOM
+10:17:25 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:17:26 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:17:27 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:17:28 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:17:28 [WARNING]   × Fallback iframe no encontró estadísticas
+10:17:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:17:42 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:17:42 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:17:48 [DEBUG]   × No se encontró URL del iframe de stats
+10:17:48 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:17:48 [INFO] ✓ Captura paralela completada en 129.5s (1/1 exitosos)
+10:17:48 [WARNING] Ciclo tardó 129.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:17:48 [INFO] 
+--- Ciclo #38 ---
+10:17:48 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:17:56 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:18:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:18:14 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:18:43 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:19:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:19:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:19:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:19:04 [DEBUG]   → Extrayendo eventId del HTML...
+10:19:04 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:19:04 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:19:05 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:19:05 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:19:05 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:19:21 [WARNING]   × Timeout esperando estadísticas básicas
+10:19:21 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:19:22 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:19:23 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:19:24 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:19:25 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:19:28 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:19:29 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:19:31 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:19:32 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:19:33 [DEBUG]     × 'Saves' no encontrado en DOM
+10:19:34 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:19:35 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:19:36 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:19:37 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:19:37 [WARNING]   × Fallback iframe no encontró estadísticas
+10:19:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:19:50 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:19:50 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:19:56 [DEBUG]   × No se encontró URL del iframe de stats
+10:19:56 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:19:56 [INFO] ✓ Captura paralela completada en 128.3s (1/1 exitosos)
+10:19:56 [WARNING] Ciclo tardó 128.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:19:56 [INFO] 
+--- Ciclo #39 ---
+10:19:56 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:20:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:20:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:20:23 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:20:51 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:21:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:21:12 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:21:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:21:13 [DEBUG]   → Extrayendo eventId del HTML...
+10:21:13 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:21:13 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:21:13 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:21:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:21:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:21:34 [WARNING]   × Timeout esperando estadísticas básicas
+10:21:34 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:21:35 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:21:36 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:21:37 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:21:38 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:21:41 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:21:42 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:21:43 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:21:44 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:21:45 [DEBUG]     × 'Saves' no encontrado en DOM
+10:21:46 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:21:47 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:21:49 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:21:50 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:21:50 [WARNING]   × Fallback iframe no encontró estadísticas
+10:21:50 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:22:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:22:03 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:22:09 [DEBUG]   × No se encontró URL del iframe de stats
+10:22:09 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:22:09 [INFO] ✓ Captura paralela completada en 132.8s (1/1 exitosos)
+10:22:09 [WARNING] Ciclo tardó 132.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:22:09 [INFO] 
+--- Ciclo #40 ---
+10:22:09 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:22:17 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:22:34 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:22:35 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:23:04 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:23:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:23:24 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:23:25 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:23:25 [DEBUG]   → Extrayendo eventId del HTML...
+10:23:25 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:23:25 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:23:26 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:23:26 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:23:26 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:23:41 [WARNING]   × Timeout esperando estadísticas básicas
+10:23:41 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:23:42 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:23:43 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:23:44 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:23:45 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:23:48 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:23:49 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:23:50 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:23:51 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:23:52 [DEBUG]     × 'Saves' no encontrado en DOM
+10:23:53 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:23:54 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:23:55 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:23:56 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:23:56 [WARNING]   × Fallback iframe no encontró estadísticas
+10:23:58 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:24:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:24:11 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:24:17 [DEBUG]   × No se encontró URL del iframe de stats
+10:24:17 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:24:17 [INFO] ✓ Captura paralela completada en 127.9s (1/1 exitosos)
+10:24:17 [INFO] 🔄 Revisando games.csv para detectar cambios...
+10:24:17 [INFO] Cargados 0 partidos desde games.csv
+10:24:17 [WARNING] Ciclo tardó 127.9s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:24:17 [INFO] 
+--- Ciclo #41 ---
+10:24:17 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:24:25 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:24:42 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:24:43 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:25:12 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:25:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:25:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:25:33 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:25:33 [DEBUG]   → Extrayendo eventId del HTML...
+10:25:33 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:25:33 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:25:34 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:25:34 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:25:34 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:25:52 [WARNING]   × Timeout esperando estadísticas básicas
+10:25:52 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:25:53 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:25:54 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:25:55 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:25:56 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:26:00 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:26:01 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:26:02 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:26:03 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:26:04 [DEBUG]     × 'Saves' no encontrado en DOM
+10:26:05 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:26:06 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:26:07 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:26:08 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:26:08 [WARNING]   × Fallback iframe no encontró estadísticas
+10:26:08 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:26:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:26:21 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:26:27 [DEBUG]   × No se encontró URL del iframe de stats
+10:26:27 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:26:27 [INFO] ✓ Captura paralela completada en 130.4s (1/1 exitosos)
+10:26:27 [WARNING] Ciclo tardó 130.4s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:26:27 [INFO] 
+--- Ciclo #42 ---
+10:26:27 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:26:35 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:26:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:26:54 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:27:22 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:27:42 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:27:43 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:27:44 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:27:44 [DEBUG]   → Extrayendo eventId del HTML...
+10:27:44 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:27:44 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:27:44 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:27:44 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:27:44 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:28:00 [WARNING]   × Timeout esperando estadísticas básicas
+10:28:00 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:28:01 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:28:02 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:28:03 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:28:04 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:28:07 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:28:08 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:28:09 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:28:10 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:28:11 [DEBUG]     × 'Saves' no encontrado en DOM
+10:28:12 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:28:13 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:28:14 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:28:16 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:28:16 [WARNING]   × Fallback iframe no encontró estadísticas
+10:28:16 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:28:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:28:29 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:28:35 [DEBUG]   × No se encontró URL del iframe de stats
+10:28:35 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:28:35 [INFO] ✓ Captura paralela completada en 127.8s (1/1 exitosos)
+10:28:35 [WARNING] Ciclo tardó 127.8s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:28:35 [INFO] 
+--- Ciclo #43 ---
+10:28:35 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:28:43 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:29:01 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:29:02 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:29:30 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:29:50 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:29:51 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:29:52 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:29:52 [DEBUG]   → Extrayendo eventId del HTML...
+10:29:52 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:29:52 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:29:53 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:29:53 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:29:53 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:30:10 [WARNING]   × Timeout esperando estadísticas básicas
+10:30:10 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:30:11 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:30:12 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:30:13 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:30:14 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:30:17 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:30:18 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:30:19 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:30:20 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:30:22 [DEBUG]     × 'Saves' no encontrado en DOM
+10:30:23 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:30:24 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:30:25 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:30:26 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:30:26 [WARNING]   × Fallback iframe no encontró estadísticas
+10:30:26 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:30:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:30:39 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:30:45 [DEBUG]   × No se encontró URL del iframe de stats
+10:30:45 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:30:45 [INFO] ✓ Captura paralela completada en 130.4s (1/1 exitosos)
+10:30:45 [WARNING] Ciclo tardó 130.4s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:30:45 [INFO] 
+--- Ciclo #44 ---
+10:30:45 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:30:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:31:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:31:12 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:31:40 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:32:00 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:32:01 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:32:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:32:02 [DEBUG]   → Extrayendo eventId del HTML...
+10:32:02 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:32:02 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:32:03 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:32:03 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:32:03 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:32:18 [WARNING]   × Timeout esperando estadísticas básicas
+10:32:18 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:32:19 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:32:20 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:32:21 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:32:22 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:32:25 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:32:26 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:32:28 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:32:29 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:32:30 [DEBUG]     × 'Saves' no encontrado en DOM
+10:32:31 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:32:32 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:32:33 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:32:34 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:32:34 [WARNING]   × Fallback iframe no encontró estadísticas
+10:32:34 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:32:47 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:32:47 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:32:53 [DEBUG]   × No se encontró URL del iframe de stats
+10:32:53 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:32:53 [INFO] ✓ Captura paralela completada en 128.0s (1/1 exitosos)
+10:32:53 [WARNING] Ciclo tardó 128.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:32:53 [INFO] 
+--- Ciclo #45 ---
+10:32:53 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:33:01 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:33:19 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:33:20 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:33:49 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:34:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:34:10 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:34:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:34:11 [DEBUG]   → Extrayendo eventId del HTML...
+10:34:11 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:34:11 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:34:11 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:34:11 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:34:11 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:34:30 [WARNING]   × Timeout esperando estadísticas básicas
+10:34:30 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:34:31 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:34:32 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:34:34 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:34:35 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:34:38 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:34:39 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:34:40 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:34:41 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:34:42 [DEBUG]     × 'Saves' no encontrado en DOM
+10:34:43 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:34:44 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:34:45 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:34:46 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:34:46 [WARNING]   × Fallback iframe no encontró estadísticas
+10:34:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:34:59 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:34:59 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:35:06 [DEBUG]   × No se encontró URL del iframe de stats
+10:35:06 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:35:06 [INFO] ✓ Captura paralela completada en 132.3s (1/1 exitosos)
+10:35:06 [INFO] 🔄 Revisando games.csv para detectar cambios...
+10:35:06 [INFO] Cargados 0 partidos desde games.csv
+10:35:06 [WARNING] Ciclo tardó 132.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:35:06 [INFO] 
+--- Ciclo #46 ---
+10:35:06 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:35:14 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:35:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:35:33 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:36:01 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:36:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:36:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:36:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:36:23 [DEBUG]   → Extrayendo eventId del HTML...
+10:36:23 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:36:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:36:23 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:36:23 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:36:23 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:36:39 [WARNING]   × Timeout esperando estadísticas básicas
+10:36:39 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:36:40 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:36:41 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:36:42 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:36:43 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:36:46 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:36:47 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:36:48 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:36:50 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:36:51 [DEBUG]     × 'Saves' no encontrado en DOM
+10:36:52 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:36:53 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:36:54 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:36:55 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:36:55 [WARNING]   × Fallback iframe no encontró estadísticas
+10:36:56 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:37:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:37:09 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:37:15 [DEBUG]   × No se encontró URL del iframe de stats
+10:37:15 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:37:15 [INFO] ✓ Captura paralela completada en 129.5s (1/1 exitosos)
+10:37:15 [WARNING] Ciclo tardó 129.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:37:15 [INFO] 
+--- Ciclo #47 ---
+10:37:15 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:37:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:37:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:37:42 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:38:10 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:38:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:38:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:38:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:38:32 [DEBUG]   → Extrayendo eventId del HTML...
+10:38:32 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:38:32 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:38:33 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:38:33 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:38:33 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:38:51 [WARNING]   × Timeout esperando estadísticas básicas
+10:38:51 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:38:52 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:38:54 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:38:55 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:38:56 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:38:59 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:39:00 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:39:01 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:39:02 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:39:03 [DEBUG]     × 'Saves' no encontrado en DOM
+10:39:04 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:39:05 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:39:06 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:39:07 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:39:07 [WARNING]   × Fallback iframe no encontró estadísticas
+10:39:08 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:39:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:39:21 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:39:27 [DEBUG]   × No se encontró URL del iframe de stats
+10:39:27 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:39:27 [INFO] ✓ Captura paralela completada en 131.7s (1/1 exitosos)
+10:39:27 [WARNING] Ciclo tardó 131.7s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:39:27 [INFO] 
+--- Ciclo #48 ---
+10:39:27 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:39:35 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:39:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:39:54 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:40:22 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:40:42 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:40:43 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:40:44 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:40:44 [DEBUG]   → Extrayendo eventId del HTML...
+10:40:44 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:40:44 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:40:45 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:40:45 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:40:45 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:41:01 [WARNING]   × Timeout esperando estadísticas básicas
+10:41:01 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:41:02 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:41:03 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:41:04 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:41:05 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:41:08 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:41:09 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:41:10 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:41:12 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:41:13 [DEBUG]     × 'Saves' no encontrado en DOM
+10:41:14 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:41:15 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:41:16 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:41:17 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:41:17 [WARNING]   × Fallback iframe no encontró estadísticas
+10:41:17 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:41:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:41:30 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:41:36 [DEBUG]   × No se encontró URL del iframe de stats
+10:41:36 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:41:36 [INFO] ✓ Captura paralela completada en 129.4s (1/1 exitosos)
+10:41:36 [WARNING] Ciclo tardó 129.4s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:41:36 [INFO] 
+--- Ciclo #49 ---
+10:41:36 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:41:44 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:42:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:42:03 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:42:32 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:42:52 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:42:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:42:54 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:42:54 [DEBUG]   → Extrayendo eventId del HTML...
+10:42:54 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:42:54 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:42:54 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:42:54 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:42:54 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:43:12 [WARNING]   × Timeout esperando estadísticas básicas
+10:43:12 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:43:13 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:43:14 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:43:15 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:43:16 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:43:19 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:43:20 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:43:21 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:43:22 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:43:23 [DEBUG]     × 'Saves' no encontrado en DOM
+10:43:24 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:43:25 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:43:26 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:43:28 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:43:28 [WARNING]   × Fallback iframe no encontró estadísticas
+10:43:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:43:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:43:41 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:43:47 [DEBUG]   × No se encontró URL del iframe de stats
+10:43:47 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:43:47 [INFO] ✓ Captura paralela completada en 130.5s (1/1 exitosos)
+10:43:47 [WARNING] Ciclo tardó 130.5s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:43:47 [INFO] 
+--- Ciclo #50 ---
+10:43:47 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:43:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:44:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:44:14 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:44:42 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:45:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:45:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:45:04 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:45:04 [DEBUG]   → Extrayendo eventId del HTML...
+10:45:04 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:45:04 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:45:04 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:45:04 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:45:04 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:45:19 [WARNING]   × Timeout esperando estadísticas básicas
+10:45:19 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:45:20 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:45:21 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:45:22 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:45:23 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:45:26 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:45:27 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:45:28 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:45:29 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:45:30 [DEBUG]     × 'Saves' no encontrado en DOM
+10:45:31 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:45:33 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:45:34 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:45:35 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:45:35 [WARNING]   × Fallback iframe no encontró estadísticas
+10:45:35 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:45:48 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:45:48 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:45:54 [DEBUG]   × No se encontró URL del iframe de stats
+10:45:54 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:45:54 [INFO] ✓ Captura paralela completada en 127.2s (1/1 exitosos)
+10:45:54 [INFO] 🔄 Revisando games.csv para detectar cambios...
+10:45:54 [INFO] Cargados 0 partidos desde games.csv
+10:45:54 [WARNING] Ciclo tardó 127.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:45:54 [INFO] 
+--- Ciclo #51 ---
+10:45:54 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:46:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:46:20 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:46:21 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:46:49 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:47:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:47:10 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:47:11 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:47:11 [DEBUG]   → Extrayendo eventId del HTML...
+10:47:11 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:47:11 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:47:12 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:47:12 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:47:12 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:47:30 [WARNING]   × Timeout esperando estadísticas básicas
+10:47:30 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:47:31 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:47:32 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:47:33 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:47:35 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:47:38 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:47:39 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:47:40 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:47:41 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:47:42 [DEBUG]     × 'Saves' no encontrado en DOM
+10:47:43 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:47:44 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:47:45 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:47:46 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:47:46 [WARNING]   × Fallback iframe no encontró estadísticas
+10:47:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:47:59 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:47:59 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:48:05 [DEBUG]   × No se encontró URL del iframe de stats
+10:48:05 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:48:05 [INFO] ✓ Captura paralela completada en 131.6s (1/1 exitosos)
+10:48:05 [WARNING] Ciclo tardó 131.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:48:05 [INFO] 
+--- Ciclo #52 ---
+10:48:05 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:48:14 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:48:32 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:48:33 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:49:01 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:49:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:49:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:49:23 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:49:23 [DEBUG]   → Extrayendo eventId del HTML...
+10:49:23 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:49:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:49:23 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:49:23 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:49:23 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:49:39 [WARNING]   × Timeout esperando estadísticas básicas
+10:49:39 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:49:40 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:49:41 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:49:42 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:49:43 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:49:46 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:49:47 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:49:48 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:49:49 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:49:50 [DEBUG]     × 'Saves' no encontrado en DOM
+10:49:51 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:49:52 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:49:53 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:49:55 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:49:55 [WARNING]   × Fallback iframe no encontró estadísticas
+10:49:55 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:50:08 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:50:08 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:50:14 [DEBUG]   × No se encontró URL del iframe de stats
+10:50:14 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:50:14 [INFO] ✓ Captura paralela completada en 128.3s (1/1 exitosos)
+10:50:14 [WARNING] Ciclo tardó 128.3s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:50:14 [INFO] 
+--- Ciclo #53 ---
+10:50:14 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:50:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:50:40 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:50:41 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:51:09 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:51:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:51:30 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:51:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:51:31 [DEBUG]   → Extrayendo eventId del HTML...
+10:51:31 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:51:31 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:51:32 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:51:32 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:51:32 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:51:51 [WARNING]   × Timeout esperando estadísticas básicas
+10:51:51 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:51:52 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:51:53 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:51:54 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:51:55 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:51:58 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:51:59 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:52:01 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:52:02 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:52:03 [DEBUG]     × 'Saves' no encontrado en DOM
+10:52:04 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:52:05 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:52:06 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:52:07 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:52:07 [WARNING]   × Fallback iframe no encontró estadísticas
+10:52:07 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:52:20 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:52:20 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:52:26 [DEBUG]   × No se encontró URL del iframe de stats
+10:52:26 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:52:26 [INFO] ✓ Captura paralela completada en 132.6s (1/1 exitosos)
+10:52:26 [WARNING] Ciclo tardó 132.6s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:52:26 [INFO] 
+--- Ciclo #54 ---
+10:52:26 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:52:35 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:52:52 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:52:53 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:53:22 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:53:42 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:53:43 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:53:44 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:53:44 [DEBUG]   → Extrayendo eventId del HTML...
+10:53:44 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:53:44 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:53:44 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:53:44 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:53:44 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:53:59 [WARNING]   × Timeout esperando estadísticas básicas
+10:53:59 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:54:01 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:54:02 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:54:03 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:54:04 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:54:07 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:54:08 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:54:09 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:54:10 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:54:11 [DEBUG]     × 'Saves' no encontrado en DOM
+10:54:12 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:54:13 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:54:14 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:54:15 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:54:15 [WARNING]   × Fallback iframe no encontró estadísticas
+10:54:16 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:54:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:54:28 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:54:35 [DEBUG]   × No se encontró URL del iframe de stats
+10:54:35 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:54:35 [INFO] ✓ Captura paralela completada en 128.1s (1/1 exitosos)
+10:54:35 [WARNING] Ciclo tardó 128.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:54:35 [INFO] 
+--- Ciclo #55 ---
+10:54:35 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:54:43 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:55:00 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:55:01 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:55:30 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:55:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:55:50 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:55:51 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:55:51 [DEBUG]   → Extrayendo eventId del HTML...
+10:55:51 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:55:51 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:55:52 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:55:52 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:55:52 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:56:09 [WARNING]   × Timeout esperando estadísticas básicas
+10:56:09 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:56:10 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:56:11 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:56:12 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:56:13 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:56:17 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:56:18 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:56:19 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:56:20 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:56:21 [DEBUG]     × 'Saves' no encontrado en DOM
+10:56:22 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:56:23 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:56:24 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:56:25 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:56:25 [WARNING]   × Fallback iframe no encontró estadísticas
+10:56:25 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:56:38 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:56:38 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:56:45 [DEBUG]   × No se encontró URL del iframe de stats
+10:56:45 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:56:45 [INFO] ✓ Captura paralela completada en 130.0s (1/1 exitosos)
+10:56:45 [INFO] 🔄 Revisando games.csv para detectar cambios...
+10:56:45 [INFO] Cargados 0 partidos desde games.csv
+10:56:45 [WARNING] Ciclo tardó 130.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:56:45 [INFO] 
+--- Ciclo #56 ---
+10:56:45 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:56:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:57:10 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:57:12 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:57:40 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+10:58:00 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+10:58:01 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+10:58:02 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+10:58:02 [DEBUG]   → Extrayendo eventId del HTML...
+10:58:02 [DEBUG] Betfair event ID extraído de la URL: 35189654
+10:58:02 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:58:02 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+10:58:02 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+10:58:02 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+10:58:17 [WARNING]   × Timeout esperando estadísticas básicas
+10:58:17 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+10:58:19 [DEBUG]     × 'Shots on target' no encontrado en DOM
+10:58:20 [DEBUG]     × 'Shots off target' no encontrado en DOM
+10:58:21 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+10:58:22 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+10:58:25 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+10:58:26 [DEBUG]     × 'Free kicks' no encontrado en DOM
+10:58:27 [DEBUG]     × 'Offsides' no encontrado en DOM
+10:58:28 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+10:58:29 [DEBUG]     × 'Saves' no encontrado en DOM
+10:58:30 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+10:58:31 [DEBUG]     × 'Substitutions' no encontrado en DOM
+10:58:32 [DEBUG]     × 'Injuries' no encontrado en DOM
+10:58:33 [DEBUG]     × 'Fouls' no encontrado en DOM
+10:58:33 [WARNING]   × Fallback iframe no encontró estadísticas
+10:58:33 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+10:58:46 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+10:58:46 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+10:58:52 [DEBUG]   × No se encontró URL del iframe de stats
+10:58:52 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+10:58:52 [INFO] ✓ Captura paralela completada en 128.0s (1/1 exitosos)
+10:58:52 [WARNING] Ciclo tardó 128.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+10:58:52 [INFO] 
+--- Ciclo #57 ---
+10:58:52 [INFO] 📸 Capturando 1 partidos en paralelo...
+10:59:00 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+10:59:18 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+10:59:20 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+10:59:48 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+11:00:08 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+11:00:09 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+11:00:10 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+11:00:10 [DEBUG]   → Extrayendo eventId del HTML...
+11:00:10 [DEBUG] Betfair event ID extraído de la URL: 35189654
+11:00:10 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:00:10 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:00:10 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+11:00:10 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+11:00:29 [WARNING]   × Timeout esperando estadísticas básicas
+11:00:29 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+11:00:31 [DEBUG]     × 'Shots on target' no encontrado en DOM
+11:00:32 [DEBUG]     × 'Shots off target' no encontrado en DOM
+11:00:33 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+11:00:34 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+11:00:37 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+11:00:38 [DEBUG]     × 'Free kicks' no encontrado en DOM
+11:00:39 [DEBUG]     × 'Offsides' no encontrado en DOM
+11:00:40 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+11:00:41 [DEBUG]     × 'Saves' no encontrado en DOM
+11:00:42 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+11:00:43 [DEBUG]     × 'Substitutions' no encontrado en DOM
+11:00:44 [DEBUG]     × 'Injuries' no encontrado en DOM
+11:00:45 [DEBUG]     × 'Fouls' no encontrado en DOM
+11:00:45 [WARNING]   × Fallback iframe no encontró estadísticas
+11:00:45 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+11:00:58 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+11:00:58 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+11:01:05 [DEBUG]   × No se encontró URL del iframe de stats
+11:01:05 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+11:01:05 [INFO] ✓ Captura paralela completada en 132.2s (1/1 exitosos)
+11:01:05 [WARNING] Ciclo tardó 132.2s (> 30s). Iniciando siguiente ciclo inmediatamente.
+11:01:05 [INFO] 
+--- Ciclo #58 ---
+11:01:05 [INFO] 📸 Capturando 1 partidos en paralelo...
+11:01:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+11:01:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+11:01:32 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+11:02:00 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+11:02:20 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+11:02:21 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+11:02:22 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+11:02:22 [DEBUG]   → Extrayendo eventId del HTML...
+11:02:22 [DEBUG] Betfair event ID extraído de la URL: 35189654
+11:02:22 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:02:23 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:02:23 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+11:02:23 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+11:02:37 [WARNING]   × Timeout esperando estadísticas básicas
+11:02:37 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+11:02:38 [DEBUG]     × 'Shots on target' no encontrado en DOM
+11:02:39 [DEBUG]     × 'Shots off target' no encontrado en DOM
+11:02:40 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+11:02:41 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+11:02:44 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+11:02:45 [DEBUG]     × 'Free kicks' no encontrado en DOM
+11:02:46 [DEBUG]     × 'Offsides' no encontrado en DOM
+11:02:47 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+11:02:48 [DEBUG]     × 'Saves' no encontrado en DOM
+11:02:49 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+11:02:50 [DEBUG]     × 'Substitutions' no encontrado en DOM
+11:02:51 [DEBUG]     × 'Injuries' no encontrado en DOM
+11:02:52 [DEBUG]     × 'Fouls' no encontrado en DOM
+11:02:52 [WARNING]   × Fallback iframe no encontró estadísticas
+11:02:53 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+11:03:05 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+11:03:05 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+11:03:12 [DEBUG]   × No se encontró URL del iframe de stats
+11:03:12 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+11:03:12 [INFO] ✓ Captura paralela completada en 127.0s (1/1 exitosos)
+11:03:12 [WARNING] Ciclo tardó 127.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+11:03:12 [INFO] 
+--- Ciclo #59 ---
+11:03:12 [INFO] 📸 Capturando 1 partidos en paralelo...
+11:03:20 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+11:03:37 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+11:03:38 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+11:04:07 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+11:04:27 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+11:04:28 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+11:04:29 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+11:04:29 [DEBUG]   → Extrayendo eventId del HTML...
+11:04:29 [DEBUG] Betfair event ID extraído de la URL: 35189654
+11:04:29 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:04:29 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:04:29 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+11:04:29 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+11:04:48 [WARNING]   × Timeout esperando estadísticas básicas
+11:04:48 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+11:04:49 [DEBUG]     × 'Shots on target' no encontrado en DOM
+11:04:50 [DEBUG]     × 'Shots off target' no encontrado en DOM
+11:04:51 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+11:04:52 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+11:04:55 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+11:04:56 [DEBUG]     × 'Free kicks' no encontrado en DOM
+11:04:57 [DEBUG]     × 'Offsides' no encontrado en DOM
+11:04:58 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+11:04:59 [DEBUG]     × 'Saves' no encontrado en DOM
+11:05:00 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+11:05:01 [DEBUG]     × 'Substitutions' no encontrado en DOM
+11:05:02 [DEBUG]     × 'Injuries' no encontrado en DOM
+11:05:03 [DEBUG]     × 'Fouls' no encontrado en DOM
+11:05:03 [WARNING]   × Fallback iframe no encontró estadísticas
+11:05:03 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+11:05:16 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+11:05:16 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+11:05:23 [DEBUG]   × No se encontró URL del iframe de stats
+11:05:23 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+11:05:23 [INFO] ✓ Captura paralela completada en 131.0s (1/1 exitosos)
+11:05:23 [WARNING] Ciclo tardó 131.0s (> 30s). Iniciando siguiente ciclo inmediatamente.
+11:05:23 [INFO] 
+--- Ciclo #60 ---
+11:05:23 [INFO] 📸 Capturando 1 partidos en paralelo...
+11:05:31 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+11:05:49 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+11:05:50 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+11:06:18 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+11:06:38 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+11:06:39 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Resultado Correcto...
+11:06:40 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo estadísticas del partido...
+11:06:40 [DEBUG]   → Extrayendo eventId del HTML...
+11:06:40 [DEBUG] Betfair event ID extraído de la URL: 35189654
+11:06:40 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:06:40 [ERROR] Error consultando videoplayer endpoint: 404 Client Error:  for url: https://videoplayer.betfair.es/GetPlayer.do?eID=35189654&contentType=viz&contentView=mstats
+11:06:40 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+11:06:40 [INFO]   → Extrayendo stats del iframe (fallback): eID=35189654
+11:06:56 [WARNING]   × Timeout esperando estadísticas básicas
+11:06:56 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+11:06:57 [DEBUG]     × 'Shots on target' no encontrado en DOM
+11:06:58 [DEBUG]     × 'Shots off target' no encontrado en DOM
+11:06:59 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+11:07:00 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+11:07:03 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+11:07:04 [DEBUG]     × 'Free kicks' no encontrado en DOM
+11:07:05 [DEBUG]     × 'Offsides' no encontrado en DOM
+11:07:06 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+11:07:07 [DEBUG]     × 'Saves' no encontrado en DOM
+11:07:08 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+11:07:09 [DEBUG]     × 'Substitutions' no encontrado en DOM
+11:07:10 [DEBUG]     × 'Injuries' no encontrado en DOM
+11:07:12 [DEBUG]     × 'Fouls' no encontrado en DOM
+11:07:12 [WARNING]   × Fallback iframe no encontró estadísticas
+11:07:13 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo volumen matched...
+11:07:26 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo momentum (fallback visual)...
+11:07:26 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+11:07:32 [DEBUG]   × No se encontró URL del iframe de stats
+11:07:32 [INFO] ✓ [utrecht-feyenoord-apuestas-35189654] Captura exitosa: pre_partido, min , -
+11:07:32 [INFO] ✓ Captura paralela completada en 129.5s (1/1 exitosos)
+11:07:32 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:07:32 [INFO] Cargados 1 partidos desde games.csv
+11:07:32 [INFO] 🗑️  Cerrando 1 drivers (partidos finalizados o futuros)...
+11:07:35 [DEBUG] ✓ Driver cerrado: utrecht-feyenoord-apuestas-35189654
+11:07:35 [DEBUG]    - Cerrado: utrecht-feyenoord-apuestas-35189654
+11:07:35 [INFO] ✓ Drivers actualizados: 0 partidos activos
+11:07:35 [WARNING] Ciclo tardó 132.4s (> 30s). Iniciando siguiente ciclo inmediatamente.
+11:07:35 [INFO] 
+--- Ciclo #61 ---
+11:07:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:07:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:08:05 [INFO] 
+--- Ciclo #62 ---
+11:08:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:08:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:08:35 [INFO] 
+--- Ciclo #63 ---
+11:08:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:08:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:09:05 [INFO] 
+--- Ciclo #64 ---
+11:09:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:09:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:09:35 [INFO] 
+--- Ciclo #65 ---
+11:09:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:09:35 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:09:35 [INFO] Cargados 1 partidos desde games.csv
+11:09:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:10:05 [INFO] 
+--- Ciclo #66 ---
+11:10:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:10:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:10:35 [INFO] 
+--- Ciclo #67 ---
+11:10:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:10:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:11:05 [INFO] 
+--- Ciclo #68 ---
+11:11:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:11:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:11:35 [INFO] 
+--- Ciclo #69 ---
+11:11:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:11:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:12:05 [INFO] 
+--- Ciclo #70 ---
+11:12:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:12:05 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:12:05 [INFO] Cargados 1 partidos desde games.csv
+11:12:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:12:35 [INFO] 
+--- Ciclo #71 ---
+11:12:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:12:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:13:05 [INFO] 
+--- Ciclo #72 ---
+11:13:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:13:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:13:35 [INFO] 
+--- Ciclo #73 ---
+11:13:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:13:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:14:05 [INFO] 
+--- Ciclo #74 ---
+11:14:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:14:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:14:35 [INFO] 
+--- Ciclo #75 ---
+11:14:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:14:35 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:14:35 [INFO] Cargados 1 partidos desde games.csv
+11:14:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:15:05 [INFO] 
+--- Ciclo #76 ---
+11:15:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:15:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:15:35 [INFO] 
+--- Ciclo #77 ---
+11:15:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:15:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:16:05 [INFO] 
+--- Ciclo #78 ---
+11:16:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:16:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:16:35 [INFO] 
+--- Ciclo #79 ---
+11:16:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:16:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:17:05 [INFO] 
+--- Ciclo #80 ---
+11:17:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:17:05 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:17:05 [INFO] Cargados 1 partidos desde games.csv
+11:17:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:17:35 [INFO] 
+--- Ciclo #81 ---
+11:17:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:17:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:18:05 [INFO] 
+--- Ciclo #82 ---
+11:18:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:18:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:18:35 [INFO] 
+--- Ciclo #83 ---
+11:18:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:18:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:19:05 [INFO] 
+--- Ciclo #84 ---
+11:19:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:19:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:19:35 [INFO] 
+--- Ciclo #85 ---
+11:19:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:19:35 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:19:35 [INFO] Cargados 1 partidos desde games.csv
+11:19:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:20:05 [INFO] 
+--- Ciclo #86 ---
+11:20:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:20:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:20:35 [INFO] 
+--- Ciclo #87 ---
+11:20:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:20:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:21:05 [INFO] 
+--- Ciclo #88 ---
+11:21:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:21:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:21:35 [INFO] 
+--- Ciclo #89 ---
+11:21:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:21:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:22:05 [INFO] 
+--- Ciclo #90 ---
+11:22:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:22:06 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:22:06 [INFO] Cargados 1 partidos desde games.csv
+11:22:06 [INFO] Ciclo completado en 0.3s. Esperando 29.7s para siguiente ciclo...
+11:22:35 [INFO] 
+--- Ciclo #91 ---
+11:22:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:22:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:23:05 [INFO] 
+--- Ciclo #92 ---
+11:23:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:23:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:23:35 [INFO] 
+--- Ciclo #93 ---
+11:23:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:23:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:24:05 [INFO] 
+--- Ciclo #94 ---
+11:24:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:24:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:24:35 [INFO] 
+--- Ciclo #95 ---
+11:24:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:24:35 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:24:35 [INFO] Cargados 1 partidos desde games.csv
+11:24:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:25:05 [INFO] 
+--- Ciclo #96 ---
+11:25:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:25:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:25:35 [INFO] 
+--- Ciclo #97 ---
+11:25:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:25:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:26:05 [INFO] 
+--- Ciclo #98 ---
+11:26:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:26:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:26:35 [INFO] 
+--- Ciclo #99 ---
+11:26:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:26:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:27:05 [INFO] 
+--- Ciclo #100 ---
+11:27:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:27:05 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:27:05 [INFO] Cargados 1 partidos desde games.csv
+11:27:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:27:35 [INFO] 
+--- Ciclo #101 ---
+11:27:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:27:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:28:05 [INFO] 
+--- Ciclo #102 ---
+11:28:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:28:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:28:35 [INFO] 
+--- Ciclo #103 ---
+11:28:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:28:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:29:05 [INFO] 
+--- Ciclo #104 ---
+11:29:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:29:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:29:35 [INFO] 
+--- Ciclo #105 ---
+11:29:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:29:35 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:29:35 [INFO] Cargados 1 partidos desde games.csv
+11:29:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:30:05 [INFO] 
+--- Ciclo #106 ---
+11:30:05 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:30:05 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:30:35 [INFO] 
+--- Ciclo #107 ---
+11:30:35 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:30:35 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:31:06 [INFO] 
+--- Ciclo #108 ---
+11:31:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:31:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:31:36 [INFO] 
+--- Ciclo #109 ---
+11:31:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:31:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:32:06 [INFO] 
+--- Ciclo #110 ---
+11:32:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:32:06 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:32:06 [INFO] Cargados 1 partidos desde games.csv
+11:32:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:32:36 [INFO] 
+--- Ciclo #111 ---
+11:32:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:32:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:33:06 [INFO] 
+--- Ciclo #112 ---
+11:33:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:33:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:33:36 [INFO] 
+--- Ciclo #113 ---
+11:33:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:33:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:34:06 [INFO] 
+--- Ciclo #114 ---
+11:34:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:34:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:34:36 [INFO] 
+--- Ciclo #115 ---
+11:34:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:34:36 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:34:36 [INFO] Cargados 1 partidos desde games.csv
+11:34:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:35:06 [INFO] 
+--- Ciclo #116 ---
+11:35:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:35:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:35:36 [INFO] 
+--- Ciclo #117 ---
+11:35:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:35:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:36:06 [INFO] 
+--- Ciclo #118 ---
+11:36:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:36:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:36:36 [INFO] 
+--- Ciclo #119 ---
+11:36:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:36:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:37:06 [INFO] 
+--- Ciclo #120 ---
+11:37:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:37:06 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:37:06 [INFO] Cargados 1 partidos desde games.csv
+11:37:06 [INFO] Ciclo completado en 0.4s. Esperando 29.6s para siguiente ciclo...
+11:37:36 [INFO] 
+--- Ciclo #121 ---
+11:37:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:37:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:38:06 [INFO] 
+--- Ciclo #122 ---
+11:38:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:38:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:38:36 [INFO] 
+--- Ciclo #123 ---
+11:38:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:38:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:39:06 [INFO] 
+--- Ciclo #124 ---
+11:39:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:39:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:39:36 [INFO] 
+--- Ciclo #125 ---
+11:39:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:39:36 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:39:36 [INFO] Cargados 1 partidos desde games.csv
+11:39:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:40:06 [INFO] 
+--- Ciclo #126 ---
+11:40:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:40:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:40:36 [INFO] 
+--- Ciclo #127 ---
+11:40:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:40:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:41:06 [INFO] 
+--- Ciclo #128 ---
+11:41:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:41:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:41:36 [INFO] 
+--- Ciclo #129 ---
+11:41:36 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:41:36 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...
+11:42:06 [INFO] 
+--- Ciclo #130 ---
+11:42:06 [INFO] ⏰ Sin partidos activos para capturar en este ciclo
+11:42:06 [INFO] 🔄 Revisando games.csv para detectar cambios...
+11:42:06 [INFO] Cargados 1 partidos desde games.csv
+11:42:06 [INFO] Ciclo completado en 0.0s. Esperando 30.0s para siguiente ciclo...

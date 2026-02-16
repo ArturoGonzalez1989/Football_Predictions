@@ -20,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.matches import router as matches_router
 from api.system import router as system_router
 from api.analytics import router as analytics_router
+from api.bets import router as bets_router
 
 app = FastAPI(title="Furbo Monitor API", version="1.0.0")
 
@@ -34,6 +35,7 @@ app.add_middleware(
 app.include_router(matches_router)
 app.include_router(system_router)
 app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(bets_router, tags=["bets"])
 
 
 # ==================== AUTO REFRESH SCHEDULER ====================

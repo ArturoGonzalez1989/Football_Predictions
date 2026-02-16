@@ -34,6 +34,10 @@ import {
   type StrategyXGBet,
   type StrategyOddsDrift,
   type StrategyOddsDriftBet,
+  type StrategyGoalClustering,
+  type StrategyGoalClusteringBet,
+  type StrategyPressureCooker,
+  type StrategyPressureCookerBet,
   type Cartera,
   type CarteraBet,
 } from "../lib/api"
@@ -49,6 +53,8 @@ export function InsightsView() {
   const [strategyDraw, setStrategyDraw] = useState<StrategyBackDraw00 | null>(null)
   const [strategyXG, setStrategyXG] = useState<StrategyXGUnderperformance | null>(null)
   const [strategyDrift, setStrategyDrift] = useState<StrategyOddsDrift | null>(null)
+  const [strategyGoalClustering, setStrategyGoalClustering] = useState<StrategyGoalClustering | null>(null)
+  const [strategyPressureCooker, setStrategyPressureCooker] = useState<StrategyPressureCooker | null>(null)
   const [cartera, setCartera] = useState<Cartera | null>(null)
   const [xg, setXg] = useState<XgAccuracy | null>(null)
   const [odds, setOdds] = useState<OddsMovements | null>(null)
@@ -67,7 +73,7 @@ export function InsightsView() {
     const load = async () => {
       setLoading(true)
       try {
-        const [m, x, o, ou, c, allMatches, sd, sxg, sdr, cart] = await Promise.all([
+        const results = await Promise.allSettled([
           api.getMomentumPatterns(),
           api.getXgAccuracy(),
           api.getOddsMovements(),
@@ -77,25 +83,45 @@ export function InsightsView() {
           api.getStrategyBackDraw00(),
           api.getStrategyXGUnderperformance(),
           api.getStrategyOddsDrift(),
+          api.getStrategyGoalClustering(),
+          api.getStrategyPressureCooker(),
           api.getCartera(),
         ])
-        setMomentum(m)
-        setXg(x)
-        setOdds(o)
-        setOverUnder(ou)
-        setCorrelations(c)
-        setStrategyDraw(sd)
-        setStrategyXG(sxg)
-        setStrategyDrift(sdr)
-        setCartera(cart)
+        const val = <T,>(r: PromiseSettledResult<T>): T | null => r.status === "fulfilled" ? r.value : null
+        const m = val(results[0])
+        const x = val(results[1])
+        const o = val(results[2])
+        const ou = val(results[3])
+        const c = val(results[4])
+        const allMatches = val(results[5])
+        const sd = val(results[6])
+        const sxg = val(results[7])
+        const sdr = val(results[8])
+        const sgc = val(results[9])
+        const spc = val(results[10])
+        const cart = val(results[11])
+        // Log any failures
+        results.forEach((r, i) => { if (r.status === "rejected") console.warn(`Insights API call #${i} failed:`, r.reason) })
+        if (m) setMomentum(m)
+        if (x) setXg(x)
+        if (o) setOdds(o)
+        if (ou) setOverUnder(ou)
+        if (c) setCorrelations(c)
+        if (sd) setStrategyDraw(sd)
+        if (sxg) setStrategyXG(sxg)
+        if (sdr) setStrategyDrift(sdr)
+        if (sgc) setStrategyGoalClustering(sgc)
+        if (spc) setStrategyPressureCooker(spc)
+        if (cart) setCartera(cart)
         // Only matches with CSV data
-        const flat = [...allMatches.live, ...allMatches.upcoming, ...allMatches.finished]
-        const withData = flat.filter(m => m.csv_exists && m.capture_count >= 5)
-        setMatches(withData)
-        // Auto-select the match with most captures
-        if (withData.length > 0) {
-          const best = withData.reduce((a, b) => a.capture_count > b.capture_count ? a : b)
-          setSelectedMatchId(best.match_id)
+        if (allMatches) {
+          const flat = [...allMatches.live, ...allMatches.upcoming, ...allMatches.finished]
+          const withData = flat.filter(m => m.csv_exists && m.capture_count >= 5)
+          setMatches(withData)
+          if (withData.length > 0) {
+            const best = withData.reduce((a, b) => a.capture_count > b.capture_count ? a : b)
+            setSelectedMatchId(best.match_id)
+          }
         }
       } catch (err) {
         console.error("Failed to load insights:", err)
@@ -182,6 +208,8 @@ export function InsightsView() {
           strategyDraw={strategyDraw}
           strategyXG={strategyXG}
           strategyDrift={strategyDrift}
+          strategyGoalClustering={strategyGoalClustering}
+          strategyPressureCooker={strategyPressureCooker}
           cartera={cartera}
         />
       )}
@@ -737,6 +765,90 @@ const STRATEGY_VERSIONS: { key: StrategyVersion; label: string; desc: string; fi
   { key: "v2", label: "V2", desc: "xG<0.5 + PD<20% + Sh<8", filterKey: "passes_v2" },
 ]
 
+// CSV Download helpers
+function downloadCSV(filename: string, csvContent: string) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', filename)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+function generateCarteraCSV(bets: CarteraBet[]): string {
+  const headers = [
+    'match', 'match_id', 'csv_file', 'timestamp_utc', 'strategy', 'minuto', 'score', 'ft_score', 'won', 'pl',
+    // Odds
+    'back_draw', 'back_over_odds', 'over_line', 'back_odds', 'drift_pct',
+    // Stats
+    'xg_total', 'xg_excess', 'poss_diff', 'shots_total', 'sot_total', 'sot_max',
+    // Validation columns
+    'passes_v15', 'passes_v2r', 'passes_v2', 'passes_v3', 'passes_v4',
+    'team', 'goal_diff'
+  ].join(',')
+
+  const rows = bets.map(b => {
+    const csvFile = `${b.match_id}.csv`
+    const strategy = b.strategy_label || b.strategy || ''
+
+    return [
+      `"${b.match}"`, b.match_id, csvFile, b.timestamp_utc || '', strategy,
+      b.minuto ?? '', b.score_at_trigger || '', b.ft_score, b.won ? 1 : 0, b.pl,
+      b.back_draw ?? '', b.back_over_odds ?? (b as any).over_odds ?? '', b.over_line || '', b.back_odds ?? '', b.drift_pct ?? '',
+      b.xg_total ?? '', b.xg_excess ?? '', b.poss_diff ?? '', b.shots_total ?? '', b.sot_total ?? '', b.sot_max ?? '',
+      b.passes_v15 ? 1 : 0, b.passes_v2r ? 1 : 0, b.passes_v2 ? 1 : 0, b.passes_v3 ? 1 : 0, b.passes_v4 ? 1 : 0,
+      b.team || '', b.goal_diff ?? ''
+    ].join(',')
+  })
+
+  return [headers, ...rows].join('\n')
+}
+
+function generateBackDrawCSV(bets: StrategyBet[]): string {
+  const headers = [
+    'match', 'match_id', 'csv_file', 'timestamp_utc', 'minuto', 'score',
+    'back_draw', 'xg_total', 'xg_max', 'poss_diff', 'shots_total', 'sot_total',
+    'bfed_prematch', 'ft_score', 'won', 'pl',
+    // Validation columns (1/0)
+    'cumple_minuto_30', 'cumple_score_00', 'cumple_xg_bajo_06', 'cumple_xg_bajo_05',
+    'cumple_poss_equilibrada_25', 'cumple_poss_equilibrada_20',
+    'cumple_tiros_bajos', 'passes_v1', 'passes_v15', 'passes_v2r', 'passes_v2'
+  ].join(',')
+
+  const rows = bets.map(b => {
+    const csvFile = `${b.match_id}.csv`
+    const minuto = b.minuto ?? ''
+    const xgTotal = b.xg_total ?? ''
+    const xgMax = b.xg_max ?? ''
+    const possDiff = b.poss_diff ?? ''
+    const shotsTotal = b.shots_total ?? ''
+    const sotTotal = b.sot_total ?? ''
+
+    // Validation flags
+    const cumpleMinuto30 = (b.minuto && b.minuto >= 30) ? 1 : 0
+    const cumpleScore00 = 1 // Always true for this strategy trigger
+    const cumpleXgBajo06 = (b.xg_total !== null && b.xg_total < 0.6) ? 1 : 0
+    const cumpleXgBajo05 = (b.xg_total !== null && b.xg_total < 0.5) ? 1 : 0
+    const cumplePossEq25 = (b.poss_diff !== null && b.poss_diff < 25) ? 1 : 0
+    const cumplePossEq20 = (b.poss_diff !== null && b.poss_diff < 20) ? 1 : 0
+    const cumpleTirosBajos = (b.shots_total !== null && b.shots_total < 8) ? 1 : 0
+
+    return [
+      `"${b.match}"`, b.match_id, csvFile, b.timestamp_utc || '',
+      minuto, '0-0', b.back_draw ?? '', xgTotal, xgMax, possDiff, shotsTotal, sotTotal,
+      b.bfed_prematch ?? '', b.ft_score, b.won ? 1 : 0, b.pl,
+      cumpleMinuto30, cumpleScore00, cumpleXgBajo06, cumpleXgBajo05,
+      cumplePossEq25, cumplePossEq20, cumpleTirosBajos,
+      b.passes_v2 ? 1 : 0, b.passes_v15 ? 1 : 0, b.passes_v2r ? 1 : 0, b.passes_v2 ? 1 : 0
+    ].join(',')
+  })
+
+  return [headers, ...rows].join('\n')
+}
+
 function StrategyDrawTab({ data }: { data: StrategyBackDraw00 }) {
   const { summary, bets, total_matches, with_trigger } = data
   const [version, setVersion] = useState<StrategyVersion>("v1")
@@ -945,17 +1057,21 @@ function StrategyDrawTab({ data }: { data: StrategyBackDraw00 }) {
   )
 }
 
-type StrategySubTab = "draw" | "xg" | "drift" | "cartera"
+type StrategySubTab = "draw" | "xg" | "drift" | "clustering" | "pressure" | "cartera"
 
 function StrategiesContainer({
   strategyDraw,
   strategyXG,
   strategyDrift,
+  strategyGoalClustering,
+  strategyPressureCooker,
   cartera,
 }: {
   strategyDraw: StrategyBackDraw00 | null
   strategyXG: StrategyXGUnderperformance | null
   strategyDrift: StrategyOddsDrift | null
+  strategyGoalClustering: StrategyGoalClustering | null
+  strategyPressureCooker: StrategyPressureCooker | null
   cartera: Cartera | null
 }) {
   const [sub, setSub] = useState<StrategySubTab>("draw")
@@ -964,14 +1080,27 @@ function StrategiesContainer({
     { key: "draw", label: "Back Empate 0-0", color: "cyan" },
     { key: "xg", label: "xG Underperf", color: "amber" },
     { key: "drift", label: "Odds Drift", color: "emerald" },
+    { key: "clustering", label: "Goal Clustering", color: "rose" },
+    { key: "pressure", label: "Pressure Cooker", color: "orange" },
     { key: "cartera", label: "Cartera", color: "purple" },
   ]
 
-  const colorMap: Record<string, string> = {
+  const colorMapActive: Record<string, string> = {
     cyan: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40",
     amber: "bg-amber-500/20 text-amber-400 border border-amber-500/40",
     emerald: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40",
+    rose: "bg-rose-500/20 text-rose-400 border border-rose-500/40",
+    orange: "bg-orange-500/20 text-orange-400 border border-orange-500/40",
     purple: "bg-purple-500/20 text-purple-400 border border-purple-500/40",
+  }
+
+  const colorMapInactive: Record<string, string> = {
+    cyan: "bg-cyan-500/5 text-cyan-500/60 border border-cyan-500/20 hover:border-cyan-500/30",
+    amber: "bg-amber-500/5 text-amber-500/60 border border-amber-500/20 hover:border-amber-500/30",
+    emerald: "bg-emerald-500/5 text-emerald-500/60 border border-emerald-500/20 hover:border-emerald-500/30",
+    rose: "bg-rose-500/5 text-rose-500/60 border border-rose-500/20 hover:border-rose-500/30",
+    orange: "bg-orange-500/5 text-orange-500/60 border border-orange-500/20 hover:border-orange-500/30",
+    purple: "bg-purple-500/5 text-purple-500/60 border border-purple-500/20 hover:border-purple-500/30",
   }
 
   return (
@@ -985,8 +1114,8 @@ function StrategiesContainer({
             onClick={() => setSub(t.key)}
             className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
               sub === t.key
-                ? colorMap[t.color]
-                : "text-zinc-500 hover:text-zinc-300 border border-transparent"
+                ? colorMapActive[t.color]
+                : colorMapInactive[t.color]
             }`}
           >
             {t.label}
@@ -1005,6 +1134,14 @@ function StrategiesContainer({
       {sub === "drift" && strategyDrift && <StrategyDriftTab data={strategyDrift} />}
       {sub === "drift" && !strategyDrift && (
         <div className="text-center py-12 text-zinc-500 text-sm">No hay datos de Odds Drift.</div>
+      )}
+      {sub === "clustering" && strategyGoalClustering && <GoalClusteringTab data={strategyGoalClustering} />}
+      {sub === "clustering" && !strategyGoalClustering && (
+        <div className="text-center py-12 text-zinc-500 text-sm">No hay datos de Goal Clustering.</div>
+      )}
+      {sub === "pressure" && strategyPressureCooker && <PressureCookerTab data={strategyPressureCooker} />}
+      {sub === "pressure" && !strategyPressureCooker && (
+        <div className="text-center py-12 text-zinc-500 text-sm">No hay datos de Pressure Cooker.</div>
       )}
       {sub === "cartera" && cartera && <CarteraTab data={cartera} />}
       {sub === "cartera" && !cartera && (
@@ -1185,7 +1322,7 @@ function StrategyXGTab({ data }: { data: StrategyXGUnderperformance }) {
                     <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.team_xg?.toFixed(2) ?? "-"}</td>
                     <td className="py-2 px-2 text-right text-cyan-400 text-xs font-medium">{b.xg_excess?.toFixed(2) ?? "-"}</td>
                     <td className="py-2 px-2 text-center text-zinc-400 text-xs">{b.over_line || "-"}</td>
-                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.back_over_odds?.toFixed(2) ?? "-"}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400 text-xs">{(b.back_over_odds ?? (b as any).over_odds)?.toFixed(2) ?? "-"}</td>
                     <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.sot_team ?? "-"}</td>
                     <td className="py-2 px-2 text-center text-xs">
                       <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
@@ -1438,6 +1575,31 @@ function filterDriftBets(bets: CarteraBet[], version: DriftCarteraVersion): Cart
   return driftBets
 }
 
+type ClusteringCarteraVersion = "v2" | "off"
+
+const CLUSTERING_CARTERA_VERSIONS: { key: ClusteringCarteraVersion; label: string; desc: string }[] = [
+  { key: "v2", label: "V2", desc: "SoT max>=3" },
+  { key: "off", label: "OFF", desc: "" },
+]
+
+function filterClusteringBets(bets: CarteraBet[], version: ClusteringCarteraVersion): CarteraBet[] {
+  if (version === "off") return []
+  const clusteringBets = bets.filter(b => b.strategy === "goal_clustering")
+  return clusteringBets
+}
+
+type PressureCarteraVersion = "v1" | "off"
+
+const PRESSURE_CARTERA_VERSIONS: { key: PressureCarteraVersion; label: string; desc: string }[] = [
+  { key: "v1", label: "V1", desc: "Empate 1-1+ min 65-75" },
+  { key: "off", label: "OFF", desc: "" },
+]
+
+function filterPressureBets(bets: CarteraBet[], version: PressureCarteraVersion): CarteraBet[] {
+  if (version === "off") return []
+  return bets.filter(b => b.strategy === "pressure_cooker")
+}
+
 interface DrawdownInfo {
   maxDd: number
   peak: number
@@ -1507,7 +1669,7 @@ const BANKROLL_MODES: { key: BankrollMode; label: string; desc: string }[] = [
 ]
 
 function getBetOdds(b: CarteraBet): number {
-  return b.back_draw ?? b.back_over_odds ?? b.back_odds ?? 2.0
+  return b.back_draw ?? b.back_over_odds ?? (b as any).over_odds ?? b.back_odds ?? 2.0
 }
 
 function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: BankrollMode) {
@@ -1569,7 +1731,7 @@ function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: Bankrol
         break
       }
       case "variable":
-        stakePct = b.strategy === "odds_drift" ? 0.025 : b.strategy === "xg_underperformance" ? 0.03 : 0.015
+        stakePct = b.strategy === "odds_drift" ? 0.025 : b.strategy === "xg_underperformance" ? 0.03 : b.strategy === "pressure_cooker" ? 0.02 : 0.015
         break
     }
 
@@ -1620,14 +1782,16 @@ const PRESETS: { key: Exclude<PresetKey, null>; label: string; icon: string; des
 ]
 
 interface VersionCombo {
-  draw: DrawVersion; xg: XGCarteraVersion; drift: DriftCarteraVersion; br: BankrollMode
+  draw: DrawVersion; xg: XGCarteraVersion; drift: DriftCarteraVersion; clustering: ClusteringCarteraVersion; pressure: PressureCarteraVersion; br: BankrollMode
 }
 
 function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number) {
   const drawBets = filterDrawBets(bets, combo.draw)
   const xgBets = filterXGBets(bets, combo.xg)
   const driftBets = filterDriftBets(bets, combo.drift)
-  const filtered = [...drawBets, ...xgBets, ...driftBets].sort((a, b) =>
+  const clusteringBets = filterClusteringBets(bets, combo.clustering)
+  const pressureBets = filterPressureBets(bets, combo.pressure)
+  const filtered = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets].sort((a, b) =>
     (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
   if (filtered.length === 0) return null
@@ -1637,38 +1801,43 @@ function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: nu
 
 function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>): VersionCombo {
   // For max_bets, just return all V1
-  if (criterion === "max_bets") return { draw: "v1", xg: "base", drift: "v1", br: "fixed" }
+  if (criterion === "max_bets") return { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", br: "fixed" }
 
   const drawOpts: DrawVersion[] = ["v1", "v15", "v2r", "v2"]
   const xgOpts: XGCarteraVersion[] = ["base", "v2"]
   const driftOpts: DriftCarteraVersion[] = ["v1", "v2", "v3", "v4"]
+  const clusteringOpts: ClusteringCarteraVersion[] = ["v2", "off"]
+  const pressureOpts: PressureCarteraVersion[] = ["v1", "off"]
   const brOpts: BankrollMode[] = criterion === "min_dd" ? ["dd_protection", "fixed", "half_kelly"] : ["fixed"]
 
-  let best: VersionCombo = { draw: "v1", xg: "base", drift: "v1", br: "fixed" }
+  let best: VersionCombo = { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", br: "fixed" }
   let bestScore = -Infinity
 
   for (const draw of drawOpts) {
     for (const xg of xgOpts) {
       for (const drift of driftOpts) {
-        for (const br of brOpts) {
-          const combo = { draw, xg, drift, br }
-          const result = evaluateCombo(bets, combo, bankrollInit)
-          if (!result || result.total < 3) continue
+        for (const clustering of clusteringOpts) {
+          for (const pressure of pressureOpts) {
+            for (const br of brOpts) {
+              const combo = { draw, xg, drift, clustering, pressure, br }
+              const result = evaluateCombo(bets, combo, bankrollInit)
+              if (!result || result.total < 3) continue
 
-          let score: number
-          switch (criterion) {
-            case "max_roi": score = result.flatRoi; break
-            case "max_pl": score = result.flatPl; break
-            case "max_wr": score = result.winPct + result.total * 0.01; break // slight bonus for more bets
-            case "min_dd": {
-              // minimize DD relative to PL, penalize negative PL
-              const ddPenalty = result.managedMaxDd.maxDd
-              score = result.managedPl - ddPenalty * 2 + result.winPct * 0.5
-              break
+              let score: number
+              switch (criterion) {
+                case "max_roi": score = result.flatRoi; break
+                case "max_pl": score = result.flatPl; break
+                case "max_wr": score = result.winPct + result.total * 0.01; break // slight bonus for more bets
+                case "min_dd": {
+                  const ddPenalty = result.managedMaxDd.maxDd
+                  score = result.managedPl - ddPenalty * 2 + result.winPct * 0.5
+                  break
+                }
+                default: score = result.flatPl
+              }
+              if (score > bestScore) { bestScore = score; best = combo }
             }
-            default: score = result.flatPl
           }
-          if (score > bestScore) { bestScore = score; best = combo }
         }
       }
     }
@@ -1681,6 +1850,8 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [drawVer, setDrawVer] = useState<DrawVersion>("v1")
   const [xgVer, setXgVer] = useState<XGCarteraVersion>("base")
   const [driftVer, setDriftVer] = useState<DriftCarteraVersion>("v1")
+  const [clusteringVer, setClusteringVer] = useState<ClusteringCarteraVersion>("v2")
+  const [pressureVer, setPressureVer] = useState<PressureCarteraVersion>("v1")
   const [brMode, setBrMode] = useState<BankrollMode>("fixed")
   const [activePreset, setActivePreset] = useState<PresetKey>(null)
 
@@ -1689,6 +1860,8 @@ function CarteraTab({ data }: { data: Cartera }) {
     setDrawVer(combo.draw)
     setXgVer(combo.xg)
     setDriftVer(combo.drift)
+    setClusteringVer(combo.clustering)
+    setPressureVer(combo.pressure)
     setBrMode(combo.br)
     setActivePreset(key)
   }
@@ -1697,9 +1870,18 @@ function CarteraTab({ data }: { data: Cartera }) {
   const drawBets = filterDrawBets(bets, drawVer)
   const xgBets = filterXGBets(bets, xgVer)
   const driftBets = filterDriftBets(bets, driftVer)
-  const filteredBets = [...drawBets, ...xgBets, ...driftBets].sort((a, b) =>
+  const clusteringBets = filterClusteringBets(bets, clusteringVer)
+  const pressureBets = filterPressureBets(bets, pressureVer)
+  const filteredBets = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets].sort((a, b) =>
     (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
+
+  const handleDownloadCSV = () => {
+    const csv = generateCarteraCSV(filteredBets)
+    const timestamp = new Date().toISOString().split('T')[0]
+    const presetLabel = activePreset ? `_${activePreset}` : ''
+    downloadCSV(`cartera${presetLabel}_${timestamp}.csv`, csv)
+  }
 
   // Recalculate simulations
   const sim = simulateCartera(filteredBets, managed.initial_bankroll, brMode)
@@ -1709,6 +1891,8 @@ function CarteraTab({ data }: { data: Cartera }) {
     { key: "back_draw_00", label: "Back Empate 0-0", bgClass: "bg-cyan-500", active: drawVer !== "off", verLabel: drawVer !== "off" ? DRAW_VERSIONS.find(v => v.key === drawVer)!.label : "" },
     { key: "xg_underperformance", label: "xG Underperformance", bgClass: "bg-amber-500", active: xgVer !== "off", verLabel: xgVer !== "off" ? XG_CARTERA_VERSIONS.find(v => v.key === xgVer)!.label : "" },
     { key: "odds_drift", label: "Odds Drift", bgClass: "bg-emerald-500", active: driftVer !== "off", verLabel: driftVer !== "off" ? DRIFT_CARTERA_VERSIONS.find(v => v.key === driftVer)!.label : "" },
+    { key: "goal_clustering", label: "Goal Clustering", bgClass: "bg-rose-500", active: clusteringVer !== "off", verLabel: clusteringVer !== "off" ? CLUSTERING_CARTERA_VERSIONS.find(v => v.key === clusteringVer)!.label : "" },
+    { key: "pressure_cooker", label: "Pressure Cooker", bgClass: "bg-orange-500", active: pressureVer !== "off", verLabel: pressureVer !== "off" ? PRESSURE_CARTERA_VERSIONS.find(v => v.key === pressureVer)!.label : "" },
   ]
 
   const stratStats = stratConfigs.filter(s => s.active).map(s => {
@@ -1741,7 +1925,7 @@ function CarteraTab({ data }: { data: Cartera }) {
   }
 
   const activeLabels = stratConfigs.filter(s => s.active).map(s => `${s.label} (${s.verLabel})`)
-  const selLabel = activeLabels.length === 3 ? "Todas las estrategias" : activeLabels.length === 2 ? "2 estrategias" : activeLabels[0] || "Ninguna"
+  const selLabel = activeLabels.length === 5 ? "Todas las estrategias" : activeLabels.length >= 3 ? `${activeLabels.length} estrategias` : activeLabels.length === 2 ? "2 estrategias" : activeLabels[0] || "Ninguna"
 
   return (
     <div className="space-y-6">
@@ -1754,9 +1938,22 @@ function CarteraTab({ data }: { data: Cartera }) {
               Elige estrategias, versiones y modo de gestion de bankroll.
             </p>
           </div>
-          <span className="text-[10px] text-zinc-600 font-mono">
-            {bets.length} apuestas totales
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-zinc-600 font-mono">
+              {filteredBets.length} apuestas filtradas / {bets.length} totales
+            </span>
+            <button
+              type="button"
+              onClick={handleDownloadCSV}
+              className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+              title="Descargar CSV completo con todas las apuestas filtradas"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Descargar CSV
+            </button>
+          </div>
         </div>
         {/* Optimization Presets */}
         <div className="mb-4">
@@ -1886,6 +2083,68 @@ function CarteraTab({ data }: { data: Cartera }) {
                 {driftVer === "v2" && "→ Trigger: V1 + Total goles al trigger >= 2 | Apuesta: Back equipo"}
                 {driftVer === "v3" && "→ Trigger: V1 + Drift >= 100% | Apuesta: Back equipo"}
                 {driftVer === "v4" && "→ Trigger: V1 + Minuto >= 45 (2a parte) | Apuesta: Back equipo"}
+              </div>
+            )}
+          </div>
+          {/* Goal Clustering versions */}
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Goal Clustering</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {CLUSTERING_CARTERA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setClusteringVer(v.key === clusteringVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                      clusteringVer === v.key
+                        ? v.key === "off"
+                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
+                          : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {clusteringVer !== "off" && (
+              <div className="ml-[140px] mt-1.5 text-[10px] text-rose-400/70">
+                {clusteringVer === "v2" && "→ Trigger: Gol reciente (min 15-80) + SoT max >= 3 | Apuesta: Back Over (total+0.5)"}
+              </div>
+            )}
+          </div>
+          {/* Pressure Cooker versions */}
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Pressure Cooker</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {PRESSURE_CARTERA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setPressureVer(v.key === pressureVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                      pressureVer === v.key
+                        ? v.key === "off"
+                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
+                          : "bg-orange-500/20 text-orange-400 border border-orange-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {pressureVer !== "off" && (
+              <div className="ml-[140px] mt-1.5 text-[10px] text-orange-400/70">
+                {pressureVer === "v1" && "→ Trigger: Empate 1-1+ entre min 65-75 | Apuesta: Back Over (total+0.5)"}
               </div>
             )}
           </div>
@@ -2134,6 +2393,10 @@ function CarteraTab({ data }: { data: Cartera }) {
                             ? "bg-cyan-500/15 text-cyan-400"
                             : b.strategy === "odds_drift"
                             ? "bg-emerald-500/15 text-emerald-400"
+                            : b.strategy === "goal_clustering"
+                            ? "bg-rose-500/15 text-rose-400"
+                            : b.strategy === "pressure_cooker"
+                            ? "bg-orange-500/15 text-orange-400"
                             : "bg-amber-500/15 text-amber-400"
                         }`}>
                           {b.strategy_label}
@@ -2181,6 +2444,248 @@ function CarteraTab({ data }: { data: Cartera }) {
           No hay apuestas en la cartera.
         </div>
       )}
+    </div>
+  )
+}
+
+function PressureCookerTab({ data }: { data: StrategyPressureCooker }) {
+  const { summary, bets, total_matches, draws_65_75 } = data
+
+  const sortedBets = [...bets].sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
+  const cumulativeBets = sortedBets.map((bet, idx) => ({
+    idx: idx + 1,
+    pl: sortedBets.slice(0, idx + 1).reduce((sum, b) => sum + b.pl, 0),
+  }))
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/30 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-orange-400 mb-3">Pressure Cooker V1</h2>
+        <p className="text-zinc-400 text-sm">
+          Back Over (score+0.5) en empates con goles (1-1, 2-2...) entre min 65-75. Excluye 0-0.
+        </p>
+        <p className="text-zinc-500 text-xs mt-2">
+          Estado: EN PRUEBA - Muestra insuficiente, acumulando datos para validacion.
+        </p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-5 gap-3">
+        <MetricCard title="Partidos" value={total_matches} description="Partidos analizados" />
+        <MetricCard title="Empates 65-75" value={draws_65_75} description="Candidatos detectados" />
+        <MetricCard
+          title="Win Rate"
+          value={`${summary.win_rate}%`}
+          description={`${summary.wins}/${summary.total_bets} apuestas ganadas`}
+        />
+        <MetricCard title="P/L Total" value={`${summary.total_pl >= 0 ? "+" : ""}${summary.total_pl.toFixed(2)}`} description="Stake 10 EUR" />
+        <MetricCard title="ROI" value={`${summary.roi >= 0 ? "+" : ""}${summary.roi}%`} description="Retorno sobre inversion" />
+      </div>
+
+      {/* Chart */}
+      {cumulativeBets.length > 0 && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-zinc-300 mb-4">P/L Acumulado</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <ComposedChart data={cumulativeBets}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
+              <XAxis dataKey="idx" stroke="#71717a" tick={{ fontSize: 11 }} />
+              <YAxis stroke="#71717a" tick={{ fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#18181b",
+                  border: "1px solid #3f3f46",
+                  borderRadius: "8px",
+                  fontSize: "11px",
+                }}
+              />
+              <Bar dataKey="pl" fill="#f97316" opacity={0.6} />
+              <Line type="monotone" dataKey="pl" stroke="#fb923c" strokeWidth={2} dot={false} />
+              <ReferenceLine y={0} stroke="#71717a" strokeDasharray="3 3" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Bets Table */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-zinc-800">
+          <h3 className="text-sm font-semibold text-zinc-300">
+            Detalle de Apuestas ({bets.length})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-zinc-900/80 text-zinc-500 uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3 text-left">#</th>
+                <th className="px-4 py-3 text-left">Partido</th>
+                <th className="px-4 py-3 text-center">Min</th>
+                <th className="px-4 py-3 text-center">Score</th>
+                <th className="px-4 py-3 text-center">Over Odds</th>
+                <th className="px-4 py-3 text-center">Over Line</th>
+                <th className="px-4 py-3 text-center">SoT Δ10</th>
+                <th className="px-4 py-3 text-center">Shots Δ10</th>
+                <th className="px-4 py-3 text-center">FT</th>
+                <th className="px-4 py-3 text-center">P/L</th>
+                <th className="px-4 py-3 text-center">Result</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {sortedBets.map((b, i) => (
+                <tr key={i} className="hover:bg-zinc-800/30 transition-colors">
+                  <td className="px-4 py-2 text-zinc-500">{i + 1}</td>
+                  <td className="px-4 py-2 text-zinc-300 truncate max-w-[180px]">{b.match}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.minuto}'</td>
+                  <td className="px-4 py-2 text-center text-zinc-300 font-medium">{b.score}</td>
+                  <td className="px-4 py-2 text-center text-orange-400 font-medium">{b.back_over_odds?.toFixed(2) ?? "-"}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.over_line}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.sot_delta}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.shots_delta}</td>
+                  <td className="px-4 py-2 text-center">
+                    <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
+                  </td>
+                  <td className={`px-4 py-2 text-center font-medium ${b.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {b.pl >= 0 ? "+" : ""}{b.pl.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.won ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                      {b.won ? "W" : "L"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function GoalClusteringTab({ data }: { data: StrategyGoalClustering }) {
+  const { summary, bets, total_matches, total_goal_events } = data
+
+  // Calcular P/L acumulado para el chart
+  const cumulativeBets = bets
+    .sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
+    .map((bet, idx) => ({
+      idx: idx + 1,
+      pl: bets.slice(0, idx + 1).reduce((sum, b) => sum + b.pl, 0),
+    }))
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-rose-500/10 to-pink-500/10 border border-rose-500/30 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-rose-400 mb-3">Goal Clustering V2</h2>
+        <p className="text-zinc-400 text-sm">
+          Apostar a Over (total+0.5) inmediatamente después de un gol cuando hay intensidad de juego (SoT max ≥ 3)
+        </p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-4 gap-3">
+        <MetricCard title="Triggers" value={total_goal_events} description="Eventos de gol detectados" />
+        <MetricCard
+          title="Win Rate"
+          value={`${summary.win_rate}%`}
+          description={`${summary.wins}/${summary.total_bets} apuestas ganadas`}
+        />
+        <MetricCard title="P/L Total" value={`€${summary.total_pl.toFixed(2)}`} description="Beneficio total (stake 10 EUR)" />
+        <MetricCard title="ROI" value={`${summary.roi}%`} description="Retorno sobre inversión" />
+      </div>
+
+      {/* Chart */}
+      {cumulativeBets.length > 0 && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-zinc-300 mb-4">P/L Acumulado</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <ComposedChart data={cumulativeBets}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
+              <XAxis dataKey="idx" stroke="#71717a" tick={{ fontSize: 11 }} />
+              <YAxis stroke="#71717a" tick={{ fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#18181b",
+                  border: "1px solid #3f3f46",
+                  borderRadius: "8px",
+                  fontSize: "11px",
+                }}
+              />
+              <Bar dataKey="pl" fill="#f43f5e" opacity={0.6} />
+              <Line type="monotone" dataKey="pl" stroke="#fb7185" strokeWidth={2} dot={false} />
+              <ReferenceLine y={0} stroke="#71717a" strokeDasharray="3 3" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Bets Table */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-zinc-800">
+          <h3 className="text-sm font-semibold text-zinc-300">
+            Detalle de Apuestas ({bets.length})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-zinc-900/80 text-zinc-500 uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3 text-left">#</th>
+                <th className="px-4 py-3 text-left">Partido</th>
+                <th className="px-4 py-3 text-center">Min</th>
+                <th className="px-4 py-3 text-center">Score</th>
+                <th className="px-4 py-3 text-center">SoT Max</th>
+                <th className="px-4 py-3 text-center">Over Odds</th>
+                <th className="px-4 py-3 text-center">FT</th>
+                <th className="px-4 py-3 text-center">P/L</th>
+                <th className="px-4 py-3 text-center">Result</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {bets.map((bet, i) => (
+                <tr
+                  key={i}
+                  className={`hover:bg-zinc-800/30 transition-colors ${
+                    bet.won ? "bg-emerald-500/5" : "bg-red-500/5"
+                  }`}
+                >
+                  <td className="px-4 py-3 text-zinc-500">{i + 1}</td>
+                  <td className="px-4 py-3 text-zinc-300">{bet.match}</td>
+                  <td className="px-4 py-3 text-center text-zinc-400">{bet.minuto}</td>
+                  <td className="px-4 py-3 text-center font-mono text-zinc-300">{bet.score}</td>
+                  <td className="px-4 py-3 text-center text-rose-400">{bet.sot_max}</td>
+                  <td className="px-4 py-3 text-center font-mono text-zinc-300">
+                    {bet.over_odds?.toFixed(2) || "N/A"}
+                  </td>
+                  <td className="px-4 py-3 text-center font-mono text-zinc-400">{bet.ft_score}</td>
+                  <td
+                    className={`px-4 py-3 text-center font-mono font-semibold ${
+                      bet.pl > 0 ? "text-emerald-400" : bet.pl < 0 ? "text-red-400" : "text-zinc-500"
+                    }`}
+                  >
+                    {bet.pl > 0 ? "+" : ""}
+                    {bet.pl.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {bet.won ? (
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        WIN
+                      </span>
+                    ) : (
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+                        LOSS
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
