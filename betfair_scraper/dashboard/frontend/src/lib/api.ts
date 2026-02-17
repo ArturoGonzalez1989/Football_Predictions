@@ -420,12 +420,13 @@ export interface CarteraBet {
   passes_v2?: boolean
   passes_v15?: boolean
   passes_v2r?: boolean
+  passes_v3?: boolean
   // odds drift fields
   back_odds?: number | null
   drift_pct?: number | null
   goal_diff?: number | null
-  passes_v3?: boolean
   passes_v4?: boolean
+  passes_v5?: boolean
 }
 
 export interface Cartera {
@@ -470,10 +471,38 @@ export interface BettingSignal {
   description?: string
 }
 
+export interface AvailableStrategy {
+  id: string
+  name: string
+  sample_size: number
+}
+
 export interface BettingSignals {
   total_signals: number
   live_matches: number
   signals: BettingSignal[]
+  available_strategies?: AvailableStrategy[]
+}
+
+export interface WatchlistCondition {
+  label: string
+  met: boolean
+  current?: string
+  target?: string
+}
+
+export interface WatchlistItem {
+  match_id: string
+  match_name: string
+  match_url: string
+  minute: number
+  score: string
+  strategy: string
+  version: string
+  conditions: WatchlistCondition[]
+  met: number
+  total: number
+  proximity: number
 }
 
 export interface PlaceBetRequest {
@@ -522,6 +551,12 @@ export interface PlacedBet {
   status: "pending" | "won" | "lost"
   result?: string
   pl?: number
+  // Live enrichment (pending bets only)
+  live_score?: string
+  live_minute?: number | null
+  live_status?: string
+  would_win_now?: boolean
+  potential_pl?: number
 }
 
 export interface PlacedBetsResponse {
@@ -529,6 +564,7 @@ export interface PlacedBetsResponse {
   pending: number
   won: number
   lost: number
+  total_pl: number
   bets: PlacedBet[]
 }
 
@@ -569,7 +605,16 @@ export const api = {
   getCartera: () => get<Cartera>("/analytics/strategies/cartera"),
 
   // Betting signals
-  getBettingSignals: () => get<BettingSignals>("/analytics/signals/betting-opportunities"),
+  getBettingSignals: (versions?: Record<string, string>) => {
+    if (!versions) return get<BettingSignals>("/analytics/signals/betting-opportunities")
+    const params = new URLSearchParams(versions).toString()
+    return get<BettingSignals>(`/analytics/signals/betting-opportunities?${params}`)
+  },
+  getWatchlist: (versions?: Record<string, string>) => {
+    if (!versions) return get<WatchlistItem[]>("/analytics/signals/watchlist")
+    const params = new URLSearchParams(versions).toString()
+    return get<WatchlistItem[]>(`/analytics/signals/watchlist?${params}`)
+  },
 
   // Placed bets tracking
   placeBet: (bet: PlaceBetRequest) => post<PlacedBet>("/bets/place", bet),

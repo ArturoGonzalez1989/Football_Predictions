@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback } from "react"
 import { api, type MatchesGrouped, type SystemStatus as SystemStatusType } from "../lib/api"
+import { isSoundEnabled, setSoundEnabled } from "../lib/sounds"
 import { BettingSignalsView } from "./BettingSignalsView"
 import { LiveView } from "./LiveView"
 import { UpcomingView } from "./UpcomingView"
 import { FinishedView } from "./FinishedView"
 import { DataQualityView } from "./DataQualityView"
 import { InsightsView } from "./InsightsView"
+import { PlacedBetsView } from "./PlacedBetsView"
+import { AnalyticsView } from "./AnalyticsView"
 
-type View = "signals" | "live" | "upcoming" | "finished" | "quality" | "insights"
+type View = "signals" | "bets" | "live" | "upcoming" | "finished" | "quality" | "insights" | "analytics"
 
 export function Dashboard() {
   const [view, setView] = useState<View>("signals")
@@ -15,6 +18,7 @@ export function Dashboard() {
   const [system, setSystem] = useState<SystemStatusType | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [error, setError] = useState<string | null>(null)
+  const [soundOn, setSoundOn] = useState(isSoundEnabled)
 
   const refresh = useCallback(async () => {
     try {
@@ -60,6 +64,17 @@ export function Dashboard() {
             }
             label="Señales"
             badgeColor="amber"
+          />
+          <NavItem
+            active={view === "bets"}
+            onClick={() => setView("bets")}
+            icon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            }
+            label="Apuestas"
+            badgeColor="blue"
           />
           <NavItem
             active={view === "live"}
@@ -122,16 +137,43 @@ export function Dashboard() {
             }
             label="Insights"
           />
+
+          <NavItem
+            active={view === "analytics"}
+            onClick={() => setView("analytics")}
+            icon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            }
+            label="Analytics"
+          />
         </nav>
 
-        <div className="p-3 border-t border-zinc-800 text-[10px] text-zinc-600">
-          Updated {lastRefresh.toLocaleTimeString()}
+        <div className="p-3 border-t border-zinc-800 text-[10px] text-zinc-600 flex items-center justify-between">
+          <span>
+            Updated {lastRefresh.toLocaleTimeString()}
+            <button
+              type="button"
+              onClick={refresh}
+              className="ml-2 text-zinc-500 hover:text-zinc-200 transition-colors cursor-pointer"
+            >
+              Refresh
+            </button>
+          </span>
           <button
             type="button"
-            onClick={refresh}
-            className="ml-2 text-zinc-500 hover:text-zinc-200 transition-colors cursor-pointer"
+            title={soundOn ? "Silenciar alertas" : "Activar alertas"}
+            onClick={() => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next) }}
+            className={`p-1 rounded transition-colors cursor-pointer ${soundOn ? "text-zinc-400 hover:text-zinc-200" : "text-zinc-700 hover:text-zinc-500"}`}
           >
-            Refresh
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              {soundOn ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M11 5L6 9H2v6h4l5 4V5z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707A1 1 0 0112 5v14a1 1 0 01-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              )}
+            </svg>
           </button>
         </div>
       </aside>
@@ -145,6 +187,8 @@ export function Dashboard() {
         )}
 
         {view === "signals" && <BettingSignalsView />}
+
+        {view === "bets" && <PlacedBetsView />}
 
         {view === "live" && (
           <LiveView
@@ -166,6 +210,8 @@ export function Dashboard() {
         {view === "quality" && <DataQualityView />}
 
         {view === "insights" && <InsightsView />}
+
+        {view === "analytics" && <AnalyticsView />}
       </main>
     </div>
   )

@@ -114,7 +114,31 @@ async def get_strategy_pressure_cooker() -> Dict[str, Any]:
 # ==================== BETTING SIGNALS ENDPOINT ====================
 
 @router.get("/signals/betting-opportunities")
-async def get_betting_signals() -> Dict[str, Any]:
-    """Detect live betting opportunities based on portfolio strategies."""
-    return csv_reader.detect_betting_signals()
+async def get_betting_signals(
+    draw: str = "v2r",
+    xg: str = "v2",
+    drift: str = "v1",
+    clustering: str = "v2",
+    pressure: str = "v1",
+) -> Dict[str, Any]:
+    """Detect live betting opportunities based on portfolio strategies.
+
+    Each parameter specifies the version of the strategy to use.
+    Use "off" to disable a strategy.
+    """
+    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure}
+    return csv_reader.detect_betting_signals(versions=versions)
+
+
+@router.get("/signals/watchlist")
+async def get_watchlist(
+    draw: str = "v2r",
+    xg: str = "v2",
+    drift: str = "v1",
+    clustering: str = "v2",
+    pressure: str = "v1",
+) -> List[Any]:
+    """Matches close to triggering a signal but not yet meeting all conditions."""
+    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure}
+    return csv_reader.detect_watchlist(versions=versions)
 

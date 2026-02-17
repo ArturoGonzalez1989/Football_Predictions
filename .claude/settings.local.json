@@ -85,7 +85,10 @@
       "Bash(/c/Users/agonz/miniconda3/python.exe:*)",
       "Bash(for f in partido_*.csv)",
       "Bash(do grep \"finalizado\" \"$f\")",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(WMIC PROCESS WHERE \"CommandLine LIKE ''%uvicorn%''\" GET ProcessId,CommandLine)",
+      "Bash(WMIC PROCESS WHERE \"Name=''python.exe''\" GET ProcessId,CommandLine)",
+      "Bash(npm run dev:*)"
     ]
   }
 }

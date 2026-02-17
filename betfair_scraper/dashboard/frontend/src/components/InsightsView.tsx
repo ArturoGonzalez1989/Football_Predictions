@@ -44,6 +44,19 @@ import {
 import { SiegeMeter } from "./SiegeMeter"
 import { PriceVsReality } from "./PriceVsReality"
 import { MomentumSwings } from "./MomentumSwings"
+import {
+  type DrawVersion, type XGCarteraVersion, type DriftCarteraVersion,
+  type ClusteringCarteraVersion, type PressureCarteraVersion,
+  type BankrollMode, type VersionCombo, type PresetKey,
+  PRESETS, DRAW_VERSIONS, XG_CARTERA_VERSIONS, DRIFT_CARTERA_VERSIONS,
+  CLUSTERING_CARTERA_VERSIONS, PRESSURE_CARTERA_VERSIONS, BANKROLL_MODES,
+  round2,
+  filterDrawBets, filterXGBets, filterDriftBets, filterClusteringBets, filterPressureBets,
+  calcMaxDrawdown, calcWorstStreak,
+  simulateCartera, evaluateCombo, findBestCombo, getBetOdds,
+  type RealisticAdjustments, DEFAULT_ADJUSTMENTS, REALISTIC_ADJUSTMENTS,
+  applyRealisticAdjustments,
+} from "../lib/cartera"
 
 type Tab = "strategies" | "trading" | "momentum" | "xg" | "odds" | "overunder" | "correlations"
 
@@ -854,9 +867,10 @@ function StrategyDrawTab({ data }: { data: StrategyBackDraw00 }) {
   const [version, setVersion] = useState<StrategyVersion>("v1")
 
   const activeVersion = STRATEGY_VERSIONS.find(v => v.key === version)!
-  const filteredBets = activeVersion.filterKey
+  const filteredBets = (activeVersion.filterKey
     ? bets.filter(b => b[activeVersion.filterKey!])
     : bets
+  ).sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
   const stats = summary[version] ?? summary.base
 
   // Cumulative P/L for filtered bets
@@ -991,6 +1005,7 @@ function StrategyDrawTab({ data }: { data: StrategyBackDraw00 }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800">
+                  <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Fecha</th>
                   <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Partido</th>
                   <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">Min</th>
                   <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">Back</th>
@@ -1009,6 +1024,9 @@ function StrategyDrawTab({ data }: { data: StrategyBackDraw00 }) {
                     key={b.match_id}
                     className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
                   >
+                    <td className="py-2 px-2 text-zinc-500 text-xs whitespace-nowrap">
+                      {b.timestamp_utc ? `${new Date(b.timestamp_utc).getDate().toString().padStart(2,'0')}/${(new Date(b.timestamp_utc).getMonth()+1).toString().padStart(2,'0')}` : "-"}
+                    </td>
                     <td className="py-2 px-2 text-zinc-300 text-xs max-w-[180px] truncate" title={b.match}>{b.match}</td>
                     <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.minuto ?? "-"}</td>
                     <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.back_draw?.toFixed(2) ?? "-"}</td>
@@ -1162,7 +1180,8 @@ function StrategyXGTab({ data }: { data: StrategyXGUnderperformance }) {
   const { summary, bets, total_matches, with_trigger } = data
   const [version, setVersion] = useState<XGVersion>("base")
 
-  const filteredBets = version === "v2" ? bets.filter(b => b.passes_v2) : bets
+  const filteredBets = (version === "v2" ? bets.filter(b => b.passes_v2) : bets)
+    .sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
   const stats = summary[version]
 
   const cumPl = filteredBets.reduce<{ match: string; pl: number; cumPl: number }[]>((acc, b) => {
@@ -1292,6 +1311,7 @@ function StrategyXGTab({ data }: { data: StrategyXGUnderperformance }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800">
+                  <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Fecha</th>
                   <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Partido</th>
                   <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">Min</th>
                   <th className="text-center py-2 px-2 text-xs font-medium text-zinc-500">Score</th>
@@ -1311,6 +1331,9 @@ function StrategyXGTab({ data }: { data: StrategyXGUnderperformance }) {
                     key={`${b.match_id}-${i}`}
                     className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
                   >
+                    <td className="py-2 px-2 text-zinc-500 text-xs whitespace-nowrap">
+                      {b.timestamp_utc ? `${new Date(b.timestamp_utc).getDate().toString().padStart(2,'0')}/${(new Date(b.timestamp_utc).getMonth()+1).toString().padStart(2,'0')}` : "-"}
+                    </td>
                     <td className="py-2 px-2 text-zinc-300 text-xs max-w-[160px] truncate" title={b.match}>{b.match}</td>
                     <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.minuto ?? "-"}</td>
                     <td className="py-2 px-2 text-center text-zinc-400 text-xs">{b.score_at_trigger}</td>
@@ -1367,10 +1390,11 @@ function StrategyDriftTab({ data }: { data: StrategyOddsDrift }) {
   const { summary, bets, total_matches, with_trigger } = data
   const [version, setVersion] = useState<DriftVersion>("v1")
 
-  const filteredBets = version === "v1" ? bets
+  const filteredBets = (version === "v1" ? bets
     : version === "v2" ? bets.filter(b => b.passes_v2)
     : version === "v3" ? bets.filter(b => b.passes_v3)
     : bets.filter(b => b.passes_v4)
+  ).sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
   const stats = summary[version]
 
   // Cumulative P/L
@@ -1465,6 +1489,7 @@ function StrategyDriftTab({ data }: { data: StrategyOddsDrift }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800">
+                  <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Fecha</th>
                   <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Partido</th>
                   <th className="text-right py-2 px-2 text-xs font-medium text-zinc-500">Min</th>
                   <th className="text-center py-2 px-2 text-xs font-medium text-zinc-500">Score</th>
@@ -1481,6 +1506,9 @@ function StrategyDriftTab({ data }: { data: StrategyOddsDrift }) {
                 {filteredBets.map((b, i) => (
                   <tr key={`${b.match_id}-${b.team}-${i}`}
                     className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                    <td className="py-2 px-2 text-zinc-500 text-xs whitespace-nowrap">
+                      {b.timestamp_utc ? `${new Date(b.timestamp_utc).getDate().toString().padStart(2,'0')}/${(new Date(b.timestamp_utc).getMonth()+1).toString().padStart(2,'0')}` : "-"}
+                    </td>
                     <td className="py-2 px-2 text-zinc-300 text-xs max-w-[180px] truncate" title={b.match}>{b.match}</td>
                     <td className="py-2 px-2 text-right text-zinc-400 text-xs">{b.minuto ?? "-"}</td>
                     <td className="py-2 px-2 text-center text-xs text-zinc-400">{b.score_at_trigger}</td>
@@ -1520,330 +1548,9 @@ function StrategyDriftTab({ data }: { data: StrategyOddsDrift }) {
   )
 }
 
-type DrawVersion = "v1" | "v15" | "v2r" | "v2" | "off"
-type XGCarteraVersion = "base" | "v2" | "off"
+// Types, constants, filter functions, simulation imported from ../lib/cartera
 
-const DRAW_VERSIONS: { key: DrawVersion; label: string; desc: string }[] = [
-  { key: "v1", label: "V1", desc: "Base" },
-  { key: "v15", label: "V1.5", desc: "xG<0.6+PD<25%" },
-  { key: "v2r", label: "V2r", desc: "xG<0.6+PD<20%+Sh<8" },
-  { key: "v2", label: "V2", desc: "xG<0.5+PD<20%+Sh<8" },
-  { key: "off", label: "OFF", desc: "" },
-]
 
-const XG_CARTERA_VERSIONS: { key: XGCarteraVersion; label: string; desc: string }[] = [
-  { key: "base", label: "V1", desc: "Base" },
-  { key: "v2", label: "V2", desc: "SoT>=2" },
-  { key: "off", label: "OFF", desc: "" },
-]
-
-function filterDrawBets(bets: CarteraBet[], version: DrawVersion): CarteraBet[] {
-  if (version === "off") return []
-  const drawBets = bets.filter(b => b.strategy === "back_draw_00")
-  if (version === "v1") return drawBets
-  if (version === "v15") return drawBets.filter(b => b.passes_v15)
-  if (version === "v2r") return drawBets.filter(b => b.passes_v2r)
-  if (version === "v2") return drawBets.filter(b => b.passes_v2)
-  return drawBets
-}
-
-function filterXGBets(bets: CarteraBet[], version: XGCarteraVersion): CarteraBet[] {
-  if (version === "off") return []
-  const xgBets = bets.filter(b => b.strategy === "xg_underperformance")
-  if (version === "base") return xgBets
-  if (version === "v2") return xgBets.filter(b => b.passes_v2)
-  return xgBets
-}
-
-type DriftCarteraVersion = "v1" | "v2" | "v3" | "v4" | "off"
-
-const DRIFT_CARTERA_VERSIONS: { key: DriftCarteraVersion; label: string; desc: string }[] = [
-  { key: "v1", label: "V1", desc: "Base" },
-  { key: "v2", label: "V2", desc: "2+ goles" },
-  { key: "v3", label: "V3", desc: "Drift>=100%" },
-  { key: "v4", label: "V4", desc: "2a parte" },
-  { key: "off", label: "OFF", desc: "" },
-]
-
-function filterDriftBets(bets: CarteraBet[], version: DriftCarteraVersion): CarteraBet[] {
-  if (version === "off") return []
-  const driftBets = bets.filter(b => b.strategy === "odds_drift")
-  if (version === "v1") return driftBets
-  if (version === "v2") return driftBets.filter(b => b.passes_v2)
-  if (version === "v3") return driftBets.filter(b => b.passes_v3)
-  if (version === "v4") return driftBets.filter(b => b.passes_v4)
-  return driftBets
-}
-
-type ClusteringCarteraVersion = "v2" | "off"
-
-const CLUSTERING_CARTERA_VERSIONS: { key: ClusteringCarteraVersion; label: string; desc: string }[] = [
-  { key: "v2", label: "V2", desc: "SoT max>=3" },
-  { key: "off", label: "OFF", desc: "" },
-]
-
-function filterClusteringBets(bets: CarteraBet[], version: ClusteringCarteraVersion): CarteraBet[] {
-  if (version === "off") return []
-  const clusteringBets = bets.filter(b => b.strategy === "goal_clustering")
-  return clusteringBets
-}
-
-type PressureCarteraVersion = "v1" | "off"
-
-const PRESSURE_CARTERA_VERSIONS: { key: PressureCarteraVersion; label: string; desc: string }[] = [
-  { key: "v1", label: "V1", desc: "Empate 1-1+ min 65-75" },
-  { key: "off", label: "OFF", desc: "" },
-]
-
-function filterPressureBets(bets: CarteraBet[], version: PressureCarteraVersion): CarteraBet[] {
-  if (version === "off") return []
-  return bets.filter(b => b.strategy === "pressure_cooker")
-}
-
-interface DrawdownInfo {
-  maxDd: number
-  peak: number
-  trough: number
-  peakIdx: number
-  troughIdx: number
-  ddPct: number // % of peak lost
-}
-
-function calcMaxDrawdown(cumulative: number[]): DrawdownInfo {
-  let peak = 0
-  let peakIdx = -1
-  let maxDd = 0
-  let ddPeak = 0
-  let ddTrough = 0
-  let ddPeakIdx = 0
-  let ddTroughIdx = 0
-  for (let i = 0; i < cumulative.length; i++) {
-    const v = cumulative[i]
-    if (v > peak) { peak = v; peakIdx = i }
-    const dd = peak - v
-    if (dd > maxDd) {
-      maxDd = dd
-      ddPeak = peak
-      ddTrough = v
-      ddPeakIdx = peakIdx
-      ddTroughIdx = i
-    }
-  }
-  const ddPct = ddPeak > 0 ? round2(maxDd / ddPeak * 100) : 0
-  return {
-    maxDd: round2(maxDd), peak: round2(ddPeak), trough: round2(ddTrough),
-    peakIdx: ddPeakIdx, troughIdx: ddTroughIdx, ddPct,
-  }
-}
-
-function calcWorstStreak(bets: CarteraBet[]): { losses: number; from: number; to: number; plLost: number } {
-  let maxStreak = 0
-  let maxFrom = 0
-  let maxTo = 0
-  let cur = 0
-  let curFrom = 0
-  let curPl = 0
-  let maxPl = 0
-  for (let i = 0; i < bets.length; i++) {
-    if (bets[i].pl < 0) {
-      if (cur === 0) { curFrom = i; curPl = 0 }
-      cur++
-      curPl += bets[i].pl
-      if (cur > maxStreak) { maxStreak = cur; maxFrom = curFrom; maxTo = i; maxPl = curPl }
-    } else {
-      cur = 0
-      curPl = 0
-    }
-  }
-  return { losses: maxStreak, from: maxFrom + 1, to: maxTo + 1, plLost: round2(maxPl) }
-}
-
-type BankrollMode = "fixed" | "kelly" | "half_kelly" | "dd_protection" | "variable"
-
-const BANKROLL_MODES: { key: BankrollMode; label: string; desc: string }[] = [
-  { key: "fixed", label: "Fijo 2%", desc: "Apuesta siempre el 2% del bankroll" },
-  { key: "kelly", label: "Kelly", desc: "WR rolling, max 8% del bankroll por apuesta" },
-  { key: "half_kelly", label: "Half-Kelly", desc: "Kelly/2 rolling, max 4% del bankroll" },
-  { key: "dd_protection", label: "Proteccion DD", desc: "2% base, 1% si cae >5%, 0.5% si cae >10% del pico" },
-  { key: "variable", label: "Variable", desc: "3% xG / 1.5% Draw" },
-]
-
-function getBetOdds(b: CarteraBet): number {
-  return b.back_draw ?? b.back_over_odds ?? (b as any).over_odds ?? b.back_odds ?? 2.0
-}
-
-function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: BankrollMode) {
-  const FLAT_STAKE = 10
-  const KELLY_MIN_BETS = 5 // minimum bets before Kelly kicks in (use fixed 2% before)
-
-  let flatCum = 0
-  let bankroll = bankrollInit
-  let peakBankroll = bankrollInit
-  const flatCumArr: number[] = []
-  const managedCumArr: number[] = []
-  const betDetails: { stake: number; plManaged: number; bankrollAfter: number }[] = []
-  let flatWins = 0
-  let managedPl = 0
-  let rollingWins = 0 // track wins seen so far for rolling Kelly
-
-  for (let i = 0; i < bets.length; i++) {
-    const b = bets[i]
-    // Flat (always 10 EUR)
-    flatCum = round2(flatCum + b.pl)
-    flatCumArr.push(flatCum)
-    if (b.won) flatWins++
-
-    // Rolling win rate: only from PREVIOUS bets (not current or future)
-    const rollingWR = i > 0 ? rollingWins / i : 0.5
-
-    // Calculate stake % based on mode
-    const odds = getBetOdds(b)
-    const bNet = Math.max(odds - 1, 0.01)
-    let stakePct: number
-
-    switch (mode) {
-      case "fixed":
-        stakePct = 0.02
-        break
-      case "kelly": {
-        if (i < KELLY_MIN_BETS) {
-          stakePct = 0.02 // conservative until enough data
-        } else {
-          const f = (rollingWR * bNet - (1 - rollingWR)) / bNet
-          stakePct = Math.max(0, Math.min(f, 0.08)) // cap 8% - realistic for sports betting
-        }
-        break
-      }
-      case "half_kelly": {
-        if (i < KELLY_MIN_BETS) {
-          stakePct = 0.01 // half of conservative
-        } else {
-          const f = (rollingWR * bNet - (1 - rollingWR)) / bNet
-          stakePct = Math.max(0, Math.min(f / 2, 0.04)) // cap 4%
-        }
-        break
-      }
-      case "dd_protection": {
-        const ddFromPeak = peakBankroll > 0 ? (peakBankroll - bankroll) / peakBankroll : 0
-        if (ddFromPeak > 0.10) stakePct = 0.005
-        else if (ddFromPeak > 0.05) stakePct = 0.01
-        else stakePct = 0.02
-        break
-      }
-      case "variable":
-        stakePct = b.strategy === "odds_drift" ? 0.025 : b.strategy === "xg_underperformance" ? 0.03 : b.strategy === "pressure_cooker" ? 0.02 : 0.015
-        break
-    }
-
-    const stake = round2(bankroll * stakePct)
-    const ratio = stake / FLAT_STAKE
-    const managedBetPl = round2(b.pl * ratio)
-    bankroll = round2(bankroll + managedBetPl)
-    if (bankroll > peakBankroll) peakBankroll = bankroll
-    managedPl = round2(managedPl + managedBetPl)
-    managedCumArr.push(round2(bankroll - bankrollInit))
-    betDetails.push({ stake, plManaged: managedBetPl, bankrollAfter: bankroll })
-
-    // Update rolling wins AFTER using it (so bet i uses WR from bets 0..i-1)
-    if (b.won) rollingWins++
-  }
-
-  const totalStaked = bets.length * FLAT_STAKE
-  const flatDd = calcMaxDrawdown(flatCumArr)
-  const managedDd = calcMaxDrawdown(managedCumArr)
-  const worstStreak = calcWorstStreak(bets)
-
-  return {
-    total: bets.length,
-    wins: flatWins,
-    winPct: bets.length > 0 ? round2(flatWins / bets.length * 100) : 0,
-    flatPl: flatCum,
-    flatRoi: totalStaked > 0 ? round2(flatCum / totalStaked * 100) : 0,
-    flatCumulative: flatCumArr,
-    flatMaxDd: flatDd,
-    managedPl,
-    managedRoi: bankrollInit > 0 ? round2(managedPl / bankrollInit * 100) : 0,
-    managedFinalBankroll: bankroll,
-    managedCumulative: managedCumArr,
-    managedMaxDd: managedDd,
-    worstStreak,
-    betDetails,
-  }
-}
-
-type PresetKey = "max_roi" | "max_pl" | "max_wr" | "min_dd" | "max_bets" | null
-
-const PRESETS: { key: Exclude<PresetKey, null>; label: string; icon: string; desc: string }[] = [
-  { key: "max_roi", label: "Max ROI", icon: "%", desc: "Busca la combinacion de versiones que maximiza el retorno porcentual sobre lo apostado" },
-  { key: "max_pl", label: "Max P/L", icon: "$", desc: "Maximiza el beneficio absoluto en EUR" },
-  { key: "max_wr", label: "Max WR", icon: "W", desc: "Maximiza el porcentaje de acierto (con ligero bonus por mayor muestra)" },
-  { key: "min_dd", label: "Min DD", icon: "D", desc: "Minimiza el drawdown relativo al P/L, tambien explora modo DD-protection de bankroll" },
-  { key: "max_bets", label: "Max Datos", icon: "#", desc: "Selecciona todas las V1 para maximizar el tamano de muestra" },
-]
-
-interface VersionCombo {
-  draw: DrawVersion; xg: XGCarteraVersion; drift: DriftCarteraVersion; clustering: ClusteringCarteraVersion; pressure: PressureCarteraVersion; br: BankrollMode
-}
-
-function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number) {
-  const drawBets = filterDrawBets(bets, combo.draw)
-  const xgBets = filterXGBets(bets, combo.xg)
-  const driftBets = filterDriftBets(bets, combo.drift)
-  const clusteringBets = filterClusteringBets(bets, combo.clustering)
-  const pressureBets = filterPressureBets(bets, combo.pressure)
-  const filtered = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets].sort((a, b) =>
-    (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
-  )
-  if (filtered.length === 0) return null
-  const sim = simulateCartera(filtered, bankrollInit, combo.br)
-  return { ...sim, combo, filtered }
-}
-
-function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>): VersionCombo {
-  // For max_bets, just return all V1
-  if (criterion === "max_bets") return { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", br: "fixed" }
-
-  const drawOpts: DrawVersion[] = ["v1", "v15", "v2r", "v2"]
-  const xgOpts: XGCarteraVersion[] = ["base", "v2"]
-  const driftOpts: DriftCarteraVersion[] = ["v1", "v2", "v3", "v4"]
-  const clusteringOpts: ClusteringCarteraVersion[] = ["v2", "off"]
-  const pressureOpts: PressureCarteraVersion[] = ["v1", "off"]
-  const brOpts: BankrollMode[] = criterion === "min_dd" ? ["dd_protection", "fixed", "half_kelly"] : ["fixed"]
-
-  let best: VersionCombo = { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", br: "fixed" }
-  let bestScore = -Infinity
-
-  for (const draw of drawOpts) {
-    for (const xg of xgOpts) {
-      for (const drift of driftOpts) {
-        for (const clustering of clusteringOpts) {
-          for (const pressure of pressureOpts) {
-            for (const br of brOpts) {
-              const combo = { draw, xg, drift, clustering, pressure, br }
-              const result = evaluateCombo(bets, combo, bankrollInit)
-              if (!result || result.total < 3) continue
-
-              let score: number
-              switch (criterion) {
-                case "max_roi": score = result.flatRoi; break
-                case "max_pl": score = result.flatPl; break
-                case "max_wr": score = result.winPct + result.total * 0.01; break // slight bonus for more bets
-                case "min_dd": {
-                  const ddPenalty = result.managedMaxDd.maxDd
-                  score = result.managedPl - ddPenalty * 2 + result.winPct * 0.5
-                  break
-                }
-                default: score = result.flatPl
-              }
-              if (score > bestScore) { bestScore = score; best = combo }
-            }
-          }
-        }
-      }
-    }
-  }
-  return best
-}
 
 function CarteraTab({ data }: { data: Cartera }) {
   const { managed, bets } = data
@@ -1854,6 +1561,12 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [pressureVer, setPressureVer] = useState<PressureCarteraVersion>("v1")
   const [brMode, setBrMode] = useState<BankrollMode>("fixed")
   const [activePreset, setActivePreset] = useState<PresetKey>(null)
+  const [realistic, setRealistic] = useState(false)
+  const [adjDedup, setAdjDedup] = useState(true)
+  const [adjMaxOdds, setAdjMaxOdds] = useState(6.0)
+  const [adjMinOdds, setAdjMinOdds] = useState(1.15)
+  const [adjDriftMinMin, setAdjDriftMinMin] = useState(15)
+  const [adjSlippage, setAdjSlippage] = useState(2)
 
   const applyPreset = (key: Exclude<PresetKey, null>) => {
     const combo = findBestCombo(bets, managed.initial_bankroll, key)
@@ -1872,19 +1585,29 @@ function CarteraTab({ data }: { data: Cartera }) {
   const driftBets = filterDriftBets(bets, driftVer)
   const clusteringBets = filterClusteringBets(bets, clusteringVer)
   const pressureBets = filterPressureBets(bets, pressureVer)
-  const filteredBets = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets].sort((a, b) =>
+  const rawBets = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets].sort((a, b) =>
     (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
+
+  // Apply realistic adjustments if enabled
+  const currentAdj: RealisticAdjustments = realistic
+    ? { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin, slippagePct: adjSlippage }
+    : DEFAULT_ADJUSTMENTS
+  const filteredBets = realistic ? applyRealisticAdjustments(rawBets, currentAdj) : rawBets
+  const removedCount = rawBets.length - filteredBets.length
 
   const handleDownloadCSV = () => {
     const csv = generateCarteraCSV(filteredBets)
     const timestamp = new Date().toISOString().split('T')[0]
     const presetLabel = activePreset ? `_${activePreset}` : ''
-    downloadCSV(`cartera${presetLabel}_${timestamp}.csv`, csv)
+    const realisticLabel = realistic ? '_realista' : ''
+    downloadCSV(`cartera${presetLabel}${realisticLabel}_${timestamp}.csv`, csv)
   }
 
   // Recalculate simulations
   const sim = simulateCartera(filteredBets, managed.initial_bankroll, brMode)
+  // Also calculate ideal sim for comparison when realistic mode is on
+  const idealSim = realistic ? simulateCartera(rawBets, managed.initial_bankroll, brMode) : null
 
   // Per-strategy stats
   const stratConfigs = [
@@ -2049,6 +1772,7 @@ function CarteraTab({ data }: { data: Cartera }) {
               <div className="ml-[140px] mt-1.5 text-[10px] text-amber-400/70">
                 {xgVer === "base" && "→ Trigger: Equipo PERDIENDO + xG_equipo - goles_equipo >= 0.5 (min 15+) | Apuesta: Back Over (total+0.5)"}
                 {xgVer === "v2" && "→ Trigger: Equipo PERDIENDO + xG_equipo - goles_equipo >= 0.5 (min 15+) | Filtro: Tiros a puerta >= 2 | Apuesta: Back Over (total+0.5)"}
+                {xgVer === "v3" && "→ V2 + Filtro anti-DD: Entrada antes del min 70 (las tardias pierden mas)"}
               </div>
             )}
           </div>
@@ -2082,7 +1806,8 @@ function CarteraTab({ data }: { data: Cartera }) {
                 {driftVer === "v1" && "→ Trigger: Equipo ganando 1-0 + drift odds >= 25% | Apuesta: Back equipo (mantiene ventaja)"}
                 {driftVer === "v2" && "→ Trigger: V1 + Total goles al trigger >= 2 | Apuesta: Back equipo"}
                 {driftVer === "v3" && "→ Trigger: V1 + Drift >= 100% | Apuesta: Back equipo"}
-                {driftVer === "v4" && "→ Trigger: V1 + Minuto >= 45 (2a parte) | Apuesta: Back equipo"}
+                {driftVer === "v4" && "→ Trigger: V1 + Minuto >= 45 (2a parte) + Odds <= 5.0 | Apuesta: Back equipo"}
+                {driftVer === "v5" && "→ V1 + Filtro anti-DD: Odds <= 5.0 (cuotas extremas pierden mas)"}
               </div>
             )}
           </div>
@@ -2114,6 +1839,7 @@ function CarteraTab({ data }: { data: Cartera }) {
             {clusteringVer !== "off" && (
               <div className="ml-[140px] mt-1.5 text-[10px] text-rose-400/70">
                 {clusteringVer === "v2" && "→ Trigger: Gol reciente (min 15-80) + SoT max >= 3 | Apuesta: Back Over (total+0.5)"}
+                {clusteringVer === "v3" && "→ V2 + Filtro anti-DD: Entrada antes del min 60 (goles tardios = WR mas bajo)"}
               </div>
             )}
           </div>
@@ -2173,6 +1899,152 @@ function CarteraTab({ data }: { data: Cartera }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Realistic Adjustments Panel */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setRealistic(!realistic)}
+              title="Activar modo realista"
+              className={`relative w-10 h-5 rounded-full transition-colors ${realistic ? "bg-yellow-500" : "bg-zinc-700"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${realistic ? "translate-x-5" : ""}`} />
+            </button>
+            <div>
+              <span className="text-sm font-semibold text-zinc-200">Modo Realista</span>
+              <span className="text-[10px] text-zinc-500 ml-2">
+                {realistic ? `ON — ${removedCount} apuestas filtradas de ${rawBets.length}` : "OFF — simulacion ideal sin ajustes"}
+              </span>
+            </div>
+          </div>
+          {realistic && (
+            <button
+              type="button"
+              onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2) }}
+              className="text-[10px] text-yellow-500/70 hover:text-yellow-400 transition-colors"
+            >
+              Reset defaults
+            </button>
+          )}
+        </div>
+        {realistic && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3">
+            {/* Dedup toggle */}
+            <div className="bg-zinc-800/40 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] text-zinc-400 font-medium">Deduplicar</span>
+                <button
+                  type="button"
+                  onClick={() => setAdjDedup(!adjDedup)}
+                  title="Deduplicar apuestas"
+                  className={`relative w-8 h-4 rounded-full transition-colors ${adjDedup ? "bg-yellow-500" : "bg-zinc-700"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjDedup ? "translate-x-4" : ""}`} />
+                </button>
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Mismo mercado/partido = 1 apuesta</p>
+            </div>
+            {/* Max odds */}
+            <div className="bg-zinc-800/40 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] text-zinc-400 font-medium">Max Odds</span>
+                <input
+                  type="number"
+                  value={adjMaxOdds}
+                  onChange={e => setAdjMaxOdds(parseFloat(e.target.value) || 6.0)}
+                  step="0.5"
+                  min="2"
+                  max="20"
+                  title="Max odds"
+                  className="w-14 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
+                />
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &gt; X (sin liquidez)</p>
+            </div>
+            {/* Min value odds */}
+            <div className="bg-zinc-800/40 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] text-zinc-400 font-medium">Min Odds</span>
+                <input
+                  type="number"
+                  value={adjMinOdds}
+                  onChange={e => setAdjMinOdds(parseFloat(e.target.value) || 1.15)}
+                  step="0.05"
+                  min="1.01"
+                  max="2"
+                  title="Min odds"
+                  className="w-14 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
+                />
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &lt; X (sin valor)</p>
+            </div>
+            {/* Drift min minute */}
+            <div className="bg-zinc-800/40 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] text-zinc-400 font-medium">Drift Min'</span>
+                <input
+                  type="number"
+                  value={adjDriftMinMin}
+                  onChange={e => setAdjDriftMinMin(parseInt(e.target.value) || 15)}
+                  step="5"
+                  min="5"
+                  max="45"
+                  title="Minuto minimo drift"
+                  className="w-14 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
+                />
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Drift antes del min X = excluido</p>
+            </div>
+            {/* Slippage */}
+            <div className="bg-zinc-800/40 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] text-zinc-400 font-medium">Slippage</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={adjSlippage}
+                    onChange={e => setAdjSlippage(parseFloat(e.target.value) || 0)}
+                    step="0.5"
+                    min="0"
+                    max="10"
+                    title="Porcentaje de slippage"
+                    className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
+                  />
+                  <span className="text-[10px] text-zinc-500">%</span>
+                </div>
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Reduce odds X% (ejecucion real)</p>
+            </div>
+          </div>
+        )}
+        {realistic && idealSim && (
+          <div className="mt-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">Comparacion Ideal vs Realista</span>
+            </div>
+            <div className="grid grid-cols-4 gap-4 text-center">
+              <div>
+                <div className="text-[10px] text-zinc-500 mb-0.5">Apuestas</div>
+                <div className="text-xs text-zinc-400">{idealSim.total} → <span className="text-yellow-400 font-medium">{sim.total}</span></div>
+              </div>
+              <div>
+                <div className="text-[10px] text-zinc-500 mb-0.5">Win Rate</div>
+                <div className="text-xs text-zinc-400">{idealSim.winPct}% → <span className="text-yellow-400 font-medium">{sim.winPct}%</span></div>
+              </div>
+              <div>
+                <div className="text-[10px] text-zinc-500 mb-0.5">P/L Flat</div>
+                <div className="text-xs text-zinc-400">{idealSim.flatPl >= 0 ? "+" : ""}{idealSim.flatPl.toFixed(0)} → <span className={`font-medium ${sim.flatPl >= 0 ? "text-green-400" : "text-red-400"}`}>{sim.flatPl >= 0 ? "+" : ""}{sim.flatPl.toFixed(0)}</span></div>
+              </div>
+              <div>
+                <div className="text-[10px] text-zinc-500 mb-0.5">ROI Flat</div>
+                <div className="text-xs text-zinc-400">{idealSim.flatRoi >= 0 ? "+" : ""}{idealSim.flatRoi.toFixed(1)}% → <span className={`font-medium ${sim.flatRoi >= 0 ? "text-green-400" : "text-red-400"}`}>{sim.flatRoi >= 0 ? "+" : ""}{sim.flatRoi.toFixed(1)}%</span></div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Summary Cards */}
@@ -2519,6 +2391,7 @@ function PressureCookerTab({ data }: { data: StrategyPressureCooker }) {
           <table className="w-full text-xs">
             <thead className="bg-zinc-900/80 text-zinc-500 uppercase tracking-wider">
               <tr>
+                <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Fecha</th>
                 <th className="px-4 py-3 text-left">#</th>
                 <th className="px-4 py-3 text-left">Partido</th>
                 <th className="px-4 py-3 text-center">Min</th>
@@ -2535,6 +2408,9 @@ function PressureCookerTab({ data }: { data: StrategyPressureCooker }) {
             <tbody className="divide-y divide-zinc-800/50">
               {sortedBets.map((b, i) => (
                 <tr key={i} className="hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-2 px-2 text-zinc-500 text-xs whitespace-nowrap">
+                    {b.timestamp_utc ? `${new Date(b.timestamp_utc).getDate().toString().padStart(2,'0')}/${(new Date(b.timestamp_utc).getMonth()+1).toString().padStart(2,'0')}` : "-"}
+                  </td>
                   <td className="px-4 py-2 text-zinc-500">{i + 1}</td>
                   <td className="px-4 py-2 text-zinc-300 truncate max-w-[180px]">{b.match}</td>
                   <td className="px-4 py-2 text-center text-zinc-400">{b.minuto}'</td>
@@ -2633,6 +2509,7 @@ function GoalClusteringTab({ data }: { data: StrategyGoalClustering }) {
           <table className="w-full text-xs">
             <thead className="bg-zinc-900/80 text-zinc-500 uppercase tracking-wider">
               <tr>
+                <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Fecha</th>
                 <th className="px-4 py-3 text-left">#</th>
                 <th className="px-4 py-3 text-left">Partido</th>
                 <th className="px-4 py-3 text-center">Min</th>
@@ -2652,6 +2529,9 @@ function GoalClusteringTab({ data }: { data: StrategyGoalClustering }) {
                     bet.won ? "bg-emerald-500/5" : "bg-red-500/5"
                   }`}
                 >
+                  <td className="py-2 px-2 text-zinc-500 text-xs whitespace-nowrap">
+                    {bet.timestamp_utc ? `${new Date(bet.timestamp_utc).getDate().toString().padStart(2,'0')}/${(new Date(bet.timestamp_utc).getMonth()+1).toString().padStart(2,'0')}` : "-"}
+                  </td>
                   <td className="px-4 py-3 text-zinc-500">{i + 1}</td>
                   <td className="px-4 py-3 text-zinc-300">{bet.match}</td>
                   <td className="px-4 py-3 text-center text-zinc-400">{bet.minuto}</td>
@@ -2690,9 +2570,6 @@ function GoalClusteringTab({ data }: { data: StrategyGoalClustering }) {
   )
 }
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100
-}
 
 function MetricCard({
   title,
