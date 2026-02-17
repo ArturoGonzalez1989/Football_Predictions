@@ -1,0 +1,26 @@
+[      58ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
+[     136ms] [WARNING] No event found switching to competition Empty response @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[     224ms] [WARNING] Error: Error while trying to fetch getNavigationContext: TypeError: Cannot read properties of undefined (reading 'eventTypeName')
+    at t.project (https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:1:1037546)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:150579)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:239711)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:220481)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:219322)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:150677) @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[     224ms] [WARNING] Error: Error while trying to fetch getNavigationContext: TypeError: Cannot read properties of undefined (reading 'eventTypeName')
+    at t.project (https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:1:1037546)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:150579)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:239711)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:220481)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:219322)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:150677) @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[    1135ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/al-sadd-al-ittihad-apuestas-35273530:0
+[    1136ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0

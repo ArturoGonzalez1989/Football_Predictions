@@ -38,6 +38,10 @@ import {
   type StrategyGoalClusteringBet,
   type StrategyPressureCooker,
   type StrategyPressureCookerBet,
+  type StrategyTardeAsia,
+  type StrategyTardeAsiaBet,
+  type StrategyMomentumXG,
+  type StrategyMomentumXGBet,
   type Cartera,
   type CarteraBet,
 } from "../lib/api"
@@ -46,16 +50,17 @@ import { PriceVsReality } from "./PriceVsReality"
 import { MomentumSwings } from "./MomentumSwings"
 import {
   type DrawVersion, type XGCarteraVersion, type DriftCarteraVersion,
-  type ClusteringCarteraVersion, type PressureCarteraVersion,
+  type ClusteringCarteraVersion, type PressureCarteraVersion, type TardeAsiaVersion, type MomentumXGVersion,
   type BankrollMode, type VersionCombo, type PresetKey,
   PRESETS, DRAW_VERSIONS, XG_CARTERA_VERSIONS, DRIFT_CARTERA_VERSIONS,
-  CLUSTERING_CARTERA_VERSIONS, PRESSURE_CARTERA_VERSIONS, BANKROLL_MODES,
+  CLUSTERING_CARTERA_VERSIONS, PRESSURE_CARTERA_VERSIONS, TARDE_ASIA_VERSIONS, MOMENTUM_XG_VERSIONS, BANKROLL_MODES,
   round2,
-  filterDrawBets, filterXGBets, filterDriftBets, filterClusteringBets, filterPressureBets,
+  filterDrawBets, filterXGBets, filterDriftBets, filterClusteringBets, filterPressureBets, filterTardeAsiaBets, filterMomentumXGBets,
   calcMaxDrawdown, calcWorstStreak,
   simulateCartera, evaluateCombo, findBestCombo, getBetOdds,
   type RealisticAdjustments, DEFAULT_ADJUSTMENTS, REALISTIC_ADJUSTMENTS,
   applyRealisticAdjustments,
+  type RiskFilter, filterByRisk, analyzeRiskBreakdown,
 } from "../lib/cartera"
 
 type Tab = "strategies" | "trading" | "momentum" | "xg" | "odds" | "overunder" | "correlations"
@@ -68,6 +73,9 @@ export function InsightsView() {
   const [strategyDrift, setStrategyDrift] = useState<StrategyOddsDrift | null>(null)
   const [strategyGoalClustering, setStrategyGoalClustering] = useState<StrategyGoalClustering | null>(null)
   const [strategyPressureCooker, setStrategyPressureCooker] = useState<StrategyPressureCooker | null>(null)
+  const [strategyTardeAsia, setStrategyTardeAsia] = useState<StrategyTardeAsia | null>(null)
+  const [strategyMomentumXGV1, setStrategyMomentumXGV1] = useState<StrategyMomentumXG | null>(null)
+  const [strategyMomentumXGV2, setStrategyMomentumXGV2] = useState<StrategyMomentumXG | null>(null)
   const [cartera, setCartera] = useState<Cartera | null>(null)
   const [xg, setXg] = useState<XgAccuracy | null>(null)
   const [odds, setOdds] = useState<OddsMovements | null>(null)
@@ -98,6 +106,9 @@ export function InsightsView() {
           api.getStrategyOddsDrift(),
           api.getStrategyGoalClustering(),
           api.getStrategyPressureCooker(),
+          api.getStrategyTardeAsia(),
+          api.getStrategyMomentumXGV1(),
+          api.getStrategyMomentumXGV2(),
           api.getCartera(),
         ])
         const val = <T,>(r: PromiseSettledResult<T>): T | null => r.status === "fulfilled" ? r.value : null
@@ -112,7 +123,10 @@ export function InsightsView() {
         const sdr = val(results[8])
         const sgc = val(results[9])
         const spc = val(results[10])
-        const cart = val(results[11])
+        const sta = val(results[11])
+        const smxgv1 = val(results[12])
+        const smxgv2 = val(results[13])
+        const cart = val(results[14])
         // Log any failures
         results.forEach((r, i) => { if (r.status === "rejected") console.warn(`Insights API call #${i} failed:`, r.reason) })
         if (m) setMomentum(m)
@@ -125,6 +139,9 @@ export function InsightsView() {
         if (sdr) setStrategyDrift(sdr)
         if (sgc) setStrategyGoalClustering(sgc)
         if (spc) setStrategyPressureCooker(spc)
+        if (sta) setStrategyTardeAsia(sta)
+        if (smxgv1) setStrategyMomentumXGV1(smxgv1)
+        if (smxgv2) setStrategyMomentumXGV2(smxgv2)
         if (cart) setCartera(cart)
         // Only matches with CSV data
         if (allMatches) {
@@ -223,6 +240,9 @@ export function InsightsView() {
           strategyDrift={strategyDrift}
           strategyGoalClustering={strategyGoalClustering}
           strategyPressureCooker={strategyPressureCooker}
+          strategyTardeAsia={strategyTardeAsia}
+          strategyMomentumXGV1={strategyMomentumXGV1}
+          strategyMomentumXGV2={strategyMomentumXGV2}
           cartera={cartera}
         />
       )}
@@ -1075,7 +1095,7 @@ function StrategyDrawTab({ data }: { data: StrategyBackDraw00 }) {
   )
 }
 
-type StrategySubTab = "draw" | "xg" | "drift" | "clustering" | "pressure" | "cartera"
+type StrategySubTab = "draw" | "xg" | "drift" | "clustering" | "pressure" | "tardeAsia" | "momentumXG" | "cartera"
 
 function StrategiesContainer({
   strategyDraw,
@@ -1083,6 +1103,9 @@ function StrategiesContainer({
   strategyDrift,
   strategyGoalClustering,
   strategyPressureCooker,
+  strategyTardeAsia,
+  strategyMomentumXGV1,
+  strategyMomentumXGV2,
   cartera,
 }: {
   strategyDraw: StrategyBackDraw00 | null
@@ -1090,6 +1113,9 @@ function StrategiesContainer({
   strategyDrift: StrategyOddsDrift | null
   strategyGoalClustering: StrategyGoalClustering | null
   strategyPressureCooker: StrategyPressureCooker | null
+  strategyTardeAsia: StrategyTardeAsia | null
+  strategyMomentumXGV1: StrategyMomentumXG | null
+  strategyMomentumXGV2: StrategyMomentumXG | null
   cartera: Cartera | null
 }) {
   const [sub, setSub] = useState<StrategySubTab>("draw")
@@ -1100,6 +1126,8 @@ function StrategiesContainer({
     { key: "drift", label: "Odds Drift", color: "emerald" },
     { key: "clustering", label: "Goal Clustering", color: "rose" },
     { key: "pressure", label: "Pressure Cooker", color: "orange" },
+    { key: "tardeAsia", label: "Tarde Asia", color: "indigo" },
+    { key: "momentumXG", label: "Momentum x xG", color: "violet" },
     { key: "cartera", label: "Cartera", color: "purple" },
   ]
 
@@ -1109,6 +1137,8 @@ function StrategiesContainer({
     emerald: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40",
     rose: "bg-rose-500/20 text-rose-400 border border-rose-500/40",
     orange: "bg-orange-500/20 text-orange-400 border border-orange-500/40",
+    indigo: "bg-indigo-500/20 text-indigo-400 border border-indigo-500/40",
+    violet: "bg-violet-500/20 text-violet-400 border border-violet-500/40",
     purple: "bg-purple-500/20 text-purple-400 border border-purple-500/40",
   }
 
@@ -1118,6 +1148,8 @@ function StrategiesContainer({
     emerald: "bg-emerald-500/5 text-emerald-500/60 border border-emerald-500/20 hover:border-emerald-500/30",
     rose: "bg-rose-500/5 text-rose-500/60 border border-rose-500/20 hover:border-rose-500/30",
     orange: "bg-orange-500/5 text-orange-500/60 border border-orange-500/20 hover:border-orange-500/30",
+    indigo: "bg-indigo-500/5 text-indigo-500/60 border border-indigo-500/20 hover:border-indigo-500/30",
+    violet: "bg-violet-500/5 text-violet-500/60 border border-violet-500/20 hover:border-violet-500/30",
     purple: "bg-purple-500/5 text-purple-500/60 border border-purple-500/20 hover:border-purple-500/30",
   }
 
@@ -1160,6 +1192,16 @@ function StrategiesContainer({
       {sub === "pressure" && strategyPressureCooker && <PressureCookerTab data={strategyPressureCooker} />}
       {sub === "pressure" && !strategyPressureCooker && (
         <div className="text-center py-12 text-zinc-500 text-sm">No hay datos de Pressure Cooker.</div>
+      )}
+      {sub === "tardeAsia" && strategyTardeAsia && <TardeAsiaTab data={strategyTardeAsia} />}
+      {sub === "tardeAsia" && !strategyTardeAsia && (
+        <div className="text-center py-12 text-zinc-500 text-sm">No hay datos de Tarde Asia.</div>
+      )}
+      {sub === "momentumXG" && (strategyMomentumXGV1 || strategyMomentumXGV2) && (
+        <MomentumXGTab dataV1={strategyMomentumXGV1} dataV2={strategyMomentumXGV2} />
+      )}
+      {sub === "momentumXG" && !strategyMomentumXGV1 && !strategyMomentumXGV2 && (
+        <div className="text-center py-12 text-zinc-500 text-sm">No hay datos de Momentum x xG.</div>
       )}
       {sub === "cartera" && cartera && <CarteraTab data={cartera} />}
       {sub === "cartera" && !cartera && (
@@ -1559,6 +1601,8 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [driftVer, setDriftVer] = useState<DriftCarteraVersion>("v1")
   const [clusteringVer, setClusteringVer] = useState<ClusteringCarteraVersion>("v2")
   const [pressureVer, setPressureVer] = useState<PressureCarteraVersion>("v1")
+  const [tardeAsiaVer, setTardeAsiaVer] = useState<TardeAsiaVersion>("off")
+  const [momentumXGVer, setMomentumXGVer] = useState<MomentumXGVersion>("off")
   const [brMode, setBrMode] = useState<BankrollMode>("fixed")
   const [activePreset, setActivePreset] = useState<PresetKey>(null)
   const [realistic, setRealistic] = useState(false)
@@ -1567,14 +1611,17 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [adjMinOdds, setAdjMinOdds] = useState(1.15)
   const [adjDriftMinMin, setAdjDriftMinMin] = useState(15)
   const [adjSlippage, setAdjSlippage] = useState(2)
+  const [riskFilter, setRiskFilter] = useState<RiskFilter>("all")
 
   const applyPreset = (key: Exclude<PresetKey, null>) => {
-    const combo = findBestCombo(bets, managed.initial_bankroll, key)
+    const combo = findBestCombo(bets, managed.initial_bankroll, key, riskFilter)
     setDrawVer(combo.draw)
     setXgVer(combo.xg)
     setDriftVer(combo.drift)
     setClusteringVer(combo.clustering)
     setPressureVer(combo.pressure)
+    setTardeAsiaVer(combo.tardeAsia)
+    setMomentumXGVer(combo.momentumXG)
     setBrMode(combo.br)
     setActivePreset(key)
   }
@@ -1585,7 +1632,9 @@ function CarteraTab({ data }: { data: Cartera }) {
   const driftBets = filterDriftBets(bets, driftVer)
   const clusteringBets = filterClusteringBets(bets, clusteringVer)
   const pressureBets = filterPressureBets(bets, pressureVer)
-  const rawBets = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets].sort((a, b) =>
+  const tardeAsiaBets = filterTardeAsiaBets(bets, tardeAsiaVer)
+  const momentumXGBets = filterMomentumXGBets(bets, momentumXGVer)
+  const rawBets = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets, ...tardeAsiaBets, ...momentumXGBets].sort((a, b) =>
     (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
 
@@ -1593,8 +1642,14 @@ function CarteraTab({ data }: { data: Cartera }) {
   const currentAdj: RealisticAdjustments = realistic
     ? { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin, slippagePct: adjSlippage }
     : DEFAULT_ADJUSTMENTS
-  const filteredBets = realistic ? applyRealisticAdjustments(rawBets, currentAdj) : rawBets
+  let filteredBets = realistic ? applyRealisticAdjustments(rawBets, currentAdj) : rawBets
   const removedCount = rawBets.length - filteredBets.length
+
+  // Apply risk filter
+  filteredBets = filterByRisk(filteredBets, riskFilter)
+
+  // Calculate risk breakdown for analysis
+  const riskBreakdown = analyzeRiskBreakdown(filteredBets)
 
   const handleDownloadCSV = () => {
     const csv = generateCarteraCSV(filteredBets)
@@ -1616,10 +1671,17 @@ function CarteraTab({ data }: { data: Cartera }) {
     { key: "odds_drift", label: "Odds Drift", bgClass: "bg-emerald-500", active: driftVer !== "off", verLabel: driftVer !== "off" ? DRIFT_CARTERA_VERSIONS.find(v => v.key === driftVer)!.label : "" },
     { key: "goal_clustering", label: "Goal Clustering", bgClass: "bg-rose-500", active: clusteringVer !== "off", verLabel: clusteringVer !== "off" ? CLUSTERING_CARTERA_VERSIONS.find(v => v.key === clusteringVer)!.label : "" },
     { key: "pressure_cooker", label: "Pressure Cooker", bgClass: "bg-orange-500", active: pressureVer !== "off", verLabel: pressureVer !== "off" ? PRESSURE_CARTERA_VERSIONS.find(v => v.key === pressureVer)!.label : "" },
+    { key: "tarde_asia", label: "Tarde Asia", bgClass: "bg-blue-500", active: tardeAsiaVer !== "off", verLabel: tardeAsiaVer !== "off" ? TARDE_ASIA_VERSIONS.find(v => v.key === tardeAsiaVer)!.label : "" },
+    { key: "momentum_xg", label: "Momentum x xG", bgClass: "bg-violet-500", active: momentumXGVer !== "off", verLabel: momentumXGVer !== "off" ? MOMENTUM_XG_VERSIONS.find(v => v.key === momentumXGVer)!.label : "" },
   ]
 
   const stratStats = stratConfigs.filter(s => s.active).map(s => {
-    const sBets = filteredBets.filter(b => b.strategy === s.key)
+    // For momentum_xg, match both v1 and v2 strategy keys
+    const sBets = filteredBets.filter(b =>
+      s.key === "momentum_xg"
+        ? (b.strategy === "momentum_xg_v1" || b.strategy === "momentum_xg_v2")
+        : b.strategy === s.key
+    )
     const wins = sBets.filter(b => b.won).length
     const pl = round2(sBets.reduce((sum, b) => sum + b.pl, 0))
     const staked = sBets.length * 10
@@ -1648,7 +1710,7 @@ function CarteraTab({ data }: { data: Cartera }) {
   }
 
   const activeLabels = stratConfigs.filter(s => s.active).map(s => `${s.label} (${s.verLabel})`)
-  const selLabel = activeLabels.length === 5 ? "Todas las estrategias" : activeLabels.length >= 3 ? `${activeLabels.length} estrategias` : activeLabels.length === 2 ? "2 estrategias" : activeLabels[0] || "Ninguna"
+  const selLabel = activeLabels.length === 7 ? "Todas las estrategias" : activeLabels.length >= 3 ? `${activeLabels.length} estrategias` : activeLabels.length === 2 ? "2 estrategias" : activeLabels[0] || "Ninguna"
 
   return (
     <div className="space-y-6">
@@ -1708,6 +1770,48 @@ function CarteraTab({ data }: { data: Cartera }) {
             ))}
           </div>
         </div>
+
+        {/* Risk Filter */}
+        <div className="mb-4 pb-4 border-b border-zinc-800">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-xs font-semibold text-zinc-400 mb-0.5">Filtro de Riesgo</h3>
+              <p className="text-[10px] text-zinc-600">Analiza apuestas según tiempo restante y déficit</p>
+            </div>
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            {[
+              { key: "all" as RiskFilter, label: "Todas", desc: "Mostrar todas las apuestas" },
+              { key: "no_risk" as RiskFilter, label: "Sin riesgo", desc: "Solo apuestas sin limitación de tiempo" },
+              { key: "with_risk" as RiskFilter, label: "Con riesgo", desc: "Apuestas con riesgo medio/alto" },
+              { key: "medium" as RiskFilter, label: "Riesgo medio", desc: "Solo riesgo medio" },
+              { key: "high" as RiskFilter, label: "Alto riesgo", desc: "Solo alto riesgo" },
+            ].map(r => (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => { setRiskFilter(r.key); setActivePreset(null) }}
+                className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                  riskFilter === r.key
+                    ? r.key === "all"
+                      ? "bg-zinc-700/70 text-zinc-300 border border-zinc-600"
+                      : r.key === "high"
+                      ? "bg-red-500/20 text-red-400 border border-red-500/40"
+                      : r.key === "medium"
+                      ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
+                      : r.key === "with_risk"
+                      ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40"
+                      : "bg-green-500/20 text-green-400 border border-green-500/40"
+                    : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                }`}
+                title={r.desc}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="space-y-3">
           {/* Back Empate versions */}
           <div>
@@ -1871,6 +1975,69 @@ function CarteraTab({ data }: { data: Cartera }) {
             {pressureVer !== "off" && (
               <div className="ml-[140px] mt-1.5 text-[10px] text-orange-400/70">
                 {pressureVer === "v1" && "→ Trigger: Empate 1-1+ entre min 65-75 | Apuesta: Back Over (total+0.5)"}
+              </div>
+            )}
+          </div>
+          {/* Tarde Asia versions */}
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Tarde Asia <span className="text-[9px] text-zinc-600">({tardeAsiaBets.length})</span></span>
+              <div className="flex gap-1.5 flex-wrap">
+                {TARDE_ASIA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setTardeAsiaVer(v.key === tardeAsiaVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                      tardeAsiaVer === v.key
+                        ? v.key === "off"
+                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
+                          : "bg-blue-500/20 text-blue-400 border border-blue-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {tardeAsiaVer !== "off" && (
+              <div className="ml-[140px] mt-1.5 text-[10px] text-blue-400/70">
+                {tardeAsiaVer === "v1" && "→ Trigger: Tarde 14-20h + Liga Asia/Alemania/Francia | Apuesta: Back Over 2.5"}
+              </div>
+            )}
+          </div>
+          {/* Momentum x xG versions */}
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Momentum x xG <span className="text-[9px] text-zinc-600">({momentumXGBets.length})</span></span>
+              <div className="flex gap-1.5 flex-wrap">
+                {MOMENTUM_XG_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setMomentumXGVer(v.key === momentumXGVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                      momentumXGVer === v.key
+                        ? v.key === "off"
+                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
+                          : "bg-violet-500/20 text-violet-400 border border-violet-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {momentumXGVer !== "off" && (
+              <div className="ml-[140px] mt-1.5 text-[10px] text-violet-400/70">
+                {momentumXGVer === "v1" && "→ Trigger: Equipo dominante (SoT ratio ≥1.1x) + xG underperf >0.15 + Min 10-80 | Apuesta: Back equipo"}
+                {momentumXGVer === "v2" && "→ Trigger: Equipo dominante (SoT ratio ≥1.05x) + xG underperf >0.1 + Min 5-85 | Apuesta: Back equipo"}
               </div>
             )}
           </div>
@@ -2064,6 +2231,150 @@ function CarteraTab({ data }: { data: Cartera }) {
           value={`${sim.managedPl >= 0 ? "+" : ""}${sim.managedPl.toFixed(2)} EUR`}
           description={`ROI: ${sim.managedRoi >= 0 ? "+" : ""}${sim.managedRoi.toFixed(1)}% | ${BANKROLL_MODES.find(m => m.key === brMode)!.label} | ${sim.managedFinalBankroll.toFixed(0)}/${managed.initial_bankroll} EUR`}
         />
+      </div>
+
+      {/* Time + Score Risk Analysis */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-300">Análisis de Riesgo Tiempo + Marcador</h2>
+            <p className="text-[10px] text-zinc-500 mt-0.5">Comparativa de rendimiento según limitación de tiempo y déficit</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {/* No Risk */}
+          <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-xs font-semibold text-green-400">Sin Riesgo</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Apuestas:</span>
+                <span className="text-zinc-300 font-medium">{riskBreakdown.no_risk.count}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Win Rate:</span>
+                <span className="text-green-400 font-medium">{riskBreakdown.no_risk.winPct.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">P/L:</span>
+                <span className={`font-medium ${riskBreakdown.no_risk.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.no_risk.pl >= 0 ? "+" : ""}{riskBreakdown.no_risk.pl.toFixed(0)} EUR
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">ROI:</span>
+                <span className={`font-medium ${riskBreakdown.no_risk.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.no_risk.roi >= 0 ? "+" : ""}{riskBreakdown.no_risk.roi.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Medium Risk */}
+          <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <span className="text-xs font-semibold text-orange-400">Riesgo Medio</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Apuestas:</span>
+                <span className="text-zinc-300 font-medium">{riskBreakdown.medium_risk.count}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Win Rate:</span>
+                <span className="text-orange-400 font-medium">{riskBreakdown.medium_risk.winPct.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">P/L:</span>
+                <span className={`font-medium ${riskBreakdown.medium_risk.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.medium_risk.pl >= 0 ? "+" : ""}{riskBreakdown.medium_risk.pl.toFixed(0)} EUR
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">ROI:</span>
+                <span className={`font-medium ${riskBreakdown.medium_risk.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.medium_risk.roi >= 0 ? "+" : ""}{riskBreakdown.medium_risk.roi.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* High Risk */}
+          <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-xs font-semibold text-red-400">Alto Riesgo</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Apuestas:</span>
+                <span className="text-zinc-300 font-medium">{riskBreakdown.high_risk.count}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Win Rate:</span>
+                <span className="text-red-400 font-medium">{riskBreakdown.high_risk.winPct.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">P/L:</span>
+                <span className={`font-medium ${riskBreakdown.high_risk.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.high_risk.pl >= 0 ? "+" : ""}{riskBreakdown.high_risk.pl.toFixed(0)} EUR
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">ROI:</span>
+                <span className={`font-medium ${riskBreakdown.high_risk.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.high_risk.roi >= 0 ? "+" : ""}{riskBreakdown.high_risk.roi.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Combined Risk */}
+          <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-yellow-500" />
+              <span className="text-xs font-semibold text-yellow-400">Total Con Riesgo</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Apuestas:</span>
+                <span className="text-zinc-300 font-medium">{riskBreakdown.combined_risk.count}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">Win Rate:</span>
+                <span className="text-yellow-400 font-medium">{riskBreakdown.combined_risk.winPct.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">P/L:</span>
+                <span className={`font-medium ${riskBreakdown.combined_risk.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.combined_risk.pl >= 0 ? "+" : ""}{riskBreakdown.combined_risk.pl.toFixed(0)} EUR
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-zinc-500">ROI:</span>
+                <span className={`font-medium ${riskBreakdown.combined_risk.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {riskBreakdown.combined_risk.roi >= 0 ? "+" : ""}{riskBreakdown.combined_risk.roi.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {riskBreakdown.combined_risk.count > 0 && (
+          <div className="mt-3 pt-3 border-t border-zinc-800">
+            <div className="text-[10px] text-zinc-500 leading-relaxed">
+              <span className="text-yellow-400 font-medium">Conclusión:</span> {
+                riskBreakdown.no_risk.roi > riskBreakdown.combined_risk.roi
+                  ? `Las apuestas sin riesgo tiempo/marcador tienen ${(riskBreakdown.no_risk.roi - riskBreakdown.combined_risk.roi).toFixed(1)}% mejor ROI. Considera filtrar señales con riesgo alto.`
+                  : riskBreakdown.combined_risk.roi > riskBreakdown.no_risk.roi
+                  ? `Las apuestas con riesgo tienen ${(riskBreakdown.combined_risk.roi - riskBreakdown.no_risk.roi).toFixed(1)}% mejor ROI. El sistema de detección de valor funciona incluso con limitación de tiempo.`
+                  : `El rendimiento es similar entre apuestas con y sin riesgo.`
+              }
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Risk metrics */}
@@ -2419,6 +2730,291 @@ function PressureCookerTab({ data }: { data: StrategyPressureCooker }) {
                   <td className="px-4 py-2 text-center text-zinc-400">{b.over_line}</td>
                   <td className="px-4 py-2 text-center text-zinc-400">{b.sot_delta}</td>
                   <td className="px-4 py-2 text-center text-zinc-400">{b.shots_delta}</td>
+                  <td className="px-4 py-2 text-center">
+                    <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
+                  </td>
+                  <td className={`px-4 py-2 text-center font-medium ${b.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {b.pl >= 0 ? "+" : ""}{b.pl.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.won ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                      {b.won ? "W" : "L"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MomentumXGTab({ dataV1, dataV2 }: { dataV1: StrategyMomentumXG | null; dataV2: StrategyMomentumXG | null }) {
+  const [selectedVersion, setSelectedVersion] = useState<"v1" | "v2">("v1")
+
+  // Use selected version data, fallback to available data
+  const data = selectedVersion === "v1" ? (dataV1 || dataV2) : (dataV2 || dataV1)
+
+  if (!data) {
+    return <div className="text-center py-12 text-zinc-500 text-sm">No hay datos disponibles.</div>
+  }
+
+  const { summary, bets, total_matches, momentum_triggers } = data
+
+  const sortedBets = [...bets].sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
+  const cumulativeBets = sortedBets.map((bet, idx) => ({
+    idx: idx + 1,
+    pl: sortedBets.slice(0, idx + 1).reduce((sum, b) => sum + b.pl, 0),
+  }))
+
+  // Version info
+  const versionInfo = selectedVersion === "v1"
+    ? { label: "V1: Ultra Relajadas", desc: "SoT ≥1, ratio ≥1.1x, xG underperf >0.15, Min 10-80, Odds 1.4-6.0" }
+    : { label: "V2: Máximas", desc: "SoT ≥1, ratio ≥1.05x, xG underperf >0.1, Min 5-85, Odds 1.3-8.0" }
+
+  return (
+    <div className="space-y-5">
+      {/* Header with Version Selector */}
+      <div className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/30 rounded-2xl p-6">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-violet-400">Momentum Dominante x xG - {versionInfo.label}</h2>
+            <p className="text-zinc-400 text-sm mt-1">{versionInfo.desc}</p>
+          </div>
+          {/* Version Selector */}
+          <div className="flex gap-2 ml-4">
+            {dataV1 && (
+              <button
+                type="button"
+                onClick={() => setSelectedVersion("v1")}
+                className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                  selectedVersion === "v1"
+                    ? "bg-violet-500/20 text-violet-400 border border-violet-500/40"
+                    : "bg-violet-500/5 text-violet-500/60 border border-violet-500/20 hover:border-violet-500/30"
+                }`}
+              >
+                V1 Ultra
+              </button>
+            )}
+            {dataV2 && (
+              <button
+                type="button"
+                onClick={() => setSelectedVersion("v2")}
+                className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                  selectedVersion === "v2"
+                    ? "bg-purple-500/20 text-purple-400 border border-purple-500/40"
+                    : "bg-purple-500/5 text-purple-500/60 border border-purple-500/20 hover:border-purple-500/30"
+                }`}
+              >
+                V2 Máximas
+              </button>
+            )}
+          </div>
+        </div>
+        <p className="text-zinc-500 text-xs">
+          Concepto: Equipo dominante con xG no materializado tiende a ganar por regresión a la media.
+        </p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-5 gap-3">
+        <MetricCard title="Partidos" value={total_matches} description="Partidos analizados" />
+        <MetricCard title="Triggers" value={momentum_triggers} description="Señales detectadas" />
+        <MetricCard
+          title="Win Rate"
+          value={`${summary.win_rate}%`}
+          description={`${summary.wins}/${summary.total_bets} apuestas ganadas`}
+        />
+        <MetricCard title="P/L Total" value={`${summary.total_pl >= 0 ? "+" : ""}${summary.total_pl.toFixed(2)}`} description="Stake 10 EUR" />
+        <MetricCard title="ROI" value={`${summary.roi >= 0 ? "+" : ""}${summary.roi}%`} description="Retorno sobre inversión" />
+      </div>
+
+      {/* Chart */}
+      {cumulativeBets.length > 0 && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-zinc-300 mb-4">P/L Acumulado</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <ComposedChart data={cumulativeBets}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
+              <XAxis dataKey="idx" stroke="#71717a" tick={{ fontSize: 11 }} />
+              <YAxis stroke="#71717a" tick={{ fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#18181b",
+                  border: "1px solid #3f3f46",
+                  borderRadius: "8px",
+                  fontSize: "11px",
+                }}
+              />
+              <Bar dataKey="pl" fill="#8b5cf6" opacity={0.6} />
+              <Line type="monotone" dataKey="pl" stroke="#a78bfa" strokeWidth={2} dot={false} />
+              <ReferenceLine y={0} stroke="#71717a" strokeDasharray="3 3" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Bets Table */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-zinc-800">
+          <h3 className="text-sm font-semibold text-zinc-300">
+            Detalle de Apuestas ({bets.length})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-zinc-900/80 text-zinc-500 uppercase tracking-wider">
+              <tr>
+                <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Fecha</th>
+                <th className="px-4 py-3 text-left">#</th>
+                <th className="px-4 py-3 text-left">Partido</th>
+                <th className="px-4 py-3 text-center">Min</th>
+                <th className="px-4 py-3 text-center">Score</th>
+                <th className="px-4 py-3 text-center">Equipo</th>
+                <th className="px-4 py-3 text-center">SoT Ratio</th>
+                <th className="px-4 py-3 text-center">xG Underperf</th>
+                <th className="px-4 py-3 text-center">Cuota</th>
+                <th className="px-4 py-3 text-center">FT</th>
+                <th className="px-4 py-3 text-center">P/L</th>
+                <th className="px-4 py-3 text-center">Result</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {sortedBets.map((b, i) => (
+                <tr key={i} className="hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-2 px-2 text-zinc-500 text-xs whitespace-nowrap">
+                    {b.timestamp_utc ? `${new Date(b.timestamp_utc).getDate().toString().padStart(2,'0')}/${(new Date(b.timestamp_utc).getMonth()+1).toString().padStart(2,'0')}` : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-zinc-500">{i + 1}</td>
+                  <td className="px-4 py-2 text-zinc-300 truncate max-w-[180px]">{b.match}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.minuto}'</td>
+                  <td className="px-4 py-2 text-center text-zinc-300 font-medium">{b.score_at_trigger}</td>
+                  <td className="px-4 py-2 text-center text-violet-400 font-medium">{b.dominant_team}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.sot_ratio.toFixed(2)}x</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.xg_underperf.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-center text-violet-400 font-medium">{b.back_odds.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-center">
+                    <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
+                  </td>
+                  <td className={`px-4 py-2 text-center font-medium ${b.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {b.pl >= 0 ? "+" : ""}{b.pl.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.won ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                      {b.won ? "W" : "L"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TardeAsiaTab({ data }: { data: StrategyTardeAsia }) {
+  const { summary, bets, total_matches, tarde_asia_matches } = data
+
+  const sortedBets = [...bets].sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
+  const cumulativeBets = sortedBets.map((bet, idx) => ({
+    idx: idx + 1,
+    pl: sortedBets.slice(0, idx + 1).reduce((sum, b) => sum + b.pl, 0),
+  }))
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border border-indigo-500/30 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-indigo-400 mb-3">Tarde Asia High Scoring V1</h2>
+        <p className="text-zinc-400 text-sm">
+          Back Over 2.5 en partidos tarde (14-20h) de ligas asiáticas, alemanas y francesas.
+        </p>
+        <p className="text-zinc-500 text-xs mt-2">
+          Estado: OFF - Seguimiento sin activar señales. Meta-patrón validado con 200 partidos (60% WR).
+        </p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-5 gap-3">
+        <MetricCard title="Partidos" value={total_matches} description="Partidos analizados" />
+        <MetricCard title="Tarde Asia" value={tarde_asia_matches} description="Candidatos detectados" />
+        <MetricCard
+          title="Win Rate"
+          value={`${summary.win_rate}%`}
+          description={`${summary.wins}/${summary.total_bets} apuestas ganadas`}
+        />
+        <MetricCard title="P/L Total" value={`${summary.total_pl >= 0 ? "+" : ""}${summary.total_pl.toFixed(2)}`} description="Stake 10 EUR" />
+        <MetricCard title="ROI" value={`${summary.roi >= 0 ? "+" : ""}${summary.roi}%`} description="Retorno sobre inversion" />
+      </div>
+
+      {/* Chart */}
+      {cumulativeBets.length > 0 && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-zinc-300 mb-4">P/L Acumulado</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <ComposedChart data={cumulativeBets}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
+              <XAxis dataKey="idx" stroke="#71717a" tick={{ fontSize: 11 }} />
+              <YAxis stroke="#71717a" tick={{ fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#18181b",
+                  border: "1px solid #3f3f46",
+                  borderRadius: "8px",
+                  fontSize: "11px",
+                }}
+              />
+              <Bar dataKey="pl" fill="#6366f1" opacity={0.6} />
+              <Line type="monotone" dataKey="pl" stroke="#818cf8" strokeWidth={2} dot={false} />
+              <ReferenceLine y={0} stroke="#71717a" strokeDasharray="3 3" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Bets Table */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-zinc-800">
+          <h3 className="text-sm font-semibold text-zinc-300">
+            Detalle de Apuestas ({bets.length})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-zinc-900/80 text-zinc-500 uppercase tracking-wider">
+              <tr>
+                <th className="text-left py-2 px-2 text-xs font-medium text-zinc-500">Fecha</th>
+                <th className="px-4 py-3 text-left">#</th>
+                <th className="px-4 py-3 text-left">Partido</th>
+                <th className="px-4 py-3 text-center">Liga</th>
+                <th className="px-4 py-3 text-center">Hora</th>
+                <th className="px-4 py-3 text-center">Min</th>
+                <th className="px-4 py-3 text-center">Score</th>
+                <th className="px-4 py-3 text-center">Over Odds</th>
+                <th className="px-4 py-3 text-center">Over Line</th>
+                <th className="px-4 py-3 text-center">FT</th>
+                <th className="px-4 py-3 text-center">P/L</th>
+                <th className="px-4 py-3 text-center">Result</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {sortedBets.map((b, i) => (
+                <tr key={i} className="hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-2 px-2 text-zinc-500 text-xs whitespace-nowrap">
+                    {b.timestamp_utc ? `${new Date(b.timestamp_utc).getDate().toString().padStart(2,'0')}/${(new Date(b.timestamp_utc).getMonth()+1).toString().padStart(2,'0')}` : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-zinc-500">{i + 1}</td>
+                  <td className="px-4 py-2 text-zinc-300 truncate max-w-[180px]">{b.match}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.liga}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.hora_local}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.minuto}'</td>
+                  <td className="px-4 py-2 text-center text-zinc-300 font-medium">{b.score}</td>
+                  <td className="px-4 py-2 text-center text-indigo-400 font-medium">{b.back_over_odds?.toFixed(2) ?? "-"}</td>
+                  <td className="px-4 py-2 text-center text-zinc-400">{b.over_line}</td>
                   <td className="px-4 py-2 text-center">
                     <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
                   </td>

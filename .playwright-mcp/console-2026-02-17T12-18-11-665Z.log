@@ -1,0 +1,6 @@
+[ 5070627ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://localhost:5173/api/system/status:0
+[ 5070627ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://localhost:5173/api/matches:0
+[ 5108849ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/bets/placed:0
+[ 5108850ms] [ERROR] Error guardando apuesta: Error: API error: 500
+    at get (http://localhost:5173/src/lib/api.ts:4:22)
+    at async handleAddBet (http://localhost:5173/src/components/BettingSignalsView.tsx:494:34) @ http://localhost:5173/src/components/BettingSignalsView.tsx:575

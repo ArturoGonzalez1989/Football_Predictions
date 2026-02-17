@@ -64,6 +64,86 @@ def _to_float(val: str) -> Optional[float]:
         return None
 
 
+def _lookback_val(rows: list[dict], idx: int, col: str, minutes_back: int) -> Optional[float]:
+    """Get value of *col* from approximately *minutes_back* minutes before rows[idx]."""
+    cur_min = _to_float(rows[idx].get("minuto", "")) or 0
+    target = cur_min - minutes_back
+    best, best_dist = None, float("inf")
+    for i in range(max(0, idx - minutes_back - 5), idx):
+        m = _to_float(rows[i].get("minuto", "")) or 0
+        d = abs(m - target)
+        if d < best_dist:
+            best_dist = d
+            best = rows[i]
+    if best and best_dist < minutes_back * 0.5 + 2:
+        return _to_float(best.get(col, ""))
+    return None
+
+
+def _compute_synthetic_at_trigger(rows: list[dict], trigger_idx: int) -> dict:
+    """Compute synthetic derived attributes at a trigger row.
+
+    Uses the in-play rows list and the index of the trigger row.
+    Returns a dict with only the synthetic attrs used by version filters.
+    """
+    row = rows[trigger_idx]
+    s: dict = {}
+
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    mom_l = _to_float(row.get("momentum_local", ""))
+    mom_v = _to_float(row.get("momentum_visitante", ""))
+    opta_l = _to_float(row.get("opta_points_local", ""))
+    opta_v = _to_float(row.get("opta_points_visitante", ""))
+    shots_l = _to_float(row.get("tiros_local", ""))
+    shots_v = _to_float(row.get("tiros_visitante", ""))
+    sot_l = _to_float(row.get("tiros_puerta_local", ""))
+    sot_v = _to_float(row.get("tiros_puerta_visitante", ""))
+    corn_l = _to_float(row.get("corners_local", ""))
+    corn_v = _to_float(row.get("corners_visitante", ""))
+    gl = _to_float(row.get("goles_local", "")) or 0
+    gv = _to_float(row.get("goles_visitante", "")) or 0
+    minute = _to_float(row.get("minuto", "")) or 0
+
+    # xG dominance (0..1, 0.5 = balanced)
+    if xg_l is not None and xg_v is not None and (xg_l + xg_v) > 0:
+        s["xg_dominance"] = round(xg_l / (xg_l + xg_v), 4)
+    else:
+        s["xg_dominance"] = None
+
+    # Opta gap
+    s["opta_gap"] = round(opta_l - opta_v, 2) if opta_l is not None and opta_v is not None else None
+
+    # Momentum gap
+    s["momentum_gap"] = round(abs(mom_l - mom_v), 2) if mom_l is not None and mom_v is not None else None
+
+    # Pressure index per side (weighted recent deltas over 5 min)
+    for side, sfx in [("l", "_local"), ("v", "_visitante")]:
+        comps, wts = [], []
+        for col_base, w in [("tiros_puerta", 3.0), ("corners", 1.5),
+                             ("xg", 5.0), ("touches_box", 1.0), ("tiros", 2.0)]:
+            col = col_base + sfx
+            now = _to_float(row.get(col, ""))
+            prev = _lookback_val(rows, trigger_idx, col, 5)
+            if now is not None and prev is not None:
+                comps.append((now - prev) * w)
+                wts.append(w)
+        s[f"pressure_index_{side}"] = round(sum(comps) / sum(wts), 4) if wts else None
+
+    # Match openness
+    parts = [v for v in [shots_l, shots_v, sot_l, sot_v, corn_l, corn_v] if v is not None]
+    s["match_openness"] = round(sum(parts) + (gl + gv) * 5, 2) if parts else None
+
+    # xG remaining (expected goals left based on current xG rate)
+    if xg_l is not None and xg_v is not None and minute > 5:
+        xg_rate = (xg_l + xg_v) / minute
+        s["xg_remaining"] = round(xg_rate * max(0, 90 - minute), 4)
+    else:
+        s["xg_remaining"] = None
+
+    return s
+
+
 def _match_id_from_url(url: str) -> str:
     """Extrae el ID del partido de la URL de Betfair."""
     m = re.search(r"([a-zA-Z0-9%-]+-apuestas-\d+)", url)
@@ -707,6 +787,22 @@ def _get_cached_finished_data() -> list[dict]:
     _result_cache = {}
     _result_cache_time = now
 
+    # Load URL mapping from games.csv
+    url_map = {}
+    try:
+        games_csv_path = BASE_DIR / "games.csv"
+        if games_csv_path.exists():
+            with open(games_csv_path, "r", encoding="utf-8") as f:
+                import csv
+                reader = csv.DictReader(f)
+                for row in reader:
+                    game_name = row.get("Game", "").strip()
+                    game_url = row.get("url", "").strip()
+                    if game_name and game_url:
+                        url_map[game_name] = game_url
+    except Exception:
+        pass  # If games.csv doesn't exist or fails, continue without URLs
+
     games = load_games()
     finished = []
     for game in games:
@@ -714,9 +810,12 @@ def _get_cached_finished_data() -> list[dict]:
             csv_path = _resolve_csv_path(game["match_id"])
             if csv_path.exists():
                 rows = _read_csv_rows(csv_path)
+                # Try to get URL from games.csv mapping by match name
+                game_url = game.get("url") or url_map.get(game["name"], "")
                 finished.append({
                     "match_id": game["match_id"],
                     "name": game["name"],
+                    "url": game_url,  # URL from matches.json or games.csv
                     "csv_path": csv_path,
                     "rows": rows,
                 })
@@ -1297,13 +1396,15 @@ def analyze_strategy_back_draw_00() -> dict:
 
         # Find first row where min >= 30 and score is 0-0
         trigger_row = None
-        for row in rows:
+        trigger_idx = None
+        for ri, row in enumerate(rows):
             minuto = _to_float(row.get("minuto", ""))
             gl = _to_float(row.get("goles_local", ""))
             gv = _to_float(row.get("goles_visitante", ""))
             if minuto is not None and gl is not None and gv is not None:
                 if minuto >= 30 and int(gl) == 0 and int(gv) == 0:
                     trigger_row = row
+                    trigger_idx = ri
                     break
 
         if trigger_row is None:
@@ -1360,6 +1461,17 @@ def analyze_strategy_back_draw_00() -> dict:
         passes_v15 = passes_xg_06 and passes_poss_25  # V1.5: xG<0.6 + PD<25%
         passes_v2r = passes_xg_06 and passes_poss_20 and passes_shots  # V2r: xG<0.6 + PD<20% + shots<8
 
+        # V3: V1.5 + synthetic filters (xG dominance asymmetry + low visitor pressure)
+        synth = _compute_synthetic_at_trigger(rows, trigger_idx)
+        xg_dom = synth.get("xg_dominance")
+        press_v = synth.get("pressure_index_v")
+        passes_v3 = (
+            passes_v15
+            and xg_dom is not None
+            and (xg_dom > 0.55 or xg_dom < 0.45)
+            and (press_v is None or press_v < 0.5)
+        )
+
         bets.append({
             "match": match["name"],
             "match_id": match["match_id"],
@@ -1377,6 +1489,9 @@ def analyze_strategy_back_draw_00() -> dict:
             "passes_v2": passes_v2,
             "passes_v15": passes_v15,
             "passes_v2r": passes_v2r,
+            "passes_v3": passes_v3,
+            "synth_xg_dominance": xg_dom,
+            "synth_pressure_index_v": press_v,
             "timestamp_utc": trigger_row.get("timestamp_utc", ""),
         })
 
@@ -1412,6 +1527,103 @@ def _get_over_odds_field(total_goals: int) -> str:
     """Return CSV column name for Back Over (total_goals + 0.5)."""
     return {0: "back_over05", 1: "back_over15", 2: "back_over25",
             3: "back_over35", 4: "back_over45"}.get(total_goals, "")
+
+
+def calculate_time_score_risk(
+    strategy: str,
+    minute: float,
+    home_score: int,
+    away_score: int,
+    dominant_team: str
+) -> dict:
+    """
+    Calcula el nivel de riesgo de una apuesta basándose en tiempo restante y marcador.
+
+    Solo aplica a estrategias de resultado final (momentum_xg, odds_drift) cuando el
+    equipo sobre el que apostamos va perdiendo.
+
+    Reglas de riesgo:
+    - HIGH: Quedan <20 min y el equipo va perdiendo ≥2 goles
+    - HIGH: Quedan <15 min y el equipo va perdiendo ≥1 gol
+    - MEDIUM: Quedan <25 min y el equipo va perdiendo ≥2 goles
+    - MEDIUM: Quedan <20 min y el equipo va perdiendo ≥1 gol
+    - NONE: Otros casos
+
+    Args:
+        strategy: Nombre de la estrategia (e.g., "momentum_xg_v1", "odds_drift")
+        minute: Minuto actual del partido
+        home_score: Goles del equipo local
+        away_score: Goles del equipo visitante
+        dominant_team: "Home"/"Local" o "Away"/"Visitante"
+
+    Returns:
+        {
+            "has_risk": bool,
+            "risk_level": "none" | "medium" | "high",
+            "risk_reason": str,
+            "time_remaining": int,
+            "deficit": int
+        }
+    """
+    # Solo aplica a estrategias de resultado final
+    strategy_lower = strategy.lower()
+    if not any(s in strategy_lower for s in ["momentum_xg", "odds_drift"]):
+        return {
+            "has_risk": False,
+            "risk_level": "none",
+            "risk_reason": "",
+            "time_remaining": int(90 - minute),
+            "deficit": 0
+        }
+
+    time_remaining = 90 - minute
+
+    # Calcular déficit del equipo sobre el que apostamos
+    dominant_lower = dominant_team.lower()
+    if dominant_lower in ["home", "local"]:
+        deficit = away_score - home_score
+    else:
+        deficit = home_score - away_score
+
+    # Si no va perdiendo, no hay riesgo
+    if deficit <= 0:
+        return {
+            "has_risk": False,
+            "risk_level": "none",
+            "risk_reason": "",
+            "time_remaining": int(time_remaining),
+            "deficit": deficit
+        }
+
+    # Evaluar nivel de riesgo
+    risk_level = "none"
+    risk_reason = ""
+
+    # RIESGO ALTO
+    if time_remaining < 20 and deficit >= 2:
+        risk_level = "high"
+        risk_reason = f"ALTO RIESGO: Quedan {int(time_remaining)} min para remontar {deficit} goles. Probabilidad muy baja."
+    elif time_remaining < 15 and deficit >= 1:
+        risk_level = "high"
+        risk_reason = f"ALTO RIESGO: Quedan {int(time_remaining)} min para remontar {deficit} gol. Tiempo muy ajustado."
+
+    # RIESGO MEDIO
+    elif time_remaining < 25 and deficit >= 2:
+        risk_level = "medium"
+        risk_reason = f"RIESGO MEDIO: Quedan {int(time_remaining)} min para remontar {deficit} goles. Complicado pero posible."
+    elif time_remaining < 20 and deficit >= 1:
+        risk_level = "medium"
+        risk_reason = f"RIESGO MEDIO: Quedan {int(time_remaining)} min para remontar {deficit} gol. Tiempo limitado."
+
+    has_risk = risk_level != "none"
+
+    return {
+        "has_risk": has_risk,
+        "risk_level": risk_level,
+        "risk_reason": risk_reason,
+        "time_remaining": int(time_remaining),
+        "deficit": deficit
+    }
 
 
 @_cached_result("strategy_xg_underperformance")
@@ -1598,20 +1810,20 @@ def analyze_strategy_odds_drift() -> dict:
         ft_score = f"{ft_gl}-{ft_gv}"
         total_matches += 1
 
-        # Build list of (minuto, row) with valid data
+        # Build list of (minuto, row, back_home, back_away, row_index) with valid data
         data_points = []
-        for row in rows:
+        for ri, row in enumerate(rows):
             m = _to_float(row.get("minuto", ""))
             if m is None:
                 continue
             bh = _to_float(row.get("back_home", ""))
             ba = _to_float(row.get("back_away", ""))
-            data_points.append((m, row, bh, ba))
+            data_points.append((m, row, bh, ba, ri))
 
         triggered = {"home": False, "away": False}
 
         for idx in range(1, len(data_points)):
-            curr_min, curr_row, curr_bh, curr_ba = data_points[idx]
+            curr_min, curr_row, curr_bh, curr_ba, curr_ri = data_points[idx]
             if curr_min < MIN_MINUTE or curr_min > MAX_MINUTE:
                 continue
 
@@ -1623,7 +1835,7 @@ def analyze_strategy_odds_drift() -> dict:
 
             # Look back within window
             for prev_idx in range(idx - 1, -1, -1):
-                prev_min, prev_row, prev_bh, prev_ba = data_points[prev_idx]
+                prev_min, prev_row, prev_bh, prev_ba, _ = data_points[prev_idx]
                 if curr_min - prev_min > WINDOW_MIN:
                     break
                 if curr_min - prev_min < 2:
@@ -1674,6 +1886,20 @@ def analyze_strategy_odds_drift() -> dict:
                     passes_v4 = curr_odds <= 5.0 and curr_min > 45
                     passes_v5 = curr_odds <= 5.0  # V5: cap cuotas (sin filtro minuto)
 
+                    # V6: V5 + momentum gap > 200 (100% WR in backtest)
+                    synth = _compute_synthetic_at_trigger(rows, curr_ri)
+                    mom_gap = synth.get("momentum_gap")
+                    passes_v6 = passes_v5 and mom_gap is not None and mom_gap > 200
+
+                    # Calcular riesgo por tiempo + marcador
+                    risk_info = calculate_time_score_risk(
+                        strategy="odds_drift",
+                        minute=curr_min,
+                        home_score=gl_i,
+                        away_score=gv_i,
+                        dominant_team=team
+                    )
+
                     bets.append({
                         "match": match["name"],
                         "match_id": match["match_id"],
@@ -1694,7 +1920,13 @@ def analyze_strategy_odds_drift() -> dict:
                         "passes_v3": passes_v3,
                         "passes_v4": passes_v4,
                         "passes_v5": passes_v5,
+                        "passes_v6": passes_v6,
+                        "synth_momentum_gap": mom_gap,
                         "timestamp_utc": curr_row.get("timestamp_utc", ""),
+                        "risk_level": risk_info["risk_level"],
+                        "risk_reason": risk_info["risk_reason"],
+                        "time_remaining": risk_info["time_remaining"],
+                        "deficit": risk_info["deficit"]
                     })
                     break  # found trigger for this team at this row
 
@@ -1736,6 +1968,9 @@ def analyze_cartera() -> dict:
     drift_data = analyze_strategy_odds_drift()
     clustering_data = analyze_strategy_goal_clustering()
     pressure_data = analyze_strategy_pressure_cooker()
+    tarde_asia_data = analyze_strategy_tarde_asia()
+    momentum_xg_v1_data = analyze_strategy_momentum_xg(version="v1")
+    momentum_xg_v2_data = analyze_strategy_momentum_xg(version="v2")
 
     all_bets = []
     for b in draw_data.get("bets", []):
@@ -1748,6 +1983,12 @@ def analyze_cartera() -> dict:
         all_bets.append({**b, "strategy": "goal_clustering", "strategy_label": "Goal Clustering"})
     for b in pressure_data.get("bets", []):
         all_bets.append({**b, "strategy": "pressure_cooker", "strategy_label": "Pressure Cooker"})
+    for b in tarde_asia_data.get("bets", []):
+        all_bets.append({**b, "strategy": "tarde_asia", "strategy_label": "Tarde Asia"})
+    for b in momentum_xg_v1_data.get("bets", []):
+        all_bets.append({**b, "strategy": "momentum_xg_v1", "strategy_label": "Momentum x xG V1"})
+    for b in momentum_xg_v2_data.get("bets", []):
+        all_bets.append({**b, "strategy": "momentum_xg_v2", "strategy_label": "Momentum x xG V2"})
 
     all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))
 
@@ -1809,6 +2050,8 @@ def analyze_cartera() -> dict:
             "odds_drift": _strat_summary([b for b in all_bets if b["strategy"] == "odds_drift"]),
             "goal_clustering": _strat_summary([b for b in all_bets if b["strategy"] == "goal_clustering"]),
             "pressure_cooker": _strat_summary([b for b in all_bets if b["strategy"] == "pressure_cooker"]),
+            "tarde_asia": _strat_summary([b for b in all_bets if b["strategy"] == "tarde_asia"]),
+            "momentum_xg": _strat_summary([b for b in all_bets if b["strategy"] in ("momentum_xg_v1", "momentum_xg_v2")]),
         },
         "bets": all_bets,
     }
@@ -1915,6 +2158,13 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             "roi": 0.819,       # 81.9% ROI
             "sample_size": 16,
             "description": "Empates con goles (1-1+) entre min 65-75 tienden a romper"
+        },
+        "momentum_xg": {
+            "win_rate": 0.667,  # 66.7% from backtest (Ultra Relajadas)
+            "avg_odds": 2.4,    # Average back odds for dominant team
+            "roi": 0.522,       # 52.2% ROI
+            "sample_size": 12,
+            "description": "Equipo dominante (SoT ratio >1.1x) con xG no convertido tiende a ganar"
         }
     }
 
@@ -2194,6 +2444,15 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                                 ev = calculate_ev(odds_now, meta["win_rate"])
                                 odds_ok = is_odds_favorable(odds_now, min_odds)
 
+                                # Calcular riesgo por tiempo + marcador
+                                risk_info = calculate_time_score_risk(
+                                    strategy=f"odds_drift_{drift_ver}",
+                                    minute=minuto,
+                                    home_score=int(goles_local),
+                                    away_score=int(goles_visitante),
+                                    dominant_team=team_label
+                                )
+
                                 signal = {
                                     "match_id": match_id,
                                     "match_name": match["name"],
@@ -2218,7 +2477,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                                         "odds_now": round(odds_now, 2),
                                         "drift_pct": round(drift_pct_val, 1)
                                     },
-                                    "thresholds": drift_thresholds
+                                    "thresholds": drift_thresholds,
+                                    "risk_info": risk_info
                                 }
                                 if (match_id, signal["strategy"]) not in placed_bets_keys:
                                     signals.append(signal)
@@ -2360,6 +2620,112 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 if (match_id, signal["strategy"]) not in placed_bets_keys:
                     signals.append(signal)
                     _log_signal_to_csv(signal)
+
+        # === STRATEGY 6: Momentum Dominante x xG ===
+        momentum_ver = versions.get("momentum", "v1")
+        if momentum_ver != "off" and xg_local is not None and xg_visitante is not None:
+            # Config según versión
+            if momentum_ver == "v2":
+                mom_cfg = {"sot_min": 1, "ratio": 1.05, "xg": 0.1, "min_m": 5, "max_m": 85, "odds_min": 1.3, "odds_max": 8.0}
+            else:  # v1
+                mom_cfg = {"sot_min": 1, "ratio": 1.1, "xg": 0.15, "min_m": 10, "max_m": 80, "odds_min": 1.4, "odds_max": 6.0}
+
+            # Check minute range
+            if not (mom_cfg["min_m"] <= minuto <= mom_cfg["max_m"]):
+                pass  # Skip
+            else:
+                # Calculate xG underperformance
+                xg_underperf_local = xg_local - goles_local
+                xg_underperf_visitante = xg_visitante - goles_visitante
+
+                # Check both teams for dominance
+                dominant_team = None
+                back_odds = None
+                sot_ratio_used = 0
+
+                # Home dominant: SoT superior + xG underperformance
+                if tiros_puerta_visitante > 0:
+                    sot_ratio_local = tiros_puerta_local / tiros_puerta_visitante
+                else:
+                    sot_ratio_local = tiros_puerta_local * 2 if tiros_puerta_local >= mom_cfg["sot_min"] else 0
+
+                if (tiros_puerta_local >= mom_cfg["sot_min"] and
+                    sot_ratio_local >= mom_cfg["ratio"] and
+                    xg_underperf_local > mom_cfg["xg"]):
+                    if back_home is not None and mom_cfg["odds_min"] <= back_home <= mom_cfg["odds_max"]:
+                        dominant_team = "Home"
+                        back_odds = back_home
+                        sot_ratio_used = sot_ratio_local
+
+                # Away dominant
+                if tiros_puerta_local > 0:
+                    sot_ratio_visitante = tiros_puerta_visitante / tiros_puerta_local
+                else:
+                    sot_ratio_visitante = tiros_puerta_visitante * 2 if tiros_puerta_visitante >= mom_cfg["sot_min"] else 0
+
+                if (tiros_puerta_visitante >= mom_cfg["sot_min"] and
+                    sot_ratio_visitante >= mom_cfg["ratio"] and
+                    xg_underperf_visitante > mom_cfg["xg"]):
+                    if back_away is not None and mom_cfg["odds_min"] <= back_away <= mom_cfg["odds_max"]:
+                        # If both are dominant, take the more dominant one
+                        if dominant_team is None or xg_underperf_visitante > xg_underperf_local:
+                            dominant_team = "Away"
+                            back_odds = back_away
+                            sot_ratio_used = sot_ratio_visitante
+
+                if dominant_team is not None and back_odds is not None:
+                    xg_underperf = xg_underperf_local if dominant_team == "Home" else xg_underperf_visitante
+                    meta = STRATEGY_META["momentum_xg"]
+                    min_odds = calculate_min_odds(meta["win_rate"])
+                    ev = calculate_ev(back_odds, meta["win_rate"])
+                    odds_ok = is_odds_favorable(back_odds, min_odds)
+
+                    # Calcular riesgo por tiempo + marcador
+                    risk_info = calculate_time_score_risk(
+                        strategy=f"momentum_xg_{momentum_ver}",
+                        minute=minuto,
+                        home_score=int(goles_local),
+                        away_score=int(goles_visitante),
+                        dominant_team=dominant_team
+                    )
+
+                    signal = {
+                        "match_id": match_id,
+                        "match_name": match["name"],
+                        "match_url": match["url"],
+                        "strategy": f"momentum_xg_{momentum_ver}",
+                        "strategy_name": f"Momentum Dominante x xG ({momentum_ver.upper()})",
+                        "minute": int(minuto),
+                        "score": f"{int(goles_local)}-{int(goles_visitante)}",
+                        "recommendation": f"BACK {dominant_team.upper()} @ {back_odds:.2f}",
+                        "back_odds": round(back_odds, 2),
+                        "min_odds": round(min_odds, 2),
+                        "expected_value": round(ev, 2),
+                        "odds_favorable": odds_ok,
+                        "confidence": "high" if odds_ok else "medium",
+                        "win_rate_historical": round(meta["win_rate"] * 100, 1),
+                        "roi_historical": round(meta["roi"] * 100, 1),
+                        "sample_size": meta["sample_size"],
+                        "description": meta["description"],
+                        "entry_conditions": {
+                            "dominant_team": dominant_team,
+                            "sot_ratio": round(sot_ratio_used, 2),
+                            "xg_underperf": round(xg_underperf, 2),
+                            "sot_home": int(tiros_puerta_local),
+                            "sot_away": int(tiros_puerta_visitante)
+                        },
+                        "thresholds": {
+                            "sot_min": f">= {mom_cfg['sot_min']}",
+                            "sot_ratio": f">= {mom_cfg['ratio']}x",
+                            "xg_underperf": f"> {mom_cfg['xg']}",
+                            "minute_range": f"{mom_cfg['min_m']}-{mom_cfg['max_m']}",
+                            "odds_range": f"{mom_cfg['odds_min']}-{mom_cfg['odds_max']}"
+                        },
+                        "risk_info": risk_info
+                    }
+                    if (match_id, signal["strategy"]) not in placed_bets_keys:
+                        signals.append(signal)
+                        _log_signal_to_csv(signal)
 
     return {
         "total_signals": len(signals),
@@ -2689,6 +3055,11 @@ def analyze_strategy_goal_clustering() -> dict:
                             # Version filters
                             passes_v3 = minuto < 60  # V3: entrada temprana
 
+                            # V4: xG remaining > 0.8 (100% WR in backtest)
+                            synth = _compute_synthetic_at_trigger(rows, idx)
+                            xg_rem = synth.get("xg_remaining")
+                            passes_v4 = xg_rem is not None and xg_rem > 0.8
+
                             # Guardar bet (solo si hay cuota válida)
                             results["bets"].append({
                                 "match": match_name,
@@ -2701,6 +3072,8 @@ def analyze_strategy_goal_clustering() -> dict:
                                 "won": over_won,
                                 "pl": round(pl, 2),
                                 "passes_v3": passes_v3,
+                                "passes_v4": passes_v4,
+                                "synth_xg_remaining": xg_rem,
                                 "timestamp_utc": row.get("timestamp_utc", "")
                             })
 
@@ -2911,5 +3284,422 @@ def analyze_strategy_pressure_cooker() -> dict:
         "total_pl": round(total_pl, 2),
         "roi": round(roi, 1)
     }
+
+    return results
+
+
+def analyze_strategy_tarde_asia() -> dict:
+    """
+    Tarde Asia High Scoring V1: Back Over 2.5 en partidos tarde de Asia/Alemania/Francia
+
+    Trigger: Partidos entre 14-20h de ligas asiáticas, Bundesliga, Ligue 1/2
+    Apuesta: Back Over 2.5 desde el inicio
+    Estado: OFF - Solo tracking, no activa señales
+
+    Returns:
+        {
+            "total_matches": int,
+            "tarde_asia_matches": int,
+            "summary": {...},
+            "bets": [...]
+        }
+    """
+    finished = _get_all_finished_matches()
+
+    results = {
+        "total_matches": 0,
+        "tarde_asia_matches": 0,
+        "bets": []
+    }
+
+    # Ligas objetivo (simplificado - en producción vendría de metadata)
+    TARGET_LEAGUES = ["bundesliga", "ligue", "eredivisie", "j-league", "k-league", "asia"]
+
+    for match_data in finished:
+        results["total_matches"] += 1
+        match_id = match_data["match_id"]
+        match_name = match_data["name"]
+        csv_path = _resolve_csv_path(match_id)
+
+        if not csv_path.exists():
+            continue
+
+        rows = _read_csv_rows(csv_path)
+        if len(rows) < 20:
+            continue
+
+        # Resultado final
+        last_row = rows[-1]
+        gl_final = _to_float(last_row.get("goles_local", ""))
+        gv_final = _to_float(last_row.get("goles_visitante", ""))
+
+        if gl_final is None or gv_final is None:
+            continue
+
+        # Verificar que el partido finalizó
+        last_min = _to_float(last_row.get("minuto", ""))
+        if last_min is None or last_min < 85:
+            continue
+
+        total_final = int(gl_final) + int(gv_final)
+        ft_score = f"{int(gl_final)}-{int(gv_final)}"
+
+        # Detectar liga (de URL o nombre del partido)
+        liga_match = "Unknown"
+        match_url = match_data.get("url", "").lower()
+        match_name_lower = match_name.lower()
+
+        # Detectar liga por keywords en URL
+        if "bundesliga" in match_url or "bundesliga" in match_name_lower:
+            liga_match = "Bundesliga"
+        elif "ligue" in match_url or "ligue" in match_name_lower:
+            liga_match = "Ligue"
+        elif "eredivisie" in match_url or "eredivisie" in match_name_lower:
+            liga_match = "Eredivisie"
+        elif any(x in match_url for x in ["j-league", "jleague"]):
+            liga_match = "J-League"
+        elif any(x in match_url for x in ["k-league", "kleague"]):
+            liga_match = "K-League"
+        elif any(x in match_url for x in ["asia", "asiática", "asiatic"]):
+            liga_match = "Asian League"
+
+        # Fallback: detectar por nombres de equipos (para data histórica sin URL)
+        if liga_match == "Unknown":
+            # Dutch teams (Eredivisie)
+            dutch_teams = ["ajax", "psv", "feyenoord", "az alkmaar", "twente", "utrecht", "heerenveen", "groningen", "vitesse", "nec", "fortuna sittard", "sparta", "heracles", "almere", "zwolle", "waalwijk", "excelsior", "volendam"]
+            # German teams (Bundesliga)
+            german_teams = ["bayern", "dortmund", "leipzig", "leverkusen", "frankfurt", "freiburg", "wolfsburg", "monchengladbach", "stuttgart", "hoffenheim", "bremen", "union berlin", "mainz", "bochum", "augsburg", "heidenheim", "darmstadt"]
+            # French teams (Ligue 1/2)
+            french_teams = ["psg", "marseille", "lyon", "monaco", "lille", "lens", "rennes", "nice", "nantes", "montpellier", "strasbourg", "brest", "reims", "toulouse", "lorient", "clermont", "havre", "metz"]
+            # Asian teams (Middle East, J-League, K-League)
+            asian_teams = ["al hilal", "al nassr", "al ahli", "al ittihad", "al shabab", "al ettifaq", "al fayha", "al fateh", "al raed", "al taawoun", "al wehda", "al sharjah", "al ain", "al jazira", "shabab", "baniyas", "kashima", "urawa", "yokohama", "gamba osaka", "kawasaki", "cerezo", "sanfrecce", "vissel", "jeonbuk", "ulsan", "pohang", "suwon", "jeonnam", "seoul", "busan", "shanghai", "guangzhou", "beijing", "shandong"]
+
+            if any(team in match_name_lower for team in dutch_teams):
+                liga_match = "Eredivisie"
+            elif any(team in match_name_lower for team in german_teams):
+                liga_match = "Bundesliga"
+            elif any(team in match_name_lower for team in french_teams):
+                liga_match = "Ligue"
+            elif any(team in match_name_lower for team in asian_teams):
+                liga_match = "Asian League"
+
+        # Verificar si es liga objetivo
+        is_target_league = liga_match != "Unknown"
+        if not is_target_league:
+            continue
+
+        # Obtener hora UTC de primera fila
+        # NOTA: Por simplicidad, no filtramos por hora (necesitaríamos timezone del partido)
+        # En producción, esto vendría de metadata con timezone local
+        first_row = rows[0]
+        timestamp_utc = first_row.get("timestamp_utc", "")
+
+        # Extraer hora UTC (solo para display, no filtramos por hora)
+        hora_local = "Unknown"
+        if timestamp_utc and "T" in timestamp_utc:
+            try:
+                hora_part = timestamp_utc.split("T")[1].split(":")[0]
+                hora_int = int(hora_part)
+                hora_local = f"{hora_int:02d}:00 UTC"
+            except:
+                hora_local = "N/A"
+
+        # Si llegamos aquí, es un partido tarde de liga objetivo
+        results["tarde_asia_matches"] += 1
+
+        # Buscar primera fila con cuotas Over 2.5
+        bet_placed = False
+        for row in rows:
+            if bet_placed:
+                break
+
+            minuto = _to_float(row.get("minuto", ""))
+            if minuto is None or minuto > 15:  # Solo primeros 15 min
+                continue
+
+            # Obtener cuota Over 2.5
+            over_25_odds = _to_float(row.get("back_over25", ""))
+            if not over_25_odds or over_25_odds <= 1:
+                continue
+
+            gl = _to_float(row.get("goles_local", ""))
+            gv = _to_float(row.get("goles_visitante", ""))
+            if gl is None or gv is None:
+                continue
+
+            # Colocar apuesta
+            bet_placed = True
+            actual_min = int(minuto)
+            score_at_trigger = f"{int(gl)}-{int(gv)}"
+
+            # Resultado
+            won = total_final > 2.5
+            stake = 10
+            if won:
+                pl = round((over_25_odds - 1) * stake * 0.95, 2)
+            else:
+                pl = -stake
+
+            results["bets"].append({
+                "match": match_name,
+                "match_id": match_id,
+                "minuto": actual_min,
+                "score": score_at_trigger,
+                "back_over_odds": round(over_25_odds, 2),
+                "over_line": "Over 2.5",
+                "ft_score": ft_score,
+                "won": won,
+                "pl": round(pl, 2),
+                "liga": liga_match,
+                "hora_local": hora_local,
+                "timestamp_utc": row.get("timestamp_utc", "")
+            })
+
+    # Calcular summary
+    total_bets = len(results["bets"])
+    wins = sum(1 for b in results["bets"] if b["won"])
+    win_rate = (wins / total_bets * 100) if total_bets > 0 else 0
+    total_pl = sum(b["pl"] for b in results["bets"])
+    total_stake = total_bets * 10
+    roi = (total_pl / total_stake * 100) if total_stake > 0 else 0
+
+    results["summary"] = {
+        "total_bets": total_bets,
+        "wins": wins,
+        "win_rate": round(win_rate, 1),
+        "total_pl": round(total_pl, 2),
+        "roi": round(roi, 1)
+    }
+
+    return results
+
+
+
+
+def analyze_strategy_momentum_xg(version: str = "v1") -> dict:
+    """
+    Momentum Dominante x xG: BACK equipo con dominancia en tiros a puerta pero xG no convertido
+
+    Concepto: Equipo dominante con xG alto pero pocos goles indica regresión a la media → apostar a que ganará.
+
+    Versiones disponibles:
+    - v1 (ULTRA RELAJADAS): SoT >=1, ratio >=1.1x, xG underperf >0.15, Min 10-80, Odds 1.4-6.0
+      → 66.7% WR, 52.2% ROI (12 triggers)
+    - v2 (MÁXIMAS): SoT >=1, ratio >=1.05x, xG underperf >0.1, Min 5-85, Odds 1.3-8.0
+      → 60% WR, 68.7% ROI (15 triggers)
+
+    Apuesta: BACK equipo dominante (Home o Away)
+
+    Args:
+        version: "v1" (ultra relajadas, más consistente) o "v2" (máximas, mayor ROI)
+
+    Returns:
+        {
+            "total_matches": int,
+            "momentum_triggers": int,
+            "summary": {...},
+            "bets": [...],
+            "version": str
+        }
+    """
+    # Configuración según versión
+    if version == "v2":
+        # V2 MÁXIMAS: Mayor ROI pero menos consistente
+        config = {
+            "sot_min": 1,
+            "sot_ratio_min": 1.05,
+            "xg_underperf_min": 0.1,
+            "min_minute": 5,
+            "max_minute": 85,
+            "min_odds": 1.3,
+            "max_odds": 8.0,
+            "label": "MÁXIMAS"
+        }
+    else:  # v1 por defecto
+        # V1 ULTRA RELAJADAS: Más consistente (66.7% WR)
+        config = {
+            "sot_min": 1,
+            "sot_ratio_min": 1.1,
+            "xg_underperf_min": 0.15,
+            "min_minute": 10,
+            "max_minute": 80,
+            "min_odds": 1.4,
+            "max_odds": 6.0,
+            "label": "ULTRA RELAJADAS"
+        }
+
+    finished = _get_all_finished_matches()
+
+    results = {
+        "total_matches": 0,
+        "momentum_triggers": 0,
+        "bets": []
+    }
+
+    for match_data in finished:
+        results["total_matches"] += 1
+        match_id = match_data["match_id"]
+        match_name = match_data["name"]
+        csv_path = _resolve_csv_path(match_id)
+
+        if not csv_path.exists():
+            continue
+
+        rows = _read_csv_rows(csv_path)
+        if len(rows) < 20:
+            continue
+
+        # Resultado final
+        last_row = rows[-1]
+        gl_final = _to_float(last_row.get("goles_local", ""))
+        gv_final = _to_float(last_row.get("goles_visitante", ""))
+
+        if gl_final is None or gv_final is None:
+            continue
+
+        # Verificar que finalizó
+        last_min = _to_float(last_row.get("minuto", ""))
+        if last_min is None or last_min < 85:
+            continue
+
+        ft_score = f"{int(gl_final)}-{int(gv_final)}"
+
+        # Buscar trigger de momentum dominante
+        bet_placed = False
+        for row in rows:
+            if bet_placed:
+                break
+
+            if row.get("estado_partido") != "en_juego":
+                continue
+
+            minuto = _to_float(row.get("minuto", ""))
+            if minuto is None or minuto < config["min_minute"] or minuto > config["max_minute"]:
+                continue
+
+            # Stats necesarias
+            gl = _to_float(row.get("goles_local", ""))
+            gv = _to_float(row.get("goles_visitante", ""))
+            xg_local = _to_float(row.get("xg_local", ""))
+            xg_visitante = _to_float(row.get("xg_visitante", ""))
+            sot_local = _to_float(row.get("tiros_puerta_local", ""))
+            sot_visitante = _to_float(row.get("tiros_puerta_visitante", ""))
+            back_home_odds = _to_float(row.get("back_home", ""))
+            back_away_odds = _to_float(row.get("back_away", ""))
+
+            # Validar datos completos
+            if None in [gl, gv, xg_local, xg_visitante, sot_local, sot_visitante,
+                        back_home_odds, back_away_odds]:
+                continue
+
+            # Calcular xG underperformance
+            xg_underperf_local = xg_local - gl
+            xg_underperf_visitante = xg_visitante - gv
+
+            # Determinar equipo dominante usando SHOTS ON TARGET
+            dominant_team = None
+            back_odds = None
+            sot_ratio_used = 0
+
+            # Local dominante: SoT superior + xG underperformance
+            if sot_visitante > 0:
+                sot_ratio_local = sot_local / sot_visitante
+            else:
+                sot_ratio_local = sot_local * 2 if sot_local >= config["sot_min"] else 0
+
+            if (sot_local >= config["sot_min"] and
+                sot_ratio_local >= config["sot_ratio_min"] and
+                xg_underperf_local > config["xg_underperf_min"]):
+                if config["min_odds"] <= back_home_odds <= config["max_odds"]:
+                    dominant_team = "home"
+                    back_odds = back_home_odds
+                    sot_ratio_used = sot_ratio_local
+
+            # Visitante dominante
+            if sot_local > 0:
+                sot_ratio_visitante = sot_visitante / sot_local
+            else:
+                sot_ratio_visitante = sot_visitante * 2 if sot_visitante >= config["sot_min"] else 0
+
+            if (sot_visitante >= config["sot_min"] and
+                sot_ratio_visitante >= config["sot_ratio_min"] and
+                xg_underperf_visitante > config["xg_underperf_min"]):
+                if config["min_odds"] <= back_away_odds <= config["max_odds"]:
+                    # Si ambos son dominantes, tomar el más dominante
+                    if dominant_team is None or xg_underperf_visitante > xg_underperf_local:
+                        dominant_team = "away"
+                        back_odds = back_away_odds
+                        sot_ratio_used = sot_ratio_visitante
+
+            if dominant_team is None:
+                continue
+
+            # Trigger encontrado
+            bet_placed = True
+            results["momentum_triggers"] += 1
+
+            # Verificar resultado
+            if dominant_team == "home":
+                won = gl_final > gv_final
+                team_label = "Local"
+                xg_underperf = xg_underperf_local
+            else:
+                won = gv_final > gl_final
+                team_label = "Visitante"
+                xg_underperf = xg_underperf_visitante
+
+            # Calcular P/L
+            stake = 10
+            if won:
+                pl = round((back_odds - 1) * stake * 0.95, 2)
+            else:
+                pl = -stake
+
+            # Calcular riesgo por tiempo + marcador
+            risk_info = calculate_time_score_risk(
+                strategy=f"momentum_xg_{version}",
+                minute=minuto,
+                home_score=int(gl),
+                away_score=int(gv),
+                dominant_team=dominant_team
+            )
+
+            results["bets"].append({
+                "match": match_name,
+                "match_id": match_id,
+                "minuto": int(minuto),
+                "score_at_trigger": f"{int(gl)}-{int(gv)}",
+                "dominant_team": team_label,
+                "sot_ratio": round(sot_ratio_used, 2),
+                "xg_underperf": round(xg_underperf, 2),
+                "back_odds": round(back_odds, 2),
+                "ft_score": ft_score,
+                "won": won,
+                "pl": round(pl, 2),
+                "timestamp_utc": row.get("timestamp_utc", ""),
+                "risk_level": risk_info["risk_level"],
+                "risk_reason": risk_info["risk_reason"],
+                "time_remaining": risk_info["time_remaining"],
+                "deficit": risk_info["deficit"]
+            })
+
+    # Calcular summary
+    total_bets = len(results["bets"])
+    wins = sum(1 for b in results["bets"] if b["won"])
+    win_rate = (wins / total_bets * 100) if total_bets > 0 else 0
+    total_pl = sum(b["pl"] for b in results["bets"])
+    total_stake = total_bets * 10
+    roi = (total_pl / total_stake * 100) if total_stake > 0 else 0
+
+    results["summary"] = {
+        "total_bets": total_bets,
+        "wins": wins,
+        "win_rate": round(win_rate, 1),
+        "total_pl": round(total_pl, 2),
+        "roi": round(roi, 1)
+    }
+
+    results["version"] = version
+    results["config_label"] = config["label"]
 
     return results

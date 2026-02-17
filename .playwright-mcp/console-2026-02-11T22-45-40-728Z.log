@@ -1,6 +1,0 @@
-[     199ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie1eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
-[     889ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0
-[   16150ms] [WARNING] Error while trying to get football data soccerEventStats response invalid @ https://ie1eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
-[   18081ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0
-[   65419ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/serie-a-brasil/chapecoense-coritiba-apuestas-35207738:0
-[   65419ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0

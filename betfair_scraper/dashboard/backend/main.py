@@ -4,8 +4,12 @@ FastAPI server para monitorear el scraper de Betfair.
 """
 
 import sys
+# Prevent stale .pyc bytecode cache (OneDrive/Windows can cause mismatch)
+sys.dont_write_bytecode = True
+
 import asyncio
 import subprocess
+import importlib
 from pathlib import Path
 from datetime import datetime
 
@@ -21,6 +25,14 @@ from api.matches import router as matches_router
 from api.system import router as system_router
 from api.analytics import router as analytics_router
 from api.bets import router as bets_router
+
+# Force fresh reload of csv_reader to avoid stale module cache
+try:
+    from utils import csv_reader as _csv_reader_mod
+    importlib.reload(_csv_reader_mod)
+    print(f"[STARTUP] csv_reader reloaded OK — has momentum_xg: {hasattr(_csv_reader_mod, 'analyze_strategy_momentum_xg')}")
+except Exception as _reload_err:
+    print(f"[STARTUP] csv_reader reload FAILED: {_reload_err}")
 
 app = FastAPI(title="Furbo Monitor API", version="1.0.0")
 

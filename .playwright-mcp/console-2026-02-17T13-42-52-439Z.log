@@ -1,0 +1,727 @@
+[      61ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
+[    1866ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0
+[    9090ms] [ERROR] Attestation check for Attribution Reporting on https://region1.google-analytics.com failed. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414:0
+[   16435ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
+[   17085ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0
+[   19733ms] [WARNING] Form submission canceled because the form is not connected @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[   22404ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[   22405ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[   26221ms] [ERROR] Attestation check for Attribution Reporting on https://region1.google-analytics.com failed. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[   31668ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[   31668ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  109982ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  109983ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  153629ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  153630ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  175396ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  175396ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  192941ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  192942ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  245079ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  245080ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  280032ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  280032ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  284381ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  284381ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  306227ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  306228ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  336719ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  336720ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  345427ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  345428ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  362581ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  362582ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  371557ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  371557ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  384757ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  384758ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  397803ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  397803ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  436926ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  436926ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  462965ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  462965ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  510820ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  510820ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  589098ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  589099ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  619163ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  619163ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  632338ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  632339ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  671427ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  671428ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  706278ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  706279ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  719299ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  719300ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  727982ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  727982ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  767325ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  767326ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  828321ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  828322ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  841406ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  841406ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  858786ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  858786ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  880579ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  880579ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  919764ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  919764ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  945621ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  945621ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  958679ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  958680ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  967443ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  967444ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[  993643ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[  993644ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1002419ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1002420ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1019780ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1019781ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1028503ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1028504ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1037180ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1037181ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1063434ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1063435ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1085241ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1085241ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1089569ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1089569ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1093913ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1093914ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1111412ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1111412ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1115758ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1115759ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1124679ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1124679ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1129019ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1129019ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1133419ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1133420ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1155159ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1155160ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1159580ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1159581ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1181281ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1181281ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1185665ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1185665ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1189997ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1189998ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1198748ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1198748ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1202841ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1202841ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1208463ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://ero.betfair.es/www/sports/exchange/readonly/v1/bymarket?_ak=nzIFcwyWhrlwYMrh&alt=json&currencyCode=EUR&locale=es&marketIds=1.254134819,1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825&rollupLimit=1&rollupModel=STAKE&types=MARKET_STATE,RUNNER_STATE,RUNNER_EXCHANGE_PRICES_BEST:0
+[ 1208465ms] [WARNING] init timeout error e @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[ 1208467ms] [ERROR] e Possibly unhandled rejection: {"code":"DSC-0035","message":"Client"} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1208690ms] Uncaught TypeError: Cannot read properties of null (reading 'then')
+    at b (https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0:911990)
+    at r (https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0:802366)
+    at <anonymous> (https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0:802778)
+[ 1211747ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1211748ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1217146ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://was.betfair.es/wallet-service/v3.0/wallets?walletNames=[MAIN]&alt=json:0
+[ 1222599ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1222600ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1228472ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1238981ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1238982ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1242247ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1242247ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1246600ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1246601ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1250949ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1250949ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1255242ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1255244ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1255278ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1255279ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1258471ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1263994ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1263995ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1268323ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1268324ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1271566ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1271569ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1281374ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1281374ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1287882ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1287885ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1288481ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1290072ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1290073ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1294399ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1294399ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1303119ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1303120ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1304220ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1304222ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1311857ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1311857ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1318493ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1320497ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1320499ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1329207ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1329208ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1336818ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1336821ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1348508ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1353126ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1353128ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1355326ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1355326ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1359682ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1359682ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1363998ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1363999ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1369419ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1369424ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1372708ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1372709ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1377046ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1377046ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1378534ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1385715ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1385717ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1385739ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1385739ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1402035ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1402037ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1408524ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1418387ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1418388ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1433698ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1433699ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1434802ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1434804ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1438070ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1438070ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1438547ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1451116ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1451118ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1451137ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1451137ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1455178ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1455178ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1467440ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1467441ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1468556ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1483737ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1483738ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1485901ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1485902ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1490279ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1490280ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1498558ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1500105ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1500106ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1507710ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1507711ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1512065ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1512065ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1516442ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1516444ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1528556ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1529551ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1529551ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1532783ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1532785ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1533919ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1533920ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1549238ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1549241ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1551433ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1551433ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1558572ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1565598ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1565599ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1568879ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1568880ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1581922ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1581924ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1585978ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1585979ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1588575ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1590578ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1590579ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1598274ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1598276ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1608099ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1608100ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1614685ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1614686ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1616860ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1616860ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1618598ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1630977ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1630979ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1647315ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1647318ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1647324ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1647324ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1648582ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1660425ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1660425ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1663620ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1663622ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1673394ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1673395ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1678610ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1679859ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1679861ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1682058ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1682059ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1696290ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1696291ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1708640ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1712577ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1712578ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1716639ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1716640ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1721289ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1721289ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1725639ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1725640ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1728871ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1728877ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1738641ms] [WARNING] Error fetching cashout quotes. TypeError: Cannot read properties of null (reading 'finally')
+    at t.project (https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:1:913072)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:222759)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:150677)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t.notifyNext (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:224700)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:21:124101)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808)
+    at t._next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:65:241816)
+    at t.next (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:2808) @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[ 1738741ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1743013ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1743014ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1745138ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1745140ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1750676ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1756132ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1756133ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1759428ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1761520ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1761522ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1769160ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1769161ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1773504ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1773504ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1775710ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1777814ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://lbr.betfair.es/www/sports/exchange/reporting/live/v1.0/getMarketPositionViews?_ak=nzIFcwyWhrlwYMrh&alt=json&includeSettledProfit=false&includeSourceId=false&marketIds=1.254134827,1.254134823,1.254134824,1.254134820,1.254134822,1.254134825,1.254134819&matchProjection=MATCH:0
+[ 1777817ms] [ERROR] Error while fetching bets {
+  "exchangeQueryStatus": {
+    "code": "FAILURE",
+    "errorMessage": {
+      "code": "LBR-0002",
+      "message": "Server"
+    }
+  },
+  "exchangeBets": {}
+} @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:5
+[ 1780091ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1784427ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1787696ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://cashout-exchange.betfair.es/cashout-exchange/v1.0/getAutoCashout?alt=json&marketIds=1.254134819:0
+[ 1790862ms] [WARNING] Error while fetching manageMarketOnBetEngine Error: bettingType betting type must be one of ODDS, ASIAN_HANDICAP_SINGLE_LINE, ASIAN_HANDICAP_DOUBLE_LINE, LINE. Current value is "undefined"
+    at o (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:1:3147)
+    at A (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:1:4707)
+    at new t.default (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:16:81341)
+    at https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:170458
+    at Fe (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:170642)
+    at Ge.add (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:172299)
+    at Qe.addMarket (https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:26:175254)
+    at https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:1:798530
+    at https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:1:798591
+    at Array.forEach (<anonymous>) @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[ 1790898ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1790899ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1803923ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1803924ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1812898ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1812899ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1817199ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1817199ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1832339ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1832340ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1855460ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1855461ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1862582ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1862583ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1869119ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1869119ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1877718ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1877719ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1899222ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1899223ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1907890ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1907891ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1940034ms] [WARNING] Error while trying to get football data soccerEventStats response invalid @ https://ie2eds.cdnppb.net/resources/eds/bundle/vendors~app.eff7c2f07.js:31
+[ 1983348ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1983348ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1989540ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1989541ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 1998459ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 1998460ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2019638ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2019638ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2058850ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2058850ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2079864ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2079865ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2104161ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2104162ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2134364ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2134365ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2140090ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2140091ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2194839ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2194840ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2209922ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2209923ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2225017ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2225017ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2230458ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2230459ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2255199ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2255199ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2300517ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2300517ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2315617ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2315618ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2330750ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2330750ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2421320ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2421320ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2466620ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2466620ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2511917ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2511917ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2557195ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2557195ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2561578ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2561578ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2587358ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2587358ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2621783ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/es/f%C3%BAtbol/champions-league-asi%C3%A1tica/johor-darul-ta-zim-kobe-apuestas-35273414?loginStatus=SUCCESS&ott=Lj91dBF29cO6ZICWhptMQBtu7eGqJOlIYxnfMen7jIlbbVzpQDdoAn0CspWjG7wJ:0
+[ 2621784ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
+[ 2696798ms] [ERROR] Access to font at 'https://ie1-ssobf.cdnppb.net/page/fonts/NotoSans-Bold.woff2' from origin 'https://identitysso.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://identitysso.betfair.es/view/login?product=my-account&redirectMethod=POST&url=https%3A%2F%2Fmyactivity.betfair.es%2Flogin%2Fsuccess%3Frurl%3Dhttps%253A%252F%252Fmyactivity.betfair.es%252F#/exchange:0
+[ 2696798ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://ie1-ssobf.cdnppb.net/page/fonts/NotoSans-Bold.woff2:0
+[ 2696810ms] [ERROR] Access to font at 'https://ie1-ssobf.cdnppb.net/page/fonts/NotoSans-Regular.woff2' from origin 'https://identitysso.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://identitysso.betfair.es/view/login?product=my-account&redirectMethod=POST&url=https%3A%2F%2Fmyactivity.betfair.es%2Flogin%2Fsuccess%3Frurl%3Dhttps%253A%252F%252Fmyactivity.betfair.es%252F#/exchange:0
+[ 2696810ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://ie1-ssobf.cdnppb.net/page/fonts/NotoSans-Regular.woff2:0
+[ 2707165ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://www.betfair.es/sport/:50
+[ 2725896ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://www.betfair.es/sport/:50

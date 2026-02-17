@@ -172,11 +172,39 @@ export function AnalyticsView() {
         <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
           📋 Estadísticas Generales
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatItem label="Cuota Promedio" value={stats.avgOdds.toFixed(2)} />
-          <StatItem label="P/L Promedio" value={`${stats.avgPL >= 0 ? "+" : ""}${stats.avgPL.toFixed(2)} EUR`} />
-          <StatItem label="Stake Total" value={`${stats.totalStake.toFixed(0)} EUR`} />
-          <StatItem label="ROI Global" value={`${stats.roi.toFixed(1)}%`} />
+        <div className="space-y-4">
+          {/* Rendimiento */}
+          <div>
+            <h3 className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Rendimiento</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatItem label="ROI Global" value={`${stats.roi.toFixed(1)}%`} />
+              <StatItem label="Win Rate" value={`${stats.winRate.toFixed(1)}%`} />
+              <StatItem label="P/L Total" value={`${stats.totalPL >= 0 ? "+" : ""}${stats.totalPL.toFixed(2)} EUR`} />
+              <StatItem label="Ganancia por € Apostado" value={`€${stats.profitPerEuro.toFixed(3)}`} />
+            </div>
+          </div>
+
+          {/* Volumen */}
+          <div>
+            <h3 className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Volumen</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatItem label="Total de Apuestas" value={stats.totalBets.toString()} />
+              <StatItem label="Stake Total" value={`${stats.totalStake.toFixed(0)} EUR`} />
+              <StatItem label="Stake Promedio" value={`${stats.avgStake.toFixed(2)} EUR`} />
+              <StatItem label="Cuota Promedio" value={stats.avgOdds.toFixed(2)} />
+            </div>
+          </div>
+
+          {/* Extremos */}
+          <div>
+            <h3 className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Detalle</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatItem label="P/L Promedio" value={`${stats.avgPL >= 0 ? "+" : ""}${stats.avgPL.toFixed(2)} EUR`} />
+              <StatItem label="Expectativa" value={`${stats.expectancy >= 0 ? "+" : ""}${stats.expectancy.toFixed(2)} EUR`} />
+              <StatItem label="Mejor Apuesta" value={`+${stats.bestBet.toFixed(2)} EUR`} />
+              <StatItem label="Peor Apuesta" value={`${stats.worstBet.toFixed(2)} EUR`} />
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -185,13 +213,51 @@ export function AnalyticsView() {
 
 // Utility functions
 function calculateStats(bets: PlacedBet[]) {
+  const totalBets = bets.length
   const totalStake = bets.reduce((sum, b) => sum + Number(b.stake), 0)
   const totalPL = bets.reduce((sum, b) => sum + (Number(b.pl) || 0), 0)
   const avgOdds = bets.reduce((sum, b) => sum + (Number(b.back_odds) || 0), 0) / Math.max(bets.length, 1)
   const avgPL = totalPL / Math.max(bets.length, 1)
-  const roi = (totalPL / totalStake) * 100
+  const avgStake = totalStake / Math.max(bets.length, 1)
+  const roi = totalStake > 0 ? (totalPL / totalStake) * 100 : 0
 
-  return { totalStake, totalPL, avgOdds, avgPL, roi }
+  // Win Rate
+  const wins = bets.filter(b => b.result === "won").length
+  const winRate = totalBets > 0 ? (wins / totalBets) * 100 : 0
+
+  // Ganancia por euro apostado
+  const profitPerEuro = totalStake > 0 ? totalPL / totalStake : 0
+
+  // Expectativa (ganancia esperada por apuesta)
+  const winningBets = bets.filter(b => b.result === "won")
+  const losingBets = bets.filter(b => b.result === "lost")
+  const avgWin = winningBets.length > 0
+    ? winningBets.reduce((sum, b) => sum + (Number(b.pl) || 0), 0) / winningBets.length
+    : 0
+  const avgLoss = losingBets.length > 0
+    ? losingBets.reduce((sum, b) => sum + (Number(b.pl) || 0), 0) / losingBets.length
+    : 0
+  const expectancy = (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss
+
+  // Mejor y peor apuesta
+  const plValues = bets.map(b => Number(b.pl) || 0)
+  const bestBet = plValues.length > 0 ? Math.max(...plValues) : 0
+  const worstBet = plValues.length > 0 ? Math.min(...plValues) : 0
+
+  return {
+    totalBets,
+    totalStake,
+    totalPL,
+    avgOdds,
+    avgPL,
+    avgStake,
+    roi,
+    winRate,
+    profitPerEuro,
+    expectancy,
+    bestBet,
+    worstBet
+  }
 }
 
 function calculateStrategyPerformance(bets: PlacedBet[]) {

@@ -110,6 +110,21 @@ async def get_strategy_pressure_cooker() -> Dict[str, Any]:
     """Pressure Cooker V1: Back Over on drawn matches (1-1+) at min 65-75."""
     return csv_reader.analyze_strategy_pressure_cooker()
 
+@router.get("/strategies/tarde-asia")
+async def get_strategy_tarde_asia() -> Dict[str, Any]:
+    """Tarde Asia V1: Back Over 2.5 in afternoon matches from Asian/German/French leagues."""
+    return csv_reader.analyze_strategy_tarde_asia()
+
+@router.get("/strategies/momentum-xg-v1")
+async def get_strategy_momentum_xg_v1() -> Dict[str, Any]:
+    """Momentum Dominante x xG V1 (Ultra Relajadas): 66.7% WR, 52.2% ROI."""
+    return csv_reader.analyze_strategy_momentum_xg(version="v1")
+
+@router.get("/strategies/momentum-xg-v2")
+async def get_strategy_momentum_xg_v2() -> Dict[str, Any]:
+    """Momentum Dominante x xG V2 (Máximas): 60% WR, 68.7% ROI."""
+    return csv_reader.analyze_strategy_momentum_xg(version="v2")
+
 
 # ==================== BETTING SIGNALS ENDPOINT ====================
 
@@ -120,13 +135,14 @@ async def get_betting_signals(
     drift: str = "v1",
     clustering: str = "v2",
     pressure: str = "v1",
+    momentum: str = "v1",
 ) -> Dict[str, Any]:
     """Detect live betting opportunities based on portfolio strategies.
 
     Each parameter specifies the version of the strategy to use.
     Use "off" to disable a strategy.
     """
-    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure}
+    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure, "momentum": momentum}
     return csv_reader.detect_betting_signals(versions=versions)
 
 
@@ -137,8 +153,9 @@ async def get_watchlist(
     drift: str = "v1",
     clustering: str = "v2",
     pressure: str = "v1",
+    momentum: str = "v1",
 ) -> List[Any]:
     """Matches close to triggering a signal but not yet meeting all conditions."""
-    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure}
+    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure, "momentum": momentum}
     return csv_reader.detect_watchlist(versions=versions)
 

@@ -496,13 +496,22 @@ def extraer_runners_match_odds(driver, timeout: int = 5) -> dict:
 
                     runner_name = h3_elements[0].text.strip()
 
-                    # Identificar si es Empate/Draw (más fácil de detectar)
-                    is_draw = "Empate" in runner_name or "Draw" in runner_name
-
-                    # Si no es empate, asumir que es Home o Away
-                    # Los almacenaremos y luego asignaremos por orden
                     if not runner_name:
                         continue
+
+                    # Filtro negativo: descartar runners de otros mercados
+                    # (Over/Under contienen "Goles"/"Goals", Correct Score "X - Y")
+                    name_lower = runner_name.lower()
+                    if any(kw in name_lower for kw in (
+                        "goles", "goals", "más de", "menos de",
+                        "more than", "over", "under",
+                    )):
+                        continue
+                    if re.match(r"^\d+\s*-\s*\d+$", runner_name):
+                        continue
+
+                    # Identificar si es Empate/Draw
+                    is_draw = "Empate" in runner_name or "Draw" in runner_name
 
                     # Buscar botones con precios
                     buttons = row.find_elements(By.TAG_NAME, "button")

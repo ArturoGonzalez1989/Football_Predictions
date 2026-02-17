@@ -2,11 +2,13 @@ import type { CarteraBet } from "./api"
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-export type DrawVersion = "v1" | "v15" | "v2r" | "v2" | "off"
+export type DrawVersion = "v1" | "v15" | "v2r" | "v2" | "v3" | "off"
 export type XGCarteraVersion = "base" | "v2" | "v3" | "off"
-export type DriftCarteraVersion = "v1" | "v2" | "v3" | "v4" | "v5" | "off"
-export type ClusteringCarteraVersion = "v2" | "v3" | "off"
+export type DriftCarteraVersion = "v1" | "v2" | "v3" | "v4" | "v5" | "v6" | "off"
+export type ClusteringCarteraVersion = "v2" | "v3" | "v4" | "off"
 export type PressureCarteraVersion = "v1" | "off"
+export type TardeAsiaVersion = "v1" | "off"
+export type MomentumXGVersion = "v1" | "v2" | "off"
 export type BankrollMode = "fixed" | "kelly" | "half_kelly" | "dd_protection" | "variable" | "anti_racha"
 
 export type PresetKey = "max_roi" | "max_pl" | "max_wr" | "min_dd" | "max_bets" | null
@@ -17,6 +19,8 @@ export interface VersionCombo {
   drift: DriftCarteraVersion
   clustering: ClusteringCarteraVersion
   pressure: PressureCarteraVersion
+  tardeAsia: TardeAsiaVersion
+  momentumXG: MomentumXGVersion
   br: BankrollMode
 }
 
@@ -35,6 +39,7 @@ export const DRAW_VERSIONS: { key: DrawVersion; label: string; desc: string }[] 
   { key: "v15", label: "V1.5", desc: "xG<0.6+PD<25%" },
   { key: "v2r", label: "V2r", desc: "xG<0.6+PD<20%+Sh<8" },
   { key: "v2", label: "V2", desc: "xG<0.5+PD<20%+Sh<8" },
+  { key: "v3", label: "V3", desc: "V1.5+xGDom+LowPressV" },
   { key: "off", label: "OFF", desc: "" },
 ]
 
@@ -51,17 +56,30 @@ export const DRIFT_CARTERA_VERSIONS: { key: DriftCarteraVersion; label: string; 
   { key: "v3", label: "V3", desc: "Drift>=100%" },
   { key: "v4", label: "V4", desc: "2a parte+Odds<=5" },
   { key: "v5", label: "V5", desc: "Odds<=5" },
+  { key: "v6", label: "V6", desc: "V5+MomentumGap>200" },
   { key: "off", label: "OFF", desc: "" },
 ]
 
 export const CLUSTERING_CARTERA_VERSIONS: { key: ClusteringCarteraVersion; label: string; desc: string }[] = [
   { key: "v2", label: "V2", desc: "SoT max>=3" },
   { key: "v3", label: "V3", desc: "SoT>=3 + Min<60" },
+  { key: "v4", label: "V4", desc: "xG remaining>0.8" },
   { key: "off", label: "OFF", desc: "" },
 ]
 
 export const PRESSURE_CARTERA_VERSIONS: { key: PressureCarteraVersion; label: string; desc: string }[] = [
   { key: "v1", label: "V1", desc: "Empate 1-1+ min 65-75" },
+  { key: "off", label: "OFF", desc: "" },
+]
+
+export const TARDE_ASIA_VERSIONS: { key: TardeAsiaVersion; label: string; desc: string }[] = [
+  { key: "v1", label: "V1", desc: "Tarde 14-20h + Liga Asia/Alemania/Francia" },
+  { key: "off", label: "OFF", desc: "" },
+]
+
+export const MOMENTUM_XG_VERSIONS: { key: MomentumXGVersion; label: string; desc: string }[] = [
+  { key: "v1", label: "V1", desc: "Ultra Relajadas" },
+  { key: "v2", label: "V2", desc: "Máximas" },
   { key: "off", label: "OFF", desc: "" },
 ]
 
@@ -91,6 +109,9 @@ const MIN_ODDS_BY_STRATEGY: Record<string, number> = {
   odds_drift: 1.65,          // 66.7% WR
   goal_clustering: 1.73,     // 63.6% WR
   pressure_cooker: 1.83,     // 60.0% WR
+  tarde_asia: 1.83,          // 60.0% WR estimado
+  momentum_xg_v1: 1.65,      // 66.7% WR
+  momentum_xg_v2: 1.83,      // 60.0% WR
 }
 
 function meetsMinOdds(b: CarteraBet): boolean {
@@ -108,6 +129,7 @@ export function filterDrawBets(bets: CarteraBet[], version: DrawVersion): Carter
   if (version === "v15") return drawBets.filter(b => b.passes_v15)
   if (version === "v2r") return drawBets.filter(b => b.passes_v2r)
   if (version === "v2") return drawBets.filter(b => b.passes_v2)
+  if (version === "v3") return drawBets.filter(b => b.passes_v3)
   return drawBets
 }
 
@@ -128,6 +150,7 @@ export function filterDriftBets(bets: CarteraBet[], version: DriftCarteraVersion
   if (version === "v3") return driftBets.filter(b => b.passes_v3)
   if (version === "v4") return driftBets.filter(b => b.passes_v4)
   if (version === "v5") return driftBets.filter(b => b.passes_v5)
+  if (version === "v6") return driftBets.filter(b => b.passes_v6)
   return driftBets
 }
 
@@ -136,12 +159,26 @@ export function filterClusteringBets(bets: CarteraBet[], version: ClusteringCart
   const clusteringBets = bets.filter(b => b.strategy === "goal_clustering")
   if (version === "v2") return clusteringBets
   if (version === "v3") return clusteringBets.filter(b => b.passes_v3)
+  if (version === "v4") return clusteringBets.filter(b => b.passes_v4)
   return clusteringBets
 }
 
 export function filterPressureBets(bets: CarteraBet[], version: PressureCarteraVersion): CarteraBet[] {
   if (version === "off") return []
   return bets.filter(b => b.strategy === "pressure_cooker")
+}
+
+export function filterTardeAsiaBets(bets: CarteraBet[], version: TardeAsiaVersion): CarteraBet[] {
+  if (version === "off") return []
+  return bets.filter(b => b.strategy === "tarde_asia")
+}
+
+export function filterMomentumXGBets(bets: CarteraBet[], version: MomentumXGVersion): CarteraBet[] {
+  if (version === "off") return []
+  const momentumBets = bets.filter(b => b.strategy === "momentum_xg_v1" || b.strategy === "momentum_xg_v2")
+  if (version === "v1") return momentumBets.filter(b => b.strategy === "momentum_xg_v1")
+  if (version === "v2") return momentumBets.filter(b => b.strategy === "momentum_xg_v2")
+  return momentumBets
 }
 
 // ── Drawdown & streaks ──────────────────────────────────────────────────
@@ -308,33 +345,42 @@ export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: 
 
 // ── Combo evaluation & optimization ────────────────────────────────────
 
-export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number) {
+export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number, riskFilter: RiskFilter = "all") {
   const drawBets = filterDrawBets(bets, combo.draw)
   const xgBets = filterXGBets(bets, combo.xg)
   const driftBets = filterDriftBets(bets, combo.drift)
   const clusteringBets = filterClusteringBets(bets, combo.clustering)
   const pressureBets = filterPressureBets(bets, combo.pressure)
+  const tardeAsiaBets = filterTardeAsiaBets(bets, combo.tardeAsia)
+  const momentumXGBets = filterMomentumXGBets(bets, combo.momentumXG)
   // Only include bets where odds >= strategy min_odds (EV positive)
-  const filtered = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets]
+  let filtered = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets, ...tardeAsiaBets, ...momentumXGBets]
     .filter(meetsMinOdds)
     .sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
+
+  // Apply risk filter
+  filtered = filterByRisk(filtered, riskFilter)
+
   if (filtered.length === 0) return null
   const sim = simulateCartera(filtered, bankrollInit, combo.br)
-  return { ...sim, combo, filtered }
+  const riskBreakdown = analyzeRiskBreakdown(filtered)
+  return { ...sim, combo, filtered, riskBreakdown }
 }
 
-export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>): VersionCombo {
-  if (criterion === "max_bets") return { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", br: "fixed" }
+export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>, riskFilter: RiskFilter = "all"): VersionCombo {
+  if (criterion === "max_bets") return { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "v1", momentumXG: "v1", br: "fixed" }
 
-  const drawOpts: DrawVersion[] = ["v1", "v15", "v2r", "v2"]
+  const drawOpts: DrawVersion[] = ["v1", "v15", "v2r", "v2", "v3"]
   const xgOpts: XGCarteraVersion[] = ["base", "v2", "v3"]
-  const driftOpts: DriftCarteraVersion[] = ["v1", "v2", "v3", "v4", "v5"]
-  const clusteringOpts: ClusteringCarteraVersion[] = ["v2", "v3", "off"]
+  const driftOpts: DriftCarteraVersion[] = ["v1", "v2", "v3", "v4", "v5", "v6"]
+  const clusteringOpts: ClusteringCarteraVersion[] = ["v2", "v3", "v4", "off"]
   const pressureOpts: PressureCarteraVersion[] = ["v1", "off"]
+  const tardeAsiaOpts: TardeAsiaVersion[] = ["v1", "off"]
+  const momentumXGOpts: MomentumXGVersion[] = ["v1", "v2", "off"]
   const brOpts: BankrollMode[] = criterion === "min_dd" ? ["dd_protection", "fixed", "half_kelly", "anti_racha"] : ["fixed"]
 
-  let best: VersionCombo = { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", br: "fixed" }
+  let best: VersionCombo = { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed" }
   let bestScore = -Infinity
 
   for (const draw of drawOpts) {
@@ -342,24 +388,28 @@ export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterio
       for (const drift of driftOpts) {
         for (const clustering of clusteringOpts) {
           for (const pressure of pressureOpts) {
-            for (const br of brOpts) {
-              const combo = { draw, xg, drift, clustering, pressure, br }
-              const result = evaluateCombo(bets, combo, bankrollInit)
-              if (!result || result.total < 3) continue
+            for (const tardeAsia of tardeAsiaOpts) {
+              for (const momentumXG of momentumXGOpts) {
+                for (const br of brOpts) {
+                  const combo = { draw, xg, drift, clustering, pressure, tardeAsia, momentumXG, br }
+                  const result = evaluateCombo(bets, combo, bankrollInit, riskFilter)
+                  if (!result || result.total < 3) continue
 
-              let score: number
-              switch (criterion) {
-                case "max_roi": score = result.flatRoi; break
-                case "max_pl": score = result.flatPl; break
-                case "max_wr": score = result.winPct + result.total * 0.01; break
-                case "min_dd": {
-                  const ddPenalty = result.managedMaxDd.maxDd
-                  score = result.managedPl - ddPenalty * 2 + result.winPct * 0.5
-                  break
+                  let score: number
+                  switch (criterion) {
+                    case "max_roi": score = result.flatRoi; break
+                    case "max_pl": score = result.flatPl; break
+                    case "max_wr": score = result.winPct + result.total * 0.01; break
+                    case "min_dd": {
+                      const ddPenalty = result.managedMaxDd.maxDd
+                      score = result.managedPl - ddPenalty * 2 + result.winPct * 0.5
+                      break
+                    }
+                    default: score = result.flatPl; break
+                  }
+                  if (score > bestScore) { bestScore = score; best = combo }
                 }
-                default: score = result.flatPl
               }
-              if (score > bestScore) { bestScore = score; best = combo }
             }
           }
         }
@@ -474,5 +524,91 @@ export function comboToSignalVersions(combo: VersionCombo): Record<string, strin
     drift: combo.drift,
     clustering: combo.clustering,
     pressure: combo.pressure,
+    momentum: combo.momentumXG ?? "v1",
+  }
+}
+
+// ── Risk-based filtering and analysis ──────────────────────────────────
+
+export type RiskFilter = "all" | "no_risk" | "with_risk" | "medium" | "high"
+
+export function filterByRisk(bets: CarteraBet[], riskFilter: RiskFilter): CarteraBet[] {
+  if (riskFilter === "all") return bets
+
+  return bets.filter(b => {
+    const risk = b.risk_level || "none"
+
+    switch (riskFilter) {
+      case "no_risk":
+        return risk === "none"
+      case "with_risk":
+        return risk === "medium" || risk === "high"
+      case "medium":
+        return risk === "medium"
+      case "high":
+        return risk === "high"
+      default:
+        return true
+    }
+  })
+}
+
+export interface RiskBreakdown {
+  no_risk: {
+    count: number
+    wins: number
+    winPct: number
+    pl: number
+    roi: number
+  }
+  medium_risk: {
+    count: number
+    wins: number
+    winPct: number
+    pl: number
+    roi: number
+  }
+  high_risk: {
+    count: number
+    wins: number
+    winPct: number
+    pl: number
+    roi: number
+  }
+  combined_risk: {
+    count: number
+    wins: number
+    winPct: number
+    pl: number
+    roi: number
+  }
+}
+
+export function analyzeRiskBreakdown(bets: CarteraBet[]): RiskBreakdown {
+  const STAKE = 10
+
+  const noRiskBets = bets.filter(b => (b.risk_level || "none") === "none")
+  const mediumRiskBets = bets.filter(b => b.risk_level === "medium")
+  const highRiskBets = bets.filter(b => b.risk_level === "high")
+  const combinedRiskBets = [...mediumRiskBets, ...highRiskBets]
+
+  const calcStats = (subset: CarteraBet[]) => {
+    const count = subset.length
+    const wins = subset.filter(b => b.won).length
+    const pl = round2(subset.reduce((sum, b) => sum + b.pl, 0))
+    return {
+      count,
+      wins,
+      winPct: count > 0 ? round2((wins / count) * 100) : 0,
+      pl,
+      roi: count > 0 ? round2((pl / (count * STAKE)) * 100) : 0
+    }
+  }
+
+  return {
+    no_risk: calcStats(noRiskBets),
+    medium_risk: calcStats(mediumRiskBets),
+    high_risk: calcStats(highRiskBets),
+    combined_risk: calcStats(combinedRiskBets)
   }
 }

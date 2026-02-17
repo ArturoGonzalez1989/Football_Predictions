@@ -402,6 +402,62 @@ export interface StrategyPressureCooker {
   bets: StrategyPressureCookerBet[]
 }
 
+export interface StrategyTardeAsiaBet {
+  match: string
+  match_id: string
+  minuto: number
+  score: string
+  back_over_odds: number | null
+  over_line: string
+  ft_score: string
+  won: boolean
+  pl: number
+  liga: string
+  hora_local: string
+  timestamp_utc: string
+}
+
+export interface StrategyTardeAsia {
+  total_matches: number
+  tarde_asia_matches: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyTardeAsiaBet[]
+}
+
+export interface StrategyMomentumXGBet {
+  match: string
+  match_id: string
+  minuto: number
+  score_at_trigger: string
+  dominant_team: string
+  sot_ratio: number
+  xg_underperf: number
+  back_odds: number
+  ft_score: string
+  won: boolean
+  pl: number
+  timestamp_utc: string
+}
+
+export interface StrategyMomentumXG {
+  total_matches: number
+  momentum_triggers: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyMomentumXGBet[]
+}
+
 export interface CarteraBet {
   match: string
   match_id: string
@@ -427,6 +483,17 @@ export interface CarteraBet {
   goal_diff?: number | null
   passes_v4?: boolean
   passes_v5?: boolean
+  passes_v6?: boolean
+  // synthetic attribute fields
+  synth_xg_dominance?: number | null
+  synth_pressure_index_v?: number | null
+  synth_momentum_gap?: number | null
+  synth_xg_remaining?: number | null
+  // risk assessment fields
+  risk_level?: "none" | "medium" | "high"
+  risk_reason?: string
+  time_remaining?: number
+  deficit?: number
 }
 
 export interface Cartera {
@@ -469,6 +536,14 @@ export interface BettingSignal {
   roi_historical?: number
   sample_size?: number
   description?: string
+  // Risk assessment
+  risk_info?: {
+    has_risk: boolean
+    risk_level: "none" | "medium" | "high"
+    risk_reason: string
+    time_remaining: number
+    deficit: number
+  }
 }
 
 export interface AvailableStrategy {
@@ -602,6 +677,9 @@ export const api = {
   getStrategyOddsDrift: () => get<StrategyOddsDrift>("/analytics/strategies/odds-drift"),
   getStrategyGoalClustering: () => get<StrategyGoalClustering>("/analytics/strategies/goal-clustering"),
   getStrategyPressureCooker: () => get<StrategyPressureCooker>("/analytics/strategies/pressure-cooker"),
+  getStrategyTardeAsia: () => get<StrategyTardeAsia>("/analytics/strategies/tarde-asia"),
+  getStrategyMomentumXGV1: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v1"),
+  getStrategyMomentumXGV2: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v2"),
   getCartera: () => get<Cartera>("/analytics/strategies/cartera"),
 
   // Betting signals

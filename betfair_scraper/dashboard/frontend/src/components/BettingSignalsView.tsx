@@ -7,7 +7,7 @@ import { type VersionCombo, comboToSignalVersions } from "../lib/cartera"
 const SIGNALS_CONFIG_KEY = "furbo_signals_manual_config"
 
 const DEFAULT_COMBO: VersionCombo = {
-  draw: "v15", xg: "v3", drift: "v1", clustering: "v2", pressure: "v1", br: "fixed"
+  draw: "v15", xg: "v3", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "v1", br: "fixed"
 }
 
 function loadManualCombo(): VersionCombo {
@@ -30,10 +30,12 @@ const VERSION_LABELS: Record<string, Record<string, string>> = {
   drift: { v1: "V1", v2: "V2", v3: "V3", v4: "V4", v5: "V5", off: "OFF" },
   clustering: { v2: "V2", v3: "V3", off: "OFF" },
   pressure: { v1: "V1", off: "OFF" },
+  tardeAsia: { v1: "V1", off: "OFF" },
+  momentumXG: { v1: "V1", v2: "V2", off: "OFF" },
 }
 
 const STRATEGY_NAMES: Record<string, string> = {
-  draw: "Empate", xg: "xG Underp.", drift: "Odds Drift", clustering: "Goal Clust.", pressure: "Pressure C."
+  draw: "Empate", xg: "xG Underp.", drift: "Odds Drift", clustering: "Goal Clust.", pressure: "Pressure C.", tardeAsia: "Tarde Asia", momentumXG: "Mom. x xG"
 }
 
 export function BettingSignalsView() {
@@ -312,13 +314,29 @@ function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpen
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
-  const confidenceColors = {
-    high: "text-green-400 bg-green-500/10 border-green-500/20",
-    medium: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
-    low: "text-orange-400 bg-orange-500/10 border-orange-500/20",
-  }
+  // Determine card colors based on risk level (overrides confidence)
+  const riskLevel = signal.risk_info?.risk_level || "none"
 
-  const confidenceColor = confidenceColors[signal.confidence]
+  let cardBorderColor: string
+  let cardBgColor: string
+
+  if (riskLevel === "high") {
+    cardBorderColor = "border-red-500/40"
+    cardBgColor = "bg-red-500/10"
+  } else if (riskLevel === "medium") {
+    cardBorderColor = "border-orange-500/40"
+    cardBgColor = "bg-orange-500/10"
+  } else {
+    // No risk - use confidence colors
+    const confidenceColors = {
+      high: { border: "border-green-500/20", bg: "bg-green-500/10" },
+      medium: { border: "border-yellow-500/20", bg: "bg-yellow-500/10" },
+      low: { border: "border-orange-500/20", bg: "bg-orange-500/10" },
+    }
+    const colors = confidenceColors[signal.confidence]
+    cardBorderColor = colors.border
+    cardBgColor = colors.bg
+  }
 
   const handleAddBet = async () => {
     try {
@@ -428,7 +446,7 @@ function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpen
 
   return (
     <>
-      <div className={`border rounded-lg p-4 ${confidenceColor}`}>
+      <div className={`border rounded-lg p-4 ${cardBorderColor} ${cardBgColor}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -456,6 +474,39 @@ function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpen
           </div>
         </div>
       </div>
+
+      {/* Risk Warning */}
+      {signal.risk_info && signal.risk_info.has_risk && (
+        <div className={`mb-3 p-3 rounded border ${
+          signal.risk_info.risk_level === "high"
+            ? "bg-red-900/30 border-red-500/40"
+            : "bg-orange-900/20 border-orange-500/30"
+        }`}>
+          <div className="flex items-start gap-2">
+            <div className="text-lg mt-0.5">
+              {signal.risk_info.risk_level === "high" ? "🔴" : "🟠"}
+            </div>
+            <div className="flex-1">
+              <div className={`font-semibold text-sm mb-1 ${
+                signal.risk_info.risk_level === "high" ? "text-red-400" : "text-orange-400"
+              }`}>
+                {signal.risk_info.risk_level === "high" ? "Señal de Alto Riesgo" : "Señal de Riesgo Medio"}
+              </div>
+              <div className={`text-xs ${
+                signal.risk_info.risk_level === "high" ? "text-red-300/80" : "text-orange-300/80"
+              }`}>
+                {signal.risk_info.risk_reason}
+              </div>
+              <div className="flex gap-3 mt-2 text-[10px] text-zinc-400">
+                <span>Tiempo restante: {signal.risk_info.time_remaining} min</span>
+                {signal.risk_info.deficit > 0 && (
+                  <span>Déficit: {signal.risk_info.deficit} gol{signal.risk_info.deficit > 1 ? 'es' : ''}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* GO/NO-GO Decision — always show min_odds guidance */}
       {(() => {

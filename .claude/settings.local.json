@@ -88,7 +88,14 @@
       "Bash(pkill:*)",
       "Bash(WMIC PROCESS WHERE \"CommandLine LIKE ''%uvicorn%''\" GET ProcessId,CommandLine)",
       "Bash(WMIC PROCESS WHERE \"Name=''python.exe''\" GET ProcessId,CommandLine)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(find:*)",
+      "Bash(head:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run:*)",
+      "mcp__plugin_playwright_playwright__browser_handle_dialog",
+      "Bash(echo:*)",
+      "Bash(# Get version-specific stats for strategies with versions for strat_url in \"\"back-draw-00\"\" \"\"xg-underperformance\"\" \"\"odds-drift\"\"; do curl -s \"\"http://localhost:8000/api/analytics/strategies/$strat_url\"\")"
     ]
   }
 }
