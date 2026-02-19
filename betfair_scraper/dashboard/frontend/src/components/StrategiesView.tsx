@@ -36,20 +36,27 @@ export function StrategiesView() {
   const [cartera, setCartera] = useState<Cartera | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const loadCartera = async (cashoutMinute?: number) => {
+    try {
+      const data = await api.getCartera(cashoutMinute)
+      setCartera(data)
+    } catch (e) {
+      console.error("Error loading cartera:", e)
+    }
+  }
+
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      try {
-        const data = await api.getCartera()
-        setCartera(data)
-      } catch (e) {
-        console.error("Error loading cartera:", e)
-      } finally {
-        setLoading(false)
-      }
+      await loadCartera()
+      setLoading(false)
     }
     load()
   }, [])
+
+  const refreshCartera = async () => {
+    await loadCartera()
+  }
 
   if (loading) {
     return (
@@ -80,7 +87,7 @@ export function StrategiesView() {
         </p>
       </div>
 
-      <CarteraTab data={cartera} />
+      <CarteraTab data={cartera} onRefresh={refreshCartera} />
     </div>
   )
 }
@@ -243,7 +250,7 @@ function getBetType(bet: CarteraBet): string {
   return "-"
 }
 
-function CarteraTab({ data }: { data: Cartera }) {
+function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promise<void> }) {
   const [drawParams, setDrawParams] = useState<DrawFilterParams>(savedState?.drawParams || DEFAULT_DRAW_PARAMS)
   const [xgParams, setXGParams] = useState<XGFilterParams>(savedState?.xgParams || DEFAULT_XG_PARAMS)
   const [driftParams, setDriftParams] = useState<DriftFilterParams>(savedState?.driftParams || DEFAULT_DRIFT_PARAMS)
@@ -324,6 +331,12 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   const updateMinDur = (newMinDur: MinDurConfig) => {
     setMinDur(newMinDur)
+    // Build config with the new minDur (buildConfig() uses stale state here, so override min_duration directly)
+    const config = buildConfig()
+    config.min_duration = newMinDur
+    api.saveConfig(config)
+      .then(() => onRefresh())
+      .catch(e => console.error("Error refreshing cartera after minDur change:", e))
   }
 
   /** Build CarteraConfig from current component state */
