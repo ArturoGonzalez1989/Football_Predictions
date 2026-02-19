@@ -89,30 +89,21 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
     <div className="flex h-screen">
       {/* Match list panel */}
       <div className="w-72 shrink-0 border-r border-zinc-800 overflow-y-auto">
-        <div className="p-4 border-b border-zinc-800 space-y-2.5">
-          <div>
-            <h1 className="text-lg font-semibold text-zinc-100">Finalizados</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {visibleMatches.length}{dateFilter ? ` de ${matches.length}` : ""} partidos
-            </p>
-          </div>
-          {availableDates.length > 1 && (
-            <div className="flex flex-wrap gap-1">
-              <button
-                type="button"
-                onClick={() => setDateFilter(null)}
-                className={`px-2 py-0.5 rounded text-[10px] transition-colors ${!dateFilter ? "bg-zinc-600 text-zinc-100" : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
-              >Todas</button>
+        <div className="p-4 border-b border-zinc-800 space-y-2">
+          <h1 className="text-lg font-semibold text-zinc-100">Finalizados</h1>
+          <div className="flex items-center gap-2">
+            <select
+              value={dateFilter ?? ""}
+              onChange={e => setDateFilter(e.target.value || null)}
+              title="Filtrar por fecha"
+              className="flex-1 px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500"
+            >
+              <option value="">Todas las fechas ({matches.length})</option>
               {availableDates.map(d => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setDateFilter(dateFilter === d ? null : d)}
-                  className={`px-2 py-0.5 rounded text-[10px] transition-colors ${dateFilter === d ? "bg-blue-600/70 text-blue-100" : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
-                >{fmtDateChip(d)}</button>
+                <option key={d} value={d}>{fmtDateChip(d)} — {matches.filter(m => matchDate(m.start_time) === d).length} partidos</option>
               ))}
-            </div>
-          )}
+            </select>
+          </div>
         </div>
         {visibleMatches.length === 0 ? (
           <div className="p-6 text-center text-zinc-500 text-sm">
