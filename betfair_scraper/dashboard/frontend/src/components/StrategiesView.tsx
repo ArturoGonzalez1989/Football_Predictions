@@ -1962,8 +1962,15 @@ function OptimizerPanel({
   const SortIndicator = ({ k }: { k: SortKey }) =>
     sortKey === k ? <span className="ml-0.5">{sortDir === "desc" ? "▼" : "▲"}</span> : null
 
+  const COL_TITLES: Record<SortKey, string> = {
+    roi: "ROI — Retorno sobre lo apostado (%). Mayor = más eficiente por unidad apostada.",
+    pl: "P/L — Beneficio neto en EUR (suma de ganancias - pérdidas). Mayor = más dinero ganado.",
+    wr: "WR — Win Rate: porcentaje de apuestas ganadas. Mayor = más aciertos.",
+    nBets: "N — Número total de apuestas generadas con esta combinación de parámetros.",
+  }
+
   const ColHeader = ({ k, label, className }: { k: SortKey; label: string; className?: string }) => (
-    <button type="button" onClick={() => handleSort(k)}
+    <button type="button" onClick={() => handleSort(k)} title={COL_TITLES[k]}
       className={`text-right text-[9px] uppercase tracking-wider transition-colors select-none ${sortKey === k ? "text-amber-400" : "text-zinc-600 hover:text-zinc-400"} ${className ?? ""}`}
     >{label}<SortIndicator k={k} /></button>
   )
