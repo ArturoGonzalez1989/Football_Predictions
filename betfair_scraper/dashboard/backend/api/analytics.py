@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query
 from typing import Dict, List, Any, Optional
 from utils import csv_reader
+from api.config import load_config
 
 router = APIRouter()
 
@@ -138,45 +139,69 @@ async def get_strategy_momentum_xg_v2() -> Dict[str, Any]:
 
 @router.get("/signals/betting-opportunities")
 async def get_betting_signals(
-    draw: str = "v2r",
-    xg: str = "v2",
-    drift: str = "v1",
-    clustering: str = "v2",
-    pressure: str = "v1",
-    momentum: str = "v1",
-    draw_min_dur: int = 1,
-    xg_min_dur: int = 2,
-    drift_min_dur: int = 2,
-    clustering_min_dur: int = 4,
-    pressure_min_dur: int = 2,
+    draw: Optional[str] = None,
+    xg: Optional[str] = None,
+    drift: Optional[str] = None,
+    clustering: Optional[str] = None,
+    pressure: Optional[str] = None,
+    momentum: Optional[str] = None,
+    draw_min_dur: Optional[int] = None,
+    xg_min_dur: Optional[int] = None,
+    drift_min_dur: Optional[int] = None,
+    clustering_min_dur: Optional[int] = None,
+    pressure_min_dur: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Detect live betting opportunities based on portfolio strategies.
 
-    Each parameter specifies the version of the strategy to use.
-    Use "off" to disable a strategy.
-    xxx_min_dur: minimum minutes a signal must be active to be considered mature.
+    When no parameters are supplied, reads versions and min_duration from
+    cartera_config.json (the saved cartera configuration). Query params
+    act as explicit overrides for preview/debug purposes.
     """
+    cfg = load_config()
+    v = cfg.get("versions", {})
+    md = cfg.get("min_duration", {})
+
     versions = {
-        "draw": draw, "xg": xg, "drift": drift, "clustering": clustering,
-        "pressure": pressure, "momentum": momentum,
-        "draw_min_dur": str(draw_min_dur), "xg_min_dur": str(xg_min_dur),
-        "drift_min_dur": str(drift_min_dur), "clustering_min_dur": str(clustering_min_dur),
-        "pressure_min_dur": str(pressure_min_dur),
+        "draw": draw or v.get("draw", "v2r"),
+        "xg": xg or v.get("xg", "base"),
+        "drift": drift or v.get("drift", "v1"),
+        "clustering": clustering or v.get("clustering", "v2"),
+        "pressure": pressure or v.get("pressure", "v1"),
+        "momentum": momentum or v.get("momentum_xg", "off"),
+        "tarde_asia": v.get("tarde_asia", "off"),
+        "draw_min_dur": str(draw_min_dur if draw_min_dur is not None else md.get("draw", 1)),
+        "xg_min_dur": str(xg_min_dur if xg_min_dur is not None else md.get("xg", 2)),
+        "drift_min_dur": str(drift_min_dur if drift_min_dur is not None else md.get("drift", 2)),
+        "clustering_min_dur": str(clustering_min_dur if clustering_min_dur is not None else md.get("clustering", 4)),
+        "pressure_min_dur": str(pressure_min_dur if pressure_min_dur is not None else md.get("pressure", 2)),
     }
     return csv_reader.detect_betting_signals(versions=versions)
 
 
 @router.get("/signals/watchlist")
 async def get_watchlist(
-    draw: str = "v2r",
-    xg: str = "v2",
-    drift: str = "v1",
-    clustering: str = "v2",
-    pressure: str = "v1",
-    momentum: str = "v1",
+    draw: Optional[str] = None,
+    xg: Optional[str] = None,
+    drift: Optional[str] = None,
+    clustering: Optional[str] = None,
+    pressure: Optional[str] = None,
+    momentum: Optional[str] = None,
 ) -> List[Any]:
-    """Matches close to triggering a signal but not yet meeting all conditions."""
-    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure, "momentum": momentum}
+    """Matches close to triggering a signal but not yet meeting all conditions.
+
+    Reads versions from cartera_config.json when no query params supplied.
+    """
+    cfg = load_config()
+    v = cfg.get("versions", {})
+    versions = {
+        "draw": draw or v.get("draw", "v2r"),
+        "xg": xg or v.get("xg", "base"),
+        "drift": drift or v.get("drift", "v1"),
+        "clustering": clustering or v.get("clustering", "v2"),
+        "pressure": pressure or v.get("pressure", "v1"),
+        "momentum": momentum or v.get("momentum_xg", "off"),
+        "tarde_asia": v.get("tarde_asia", "off"),
+    }
     return csv_reader.detect_watchlist(versions=versions)
 
 

@@ -650,6 +650,49 @@ export interface PlacedBetsResponse {
   bets: PlacedBet[]
 }
 
+// ── Cartera configuration (single source of truth) ─────────────────────
+export interface CarteraConfig {
+  versions: {
+    draw: string
+    xg: string
+    drift: string
+    clustering: string
+    pressure: string
+    tarde_asia: string
+    momentum_xg: string
+  }
+  bankroll_mode: string
+  active_preset: string | null
+  risk_filter: string
+  min_duration: {
+    draw: number
+    xg: number
+    drift: number
+    clustering: number
+    pressure: number
+  }
+  adjustments: {
+    enabled: boolean
+    dedup: boolean
+    max_odds: number
+    min_odds: number
+    drift_min_minute: number
+    slippage_pct: number
+    conflict_filter: boolean
+    cashout_minute: number | null
+  }
+}
+
+async function put<T>(path: string, body: any): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  return res.json()
+}
+
 export const api = {
   getMatches: () => get<MatchesGrouped>("/matches"),
   getMatchDetail: (id: string) => get<MatchDetail>(`/matches/${id}`),
@@ -710,4 +753,8 @@ export const api = {
   // Placed bets tracking
   placeBet: (bet: PlaceBetRequest) => post<PlacedBet>("/bets/place", bet),
   getPlacedBets: () => get<PlacedBetsResponse>("/bets/placed"),
+
+  // Cartera configuration
+  getConfig: () => get<CarteraConfig>("/config/cartera"),
+  saveConfig: (config: CarteraConfig) => put<{ status: string }>("/config/cartera", config),
 }

@@ -1,0 +1,31 @@
+{
+  "versions": {
+    "draw": "v2r",
+    "xg": "base",
+    "drift": "v1",
+    "clustering": "v2",
+    "pressure": "v1",
+    "tarde_asia": "off",
+    "momentum_xg": "off"
+  },
+  "bankroll_mode": "fixed",
+  "active_preset": null,
+  "risk_filter": "all",
+  "min_duration": {
+    "draw": 1,
+    "xg": 2,
+    "drift": 2,
+    "clustering": 4,
+    "pressure": 2
+  },
+  "adjustments": {
+    "enabled": false,
+    "dedup": true,
+    "max_odds": 6.0,
+    "min_odds": 1.15,
+    "drift_min_minute": 15,
+    "slippage_pct": 2,
+    "conflict_filter": true,
+    "cashout_minute": null
+  }
+}

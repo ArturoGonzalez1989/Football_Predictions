@@ -25,6 +25,7 @@ from api.matches import router as matches_router
 from api.system import router as system_router
 from api.analytics import router as analytics_router
 from api.bets import router as bets_router
+from api.config import router as config_router
 
 # Force fresh reload of csv_reader to avoid stale module cache
 try:
@@ -48,6 +49,7 @@ app.include_router(matches_router)
 app.include_router(system_router)
 app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(bets_router, tags=["bets"])
+app.include_router(config_router, prefix="/api", tags=["config"])
 
 
 # ==================== AUTO REFRESH SCHEDULER ====================

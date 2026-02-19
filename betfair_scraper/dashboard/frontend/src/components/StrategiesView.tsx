@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { api, type Cartera, type CarteraBet } from "../lib/api"
+import { useState, useEffect, useRef } from "react"
+import { api, type Cartera, type CarteraBet, type CarteraConfig } from "../lib/api"
 import {
   type DrawVersion, type XGCarteraVersion, type DriftCarteraVersion,
   type ClusteringCarteraVersion, type PressureCarteraVersion, type TardeAsiaVersion, type MomentumXGVersion,
@@ -81,16 +81,14 @@ export function StrategiesView() {
   )
 }
 
-// LocalStorage key for saving filters
+// LocalStorage key — kept as fallback only (backend config is primary source of truth)
 const STORAGE_KEY = "cartera_filters"
 
-// Load saved state from localStorage or use defaults
+// Load saved state from localStorage (fallback when backend config not yet loaded)
 const loadSavedState = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      return JSON.parse(saved)
-    }
+    if (saved) return JSON.parse(saved)
   } catch (e) {
     console.error("Error loading saved filters:", e)
   }
@@ -99,22 +97,41 @@ const loadSavedState = () => {
 
 const savedState = loadSavedState()
 
-// Min duration (minutos de seguridad) — same localStorage key as BettingSignalsView so settings are shared
-const CARTERA_MIN_DUR_KEY = "furbo_signals_min_dur"
+// Min duration config type (shared with BettingSignalsView)
 type MinDurConfig = { draw: number; xg: number; drift: number; clustering: number; pressure: number }
 const DEFAULT_MIN_DUR: MinDurConfig = { draw: 1, xg: 2, drift: 2, clustering: 4, pressure: 2 }
 const MIN_DUR_OPTIONS = [1, 2, 3, 4, 5]
 
-function loadMinDur(): MinDurConfig {
-  try {
-    const stored = localStorage.getItem(CARTERA_MIN_DUR_KEY)
-    if (stored) return { ...DEFAULT_MIN_DUR, ...JSON.parse(stored) }
-  } catch { /* ignore */ }
-  return { ...DEFAULT_MIN_DUR }
-}
-
-function saveMinDur(cfg: MinDurConfig) {
-  try { localStorage.setItem(CARTERA_MIN_DUR_KEY, JSON.stringify(cfg)) } catch { /* ignore */ }
+/** Convert backend CarteraConfig to local component state shape */
+function configToState(cfg: CarteraConfig) {
+  return {
+    drawVer: (cfg.versions.draw || "v1") as DrawVersion,
+    xgVer: (cfg.versions.xg || "base") as XGCarteraVersion,
+    driftVer: (cfg.versions.drift || "v1") as DriftCarteraVersion,
+    clusteringVer: (cfg.versions.clustering || "v2") as ClusteringCarteraVersion,
+    pressureVer: (cfg.versions.pressure || "v1") as PressureCarteraVersion,
+    tardeAsiaVer: (cfg.versions.tarde_asia || "off") as TardeAsiaVersion,
+    momentumXGVer: (cfg.versions.momentum_xg || "off") as MomentumXGVersion,
+    brMode: (cfg.bankroll_mode || "fixed") as BankrollMode,
+    activePreset: (cfg.active_preset || null) as PresetKey,
+    riskFilter: (cfg.risk_filter || "all") as RiskFilter,
+    realistic: cfg.adjustments.enabled ?? false,
+    adjDedup: cfg.adjustments.dedup ?? true,
+    adjMaxOdds: cfg.adjustments.max_odds ?? 6.0,
+    adjMinOdds: cfg.adjustments.min_odds ?? 1.15,
+    adjDriftMinMin: cfg.adjustments.drift_min_minute ?? 15,
+    adjSlippage: cfg.adjustments.slippage_pct ?? 2,
+    adjConflictFilter: cfg.adjustments.conflict_filter ?? true,
+    adjCashout: cfg.adjustments.cashout_minute != null,
+    adjCashoutMinute: cfg.adjustments.cashout_minute ?? 70,
+    minDur: {
+      draw: cfg.min_duration.draw ?? 1,
+      xg: cfg.min_duration.xg ?? 2,
+      drift: cfg.min_duration.drift ?? 2,
+      clustering: cfg.min_duration.clustering ?? 4,
+      pressure: cfg.min_duration.pressure ?? 2,
+    },
+  }
 }
 
 // CSV Helper Functions
@@ -221,7 +238,40 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [adjCashout, setAdjCashout] = useState<boolean>(savedState?.adjCashout ?? false)
   const [adjCashoutMinute, setAdjCashoutMinute] = useState<number>(savedState?.adjCashoutMinute ?? 70)
   const [riskFilter, setRiskFilter] = useState<RiskFilter>(savedState?.riskFilter || "all")
-  const [minDur, setMinDur] = useState<MinDurConfig>(loadMinDur)
+  const [minDur, setMinDur] = useState<MinDurConfig>(savedState?.minDur || DEFAULT_MIN_DUR)
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const configLoadedRef = useRef(false)
+
+  // Load config from backend on mount (overrides localStorage if backend has saved config)
+  useEffect(() => {
+    if (configLoadedRef.current) return
+    configLoadedRef.current = true
+    api.getConfig()
+      .then(cfg => {
+        const s = configToState(cfg)
+        setDrawVer(s.drawVer)
+        setXgVer(s.xgVer)
+        setDriftVer(s.driftVer)
+        setClusteringVer(s.clusteringVer)
+        setPressureVer(s.pressureVer)
+        setTardeAsiaVer(s.tardeAsiaVer)
+        setMomentumXGVer(s.momentumXGVer)
+        setBrMode(s.brMode)
+        setActivePreset(s.activePreset)
+        setRiskFilter(s.riskFilter)
+        setRealistic(s.realistic)
+        setAdjDedup(s.adjDedup)
+        setAdjMaxOdds(s.adjMaxOdds)
+        setAdjMinOdds(s.adjMinOdds)
+        setAdjDriftMinMin(s.adjDriftMinMin)
+        setAdjSlippage(s.adjSlippage)
+        setAdjConflictFilter(s.adjConflictFilter)
+        setAdjCashout(s.adjCashout)
+        setAdjCashoutMinute(s.adjCashoutMinute)
+        setMinDur(s.minDur)
+      })
+      .catch(() => { /* backend unreachable — keep localStorage values */ })
+  }, [])
 
   // CO-adjusted cartera data (fetched from backend when adjCashout is on)
   const [coData, setCoData] = useState<Cartera | null>(null)
@@ -241,36 +291,54 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   const updateMinDur = (newMinDur: MinDurConfig) => {
     setMinDur(newMinDur)
-    saveMinDur(newMinDur)
   }
 
-  // Save filters to localStorage
+  /** Build CarteraConfig from current component state */
+  const buildConfig = (): CarteraConfig => ({
+    versions: {
+      draw: drawVer,
+      xg: xgVer,
+      drift: driftVer,
+      clustering: clusteringVer,
+      pressure: pressureVer,
+      tarde_asia: tardeAsiaVer,
+      momentum_xg: momentumXGVer,
+    },
+    bankroll_mode: brMode,
+    active_preset: activePreset,
+    risk_filter: riskFilter,
+    min_duration: minDur,
+    adjustments: {
+      enabled: realistic,
+      dedup: adjDedup,
+      max_odds: adjMaxOdds,
+      min_odds: adjMinOdds,
+      drift_min_minute: adjDriftMinMin,
+      slippage_pct: adjSlippage,
+      conflict_filter: adjConflictFilter,
+      cashout_minute: adjCashout ? adjCashoutMinute : null,
+    },
+  })
+
+  // Save config to backend (single source of truth) + localStorage as fallback
   const saveFilters = () => {
-    const state = {
-      drawVer,
-      xgVer,
-      driftVer,
-      clusteringVer,
-      pressureVer,
-      tardeAsiaVer,
-      momentumXGVer,
-      brMode,
-      activePreset,
-      realistic,
-      adjDedup,
-      adjMaxOdds,
-      adjMinOdds,
-      adjDriftMinMin,
-      adjSlippage,
-      adjConflictFilter,
-      adjCashout,
-      adjCashoutMinute,
-      riskFilter,
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    const config = buildConfig()
+    setSaveStatus("saving")
+    api.saveConfig(config)
+      .then(() => {
+        // Keep localStorage in sync as fallback
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          drawVer, xgVer, driftVer, clusteringVer, pressureVer, tardeAsiaVer, momentumXGVer,
+          brMode, activePreset, realistic, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
+          adjSlippage, adjConflictFilter, adjCashout, adjCashoutMinute, riskFilter, minDur,
+        }))
+        setSaveStatus("saved")
+        setTimeout(() => setSaveStatus("idle"), 2000)
+      })
+      .catch(() => setSaveStatus("error"))
   }
 
-  // Reset filters to default values
+  // Reset filters to defaults and save to backend
   const resetFilters = () => {
     setDrawVer("v1")
     setXgVer("base")
@@ -291,7 +359,7 @@ function CarteraTab({ data }: { data: Cartera }) {
     setAdjCashout(false)
     setAdjCashoutMinute(70)
     setRiskFilter("all")
-    updateMinDur({ ...DEFAULT_MIN_DUR })
+    setMinDur({ ...DEFAULT_MIN_DUR })
     localStorage.removeItem(STORAGE_KEY)
   }
 
@@ -415,13 +483,23 @@ function CarteraTab({ data }: { data: Cartera }) {
             <button
               type="button"
               onClick={saveFilters}
-              className="px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
-              title="Guardar configuración actual de filtros"
+              disabled={saveStatus === "saving"}
+              className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                saveStatus === "saved" ? "bg-green-500/20 border-green-500/50 text-green-300" :
+                saveStatus === "error" ? "bg-red-500/20 border-red-500/50 text-red-300" :
+                saveStatus === "saving" ? "bg-zinc-700/50 border-zinc-600 text-zinc-400" :
+                "bg-green-500/10 hover:bg-green-500/20 border-green-500/30 text-green-400"
+              }`}
+              title="Guardar configuración — se usará en Señales, Cartera y Simulación"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
+                  saveStatus === "saved" ? "M5 13l4 4L19 7" :
+                  saveStatus === "error" ? "M6 18L18 6M6 6l12 12" :
+                  "M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                } />
               </svg>
-              Guardar
+              {saveStatus === "saving" ? "Guardando..." : saveStatus === "saved" ? "Guardado" : saveStatus === "error" ? "Error" : "Guardar"}
             </button>
             <button
               type="button"

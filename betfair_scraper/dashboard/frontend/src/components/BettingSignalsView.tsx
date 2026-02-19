@@ -1,86 +1,131 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { api, type BettingSignals, type BettingSignal, type PlaceBetRequest, type WatchlistItem } from "../lib/api"
+import { api, type BettingSignals, type BettingSignal, type PlaceBetRequest, type WatchlistItem, type CarteraConfig } from "../lib/api"
 import { playSignalAlert } from "../lib/sounds"
 import { type VersionCombo, comboToSignalVersions } from "../lib/cartera"
 
-// Separate storage key for manual signal configuration (independent from cartera presets)
-const SIGNALS_CONFIG_KEY = "furbo_signals_manual_config"
-const SIGNALS_MIN_DUR_KEY = "furbo_signals_min_dur"
-
+// Default combo used before backend config loads
 const DEFAULT_COMBO: VersionCombo = {
-  draw: "v15", xg: "v3", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed"
+  draw: "v2r", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed"
 }
 
-// Recommended min durations from historical analysis (in minutes / captures)
+// ── Strategy criteria text mapping ────────────────────────────────────────────
+const STRATEGY_CRITERIA: Record<string, { label: string; color: string; versions: Record<string, string[]> }> = {
+  draw: {
+    label: "Back Empate",
+    color: "text-cyan-400",
+    versions: {
+      v1:  ["Score 0-0", "Min ≥ 30"],
+      v15: ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 25%"],
+      v2r: ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 20%", "Tiros totales < 8"],
+      v2:  ["Score 0-0", "Min ≥ 30", "xG total < 0.5", "Pos. diff < 20%", "Tiros totales < 8"],
+      v3:  ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 25%", "Dominancia xG asimétrica"],
+      v4:  ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 20%", "Tiros < 8", "Gap Opta ≤ 10"],
+    },
+  },
+  xg: {
+    label: "xG Underperf.",
+    color: "text-amber-400",
+    versions: {
+      base: ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15"],
+      v2:   ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15", "SoT equipo ≥ 2"],
+      v3:   ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15", "SoT equipo ≥ 2", "Min < 70"],
+    },
+  },
+  drift: {
+    label: "Odds Drift",
+    color: "text-emerald-400",
+    versions: {
+      v1: ["Ganando 1-0", "Drift odds ≥ 25%"],
+      v2: ["Diferencia goles ≥ 2", "Drift odds ≥ 25%"],
+      v3: ["Drift odds ≥ 100%"],
+      v4: ["2ª parte (min > 45)", "Odds ≤ 5.0", "Drift ≥ 25%"],
+      v5: ["Odds ≤ 5.0", "Drift ≥ 25%"],
+      v6: ["Odds ≤ 5.0", "Drift ≥ 25%", "Momentum gap > 200"],
+    },
+  },
+  clustering: {
+    label: "Goal Clustering",
+    color: "text-rose-400",
+    versions: {
+      v2: ["Gol reciente (min 15-80)", "SoT máx equipo ≥ 3"],
+      v3: ["Gol reciente (min 15-80)", "SoT máx ≥ 3", "Min < 60"],
+      v4: ["Gol reciente (min 15-80)", "SoT máx ≥ 3", "xG restante > 0.8"],
+    },
+  },
+  pressure: {
+    label: "Pressure Cooker",
+    color: "text-orange-400",
+    versions: {
+      v1: ["Empate 1-1+ entre min 65-75"],
+    },
+  },
+  tardeAsia: {
+    label: "Tarde Asia",
+    color: "text-sky-400",
+    versions: {
+      v1: ["Hora local 14-20h", "Liga Asia / Alemania / Francia"],
+    },
+  },
+  momentumXG: {
+    label: "Momentum × xG",
+    color: "text-violet-400",
+    versions: {
+      v1: ["Equipo dominante (SoT ratio)", "xG underperf > 0.1", "Min 5-85", "Odds 1.3–4.5"],
+      v2: ["Equipo dominante (SoT ratio ≥ 1.05×)", "xG underperf > 0.1", "Min 5-85", "Odds 1.5–3.5"],
+    },
+  },
+}
+
+// Recommended min durations — overridden by backend config on load
 export type MinDurConfig = { draw: number; xg: number; drift: number; clustering: number; pressure: number }
 const DEFAULT_MIN_DUR: MinDurConfig = { draw: 1, xg: 2, drift: 2, clustering: 4, pressure: 2 }
-const MIN_DUR_OPTIONS = [1, 2, 3, 4, 5]
-
-function loadMinDur(): MinDurConfig {
-  try {
-    const stored = localStorage.getItem(SIGNALS_MIN_DUR_KEY)
-    if (stored) return { ...DEFAULT_MIN_DUR, ...JSON.parse(stored) }
-  } catch { /* ignore */ }
-  return { ...DEFAULT_MIN_DUR }
-}
-
-function saveMinDur(cfg: MinDurConfig) {
-  try { localStorage.setItem(SIGNALS_MIN_DUR_KEY, JSON.stringify(cfg)) } catch { /* ignore */ }
-}
-
-function loadManualCombo(): VersionCombo {
-  try {
-    const stored = localStorage.getItem(SIGNALS_CONFIG_KEY)
-    if (stored) return JSON.parse(stored)
-  } catch { /* ignore */ }
-  return DEFAULT_COMBO
-}
-
-function saveManualCombo(combo: VersionCombo) {
-  try {
-    localStorage.setItem(SIGNALS_CONFIG_KEY, JSON.stringify(combo))
-  } catch { /* ignore */ }
-}
-
-const VERSION_LABELS: Record<string, Record<string, string>> = {
-  draw: { v1: "V1", v15: "V1.5", v2r: "V2r", v2: "V2", v3: "V3", v4: "V4", off: "OFF" },
-  xg: { base: "V1", v2: "V2", v3: "V3", off: "OFF" },
-  drift: { v1: "V1", v2: "V2", v3: "V3", v4: "V4", v5: "V5", off: "OFF" },
-  clustering: { v2: "V2", v3: "V3", off: "OFF" },
-  pressure: { v1: "V1", off: "OFF" },
-  tardeAsia: { v1: "V1", off: "OFF" },
-  momentumXG: { v1: "V1", v2: "V2", off: "OFF" },
-}
-
-const STRATEGY_NAMES: Record<string, string> = {
-  draw: "Empate", xg: "xG Underp.", drift: "Odds Drift", clustering: "Goal Clust.", pressure: "Pressure C.", tardeAsia: "Tarde Asia", momentumXG: "Mom. x xG"
-}
 
 export function BettingSignalsView() {
   const [signals, setSignals] = useState<BettingSignals | null>(null)
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [combo, setCombo] = useState<VersionCombo>(loadManualCombo)
-  const [minDur, setMinDur] = useState<MinDurConfig>(loadMinDur)
+  const [combo, setCombo] = useState<VersionCombo>(DEFAULT_COMBO)
+  const [minDur, setMinDur] = useState<MinDurConfig>(DEFAULT_MIN_DUR)
+  const [activeConfig, setActiveConfig] = useState<CarteraConfig | null>(null)
   const prevSignalKeys = useRef<Set<string> | null>(null)
   const comboRef = useRef(combo)
   comboRef.current = combo
   const minDurRef = useRef(minDur)
   minDurRef.current = minDur
   const modalOpenRef = useRef(false)
+  const configLoadedRef = useRef(false)
 
-  // Update combo and save to localStorage
-  const updateCombo = useCallback((newCombo: VersionCombo) => {
-    setCombo(newCombo)
-    comboRef.current = newCombo
-    saveManualCombo(newCombo)
-  }, [])
-
-  const updateMinDur = useCallback((newMinDur: MinDurConfig) => {
-    setMinDur(newMinDur)
-    minDurRef.current = newMinDur
-    saveMinDur(newMinDur)
+  // Load config from backend on mount (single source of truth)
+  useEffect(() => {
+    if (configLoadedRef.current) return
+    configLoadedRef.current = true
+    api.getConfig()
+      .then(cfg => {
+        setActiveConfig(cfg)
+        const newCombo: VersionCombo = {
+          draw: cfg.versions.draw as any,
+          xg: cfg.versions.xg as any,
+          drift: cfg.versions.drift as any,
+          clustering: cfg.versions.clustering as any,
+          pressure: cfg.versions.pressure as any,
+          tardeAsia: cfg.versions.tarde_asia as any,
+          momentumXG: cfg.versions.momentum_xg as any,
+          br: cfg.bankroll_mode as any,
+        }
+        const newMinDur: MinDurConfig = {
+          draw: cfg.min_duration.draw ?? 1,
+          xg: cfg.min_duration.xg ?? 2,
+          drift: cfg.min_duration.drift ?? 2,
+          clustering: cfg.min_duration.clustering ?? 4,
+          pressure: cfg.min_duration.pressure ?? 2,
+        }
+        setCombo(newCombo)
+        comboRef.current = newCombo
+        setMinDur(newMinDur)
+        minDurRef.current = newMinDur
+      })
+      .catch(() => { /* backend unreachable — keep defaults */ })
   }, [])
 
   const fetchSignals = useCallback(async () => {
@@ -201,110 +246,8 @@ export function BettingSignalsView() {
             </div>
           )}
 
-          {/* Manual Strategy Configuration */}
-          <div className="bg-zinc-900/30 border border-zinc-800 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-zinc-300">Configuración de Estrategias</h3>
-              <button
-                type="button"
-                onClick={() => { updateCombo(DEFAULT_COMBO); updateMinDur(DEFAULT_MIN_DUR) }}
-                className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
-                title="Resetear a configuración por defecto"
-              >
-                Resetear
-              </button>
-            </div>
-
-            {/* Column headers */}
-            <div className="flex items-center justify-between gap-3 mb-1.5">
-              <span className="text-[10px] text-zinc-600 min-w-[90px]">Estrategia</span>
-              <div className="flex gap-2 flex-1">
-                <span className="text-[10px] text-zinc-600 flex-1">Versión</span>
-                <span className="text-[10px] text-zinc-600 min-w-[120px] text-right">Min activa (min)</span>
-              </div>
-            </div>
-
-            {/* Manual version selectors + min duration */}
-            <div className="space-y-2">
-              {Object.entries(STRATEGY_NAMES).map(([key, name]) => {
-                const currentVer = combo[key as keyof VersionCombo] as string
-                const versions = VERSION_LABELS[key] || {}
-                const isOff = currentVer === "off"
-                // Only draw/xg/drift/clustering/pressure have duration config
-                const durKey = key as keyof MinDurConfig
-                const hasDur = durKey in DEFAULT_MIN_DUR
-                const currentDur = hasDur ? minDur[durKey] : null
-                const recommendedDur = hasDur ? DEFAULT_MIN_DUR[durKey] : null
-
-                return (
-                  <div key={key} className="flex items-center gap-3">
-                    <span className="text-xs text-zinc-400 min-w-[90px]">{name}:</span>
-                    {/* Version buttons */}
-                    <div className="flex gap-1 flex-1">
-                      {Object.entries(versions).map(([verKey, verLabel]) => {
-                        const isActive = currentVer === verKey
-                        const isOffBtn = verKey === "off"
-                        return (
-                          <button
-                            key={verKey}
-                            type="button"
-                            onClick={() => updateCombo({ ...combo, [key]: verKey })}
-                            className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
-                              isActive
-                                ? isOffBtn
-                                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                  : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                : isOffBtn
-                                  ? "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:border-red-500/30 hover:text-red-400"
-                                  : "bg-zinc-800/50 text-zinc-500 border border-zinc-700/50 hover:border-blue-500/30 hover:text-zinc-300"
-                            }`}
-                            title={`${name} ${verLabel}`}
-                          >
-                            {verLabel}
-                          </button>
-                        )
-                      })}
-                    </div>
-                    {/* Min duration selector */}
-                    {hasDur && !isOff ? (
-                      <div className="flex items-center gap-1 min-w-[120px] justify-end">
-                        {MIN_DUR_OPTIONS.map((opt) => {
-                          const isActiveDur = currentDur === opt
-                          const isRecommended = opt === recommendedDur
-                          return (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => updateMinDur({ ...minDur, [durKey]: opt })}
-                              title={isRecommended ? `${opt} min (recomendado por análisis)` : `${opt} min`}
-                              className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
-                                isActiveDur
-                                  ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                                  : isRecommended
-                                    ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                                    : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                              }`}
-                            >
-                              {opt}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <div className="min-w-[120px]" />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Info hint */}
-            <div className="mt-3 pt-3 border-t border-zinc-800">
-              <p className="text-[10px] text-zinc-600">
-                Versión: algoritmo de detección · Min activa: minutos que debe llevar activa la señal para considerarse estable (amber = recomendado por análisis histórico).
-              </p>
-            </div>
-          </div>
+          {/* Active Strategy Criteria (read from saved cartera config) */}
+          <ActiveCriteriaBlock combo={combo} minDur={minDur} activeConfig={activeConfig} />
         </div>
 
         {/* Watchlist sidebar */}
@@ -385,6 +328,107 @@ function WatchlistCard({ item }: { item: WatchlistItem }) {
           </span>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ── ActiveCriteriaBlock ───────────────────────────────────────────────────────
+function ActiveCriteriaBlock({
+  combo,
+  minDur,
+  activeConfig,
+}: {
+  combo: VersionCombo
+  minDur: MinDurConfig
+  activeConfig: CarteraConfig | null
+}) {
+  const strategyKeys: Array<keyof typeof STRATEGY_CRITERIA> = [
+    "draw", "xg", "drift", "clustering", "pressure", "tardeAsia", "momentumXG"
+  ]
+
+  const comboKeyMap: Record<string, string> = {
+    draw: "draw", xg: "xg", drift: "drift",
+    clustering: "clustering", pressure: "pressure",
+    tardeAsia: "tardeAsia", momentumXG: "momentumXG",
+  }
+
+  const activeStrategies = strategyKeys.filter(k => {
+    const ver = combo[comboKeyMap[k] as keyof VersionCombo] as string
+    return ver && ver !== "off"
+  })
+  const offStrategies = strategyKeys.filter(k => {
+    const ver = combo[comboKeyMap[k] as keyof VersionCombo] as string
+    return !ver || ver === "off"
+  })
+
+  const adj = activeConfig?.adjustments
+
+  return (
+    <div className="bg-zinc-900/30 border border-zinc-800 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-zinc-300">Cartera activa</h3>
+        <span className="text-[10px] text-zinc-600">
+          Configura en{" "}
+          <span className="text-zinc-400">Strategies → Cartera de Estrategias</span>
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {activeStrategies.map(k => {
+          const meta = STRATEGY_CRITERIA[k]
+          const ver = combo[comboKeyMap[k] as keyof VersionCombo] as string
+          const criteria = meta.versions[ver] || []
+          const durKey = k as keyof MinDurConfig
+          const hasDur = durKey in minDur
+          const dur = hasDur ? minDur[durKey] : null
+
+          return (
+            <div key={k} className="flex items-start gap-2">
+              <span className={`text-[11px] font-semibold min-w-[130px] shrink-0 ${meta.color}`}>
+                {meta.label}
+                <span className="text-zinc-500 font-normal ml-1">
+                  {ver.toUpperCase()}
+                </span>
+              </span>
+              <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                {criteria.map((c, i) => (
+                  <span key={i} className="text-[11px] text-zinc-400">
+                    {i > 0 && <span className="text-zinc-700 mr-2">·</span>}
+                    {c}
+                  </span>
+                ))}
+                {dur !== null && (
+                  <span className="text-[11px] text-amber-600/80 ml-1">
+                    · min activa: {dur}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        })}
+
+        {offStrategies.length > 0 && (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-[10px] text-zinc-600">OFF:</span>
+            <span className="text-[10px] text-zinc-700">
+              {offStrategies.map(k => STRATEGY_CRITERIA[k].label).join(" · ")}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Adjustments summary */}
+      {adj?.enabled && (
+        <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex flex-wrap gap-x-3 gap-y-0.5">
+          <span className="text-[10px] text-zinc-500 font-medium">Ajustes:</span>
+          {adj.min_odds && <span className="text-[10px] text-zinc-600">Odds mín {adj.min_odds}</span>}
+          {adj.max_odds && <span className="text-[10px] text-zinc-600">· Odds máx {adj.max_odds}</span>}
+          {adj.slippage_pct > 0 && <span className="text-[10px] text-zinc-600">· Slippage {adj.slippage_pct}%</span>}
+          {adj.dedup && <span className="text-[10px] text-zinc-600">· Dedup</span>}
+          {adj.conflict_filter && <span className="text-[10px] text-zinc-600">· Anti-conflicto</span>}
+          {adj.cashout_minute != null && <span className="text-[10px] text-zinc-600">· Cash-out min {adj.cashout_minute}</span>}
+        </div>
+      )}
     </div>
   )
 }
