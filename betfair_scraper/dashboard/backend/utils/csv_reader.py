@@ -74,6 +74,17 @@ def _to_float(val: str) -> Optional[float]:
         return None
 
 
+def _last_valid_score_row(rows: list[dict]) -> Optional[dict]:
+    """Return the last row that has valid (numeric) goles_local and goles_visitante.
+    Skips trailing pre_partido rows that the scraper sometimes appends after a match ends."""
+    for row in reversed(rows):
+        gl = _to_float(row.get("goles_local", ""))
+        gv = _to_float(row.get("goles_visitante", ""))
+        if gl is not None and gv is not None:
+            return row
+    return None
+
+
 def _lookback_val(rows: list[dict], idx: int, col: str, minutes_back: int) -> Optional[float]:
     """Get value of *col* from approximately *minutes_back* minutes before rows[idx]."""
     cur_min = _to_float(rows[idx].get("minuto", "")) or 0
@@ -1451,8 +1462,10 @@ def analyze_strategy_back_draw_00() -> dict:
         minuto_trigger = _to_float(trigger_row.get("minuto", ""))
         bfed = _to_float(trigger_row.get("BFED", "")) or _to_float(trigger_row.get("bfed_prematch", ""))
 
-        # Final result from last row
-        last_row = rows[-1]
+        # Final result — use last row with valid scores (skip trailing pre_partido rows)
+        last_row = _last_valid_score_row(rows)
+        if last_row is None:
+            continue
         gl_final = _to_float(last_row.get("goles_local", ""))
         gv_final = _to_float(last_row.get("goles_visitante", ""))
         if gl_final is None or gv_final is None:
@@ -1681,8 +1694,10 @@ def analyze_strategy_xg_underperformance() -> dict:
         if not rows or len(rows) < 5:
             continue
 
-        # Final result
-        last_row = rows[-1]
+        # Final result — use last row with valid scores (skip trailing pre_partido rows)
+        last_row = _last_valid_score_row(rows)
+        if last_row is None:
+            continue
         gl_final = _to_float(last_row.get("goles_local", ""))
         gv_final = _to_float(last_row.get("goles_visitante", ""))
         if gl_final is None or gv_final is None:
@@ -3551,8 +3566,10 @@ def analyze_strategy_goal_clustering() -> dict:
         if len(rows) < 10:
             continue
 
-        # Resultado final
-        last_row = rows[-1]
+        # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
+        last_row = _last_valid_score_row(rows)
+        if last_row is None:
+            continue
         gl_final = _to_float(last_row.get("goles_local", ""))
         gv_final = _to_float(last_row.get("goles_visitante", ""))
 
@@ -3718,8 +3735,10 @@ def analyze_strategy_pressure_cooker() -> dict:
         if len(rows) < 20:
             continue
 
-        # Resultado final
-        last_row = rows[-1]
+        # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
+        last_row = _last_valid_score_row(rows)
+        if last_row is None:
+            continue
         gl_final = _to_float(last_row.get("goles_local", ""))
         gv_final = _to_float(last_row.get("goles_visitante", ""))
 
@@ -3898,8 +3917,10 @@ def analyze_strategy_tarde_asia() -> dict:
         if len(rows) < 20:
             continue
 
-        # Resultado final
-        last_row = rows[-1]
+        # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
+        last_row = _last_valid_score_row(rows)
+        if last_row is None:
+            continue
         gl_final = _to_float(last_row.get("goles_local", ""))
         gv_final = _to_float(last_row.get("goles_visitante", ""))
 
@@ -4121,8 +4142,10 @@ def analyze_strategy_momentum_xg(version: str = "v1") -> dict:
         if len(rows) < 20:
             continue
 
-        # Resultado final
-        last_row = rows[-1]
+        # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
+        last_row = _last_valid_score_row(rows)
+        if last_row is None:
+            continue
         gl_final = _to_float(last_row.get("goles_local", ""))
         gv_final = _to_float(last_row.get("goles_visitante", ""))
 
