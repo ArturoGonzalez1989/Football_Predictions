@@ -16,6 +16,7 @@ router = APIRouter()
 
 # Path to placed bets CSV
 PLACED_BETS_CSV = Path(__file__).parent.parent.parent.parent / "placed_bets.csv"
+GAMES_CSV = Path(__file__).parent.parent.parent.parent / "games.csv"
 
 CSV_HEADERS = [
     'id', 'timestamp_utc', 'match_id', 'match_name', 'match_url',
@@ -60,6 +61,29 @@ class PlacedBet(BaseModel):
     recommendation: str
     back_odds: Optional[float]
     status: str  # "pending", "won", "lost"
+
+
+def _get_active_match_ids() -> set[str]:
+    """Obtiene el conjunto de match_ids que están actualmente en games.csv"""
+    if not GAMES_CSV.exists():
+        return set()
+
+    active_ids = set()
+    try:
+        with open(GAMES_CSV, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                url = row.get('url', '').strip()
+                if url:
+                    # Extract match_id from URL
+                    # Example: https://.../partido-x-y-apuestas-12345 -> partido-x-y-apuestas-12345
+                    match = re.search(r'([^/]+apuestas-\d+)', url)
+                    if match:
+                        active_ids.add(match.group(1))
+    except Exception:
+        pass
+
+    return active_ids
 
 
 def _ensure_csv_exists():
@@ -108,8 +132,13 @@ def _check_would_win(recommendation: str, gl: float, gv: float) -> bool:
     return False
 
 
-def _enrich_with_live_data(bet: dict) -> dict:
-    """Enriquecer un bet pendiente con datos live del CSV del partido."""
+def _enrich_with_live_data(bet: dict, is_match_active: bool = True) -> dict:
+    """Enriquecer un bet pendiente con datos live del CSV del partido.
+
+    Args:
+        bet: Diccionario con los datos de la apuesta
+        is_match_active: True si el partido está en games.csv, False si ya fue eliminado
+    """
     match_id = bet.get("match_id", "")
     if not match_id:
         return bet
@@ -118,6 +147,13 @@ def _enrich_with_live_data(bet: dict) -> dict:
         csv_path = _resolve_csv_path(match_id)
         rows = _read_csv_rows(csv_path)
         if not rows:
+            # Si no hay CSV y el partido no está activo, marcar como perdida
+            if not is_match_active:
+                bet["status"] = "lost"
+                bet["result"] = "lost"
+                bet["pl"] = -_to_float(bet.get("stake", 10))
+                bet["live_status"] = "no_data"
+                bet["_needs_csv_update"] = True
             return bet
 
         # Find last meaningful row (skip pre_partido rows that may appear after the match)
@@ -152,26 +188,9 @@ def _enrich_with_live_data(bet: dict) -> dict:
         else:
             bet["potential_pl"] = round(-stake, 2)
 
-        # Auto-resolve finished matches
-        is_finished = estado in ("finalizado", "fin", "finished", "ft", "ended")
-        # Also check if minuto >= 90 and no estado
-        if not is_finished and minuto and minuto >= 90:
-            # Check if the last capture is old (>15 min) — likely finished
-            ts = last.get("timestamp_utc", "")
-            if ts:
-                try:
-                    last_ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                    age = (datetime.utcnow() - last_ts.replace(tzinfo=None)).total_seconds()
-                    if age > 900:  # 15 min since last capture
-                        is_finished = True
-                except Exception:
-                    pass
-
-        if is_finished and bet.get("status") == "pending" and len(rows) > 10:
-            bet["status"] = "won" if would_win else "lost"
-            bet["result"] = "won" if would_win else "lost"
-            bet["pl"] = bet["potential_pl"]
-            bet["_needs_csv_update"] = True
+        # NOTE: Auto-settlement disabled - bets should only be resolved manually
+        # using the resolve_pending_bets.py script or through user action.
+        # The API only enriches pending bets with live data for visualization.
 
     except Exception:
         pass
@@ -271,21 +290,15 @@ async def get_placed_bets():
             for row in reader:
                 bets.append(dict(row))
 
-        # Enrich pending bets with live data
-        csv_updates = {}
+        # Get active match IDs from games.csv
+        active_match_ids = _get_active_match_ids()
+
+        # Enrich pending bets with live data (for visualization only, not settlement)
         for bet in bets:
             if bet.get("status") == "pending":
-                _enrich_with_live_data(bet)
-                if bet.pop("_needs_csv_update", False):
-                    csv_updates[bet["id"]] = {
-                        "status": bet["status"],
-                        "result": bet.get("result", ""),
-                        "pl": bet.get("pl", ""),
-                    }
-
-        # Persist auto-resolved bets
-        if csv_updates:
-            _update_csv_rows(csv_updates)
+                match_id = bet.get("match_id", "")
+                is_active = match_id in active_match_ids
+                _enrich_with_live_data(bet, is_match_active=is_active)
 
         # Compute stats
         stats = {"pending": 0, "won": 0, "lost": 0}

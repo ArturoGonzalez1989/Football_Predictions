@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from utils import csv_reader
 
 router = APIRouter()
@@ -96,9 +96,17 @@ async def get_strategy_odds_drift() -> Dict[str, Any]:
 
 
 @router.get("/strategies/cartera")
-async def get_strategy_cartera() -> Dict[str, Any]:
-    """Combined portfolio view of all strategies."""
-    return csv_reader.analyze_cartera()
+async def get_strategy_cartera(
+    cashout_minute: Optional[int] = Query(None, ge=0, le=90),
+) -> Dict[str, Any]:
+    """Combined portfolio view of all strategies.
+
+    cashout_minute: if provided, simulate cash-out for losing bets at this minute.
+    """
+    data = csv_reader.analyze_cartera()
+    if cashout_minute is not None:
+        data = csv_reader.simulate_cashout_cartera(data, cashout_minute)
+    return data
 
 @router.get("/strategies/goal-clustering")
 async def get_strategy_goal_clustering() -> Dict[str, Any]:
@@ -136,13 +144,25 @@ async def get_betting_signals(
     clustering: str = "v2",
     pressure: str = "v1",
     momentum: str = "v1",
+    draw_min_dur: int = 1,
+    xg_min_dur: int = 2,
+    drift_min_dur: int = 2,
+    clustering_min_dur: int = 4,
+    pressure_min_dur: int = 2,
 ) -> Dict[str, Any]:
     """Detect live betting opportunities based on portfolio strategies.
 
     Each parameter specifies the version of the strategy to use.
     Use "off" to disable a strategy.
+    xxx_min_dur: minimum minutes a signal must be active to be considered mature.
     """
-    versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure, "momentum": momentum}
+    versions = {
+        "draw": draw, "xg": xg, "drift": drift, "clustering": clustering,
+        "pressure": pressure, "momentum": momentum,
+        "draw_min_dur": str(draw_min_dur), "xg_min_dur": str(xg_min_dur),
+        "drift_min_dur": str(drift_min_dur), "clustering_min_dur": str(clustering_min_dur),
+        "pressure_min_dur": str(pressure_min_dur),
+    }
     return csv_reader.detect_betting_signals(versions=versions)
 
 
@@ -158,4 +178,11 @@ async def get_watchlist(
     """Matches close to triggering a signal but not yet meeting all conditions."""
     versions = {"draw": draw, "xg": xg, "drift": drift, "clustering": clustering, "pressure": pressure, "momentum": momentum}
     return csv_reader.detect_watchlist(versions=versions)
+
+
+@router.post("/cache/clear")
+async def clear_cache():
+    """Clear analytics cache to force reload of data."""
+    csv_reader.clear_analytics_cache()
+    return {"status": "ok", "message": "Cache cleared successfully"}
 

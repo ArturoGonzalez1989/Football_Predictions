@@ -10,7 +10,7 @@ from pathlib import Path
 
 # Configuración
 GAMES_CSV = Path(__file__).parent.parent / "games.csv"
-MATCH_DURATION_MINUTES = 105  # 90 min juego + 15 min tiempo añadido máximo
+MATCH_DURATION_MINUTES = 120  # 90 min juego + 30 min margen de seguridad
 DATE_FORMATS = ["%Y-%m-%d %H:%M", "%d/%m/%Y %H:%M"]  # Formatos soportados
 
 

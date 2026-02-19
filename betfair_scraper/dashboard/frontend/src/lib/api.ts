@@ -494,6 +494,9 @@ export interface CarteraBet {
   risk_reason?: string
   time_remaining?: number
   deficit?: number
+  // geographic fields
+  País?: string
+  Liga?: string
 }
 
 export interface Cartera {
@@ -544,6 +547,10 @@ export interface BettingSignal {
     time_remaining: number
     deficit: number
   }
+  // Signal duration / maturity
+  signal_age_minutes?: number
+  min_duration_caps?: number
+  is_mature?: boolean
 }
 
 export interface AvailableStrategy {
@@ -680,13 +687,19 @@ export const api = {
   getStrategyTardeAsia: () => get<StrategyTardeAsia>("/analytics/strategies/tarde-asia"),
   getStrategyMomentumXGV1: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v1"),
   getStrategyMomentumXGV2: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v2"),
-  getCartera: () => get<Cartera>("/analytics/strategies/cartera"),
+  getCartera: (cashoutMinute?: number) =>
+    get<Cartera>(cashoutMinute !== undefined
+      ? `/analytics/strategies/cartera?cashout_minute=${cashoutMinute}`
+      : "/analytics/strategies/cartera"),
 
   // Betting signals
-  getBettingSignals: (versions?: Record<string, string>) => {
-    if (!versions) return get<BettingSignals>("/analytics/signals/betting-opportunities")
-    const params = new URLSearchParams(versions).toString()
-    return get<BettingSignals>(`/analytics/signals/betting-opportunities?${params}`)
+  getBettingSignals: (versions?: Record<string, string>, minDur?: Record<string, number>) => {
+    const params: Record<string, string> = { ...(versions ?? {}) }
+    if (minDur) {
+      for (const [k, v] of Object.entries(minDur)) params[`${k}_min_dur`] = String(v)
+    }
+    const qs = new URLSearchParams(params).toString()
+    return get<BettingSignals>(`/analytics/signals/betting-opportunities${qs ? `?${qs}` : ""}`)
   },
   getWatchlist: (versions?: Record<string, string>) => {
     if (!versions) return get<WatchlistItem[]>("/analytics/signals/watchlist")

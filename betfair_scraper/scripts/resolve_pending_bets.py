@@ -51,6 +51,37 @@ def parse_score(score_str: str) -> Tuple[int, int]:
     return int(parts[0].strip()), int(parts[1].strip())
 
 
+def get_active_match_ids(games_csv_path: Path) -> set:
+    """
+    Read games.csv and return a set of active match IDs.
+    Match IDs are extracted from the URL column.
+
+    Returns:
+        Set of match_id strings (e.g., 'partido-x-y-apuestas-12345')
+    """
+    active_matches = set()
+
+    if not games_csv_path.exists():
+        print(f"   [WARN] games.csv not found at {games_csv_path}")
+        return active_matches
+
+    try:
+        with open(games_csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                url = row.get('url', '')
+                if url:
+                    # Extract match_id from URL
+                    # Example: https://.../partido-x-y-apuestas-12345 -> partido-x-y-apuestas-12345
+                    match = re.search(r'([^/]+apuestas-\d+)', url)
+                    if match:
+                        active_matches.add(match.group(1))
+    except Exception as e:
+        print(f"   [ERROR] Error reading games.csv: {e}")
+
+    return active_matches
+
+
 def find_match_csv(match_id: str, data_dir: Path) -> Optional[Path]:
     """
     Find the CSV file for a given match_id.
@@ -141,17 +172,24 @@ def calculate_pl(won: bool, stake: float, back_odds: float) -> float:
         return -stake
 
 
-def resolve_pending_bets(placed_bets_path: Path, data_dir: Path, dry_run: bool = False):
+def resolve_pending_bets(placed_bets_path: Path, data_dir: Path, games_csv_path: Path, dry_run: bool = False):
     """
     Main function to resolve pending bets.
 
     Args:
         placed_bets_path: Path to placed_bets.csv
         data_dir: Path to directory containing match CSV files
+        games_csv_path: Path to games.csv (to check which matches are still active)
         dry_run: If True, only print what would be changed without modifying file
     """
     print(f"[*] Reading placed bets from: {placed_bets_path}")
     print(f"[*] Looking for match CSVs in: {data_dir}")
+    print(f"[*] Checking active matches in: {games_csv_path}")
+    print()
+
+    # Get active matches from games.csv
+    active_matches = get_active_match_ids(games_csv_path)
+    print(f"[*] Active matches in games.csv: {len(active_matches)}")
     print()
 
     # Read all bets
@@ -164,7 +202,8 @@ def resolve_pending_bets(placed_bets_path: Path, data_dir: Path, dry_run: bool =
 
         for row in reader:
             rows.append(row)
-            if row['status'] == 'pending':
+            # Check for both empty status and 'pending' status
+            if row['status'] in ('', 'pending'):
                 pending_bets.append(row)
 
     print(f"[*] Total bets: {len(rows)}")
@@ -178,6 +217,7 @@ def resolve_pending_bets(placed_bets_path: Path, data_dir: Path, dry_run: bool =
     # Process each pending bet
     resolved_count = 0
     failed_count = 0
+    skipped_count = 0
 
     for bet in pending_bets:
         bet_id = bet['id']
@@ -195,6 +235,13 @@ def resolve_pending_bets(placed_bets_path: Path, data_dir: Path, dry_run: bool =
         print(f"[BET] #{bet_id}: {match_name}")
         print(f"   Strategy: {bet['strategy_name']}")
         print(f"   Recommendation: {recommendation}")
+
+        # Check if match is still active in games.csv
+        if match_id in active_matches:
+            print(f"   [SKIP] Match is still active in games.csv - keeping bet as pending")
+            skipped_count += 1
+            print()
+            continue
 
         # Find match CSV
         match_csv = find_match_csv(match_id, data_dir)
@@ -261,6 +308,7 @@ def resolve_pending_bets(placed_bets_path: Path, data_dir: Path, dry_run: bool =
     # Summary
     print("=" * 60)
     print(f"[RESOLVED] {resolved_count}")
+    print(f"[SKIPPED] {skipped_count} (matches still active in games.csv)")
     print(f"[FAILED] {failed_count}")
     print()
 
@@ -317,6 +365,12 @@ if __name__ == "__main__":
         default=Path(__file__).parent.parent / "data",
         help="Directory containing match CSV files"
     )
+    parser.add_argument(
+        "--games-csv",
+        type=Path,
+        default=Path(__file__).parent.parent / "games.csv",
+        help="Path to games.csv (active matches)"
+    )
 
     args = parser.parse_args()
 
@@ -328,4 +382,7 @@ if __name__ == "__main__":
         print(f"[ERROR] {args.data_dir} not found")
         exit(1)
 
-    resolve_pending_bets(args.placed_bets, args.data_dir, args.dry_run)
+    if not args.games_csv.exists():
+        print(f"[WARN] {args.games_csv} not found - will settle all pending bets")
+
+    resolve_pending_bets(args.placed_bets, args.data_dir, args.games_csv, args.dry_run)

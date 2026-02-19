@@ -102,6 +102,40 @@ export function getBetOdds(b: CarteraBet): number {
   return b.back_draw ?? b.back_over_odds ?? (b as any).over_odds ?? b.back_odds ?? 2.0
 }
 
+/** Derive a short bet-type label from a CarteraBet, e.g. "Draw", "Away", "O 2.5" */
+export function getBetType(b: CarteraBet): string {
+  if (b.strategy === "back_draw_00") return "Draw"
+  if (b.over_line) {
+    // "Over 2.5" → "O 2.5"
+    return b.over_line.replace("Over ", "O ")
+  }
+  if (b.team) return b.team  // "Home" or "Away"
+  // Fallback: Over strategies without over_line — derive from score
+  const isOverStrategy = b.strategy === "goal_clustering" || b.strategy === "pressure_cooker"
+    || b.strategy === "tarde_asia" || b.strategy === "xg_underperformance"
+  if (isOverStrategy) {
+    const score = (b as any).score || (b as any).score_at_trigger || ""
+    const parts = score.split("-")
+    if (parts.length === 2) {
+      const total = (parseInt(parts[0]) || 0) + (parseInt(parts[1]) || 0)
+      return `O ${total + 0.5}`
+    }
+    return "Over"
+  }
+  return "-"
+}
+
+/** Deduplicate bets: if same match has the same bet type, keep only the first occurrence */
+export function deduplicateBets(bets: CarteraBet[]): CarteraBet[] {
+  const seen = new Set<string>()
+  return bets.filter(b => {
+    const key = `${b.match_id}::${getBetType(b)}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 // Min odds per strategy: (1 / win_rate) * 1.10
 const MIN_ODDS_BY_STRATEGY: Record<string, number> = {
   back_draw_00: 1.93,       // 57.1% WR
@@ -427,6 +461,7 @@ export interface RealisticAdjustments {
   minOdds: number | null  // Excluir apuestas con odds < X (null = sin límite)
   driftMinMinute: number | null  // Min minuto para drift (null = sin filtro)
   slippagePct: number     // % de slippage sobre odds (0 = sin slippage)
+  conflictFilter: boolean // Eliminar MomXG cuando xG Underperf activa en mismo partido (par tóxico)
 }
 
 export const DEFAULT_ADJUSTMENTS: RealisticAdjustments = {
@@ -435,6 +470,7 @@ export const DEFAULT_ADJUSTMENTS: RealisticAdjustments = {
   minOdds: null,
   driftMinMinute: null,
   slippagePct: 0,
+  conflictFilter: false,
 }
 
 export const REALISTIC_ADJUSTMENTS: RealisticAdjustments = {
@@ -443,6 +479,7 @@ export const REALISTIC_ADJUSTMENTS: RealisticAdjustments = {
   minOdds: 1.15,
   driftMinMinute: 15,
   slippagePct: 2,
+  conflictFilter: true,
 }
 
 /** Get the market key for deduplication (same match + same bet type = same bet) */
@@ -497,7 +534,23 @@ export function applyRealisticAdjustments(
     })
   }
 
-  // 5. Apply slippage (reduce odds → recalculate P/L)
+  // 5. Conflict filter: remove MomXG bets from matches that also have xG Underperf
+  //    (analysis showed MomXG + xGUnderperf pair: 4 matches, 0% WR, -100% ROI)
+  if (adj.conflictFilter) {
+    const matchesWithXGUnderperf = new Set(
+      result
+        .filter(b => b.strategy === "xg_underperformance")
+        .map(b => b.match_id)
+    )
+    result = result.filter(b => {
+      if (b.strategy === "momentum_xg_v1" || b.strategy === "momentum_xg_v2") {
+        return !matchesWithXGUnderperf.has(b.match_id)
+      }
+      return true
+    })
+  }
+
+  // 6. Apply slippage (reduce odds → recalculate P/L)
   if (adj.slippagePct > 0) {
     const factor = 1 - adj.slippagePct / 100
     result = result.map(b => {

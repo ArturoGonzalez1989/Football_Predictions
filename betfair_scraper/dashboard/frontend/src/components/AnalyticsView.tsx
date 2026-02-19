@@ -45,7 +45,7 @@ export function AnalyticsView() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-zinc-100">Analytics Dashboard</h1>
+        <h1 className="text-2xl font-bold text-zinc-100">Paper Dashboard</h1>
         <p className="text-sm text-zinc-500 mt-1">
           Análisis detallado de rendimiento y métricas de riesgo
         </p>

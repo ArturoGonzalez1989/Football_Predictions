@@ -13,6 +13,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 GAMES_CSV = BASE_DIR / "games.csv"
 DATA_DIR = BASE_DIR / "data"
 
+# Load corrupted Over/Under matches list
+CORRUPTED_OVER_MATCHES = set()
+_corrupted_file = BASE_DIR / "corrupted_over_matches.txt"
+if _corrupted_file.exists():
+    with open(_corrupted_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                CORRUPTED_OVER_MATCHES.add(line)
+
 STAT_COLUMNS = [
     "xg_local", "xg_visitante", "posesion_local", "posesion_visitante",
     "tiros_local", "tiros_visitante", "tiros_puerta_local", "tiros_puerta_visitante",
@@ -774,6 +784,15 @@ _result_cache: dict = {}
 _result_cache_time: float = 0
 
 
+def clear_analytics_cache():
+    """Clear analytics cache to force reload of data."""
+    global _analytics_cache, _analytics_cache_time, _result_cache, _result_cache_time
+    _analytics_cache = {}
+    _analytics_cache_time = 0
+    _result_cache = {}
+    _result_cache_time = 0
+
+
 def _get_cached_finished_data() -> list[dict]:
     """Get all finished matches with pre-loaded CSV rows. Cached for 5 min."""
     global _analytics_cache, _analytics_cache_time, _result_cache, _result_cache_time
@@ -1472,6 +1491,15 @@ def analyze_strategy_back_draw_00() -> dict:
             and (press_v is None or press_v < 0.5)
         )
 
+        # V4: V2r + Opta equilibrium (|opta_gap| <= 10)
+        opta_l_tr = _to_float(trigger_row.get("opta_points_local", ""))
+        opta_v_tr = _to_float(trigger_row.get("opta_points_visitante", ""))
+        opta_gap_ok = (
+            opta_l_tr is not None and opta_v_tr is not None
+            and abs(opta_l_tr - opta_v_tr) <= 10
+        )
+        passes_v4 = passes_v2r and opta_gap_ok
+
         bets.append({
             "match": match["name"],
             "match_id": match["match_id"],
@@ -1490,9 +1518,12 @@ def analyze_strategy_back_draw_00() -> dict:
             "passes_v15": passes_v15,
             "passes_v2r": passes_v2r,
             "passes_v3": passes_v3,
+            "passes_v4": passes_v4,
             "synth_xg_dominance": xg_dom,
             "synth_pressure_index_v": press_v,
             "timestamp_utc": trigger_row.get("timestamp_utc", ""),
+            "País": trigger_row.get("País", "Desconocido"),
+            "Liga": trigger_row.get("Liga", "Desconocida"),
         })
 
     # Summary stats helper
@@ -1516,6 +1547,7 @@ def analyze_strategy_back_draw_00() -> dict:
             "v15": _make_summary([b for b in bets if b["passes_v15"]]),
             "v2": _make_summary([b for b in bets if b["passes_v2"]]),
             "v2r": _make_summary([b for b in bets if b["passes_v2r"]]),
+            "v4": _make_summary([b for b in bets if b.get("passes_v4")]),
         },
         "bets": bets,
     }
@@ -1641,6 +1673,10 @@ def analyze_strategy_xg_underperformance() -> dict:
     matches_with_xg = 0
 
     for match in finished_matches:
+        # Skip matches with corrupted Over/Under odds
+        if match["match_id"] in CORRUPTED_OVER_MATCHES:
+            continue
+
         rows = match.get("rows") or _read_csv_rows(match["csv_path"])
         if not rows or len(rows) < 5:
             continue
@@ -1741,6 +1777,8 @@ def analyze_strategy_xg_underperformance() -> dict:
                     "passes_v2": passes_v2,
                     "passes_v3": passes_v3,
                     "timestamp_utc": row.get("timestamp_utc", ""),
+                    "País": row.get("País", "Desconocido"),
+                    "Liga": row.get("Liga", "Desconocida"),
                 })
 
     def _make_summary(subset):
@@ -1926,7 +1964,9 @@ def analyze_strategy_odds_drift() -> dict:
                         "risk_level": risk_info["risk_level"],
                         "risk_reason": risk_info["risk_reason"],
                         "time_remaining": risk_info["time_remaining"],
-                        "deficit": risk_info["deficit"]
+                        "deficit": risk_info["deficit"],
+                        "País": curr_row.get("País", "Desconocido"),
+                        "Liga": curr_row.get("Liga", "Desconocida"),
                     })
                     break  # found trigger for this team at this row
 
@@ -2057,58 +2097,395 @@ def analyze_cartera() -> dict:
     }
 
 
-def _log_signal_to_csv(signal: dict):
-    """Registra una señal en el archivo signals_log.csv para auditoría.
-    Solo registra la PRIMERA vez que se detecta una señal (match_id + strategy).
-    Evita duplicados si la señal sigue activa en múltiples refreshes.
-    """
-    import csv
-    from datetime import datetime
-    from pathlib import Path
+# ── Cash-out simulation ─────────────────────────────────────────────────
 
-    log_file = Path(__file__).parent.parent.parent / "signals_log.csv"
+_OVER_CO_COLS: dict[str, tuple[str, str]] = {
+    "0.5": ("back_over05", "lay_over05"),
+    "1.5": ("back_over15", "lay_over15"),
+    "2.5": ("back_over25", "lay_over25"),
+    "3.5": ("back_over35", "lay_over35"),
+    "4.5": ("back_over45", "lay_over45"),
+}
+
+
+def _co_market_cols(bet: dict, strategy: str) -> tuple[str, str, float]:
+    """Return (back_col, lay_col, back_odds) for the bet's market."""
+    if strategy == "back_draw_00":
+        return "back_draw", "lay_draw", bet.get("back_draw") or 0.0
+
+    if strategy in ("xg_underperformance", "goal_clustering", "pressure_cooker", "tarde_asia"):
+        over_line = bet.get("over_line", "")
+        m = re.search(r"(\d+\.?\d+)", over_line or "")
+        key = m.group(1) if m else ""
+        bc, lc = _OVER_CO_COLS.get(key, ("", ""))
+        return bc, lc, bet.get("back_over_odds") or 0.0
+
+    if strategy == "odds_drift":
+        team = bet.get("team", "")
+        bc = "back_home" if team == "home" else "back_away"
+        lc = "lay_home" if team == "home" else "lay_away"
+        return bc, lc, bet.get("back_odds") or 0.0
+
+    if strategy in ("momentum_xg_v1", "momentum_xg_v2"):
+        dt = bet.get("dominant_team", "")
+        bc = "back_home" if dt == "Local" else "back_away"
+        lc = "lay_home" if dt == "Local" else "lay_away"
+        return bc, lc, bet.get("back_odds") or 0.0
+
+    return "", "", 0.0
+
+
+def _co_is_corrupted(row: dict, back_col: str, lay_col: str) -> bool:
+    """True if row shows market suspension artifacts (inverted or extreme spread)."""
+    bk = _to_float(row.get(back_col, ""))
+    lk = _to_float(row.get(lay_col, ""))
+    if bk is None or lk is None or bk <= 1.0 or lk <= 1.0:
+        return True
+    if lk < bk:
+        return True  # inverted = suspension
+    return (lk - bk) / bk > 0.5  # >50% spread = suspension
+
+
+def _co_calc_pl(back_odds: float, lay_odds: float, stake: float = 10.0) -> float:
+    """Cash-out P&L. Applies 5% Betfair commission only on profits."""
+    gross = stake * (back_odds / lay_odds - 1)
+    return round(gross * 0.95, 2) if gross > 0 else round(gross, 2)
+
+
+def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int) -> dict:
+    """Apply cashout simulation to cartera data for losing bets.
+
+    For each losing bet with a partido CSV, finds lay odds at approximately
+    cashout_minute (after trigger) and computes CO P&L. Only replaces the
+    original P&L if the CO result is better (less negative).
+
+    Returns a deep copy of cartera_data with modified pl values and
+    recomputed cumulative arrays and strategy summaries.
+    """
+    import copy
+    result = copy.deepcopy(cartera_data)
+    bets = result.get("bets", [])
+    stake = 10.0
+    co_count = 0
+
+    for bet in bets:
+        if bet.get("won", False):
+            continue  # only losing bets need CO
+
+        strategy = bet.get("strategy", "")
+        match_id = bet.get("match_id", "")
+        trigger_min = bet.get("minuto") or 0
+
+        back_col, lay_col, back_odds = _co_market_cols(bet, strategy)
+        if not back_col or not lay_col or not back_odds:
+            continue
+
+        try:
+            csv_path = _resolve_csv_path(match_id)
+            rows = _read_csv_rows(csv_path)
+        except Exception:
+            continue
+        if not rows:
+            continue
+
+        # Find valid row closest to cashout_minute, strictly after trigger
+        best_row = None
+        best_dist = float("inf")
+        for row in rows:
+            m = _to_float(row.get("minuto", ""))
+            if m is None or m <= trigger_min:
+                continue
+            if _co_is_corrupted(row, back_col, lay_col):
+                continue
+            dist = abs(m - cashout_minute)
+            if dist < best_dist:
+                best_dist = dist
+                best_row = row
+
+        if best_row is None:
+            continue
+
+        lay_odds = _to_float(best_row.get(lay_col, ""))
+        if not lay_odds or lay_odds <= 1.0:
+            continue
+
+        co_pl = _co_calc_pl(back_odds, lay_odds, stake)
+        if co_pl > bet["pl"]:  # only apply if improvement
+            bet["pl"] = co_pl
+            bet["cashout_applied"] = True
+            bet["cashout_minute_actual"] = _to_float(best_row.get("minuto", ""))
+            bet["cashout_lay_odds"] = round(lay_odds, 2)
+            co_count += 1
+
+    # Recompute flat cumulative
+    bets.sort(key=lambda x: x.get("timestamp_utc", ""))
+    flat_total = 0.0
+    flat_cum = []
+    for b in bets:
+        flat_total += b["pl"]
+        flat_cum.append(round(flat_total, 2))
+
+    n = len(bets)
+    flat_pl = round(sum(b["pl"] for b in bets), 2)
+    result["flat"]["pl"] = flat_pl
+    result["flat"]["roi"] = round(flat_pl / (n * stake) * 100, 1) if n else 0
+    result["flat"]["cumulative"] = flat_cum
+
+    # Recompute managed bankroll
+    initial_bankroll = result["managed"].get("initial_bankroll", 500)
+    pct = result["managed"].get("bankroll_pct", 2.0) / 100.0
+    bankroll = initial_bankroll
+    managed_cum = []
+    for b in bets:
+        bet_size = round(bankroll * pct, 2)
+        if b.get("won", False):
+            odds = b.get("back_draw") or b.get("back_over_odds") or b.get("back_odds") or 1
+            profit = round((odds - 1) * bet_size * 0.95, 2) if odds and odds > 1 else -bet_size
+        elif b.get("cashout_applied"):
+            profit = round(b["pl"] / stake * bet_size, 2)
+        else:
+            profit = -bet_size
+        bankroll += profit
+        managed_cum.append(round(bankroll - initial_bankroll, 2))
+
+    result["managed"]["final_bankroll"] = round(bankroll, 2)
+    result["managed"]["pl"] = managed_cum[-1] if managed_cum else 0
+    result["managed"]["roi"] = round(
+        (managed_cum[-1] if managed_cum else 0) / initial_bankroll * 100, 1
+    )
+    result["managed"]["cumulative"] = managed_cum
+
+    # Recompute by_strategy summaries
+    def _s(subset):
+        nn = len(subset)
+        ww = sum(1 for b in subset if b["won"])
+        pp = sum(b["pl"] for b in subset)
+        return {
+            "bets": nn, "wins": ww,
+            "win_pct": round(ww / nn * 100, 1) if nn else 0,
+            "pl": round(pp, 2),
+            "roi": round(pp / (nn * stake) * 100, 1) if nn else 0,
+        }
+
+    result["by_strategy"]["back_draw_00"] = _s([b for b in bets if b["strategy"] == "back_draw_00"])
+    result["by_strategy"]["xg_underperformance"] = _s([b for b in bets if b["strategy"] == "xg_underperformance"])
+    result["by_strategy"]["odds_drift"] = _s([b for b in bets if b["strategy"] == "odds_drift"])
+    result["by_strategy"]["goal_clustering"] = _s([b for b in bets if b["strategy"] == "goal_clustering"])
+    result["by_strategy"]["pressure_cooker"] = _s([b for b in bets if b["strategy"] == "pressure_cooker"])
+    result["by_strategy"]["tarde_asia"] = _s([b for b in bets if b["strategy"] == "tarde_asia"])
+    result["by_strategy"]["momentum_xg"] = _s(
+        [b for b in bets if b["strategy"] in ("momentum_xg_v1", "momentum_xg_v2")]
+    )
+
+    result["cashout_minute"] = cashout_minute
+    result["cashout_applied_count"] = co_count
+    return result
+
+
+# ── Signal log state (in-memory, persists across API calls within process) ──────
+# Key: (match_id, strategy) → {minute, back_odds, score, timestamp}
+_signal_state: dict[tuple[str, str], dict] = {}
+
+_SIGNAL_LOG_HEADERS = [
+    "event_type",
+    "timestamp_utc",
+    "match_id", "match_name", "match_url",
+    "strategy", "strategy_name",
+    "minute", "score",
+    "recommendation", "back_odds", "min_odds", "expected_value",
+    "confidence", "win_rate_historical", "roi_historical", "sample_size",
+    "conditions",
+    # Lifecycle columns (new)
+    "first_detected_minute", "first_detected_odds",
+    "signal_age_minutes", "odds_vs_first_pct",
+]
+
+_ODDS_CHANGE_THRESHOLD = 0.05  # 5% change triggers an odds_update event
+
+
+def _write_signal_log_row(row: dict):
+    """Write a single row to signals_log.csv, creating headers if needed."""
+    import csv as _csv
+    from pathlib import Path as _Path
+
+    log_file = _Path(__file__).parent.parent.parent / "signals_log.csv"
+    file_exists = log_file.exists()
+
+    # If file exists but uses old format (no event_type column), migrate it first
+    if file_exists:
+        with open(log_file, "r", encoding="utf-8") as f:
+            first_line = f.readline()
+        if "event_type" not in first_line:
+            _migrate_signals_log(log_file)
+
+    with open(log_file, "a", newline="", encoding="utf-8") as f:
+        writer = _csv.DictWriter(f, fieldnames=_SIGNAL_LOG_HEADERS, extrasaction="ignore")
+        if not log_file.exists() or not file_exists:
+            writer.writeheader()
+        writer.writerow({k: row.get(k, "") for k in _SIGNAL_LOG_HEADERS})
+
+
+def _migrate_signals_log(log_file):
+    """Add new lifecycle columns to existing signals_log.csv (backward compat)."""
+    import csv as _csv
+    import shutil
+
+    backup = str(log_file) + ".bak"
+    shutil.copy2(log_file, backup)
+
+    with open(log_file, "r", encoding="utf-8", errors="replace") as f:
+        old_rows = list(_csv.DictReader(f))
+
+    with open(log_file, "w", newline="", encoding="utf-8") as f:
+        writer = _csv.DictWriter(f, fieldnames=_SIGNAL_LOG_HEADERS, extrasaction="ignore")
+        writer.writeheader()
+        for r in old_rows:
+            # Map old column order: old CSV didn't have event_type as first col
+            migrated = {k: r.get(k, "") for k in _SIGNAL_LOG_HEADERS}
+            migrated["event_type"] = migrated.get("event_type") or "first_detection"
+            writer.writerow(migrated)
+
+
+def _build_log_row(signal: dict, event_type: str, state: dict | None = None) -> dict:
+    """Build a log row dict from a signal and optional prior state."""
+    from datetime import datetime as _dt
 
     match_id = signal.get("match_id", "")
     strategy = signal.get("strategy", "")
+    minute = signal.get("minute", "")
+    back_odds = signal.get("back_odds", "")
 
-    # Verificar si ya existe esta combinación match_id + strategy
-    if log_file.exists():
-        with open(log_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for existing_row in reader:
-                if (existing_row.get("match_id") == match_id and
-                    existing_row.get("strategy") == strategy):
-                    # Ya existe, no loggear de nuevo
-                    return
+    first_minute = state["minute"] if state else minute
+    first_odds = state["back_odds"] if state else back_odds
 
-    # Preparar datos para CSV
-    row = {
-        "timestamp_utc": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+    try:
+        age = round(float(minute) - float(first_minute), 1) if minute and first_minute else ""
+    except (TypeError, ValueError):
+        age = ""
+
+    try:
+        if back_odds and first_odds and float(first_odds) > 0:
+            odds_pct = round((float(back_odds) / float(first_odds) - 1) * 100, 1)
+        else:
+            odds_pct = ""
+    except (TypeError, ValueError):
+        odds_pct = ""
+
+    return {
+        "event_type": event_type,
+        "timestamp_utc": _dt.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "match_id": match_id,
         "match_name": signal.get("match_name", ""),
         "match_url": signal.get("match_url", ""),
         "strategy": strategy,
         "strategy_name": signal.get("strategy_name", ""),
-        "minute": signal.get("minute", ""),
+        "minute": minute,
         "score": signal.get("score", ""),
         "recommendation": signal.get("recommendation", ""),
-        "back_odds": signal.get("back_odds", ""),
+        "back_odds": back_odds,
         "min_odds": signal.get("min_odds", ""),
         "expected_value": signal.get("expected_value", ""),
         "confidence": signal.get("confidence", ""),
         "win_rate_historical": signal.get("win_rate_historical", ""),
         "roi_historical": signal.get("roi_historical", ""),
         "sample_size": signal.get("sample_size", ""),
-        "conditions": str(signal.get("entry_conditions", ""))
+        "conditions": str(signal.get("entry_conditions", "")),
+        "first_detected_minute": first_minute,
+        "first_detected_odds": first_odds,
+        "signal_age_minutes": age,
+        "odds_vs_first_pct": odds_pct,
     }
 
-    # Escribir en CSV (solo si no existe)
-    file_exists = log_file.exists()
-    with open(log_file, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=row.keys())
-        if not file_exists:
-            writer.writeheader()
-        writer.writerow(row)
+
+def _log_signal_to_csv(signal: dict):
+    """Event-based signal logger.
+
+    Writes a row to signals_log.csv on:
+    - first_detection: first time (match_id, strategy) is seen
+    - score_change:    goal scored while signal is active
+    - odds_update:     back_odds moved ≥5% from last logged value
+    """
+    match_id = signal.get("match_id", "")
+    strategy = signal.get("strategy", "")
+    key = (match_id, strategy)
+
+    current_score = str(signal.get("score", ""))
+    current_odds_raw = signal.get("back_odds", "")
+    try:
+        current_odds = float(current_odds_raw) if current_odds_raw else None
+    except (TypeError, ValueError):
+        current_odds = None
+
+    if key not in _signal_state:
+        # First detection
+        row = _build_log_row(signal, "first_detection", state=None)
+        _write_signal_log_row(row)
+        _signal_state[key] = {
+            "minute": signal.get("minute", ""),
+            "back_odds": current_odds_raw,
+            "score": current_score,
+        }
+        return
+
+    prev = _signal_state[key]
+    prev_score = prev.get("score", "")
+    prev_odds_raw = prev.get("back_odds", "")
+    try:
+        prev_odds = float(prev_odds_raw) if prev_odds_raw else None
+    except (TypeError, ValueError):
+        prev_odds = None
+
+    # Check for score change (goal)
+    if current_score != prev_score:
+        row = _build_log_row(signal, "score_change", state=prev)
+        _write_signal_log_row(row)
+        _signal_state[key] = {
+            "minute": signal.get("minute", ""),
+            "back_odds": current_odds_raw,
+            "score": current_score,
+        }
+        return
+
+    # Check for significant odds movement (≥5%)
+    if current_odds and prev_odds and prev_odds > 0:
+        change = abs(current_odds / prev_odds - 1)
+        if change >= _ODDS_CHANGE_THRESHOLD:
+            row = _build_log_row(signal, "odds_update", state=prev)
+            _write_signal_log_row(row)
+            _signal_state[key] = {
+                "minute": _signal_state[key]["minute"],  # keep first_detected_minute reference
+                "back_odds": current_odds_raw,
+                "score": current_score,
+            }
+
+
+def _log_signal_ends(current_signal_keys: set[tuple[str, str]]):
+    """Log signal_end for signals that were active last call but are gone now."""
+    from datetime import datetime as _dt
+
+    gone_keys = set(_signal_state.keys()) - current_signal_keys
+    for key in gone_keys:
+        prev = _signal_state.pop(key)
+        match_id, strategy = key
+        # Build a minimal end-signal row from stored state
+        end_row = {
+            "event_type": "signal_end",
+            "timestamp_utc": _dt.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "match_id": match_id,
+            "match_name": "",
+            "match_url": "",
+            "strategy": strategy,
+            "strategy_name": "",
+            "minute": prev.get("minute", ""),
+            "score": prev.get("score", ""),
+            "recommendation": "",
+            "back_odds": prev.get("back_odds", ""),
+            "first_detected_minute": prev.get("minute", ""),
+            "first_detected_odds": prev.get("back_odds", ""),
+            "signal_age_minutes": "",
+            "odds_vs_first_pct": "",
+        }
+        _write_signal_log_row(end_row)
 
 
 def detect_betting_signals(versions: dict | None = None) -> dict:
@@ -2122,6 +2499,46 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     """
     if versions is None:
         versions = {"draw": "v2r", "xg": "v3", "drift": "v1", "clustering": "v2", "pressure": "v1"}
+
+    # --- Minimum duration config (from historical duration analysis) ---
+    # Recommended minimums: draw=1 (no benefit), xg=2, drift=2, clustering=4, pressure=2
+    _DEFAULT_MIN_DUR = {"draw": 1, "xg": 2, "drift": 2, "clustering": 4, "pressure": 2}
+    min_dur_map = {
+        family: int(versions.get(f"{family}_min_dur", _DEFAULT_MIN_DUR[family]))
+        for family in _DEFAULT_MIN_DUR
+    }
+
+    # --- Load first-seen timestamps from signals_log for age calculation ---
+    _log_file = Path(__file__).parent.parent.parent / "signals_log.csv"
+    first_seen_map: dict[tuple, datetime] = {}
+    if _log_file.exists():
+        try:
+            with open(_log_file, "r", encoding="utf-8") as _f:
+                for _row in csv.DictReader(_f):
+                    _mid = _row.get("match_id", "").strip()
+                    _strat = _row.get("strategy", "").strip()
+                    _ts = _row.get("timestamp_utc", "").strip()
+                    if _mid and _strat and _ts:
+                        try:
+                            first_seen_map[(_mid, _strat)] = datetime.strptime(_ts, "%Y-%m-%d %H:%M:%S")
+                        except ValueError:
+                            pass
+        except Exception:
+            pass
+
+    def _get_strategy_family(strategy_key: str) -> str:
+        if "draw" in strategy_key:
+            return "draw"
+        if "xg" in strategy_key or "underperformance" in strategy_key:
+            return "xg"
+        if "drift" in strategy_key:
+            return "drift"
+        if "clustering" in strategy_key:
+            return "clustering"
+        if "pressure" in strategy_key:
+            return "pressure"
+        return "draw"
+
     # Strategy metadata (from historical backtesting in cartera_final.md)
     STRATEGY_META = {
         "back_draw_00": {
@@ -2191,11 +2608,67 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             return False
         return current_odds >= min_odds
 
+    def _extract_bet_market(recommendation: str) -> tuple[str, str] | None:
+        """Extract (market_group, outcome) from a recommendation string.
+
+        Returns e.g. ("match_odds", "DRAW") or ("over_under", "OVER"),
+        or None if not parseable.
+        """
+        rec = recommendation.upper().strip()
+        if rec.startswith("BACK DRAW"):
+            return ("match_odds", "DRAW")
+        elif rec.startswith("BACK HOME"):
+            return ("match_odds", "HOME")
+        elif rec.startswith("BACK AWAY"):
+            return ("match_odds", "AWAY")
+        elif "OVER" in rec:
+            return ("over_under", "OVER")
+        elif "UNDER" in rec:
+            return ("over_under", "UNDER")
+        return None
+
+    # HOME↔AWAY reversals are allowed (historically profitable: +175 EUR on 10 pairs, 80% net+)
+    # DRAW vs HOME/AWAY are blocked (fundamentally contradictory)
+    # OVER vs UNDER are blocked (mutually exclusive)
+    _REVERSAL_ALLOWED = {("HOME", "AWAY"), ("AWAY", "HOME")}
+
+    def _has_conflict(match_id: str, recommendation: str,
+                      match_outcomes: dict[str, dict[str, str]]) -> str | None:
+        """Check if a signal conflicts with an existing bet on the same match.
+
+        Returns a description of the conflict, or None if no conflict.
+        HOME↔AWAY reversals are allowed (Odds Drift pattern).
+        """
+        market = _extract_bet_market(recommendation)
+        if market is None:
+            return None
+        group, outcome = market
+        existing = match_outcomes.get(match_id, {})
+        if group in existing and existing[group] != outcome:
+            pair = (existing[group], outcome)
+            if pair in _REVERSAL_ALLOWED:
+                return None  # HOME↔AWAY reversal — allowed
+            return f"Conflicto: ya existe {existing[group]} en {group}, nueva señal es {outcome}"
+        return None
+
+    def _register_outcome(match_id: str, recommendation: str,
+                          match_outcomes: dict[str, dict[str, str]]) -> None:
+        """Register a bet outcome so future signals can check for conflicts."""
+        market = _extract_bet_market(recommendation)
+        if market is None:
+            return
+        group, outcome = market
+        if match_id not in match_outcomes:
+            match_outcomes[match_id] = {}
+        match_outcomes[match_id][group] = outcome
+
     games = load_games()
     live_matches = [g for g in games if g["status"] == "live"]
 
     # Load placed bets to exclude already-bet signals
     placed_bets_keys: set[tuple[str, str]] = set()
+    # Track bet outcomes per match for conflict detection
+    match_outcomes: dict[str, dict[str, str]] = {}
     try:
         placed_csv = Path(__file__).parent.parent.parent.parent / "placed_bets.csv"
         if placed_csv.exists():
@@ -2203,8 +2676,13 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 for row in csv.DictReader(f):
                     mid = row.get("match_id", "").strip()
                     strat = row.get("strategy", "").strip()
+                    rec = row.get("recommendation", "").strip()
+                    status = row.get("status", "").strip().lower()
                     if mid and strat:
                         placed_bets_keys.add((mid, strat))
+                    # Only track outcomes for active (pending) bets
+                    if mid and rec and status in ("pending", ""):
+                        _register_outcome(mid, rec, match_outcomes)
     except Exception:
         pass
 
@@ -2271,6 +2749,21 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             elif draw_ver == "v2":
                 passes = xg_total < 0.5 and poss_diff < 20 and tiros_total < 8
                 thresholds = {"xg_total": "< 0.5", "possession_diff": "< 20%", "total_shots": "< 8"}
+            elif draw_ver == "v3":
+                # V3: V1.5 + xG dominance asymmetry (one team clearly dominates xG)
+                xg_dom = (xg_local / xg_total) if xg_total and xg_total > 0 else None
+                passes = (
+                    xg_total < 0.6 and poss_diff < 25
+                    and xg_dom is not None and (xg_dom > 0.55 or xg_dom < 0.45)
+                )
+                thresholds = {"xg_total": "< 0.6", "possession_diff": "< 25%", "xg_dominance": "> 55% o < 45%"}
+            elif draw_ver == "v4":
+                opta_gap_abs = abs(opta_l - opta_v) if opta_l is not None and opta_v is not None else None
+                passes = (
+                    xg_total < 0.6 and poss_diff < 20 and tiros_total < 8
+                    and opta_gap_abs is not None and opta_gap_abs <= 10
+                )
+                thresholds = {"xg_total": "< 0.6", "possession_diff": "< 20%", "total_shots": "< 8", "opta_gap": "<= 10"}
 
             if passes and back_draw is not None:
                 meta = STRATEGY_META["back_draw_00"]
@@ -2304,11 +2797,17 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     "thresholds": thresholds or {"version": draw_ver}
                 }
                 if (match_id, signal["strategy"]) not in placed_bets_keys:
-                    signals.append(signal)
-                    _log_signal_to_csv(signal)
+                    conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
+                    if conflict:
+                        signal["blocked"] = conflict
+                    else:
+                        signals.append(signal)
+                        _log_signal_to_csv(signal)
+                        _register_outcome(match_id, signal["recommendation"], match_outcomes)
 
         # === STRATEGY 2: xG Underperformance (version-specific) ===
-        if xg_ver != "off" and minuto >= 15 and xg_local is not None and xg_visitante is not None:
+        # Skip if match has corrupted Over/Under odds
+        if match_id not in CORRUPTED_OVER_MATCHES and xg_ver != "off" and minuto >= 15 and xg_local is not None and xg_visitante is not None:
             # Check both teams for underperformance
             for team_label, xg_team, goals_team, goals_opp, sot_team in [
                 ("Home", xg_local, goles_local, goles_visitante, tiros_puerta_local),
@@ -2370,8 +2869,13 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     "thresholds": xg_thresholds
                 }
                 if (match_id, signal["strategy"]) not in placed_bets_keys:
-                    signals.append(signal)
-                    _log_signal_to_csv(signal)
+                    conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
+                    if conflict:
+                        signal["blocked"] = conflict
+                    else:
+                        signals.append(signal)
+                        _log_signal_to_csv(signal)
+                        _register_outcome(match_id, signal["recommendation"], match_outcomes)
 
         # === STRATEGY 3: Odds Drift Contrarian (version-specific) ===
         goal_diff = abs(int(goles_local) - int(goles_visitante))
@@ -2481,11 +2985,20 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                                     "risk_info": risk_info
                                 }
                                 if (match_id, signal["strategy"]) not in placed_bets_keys:
-                                    signals.append(signal)
-                                    _log_signal_to_csv(signal)
+                                    conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
+                                    if conflict:
+                                        signal["blocked"] = conflict
+                                    # Block signals with time/score risk
+                                    elif risk_info["risk_level"] != "none":
+                                        signal["blocked"] = f"Riesgo {risk_info['risk_level']}: {risk_info['risk_reason']}"
+                                    else:
+                                        signals.append(signal)
+                                        _log_signal_to_csv(signal)
+                                        _register_outcome(match_id, signal["recommendation"], match_outcomes)
 
         # === STRATEGY 4: Goal Clustering (version-specific) ===
-        if clustering_ver != "off" and len(rows) >= 2 and 15 <= minuto <= 80:
+        # Skip if match has corrupted Over/Under odds
+        if match_id not in CORRUPTED_OVER_MATCHES and clustering_ver != "off" and len(rows) >= 2 and 15 <= minuto <= 80:
             # Look for goal in last 3 captures (approx last 90 seconds)
             recent_goal = False
             goal_minute = None
@@ -2561,15 +3074,21 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                             "thresholds": cl_thresholds
                         }
                         if (match_id, signal["strategy"]) not in placed_bets_keys:
-                            signals.append(signal)
-                            _log_signal_to_csv(signal)
+                            conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
+                            if conflict:
+                                signal["blocked"] = conflict
+                            else:
+                                signals.append(signal)
+                                _log_signal_to_csv(signal)
+                                _register_outcome(match_id, signal["recommendation"], match_outcomes)
 
         # === STRATEGY 5: Pressure Cooker (version-specific) ===
         total_goals = int(goles_local) + int(goles_visitante)
         is_draw = goles_local == goles_visitante
         has_goals = total_goals >= 2  # at least 1-1
 
-        if pressure_ver != "off" and (65 <= minuto <= 75 and is_draw and has_goals):
+        # Skip if match has corrupted Over/Under odds
+        if match_id not in CORRUPTED_OVER_MATCHES and pressure_ver != "off" and (65 <= minuto <= 75 and is_draw and has_goals):
             # Score confirmation: check last few rows have same score
             score_confirmed = False
             confirm_count = 0
@@ -2618,8 +3137,13 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     }
                 }
                 if (match_id, signal["strategy"]) not in placed_bets_keys:
-                    signals.append(signal)
-                    _log_signal_to_csv(signal)
+                    conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
+                    if conflict:
+                        signal["blocked"] = conflict
+                    else:
+                        signals.append(signal)
+                        _log_signal_to_csv(signal)
+                        _register_outcome(match_id, signal["recommendation"], match_outcomes)
 
         # === STRATEGY 6: Momentum Dominante x xG ===
         momentum_ver = versions.get("momentum", "v1")
@@ -2724,8 +3248,35 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                         "risk_info": risk_info
                     }
                     if (match_id, signal["strategy"]) not in placed_bets_keys:
-                        signals.append(signal)
-                        _log_signal_to_csv(signal)
+                        conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
+                        if conflict:
+                            signal["blocked"] = conflict
+                        # Block signals with time/score risk
+                        elif risk_info["risk_level"] != "none":
+                            signal["blocked"] = f"Riesgo {risk_info['risk_level']}: {risk_info['risk_reason']}"
+                        else:
+                            signals.append(signal)
+                            _log_signal_to_csv(signal)
+                            _register_outcome(match_id, signal["recommendation"], match_outcomes)
+
+    # --- Enrich signals with age and maturity info ---
+    _now = datetime.utcnow()
+    for _sig in signals:
+        _key = (_sig["match_id"], _sig["strategy"])
+        _first_seen = first_seen_map.get(_key)
+        if _first_seen:
+            _age_mins = (_now - _first_seen).total_seconds() / 60.0
+        else:
+            _age_mins = 0.0
+        _family = _get_strategy_family(_sig["strategy"])
+        _min_dur = min_dur_map.get(_family, 1)
+        _sig["signal_age_minutes"] = round(_age_mins, 1)
+        _sig["min_duration_caps"] = _min_dur
+        _sig["is_mature"] = _age_mins >= _min_dur
+
+    # --- Log signal_end for signals that disappeared this cycle ---
+    current_keys = {(s["match_id"], s["strategy"]) for s in signals}
+    _log_signal_ends(current_keys)
 
     return {
         "total_signals": len(signals),
@@ -2795,17 +3346,26 @@ def detect_watchlist(versions: dict | None = None) -> list:
                 xg_total = xg_l + xg_v
                 poss_diff = abs((pos_l or 50) - (pos_v or 50))
                 tiros_total = tiros_l + tiros_v
-                if draw_ver in ("v15", "v2r", "v2"):
+                if draw_ver in ("v15", "v2r", "v2", "v3", "v4"):
                     limit = 0.5 if draw_ver == "v2" else 0.6
                     conds.append({"label": f"xG < {limit}", "met": xg_total < limit,
                                   "current": f"{xg_total:.2f}", "target": str(limit)})
-                if draw_ver in ("v15", "v2r", "v2"):
-                    pd_limit = 25 if draw_ver == "v15" else 20
+                if draw_ver in ("v15", "v2r", "v2", "v3", "v4"):
+                    pd_limit = 25 if draw_ver in ("v15", "v3") else 20
                     conds.append({"label": f"Pos. diff < {pd_limit}%", "met": poss_diff < pd_limit,
                                   "current": f"{poss_diff:.0f}%", "target": f"{pd_limit}%"})
-                if draw_ver in ("v2r", "v2"):
+                if draw_ver in ("v2r", "v2", "v4"):
                     conds.append({"label": "Tiros < 8", "met": tiros_total < 8,
                                   "current": str(int(tiros_total)), "target": "8"})
+                if draw_ver == "v3":
+                    xg_dom = (xg_l / xg_total) if xg_total > 0 else None
+                    xg_dom_ok = xg_dom is not None and (xg_dom > 0.55 or xg_dom < 0.45)
+                    conds.append({"label": "Dominancia xG asimétrica", "met": xg_dom_ok,
+                                  "current": f"{xg_dom:.0%}" if xg_dom else "n/a", "target": ">55% o <45%"})
+                if draw_ver == "v4":
+                    opta_gap_live = abs(opta_l - opta_v) if opta_l is not None and opta_v is not None else None
+                    conds.append({"label": "Opta gap <= 10", "met": opta_gap_live is not None and opta_gap_live <= 10,
+                                  "current": f"{opta_gap_live:.1f}" if opta_gap_live is not None else "n/a", "target": "10"})
 
             met = sum(1 for c in conds if c["met"])
             total = len(conds)
@@ -2980,6 +3540,10 @@ def analyze_strategy_goal_clustering() -> dict:
         match_name = match_data["name"]
         csv_path = _resolve_csv_path(match_id)
 
+        # Skip matches with corrupted Over/Under odds
+        if match_id in CORRUPTED_OVER_MATCHES:
+            continue
+
         if not csv_path.exists():
             continue
 
@@ -3066,15 +3630,19 @@ def analyze_strategy_goal_clustering() -> dict:
                                 "match_id": match_id,
                                 "minuto": int(minuto),
                                 "score": f"{int(gl)}-{int(gv)}",
+                                "score_at_trigger": f"{int(gl)}-{int(gv)}",
                                 "sot_max": sot_max,
                                 "back_over_odds": round(over_odds, 2),
+                                "over_line": f"Over {total_now + 0.5}",
                                 "ft_score": ft_score,
                                 "won": over_won,
                                 "pl": round(pl, 2),
                                 "passes_v3": passes_v3,
                                 "passes_v4": passes_v4,
                                 "synth_xg_remaining": xg_rem,
-                                "timestamp_utc": row.get("timestamp_utc", "")
+                                "timestamp_utc": row.get("timestamp_utc", ""),
+                                "País": row.get("País", "Desconocido"),
+                                "Liga": row.get("Liga", "Desconocida"),
                             })
 
                             # Marcar que ya apostamos en este partido
@@ -3266,7 +3834,9 @@ def analyze_strategy_pressure_cooker() -> dict:
                 "sot_delta": int(sot_delta),
                 "corners_delta": int(corners_delta),
                 "shots_delta": int(shots_delta),
-                "timestamp_utc": row.get("timestamp_utc", "")
+                "timestamp_utc": row.get("timestamp_utc", ""),
+                "País": row.get("País", "Desconocido"),
+                "Liga": row.get("Liga", "Desconocida"),
             })
 
     # Calcular summary
@@ -3452,7 +4022,9 @@ def analyze_strategy_tarde_asia() -> dict:
                 "pl": round(pl, 2),
                 "liga": liga_match,
                 "hora_local": hora_local,
-                "timestamp_utc": row.get("timestamp_utc", "")
+                "timestamp_utc": row.get("timestamp_utc", ""),
+                "País": row.get("País", "Desconocido"),
+                "Liga": row.get("Liga", "Desconocida"),
             })
 
     # Calcular summary
@@ -3680,7 +4252,9 @@ def analyze_strategy_momentum_xg(version: str = "v1") -> dict:
                 "risk_level": risk_info["risk_level"],
                 "risk_reason": risk_info["risk_reason"],
                 "time_remaining": risk_info["time_remaining"],
-                "deficit": risk_info["deficit"]
+                "deficit": risk_info["deficit"],
+                "País": row.get("País", "Desconocido"),
+                "Liga": row.get("Liga", "Desconocida"),
             })
 
     # Calcular summary

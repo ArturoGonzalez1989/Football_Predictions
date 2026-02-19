@@ -5,9 +5,27 @@ import { type VersionCombo, comboToSignalVersions } from "../lib/cartera"
 
 // Separate storage key for manual signal configuration (independent from cartera presets)
 const SIGNALS_CONFIG_KEY = "furbo_signals_manual_config"
+const SIGNALS_MIN_DUR_KEY = "furbo_signals_min_dur"
 
 const DEFAULT_COMBO: VersionCombo = {
-  draw: "v15", xg: "v3", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "v1", br: "fixed"
+  draw: "v15", xg: "v3", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed"
+}
+
+// Recommended min durations from historical analysis (in minutes / captures)
+export type MinDurConfig = { draw: number; xg: number; drift: number; clustering: number; pressure: number }
+const DEFAULT_MIN_DUR: MinDurConfig = { draw: 1, xg: 2, drift: 2, clustering: 4, pressure: 2 }
+const MIN_DUR_OPTIONS = [1, 2, 3, 4, 5]
+
+function loadMinDur(): MinDurConfig {
+  try {
+    const stored = localStorage.getItem(SIGNALS_MIN_DUR_KEY)
+    if (stored) return { ...DEFAULT_MIN_DUR, ...JSON.parse(stored) }
+  } catch { /* ignore */ }
+  return { ...DEFAULT_MIN_DUR }
+}
+
+function saveMinDur(cfg: MinDurConfig) {
+  try { localStorage.setItem(SIGNALS_MIN_DUR_KEY, JSON.stringify(cfg)) } catch { /* ignore */ }
 }
 
 function loadManualCombo(): VersionCombo {
@@ -25,7 +43,7 @@ function saveManualCombo(combo: VersionCombo) {
 }
 
 const VERSION_LABELS: Record<string, Record<string, string>> = {
-  draw: { v1: "V1", v15: "V1.5", v2r: "V2r", v2: "V2", off: "OFF" },
+  draw: { v1: "V1", v15: "V1.5", v2r: "V2r", v2: "V2", v3: "V3", v4: "V4", off: "OFF" },
   xg: { base: "V1", v2: "V2", v3: "V3", off: "OFF" },
   drift: { v1: "V1", v2: "V2", v3: "V3", v4: "V4", v5: "V5", off: "OFF" },
   clustering: { v2: "V2", v3: "V3", off: "OFF" },
@@ -44,9 +62,12 @@ export function BettingSignalsView() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [combo, setCombo] = useState<VersionCombo>(loadManualCombo)
+  const [minDur, setMinDur] = useState<MinDurConfig>(loadMinDur)
   const prevSignalKeys = useRef<Set<string> | null>(null)
   const comboRef = useRef(combo)
   comboRef.current = combo
+  const minDurRef = useRef(minDur)
+  minDurRef.current = minDur
   const modalOpenRef = useRef(false)
 
   // Update combo and save to localStorage
@@ -56,11 +77,17 @@ export function BettingSignalsView() {
     saveManualCombo(newCombo)
   }, [])
 
+  const updateMinDur = useCallback((newMinDur: MinDurConfig) => {
+    setMinDur(newMinDur)
+    minDurRef.current = newMinDur
+    saveMinDur(newMinDur)
+  }, [])
+
   const fetchSignals = useCallback(async () => {
     try {
       const versions = comboToSignalVersions(comboRef.current)
       const [data, wl] = await Promise.all([
-        api.getBettingSignals(versions),
+        api.getBettingSignals(versions, minDurRef.current),
         api.getWatchlist(versions),
       ])
       // Don't update signals while user has Add Bet modal open
@@ -91,10 +118,10 @@ export function BettingSignalsView() {
     return () => clearInterval(interval)
   }, [fetchSignals])
 
-  // Re-fetch when combo changes
+  // Re-fetch when combo or minDur changes
   useEffect(() => {
     fetchSignals()
-  }, [combo]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [combo, minDur]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -152,9 +179,25 @@ export function BettingSignalsView() {
             </div>
           ) : (
             <div className="space-y-4">
-              {activeSignals.map((signal, idx) => (
-                <SignalCard key={`${signal.match_id}-${signal.strategy}-${idx}`} signal={signal} modalOpenRef={modalOpenRef} />
-              ))}
+              {(() => {
+                // Detect conflict: matches where both momentum_xg AND xg_underperformance fire
+                const matchesWithXGUnderf = new Set(
+                  activeSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
+                )
+                const matchesWithMomXG = new Set(
+                  activeSignals.filter(s => s.strategy === "momentum_xg_v1" || s.strategy === "momentum_xg_v2").map(s => s.match_id)
+                )
+                const conflictMatchIds = new Set(
+                  [...matchesWithXGUnderf].filter(id => matchesWithMomXG.has(id))
+                )
+                return activeSignals.map((signal, idx) => {
+                  const hasConflict = conflictMatchIds.has(signal.match_id) &&
+                    (signal.strategy === "momentum_xg_v1" || signal.strategy === "momentum_xg_v2")
+                  return (
+                    <SignalCard key={`${signal.match_id}-${signal.strategy}-${idx}`} signal={signal} modalOpenRef={modalOpenRef} hasConflict={hasConflict} />
+                  )
+                })
+              })()}
             </div>
           )}
 
@@ -164,7 +207,7 @@ export function BettingSignalsView() {
               <h3 className="text-sm font-semibold text-zinc-300">Configuración de Estrategias</h3>
               <button
                 type="button"
-                onClick={() => updateCombo(DEFAULT_COMBO)}
+                onClick={() => { updateCombo(DEFAULT_COMBO); updateMinDur(DEFAULT_MIN_DUR) }}
                 className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
                 title="Resetear a configuración por defecto"
               >
@@ -172,30 +215,46 @@ export function BettingSignalsView() {
               </button>
             </div>
 
-            {/* Manual version selectors */}
-            <div className="space-y-2.5">
+            {/* Column headers */}
+            <div className="flex items-center justify-between gap-3 mb-1.5">
+              <span className="text-[10px] text-zinc-600 min-w-[90px]">Estrategia</span>
+              <div className="flex gap-2 flex-1">
+                <span className="text-[10px] text-zinc-600 flex-1">Versión</span>
+                <span className="text-[10px] text-zinc-600 min-w-[120px] text-right">Min activa (min)</span>
+              </div>
+            </div>
+
+            {/* Manual version selectors + min duration */}
+            <div className="space-y-2">
               {Object.entries(STRATEGY_NAMES).map(([key, name]) => {
                 const currentVer = combo[key as keyof VersionCombo] as string
                 const versions = VERSION_LABELS[key] || {}
+                const isOff = currentVer === "off"
+                // Only draw/xg/drift/clustering/pressure have duration config
+                const durKey = key as keyof MinDurConfig
+                const hasDur = durKey in DEFAULT_MIN_DUR
+                const currentDur = hasDur ? minDur[durKey] : null
+                const recommendedDur = hasDur ? DEFAULT_MIN_DUR[durKey] : null
 
                 return (
-                  <div key={key} className="flex items-center justify-between gap-3">
+                  <div key={key} className="flex items-center gap-3">
                     <span className="text-xs text-zinc-400 min-w-[90px]">{name}:</span>
-                    <div className="flex gap-1.5">
+                    {/* Version buttons */}
+                    <div className="flex gap-1 flex-1">
                       {Object.entries(versions).map(([verKey, verLabel]) => {
                         const isActive = currentVer === verKey
-                        const isOff = verKey === "off"
+                        const isOffBtn = verKey === "off"
                         return (
                           <button
                             key={verKey}
                             type="button"
                             onClick={() => updateCombo({ ...combo, [key]: verKey })}
-                            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all ${
+                            className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
                               isActive
-                                ? isOff
+                                ? isOffBtn
                                   ? "bg-red-500/20 text-red-400 border border-red-500/30"
                                   : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                : isOff
+                                : isOffBtn
                                   ? "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:border-red-500/30 hover:text-red-400"
                                   : "bg-zinc-800/50 text-zinc-500 border border-zinc-700/50 hover:border-blue-500/30 hover:text-zinc-300"
                             }`}
@@ -206,6 +265,34 @@ export function BettingSignalsView() {
                         )
                       })}
                     </div>
+                    {/* Min duration selector */}
+                    {hasDur && !isOff ? (
+                      <div className="flex items-center gap-1 min-w-[120px] justify-end">
+                        {MIN_DUR_OPTIONS.map((opt) => {
+                          const isActiveDur = currentDur === opt
+                          const isRecommended = opt === recommendedDur
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => updateMinDur({ ...minDur, [durKey]: opt })}
+                              title={isRecommended ? `${opt} min (recomendado por análisis)` : `${opt} min`}
+                              className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
+                                isActiveDur
+                                  ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
+                                  : isRecommended
+                                    ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
+                                    : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="min-w-[120px]" />
+                    )}
                   </div>
                 )
               })}
@@ -214,7 +301,7 @@ export function BettingSignalsView() {
             {/* Info hint */}
             <div className="mt-3 pt-3 border-t border-zinc-800">
               <p className="text-[10px] text-zinc-600">
-                💡 Configura manualmente las versiones de cada estrategia. Para análisis histórico con presets automáticos, ve a Insights → Cartera.
+                Versión: algoritmo de detección · Min activa: minutos que debe llevar activa la señal para considerarse estable (amber = recomendado por análisis histórico).
               </p>
             </div>
           </div>
@@ -302,7 +389,7 @@ function WatchlistCard({ item }: { item: WatchlistItem }) {
   )
 }
 
-function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpenRef: React.RefObject<boolean> }) {
+function SignalCard({ signal, modalOpenRef, hasConflict = false }: { signal: BettingSignal; modalOpenRef: React.RefObject<boolean>; hasConflict?: boolean }) {
   const [showModal, setShowModalRaw] = useState(false)
   const setShowModal = (v: boolean) => {
     setShowModalRaw(v)
@@ -449,7 +536,7 @@ function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpen
       <div className={`border rounded-lg p-4 ${cardBorderColor} ${cardBgColor}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <a
               href={signal.match_url}
               target="_blank"
@@ -464,6 +551,19 @@ function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpen
             <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
               Min {signal.minute}'
             </span>
+            <SignalAgeBadge
+              ageMinutes={signal.signal_age_minutes}
+              minDurationCaps={signal.min_duration_caps}
+              isMature={signal.is_mature}
+            />
+            {hasConflict && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold bg-red-900/40 text-red-400 border border-red-500/40"
+                title="Par toxico detectado: MomXG + xG Underperf en el mismo partido tuvieron 0% WR historicamente. No apostar ambos."
+              >
+                ⚠ Conflicto
+              </span>
+            )}
           </div>
           <div className="text-xs text-zinc-500">{signal.strategy_name}</div>
         </div>
@@ -778,10 +878,11 @@ function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpen
 
                 {/* Stake */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  <label htmlFor="stake-input" className="block text-sm font-medium text-zinc-300 mb-2">
                     Stake (EUR)
                   </label>
                   <input
+                    id="stake-input"
                     type="number"
                     value={stake}
                     onChange={(e) => setStake(parseFloat(e.target.value) || 0)}
@@ -840,6 +941,51 @@ function SignalCard({ signal, modalOpenRef }: { signal: BettingSignal; modalOpen
         </div>
       )}
     </>
+  )
+}
+
+function SignalAgeBadge({
+  ageMinutes,
+  minDurationCaps,
+  isMature,
+}: {
+  ageMinutes?: number
+  minDurationCaps?: number
+  isMature?: boolean
+}) {
+  if (ageMinutes === undefined || ageMinutes === null) return null
+
+  const age = Math.round(ageMinutes)
+  const minDur = minDurationCaps ?? 1
+
+  // Color + label based on maturity
+  let badgeClass: string
+  let icon: string
+  let title: string
+
+  if (isMature) {
+    badgeClass = "bg-green-500/15 text-green-400 border border-green-500/30"
+    icon = "●"
+    title = `Señal estable: lleva ${age} min activa (umbral: ${minDur} min)`
+  } else if (age >= Math.ceil(minDur * 0.5)) {
+    // halfway there
+    badgeClass = "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+    icon = "◑"
+    title = `Señal madurando: ${age} min activa, umbral ${minDur} min`
+  } else {
+    badgeClass = "bg-zinc-700/50 text-zinc-500 border border-zinc-600/30"
+    icon = "○"
+    title = `Señal reciente: ${age} min activa, umbral ${minDur} min`
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${badgeClass}`}
+      title={title}
+    >
+      <span className="text-[8px]">{icon}</span>
+      {age === 0 ? "<1 min" : `${age} min`}
+    </span>
   )
 }
 

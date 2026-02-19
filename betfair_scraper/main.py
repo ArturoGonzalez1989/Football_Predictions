@@ -98,6 +98,167 @@ log.addHandler(file_handler)
 
 log.info(f"📝 Log guardándose en: {log_filename}")
 
+# ── Mapeo de País y Liga (URL-based) ─────────────────────────────────────────
+from urllib.parse import unquote
+
+URL_LEAGUE_MAPPING = {
+    # España
+    'la-liga-española': ('España', 'La Liga'),
+    'segunda-división-española': ('España', 'Segunda División'),
+    'espa%C3%B1a-segunda-divisi%C3%B3n': ('España', 'Segunda División'),
+    'españa-segunda-división': ('España', 'Segunda División'),
+    'copa-del-rey': ('España', 'Copa del Rey'),
+    # Inglaterra
+    'fa-cup-inglesa': ('Inglaterra', 'FA Cup'),
+    'liga-premiership-inglesa': ('Inglaterra', 'Premier League'),
+    'championship-inglés': ('Inglaterra', 'Championship'),
+    'league-one-inglés': ('Inglaterra', 'League One'),
+    'league-two-inglés': ('Inglaterra', 'League Two'),
+    'carabao-cup': ('Inglaterra', 'Carabao Cup'),
+    'women-super-league': ('Inglaterra', "Women's Super League"),
+    'inglaterra-sky-bet-league-1': ('Inglaterra', 'League One'),
+    'inglaterra-sky-bet-league-2': ('Inglaterra', 'League Two'),
+    'inglaterra-sky-bet-championship': ('Inglaterra', 'Championship'),
+    # Alemania
+    'bundesliga': ('Alemania', 'Bundesliga'),
+    '2-bundesliga': ('Alemania', '2. Bundesliga'),
+    'dfb-pokal': ('Alemania', 'DFB-Pokal'),
+    # Italia
+    'serie-a-italiana': ('Italia', 'Serie A'),
+    'serie-b-italiana': ('Italia', 'Serie B'),
+    'coppa-italia': ('Italia', 'Coppa Italia'),
+    'serie-a-brasil': ('Brasil', 'Série A'),
+    'serie-b-brasil': ('Brasil', 'Série B'),
+    # Francia
+    'ligue-1-francesa': ('Francia', 'Ligue 1'),
+    'ligue-2-francesa': ('Francia', 'Ligue 2'),
+    'copa-francesa': ('Francia', 'Coupe de France'),
+    # Portugal
+    'liga-portuguesa': ('Portugal', 'Primeira Liga'),
+    'portugal-primeira-liga': ('Portugal', 'Primeira Liga'),
+    'segunda-liga-portuguesa': ('Portugal', 'Segunda Liga'),
+    'taça-portugal': ('Portugal', 'Taça de Portugal'),
+    'taça-da-liga-portuguesa': ('Portugal', 'Taça da Liga'),
+    # Holanda
+    'eredivisie-holandesa': ('Holanda', 'Eredivisie'),
+    'eerste-divisie': ('Holanda', 'Eerste Divisie'),
+    'knvb-beker': ('Holanda', 'KNVB Beker'),
+    # Bélgica
+    'jupiler-league-pro': ('Bélgica', 'Jupiler Pro League'),
+    'b%C3%A9lgica-pro-league': ('Bélgica', 'Jupiler Pro League'),
+    'bélgica-pro-league': ('Bélgica', 'Jupiler Pro League'),
+    'primera-división-belga': ('Bélgica', 'Primera División'),
+    'copa-belga': ('Bélgica', 'Copa Belga'),
+    # Suiza
+    'super-league-suiza': ('Suiza', 'Super League'),
+    'challenge-league-suiza': ('Suiza', 'Challenge League'),
+    'copa-suiza': ('Suiza', 'Copa Suiza'),
+    # Austria
+    'bundesliga-austriaca': ('Austria', 'Bundesliga'),
+    'segunda-liga-austriaca': ('Austria', 'Segunda Liga'),
+    # República Checa
+    'liga-checa': ('República Checa', 'Liga Checa'),
+    # Dinamarca
+    'superligaen-danesa': ('Dinamarca', 'Superligaen'),
+    'dinamarca-superliga': ('Dinamarca', 'Superligaen'),
+    'primera-división-danesa': ('Dinamarca', 'Primera División'),
+    # Grecia
+    'super-league-griega': ('Grecia', 'Super League'),
+    'segunda-división-griega': ('Grecia', 'Segunda División'),
+    # Turquía
+    'superlig-turca': ('Turquía', 'Süper Lig'),
+    'superliga-turca': ('Turquía', 'Süper Lig'),
+    'primera-división-turca': ('Turquía', 'Primera División'),
+    # Bulgaria
+    'primera-división-búlgara': ('Bulgaria', 'Primera División'),
+    'liga-a-b%C3%BAlgara': ('Bulgaria', 'Liga A'),
+    'liga-a-búlgara': ('Bulgaria', 'Liga A'),
+    'segunda-división-búlgara': ('Bulgaria', 'Segunda División'),
+    # Rumania
+    'liga-1-rumana': ('Rumania', 'Liga 1'),
+    'romanian-liga-i': ('Rumania', 'Liga 1'),
+    # Japón
+    'j-league': ('Japón', 'J-League'),
+    'j-league-2': ('Japón', 'J-League 2'),
+    'japanese-j-league': ('Japón', 'J-League'),
+    # Indonesia
+    'liga-indonesia': ('Indonesia', 'Liga Indonesia'),
+    'indonesia-super-league': ('Indonesia', 'Super League'),
+    # América del Sur - Internacional
+    'conmebol-copa-libertadores': ('Internacional', 'Copa Libertadores'),
+    'conmebol-copa-sudamericana': ('Internacional', 'Copa Sudamericana'),
+    'copa-argentina': ('Argentina', 'Copa Argentina'),
+    'copa-brasil': ('Brasil', 'Copa do Brasil'),
+    # Argentina
+    'liga-argentina': ('Argentina', 'Liga Argentina'),
+    'argentina-primera-divisi%C3%B3n': ('Argentina', 'Liga Argentina'),
+    'argentina-primera-división': ('Argentina', 'Liga Argentina'),
+    # Brasil
+    'primeira-divisão-brasil': ('Brasil', 'Série A'),
+    'paulista-seria-a1-brasil': ('Brasil', 'Paulista Serie A1'),
+    # Chile
+    'liga-chilena': ('Chile', 'Primera División'),
+    'chile-primera-divisi%C3%B3n': ('Chile', 'Primera División'),
+    'chile-primera-división': ('Chile', 'Primera División'),
+    # Colombia
+    'colombia-primera-a': ('Colombia', 'Liga Colombiana'),
+    'liga-colombiana': ('Colombia', 'Liga Colombiana'),
+    # Ecuador
+    'liga-ecuatoriana': ('Ecuador', 'Liga Ecuatoriana'),
+    # Perú
+    'liga-peruana': ('Perú', 'Liga Peruana'),
+    # Uruguay
+    'liga-uruguaya': ('Uruguay', 'Liga Uruguaya'),
+    'uruguayan-primera-division': ('Uruguay', 'Liga Uruguaya'),
+    # Paraguay
+    'liga-paraguaya': ('Paraguay', 'Liga Paraguaya'),
+    # Bolivia
+    'liga-boliviana': ('Bolivia', 'Liga Boliviana'),
+    # Venezuela
+    'liga-venezolana': ('Venezuela', 'Liga Venezolana'),
+    # México
+    'liga-mexicana': ('México', 'Liga Mexicana'),
+    'liga-mx': ('México', 'Liga MX'),
+    # Escocia
+    'premiership-escocesa': ('Escocia', 'Premiership'),
+    # Corea del Sur
+    'k-league': ('Corea del Sur', 'K-League'),
+    # Oriente Medio
+    'saudi-pro-league': ('Arabia Saudita', 'Saudi Pro League'),
+    'saudi-arabia': ('Arabia Saudita', 'Saudi Pro League'),
+    'uae-pro-league': ('Emiratos Árabes Unidos', 'UAE Pro League'),
+    'qatar-stars-league': ('Qatar', 'Qatar Stars League'),
+    'iraqi-premier-league': ('Irak', 'Iraqi Premier League'),
+    'iran-pro-league': ('Irán', 'Iran Pro League'),
+    # Competiciones Asiáticas
+    'champions-league-asiática': ('Internacional', 'AFC Champions League'),
+    'champions-league-asi%C3%A1tica': ('Internacional', 'AFC Champions League'),
+    # Chipre
+    '1st-division-chipre': ('Chipre', 'Primera División'),
+    # Egipto
+    'egipto-premier-league': ('Egipto', 'Premier League'),
+    # Eslovenia
+    'premier-league-eslovena': ('Eslovenia', 'Premier League'),
+}
+
+def extraer_pais_liga_de_url(url: str) -> tuple:
+    """
+    Extrae País y Liga de la URL de Betfair.
+    Retorna: (país, liga) o ('Desconocido', 'Desconocida') si no se encuentra.
+    """
+    if not isinstance(url, str) or not url:
+        return ('Desconocido', 'Desconocida')
+
+    url_decoded = unquote(url.lower())
+
+    # Buscar en el mapping
+    for league_key, (country, league) in URL_LEAGUE_MAPPING.items():
+        if league_key in url_decoded:
+            return (country, league)
+
+    return ('Desconocido', 'Desconocida')
+
+
 # ── Variables globales de control ────────────────────────────────────────────
 ejecutando = True
 
@@ -155,6 +316,16 @@ CSV_COLUMNS = [
     "lay_over45",
     "back_under45",
     "lay_under45",
+    # Over/Under 5.5
+    "back_over55",
+    "lay_over55",
+    "back_under55",
+    "lay_under55",
+    # Over/Under 6.5
+    "back_over65",
+    "lay_over65",
+    "back_under65",
+    "lay_under65",
     # Resultado Correcto
     "back_rc_0_0", "lay_rc_0_0",
     "back_rc_1_0", "lay_rc_1_0",
@@ -257,6 +428,8 @@ CSV_COLUMNS = [
     "volumen_matched",
     # Meta
     "url",
+    "País",
+    "Liga",
 ]
 
 
@@ -462,6 +635,65 @@ def buscar_elemento_texto(driver, selectores_css: str, timeout: int = 3) -> str:
     return ""
 
 
+def _extraer_best_back_lay(row) -> tuple:
+    """
+    Extrae el mejor precio back y lay de una fila de Betfair Exchange.
+
+    Usa selectores CSS (last-back-cell / first-lay-cell) para identificar
+    correctamente back vs lay. Fallback al método mid-point si no hay clases CSS.
+
+    Returns: (best_back: str, best_lay: str) - precios como string, vacío si no hay.
+    """
+    best_back = ""
+    best_lay = ""
+
+    # Método 1: Usar clases CSS de Betfair (más fiable)
+    try:
+        back_cell = row.find_elements(By.CSS_SELECTOR, "td.last-back-cell button")
+        if back_cell:
+            text = back_cell[0].text.strip()
+            if text:
+                m = re.match(r"^(\d+\.?\d*)", text.replace(",", "."))
+                if m:
+                    best_back = m.group(1)
+
+        lay_cell = row.find_elements(By.CSS_SELECTOR, "td.first-lay-cell button")
+        if lay_cell:
+            text = lay_cell[0].text.strip()
+            if text:
+                m = re.match(r"^(\d+\.?\d*)", text.replace(",", "."))
+                if m:
+                    best_lay = m.group(1)
+    except (NoSuchElementException, StaleElementReferenceException):
+        pass
+
+    if best_back or best_lay:
+        return best_back, best_lay
+
+    # Método 2 (fallback): Mid-point de botones con precio
+    buttons = row.find_elements(By.TAG_NAME, "button")
+    price_buttons = []
+    for btn in buttons:
+        text = btn.text.strip()
+        if text and ("€" in text or text.replace(".", "").replace(",", "").isdigit()):
+            price_buttons.append(btn)
+
+    if len(price_buttons) >= 2:
+        mid = len(price_buttons) // 2
+        back_text = price_buttons[mid - 1].text.strip()
+        lay_text = price_buttons[mid].text.strip()
+
+        back_match = re.match(r"^(\d+\.?\d*)", back_text.replace(",", "."))
+        lay_match = re.match(r"^(\d+\.?\d*)", lay_text.replace(",", "."))
+
+        if back_match:
+            best_back = back_match.group(1)
+        if lay_match:
+            best_lay = lay_match.group(1)
+
+    return best_back, best_lay
+
+
 def extraer_runners_match_odds(driver, timeout: int = 5) -> dict:
     """
     Extrae cuotas back/lay del mercado Match Odds (3 runners: Local, Empate, Visitante).
@@ -513,32 +745,10 @@ def extraer_runners_match_odds(driver, timeout: int = 5) -> dict:
                     # Identificar si es Empate/Draw
                     is_draw = "Empate" in runner_name or "Draw" in runner_name
 
-                    # Buscar botones con precios
-                    buttons = row.find_elements(By.TAG_NAME, "button")
-                    price_buttons = []
+                    back_price, lay_price = _extraer_best_back_lay(row)
 
-                    for btn in buttons:
-                        text = btn.text.strip()
-                        # Buscar botones que tengan formato "número €cantidad" o "número.decimales €cantidad"
-                        if text and ("€" in text or text.replace(".", "").replace(",", "").isdigit()):
-                            price_buttons.append(btn)
-
-                    # Los primeros 2 botones con precio son back y lay
-                    if len(price_buttons) >= 2:
-                        import re
-
-                        back_text = price_buttons[0].text.strip()
-                        lay_text = price_buttons[1].text.strip()
-
-                        # Extraer el número antes del símbolo € o espacios
-                        back_match = re.match(r"^(\d+\.?\d*)", back_text.replace(",", "."))
-                        lay_match = re.match(r"^(\d+\.?\d*)", lay_text.replace(",", "."))
-
-                        back_price = back_match.group(1) if back_match else ""
-                        lay_price = lay_match.group(1) if lay_match else ""
-
-                        # Guardar runner con sus precios
-                        runners_found.append((runner_name, back_price, lay_price, is_draw))
+                    # Guardar runner con sus precios
+                    runners_found.append((runner_name, back_price, lay_price, is_draw))
 
                 except (NoSuchElementException, StaleElementReferenceException):
                     continue
@@ -593,6 +803,10 @@ def extraer_over_under(driver) -> dict:
         "back_under35": "", "lay_under35": "",
         "back_over45": "", "lay_over45": "",
         "back_under45": "", "lay_under45": "",
+        "back_over55": "", "lay_over55": "",
+        "back_under55": "", "lay_under55": "",
+        "back_over65": "", "lay_over65": "",
+        "back_under65": "", "lay_under65": "",
     }
 
     try:
@@ -648,37 +862,154 @@ def extraer_over_under(driver) -> dict:
                         elif "Menos" in runner_name or "Under" in runner_name:
                             runner_key = ("back_under45", "lay_under45")
 
+                    # 5.5 Goles
+                    elif "5,5 Goles" in runner_name or "5.5 Goles" in runner_name:
+                        if "Más" in runner_name or "Over" in runner_name:
+                            runner_key = ("back_over55", "lay_over55")
+                        elif "Menos" in runner_name or "Under" in runner_name:
+                            runner_key = ("back_under55", "lay_under55")
+
+                    # 6.5 Goles
+                    elif "6,5 Goles" in runner_name or "6.5 Goles" in runner_name:
+                        if "Más" in runner_name or "Over" in runner_name:
+                            runner_key = ("back_over65", "lay_over65")
+                        elif "Menos" in runner_name or "Under" in runner_name:
+                            runner_key = ("back_under65", "lay_under65")
+
                     if not runner_key:
                         continue
 
-                    # Buscar botones con precios
-                    buttons = row.find_elements(By.TAG_NAME, "button")
-                    price_buttons = []
-
-                    for btn in buttons:
-                        text = btn.text.strip()
-                        if text and ("€" in text or text.replace(".", "").replace(",", "").isdigit()):
-                            price_buttons.append(btn)
-
-                    if len(price_buttons) >= 2:
-                        import re
-
-                        back_text = price_buttons[0].text.strip()
-                        lay_text = price_buttons[1].text.strip()
-
-                        back_match = re.match(r"^(\d+\.?\d*)", back_text.replace(",", "."))
-                        lay_match = re.match(r"^(\d+\.?\d*)", lay_text.replace(",", "."))
-
-                        if back_match:
-                            resultado[runner_key[0]] = back_match.group(1)
-                        if lay_match:
-                            resultado[runner_key[1]] = lay_match.group(1)
+                    back_price, lay_price = _extraer_best_back_lay(row)
+                    if back_price:
+                        resultado[runner_key[0]] = back_price
+                    if lay_price:
+                        resultado[runner_key[1]] = lay_price
 
                 except (NoSuchElementException, StaleElementReferenceException):
                     continue
 
     except WebDriverException as e:
         log.debug(f"No se pudo extraer Over/Under: {e}")
+
+    return resultado
+
+
+def extraer_over_under_via_mercado(driver) -> dict:
+    """
+    Extrae cuotas Over/Under navegando a las URLs individuales de mercado
+    desde el sidebar de Betfair. Esto obtiene cuotas en vivo reales,
+    a diferencia de la página del evento que puede tener datos congelados.
+
+    Flujo:
+    1. Guarda la URL actual (página del evento)
+    2. Busca links de mercados O/U en el sidebar
+    3. Navega a la primera URL de mercado O/U encontrada
+    4. Extrae cuotas de todos los runners O/U en esa página
+    5. Navega de vuelta a la página del evento
+    """
+    resultado = {
+        "back_over05": "", "lay_over05": "",
+        "back_under05": "", "lay_under05": "",
+        "back_over15": "", "lay_over15": "",
+        "back_under15": "", "lay_under15": "",
+        "back_over25": "", "lay_over25": "",
+        "back_under25": "", "lay_under25": "",
+        "back_over35": "", "lay_over35": "",
+        "back_under35": "", "lay_under35": "",
+        "back_over45": "", "lay_over45": "",
+        "back_under45": "", "lay_under45": "",
+        "back_over55": "", "lay_over55": "",
+        "back_under55": "", "lay_under55": "",
+        "back_over65": "", "lay_over65": "",
+        "back_under65": "", "lay_under65": "",
+    }
+
+    # Mapeo de nombre de runner a claves del resultado
+    OU_MAP = {
+        "0,5": ("05",), "0.5": ("05",),
+        "1,5": ("15",), "1.5": ("15",),
+        "2,5": ("25",), "2.5": ("25",),
+        "3,5": ("35",), "3.5": ("35",),
+        "4,5": ("45",), "4.5": ("45",),
+        "5,5": ("55",), "5.5": ("55",),
+        "6,5": ("65",), "6.5": ("65",),
+    }
+
+    original_url = driver.current_url
+
+    try:
+        # 1. Buscar links de mercados O/U en el sidebar
+        ou_market_urls = []
+        all_links = driver.find_elements(By.CSS_SELECTOR, "a")
+        for link in all_links:
+            try:
+                href = link.get_attribute("href") or ""
+                text = link.text.strip().lower()
+                if "football/market/" in href and "goles" in text:
+                    ou_market_urls.append(href)
+            except StaleElementReferenceException:
+                continue
+
+        if not ou_market_urls:
+            log.debug("No se encontraron links de mercados O/U en sidebar")
+            return resultado
+
+        # 2. Navegar a la primera URL de mercado O/U (muestra múltiples O/U)
+        market_url = ou_market_urls[0]
+        log.debug(f"Navegando a mercado O/U: {market_url}")
+        driver.get(market_url)
+        time.sleep(4)
+
+        # 3. Extraer runners O/U de la página del mercado individual
+        tables = driver.find_elements(By.CSS_SELECTOR, "table tbody")
+        for tbody in tables:
+            rows = tbody.find_elements(By.CSS_SELECTOR, "tr")
+            for row in rows:
+                try:
+                    h3_elements = row.find_elements(By.TAG_NAME, "h3")
+                    if not h3_elements:
+                        continue
+
+                    runner_name = h3_elements[0].text.strip()
+                    if "Goles" not in runner_name and "Goals" not in runner_name:
+                        continue
+
+                    # Determinar la línea (0.5, 1.5, ..., 6.5)
+                    runner_key = None
+                    for pattern, (suffix,) in OU_MAP.items():
+                        if pattern in runner_name:
+                            if "Más" in runner_name or "More" in runner_name or "Over" in runner_name:
+                                runner_key = (f"back_over{suffix}", f"lay_over{suffix}")
+                            elif "Menos" in runner_name or "Fewer" in runner_name or "Under" in runner_name:
+                                runner_key = (f"back_under{suffix}", f"lay_under{suffix}")
+                            break
+
+                    if not runner_key:
+                        continue
+
+                    back_price, lay_price = _extraer_best_back_lay(row)
+                    if back_price:
+                        resultado[runner_key[0]] = back_price
+                    if lay_price:
+                        resultado[runner_key[1]] = lay_price
+
+                except (NoSuchElementException, StaleElementReferenceException):
+                    continue
+
+    except WebDriverException as e:
+        log.debug(f"Error navegando a mercado O/U: {e}")
+
+    finally:
+        # 4. SIEMPRE volver a la página del evento
+        try:
+            driver.get(original_url)
+            time.sleep(3)
+        except WebDriverException:
+            log.warning(f"No se pudo volver a URL original: {original_url}")
+
+    ou_count = sum(1 for v in resultado.values() if v)
+    if ou_count > 0:
+        log.info(f"✓ O/U via mercado: {ou_count} valores capturados")
 
     return resultado
 
@@ -830,26 +1161,11 @@ def extraer_resultado_correcto(driver) -> dict:
 
                     marcador_key = marcador.replace("-", "_")
 
-                    # Buscar botones con precios
-                    buttons = row.find_elements(By.TAG_NAME, "button")
-                    price_buttons = []
-
-                    for btn in buttons:
-                        text = btn.text.strip()
-                        if text and ("€" in text or text.replace(".", "").replace(",", "").isdigit()):
-                            price_buttons.append(btn)
-
-                    if len(price_buttons) >= 2:
-                        back_text = price_buttons[0].text.strip()
-                        lay_text = price_buttons[1].text.strip()
-
-                        back_match = re.match(r"^(\d+\.?\d*)", back_text.replace(",", "."))
-                        lay_match = re.match(r"^(\d+\.?\d*)", lay_text.replace(",", "."))
-
-                        if back_match:
-                            resultado[f"back_rc_{marcador_key}"] = back_match.group(1)
-                        if lay_match:
-                            resultado[f"lay_rc_{marcador_key}"] = lay_match.group(1)
+                    back_price, lay_price = _extraer_best_back_lay(row)
+                    if back_price:
+                        resultado[f"back_rc_{marcador_key}"] = back_price
+                    if lay_price:
+                        resultado[f"lay_rc_{marcador_key}"] = lay_price
 
                 except (NoSuchElementException, StaleElementReferenceException):
                     continue
@@ -1717,6 +2033,14 @@ class MatchDriver:
 
                 log.debug(f"[{self.match_id}] → Extrayendo cuotas Over/Under...")
                 odds_ou = extraer_over_under(self.driver)
+                ou_count = sum(1 for v in odds_ou.values() if v)
+                if ou_count < 4:
+                    log.debug(f"[{self.match_id}] O/U escasos ({ou_count}), intentando via mercado individual...")
+                    odds_ou_market = extraer_over_under_via_mercado(self.driver)
+                    # Merge: preferir valores del mercado individual (en vivo)
+                    for k, v in odds_ou_market.items():
+                        if v:
+                            odds_ou[k] = v
 
                 log.debug(f"[{self.match_id}] → Extrayendo cuotas Resultado Correcto...")
                 odds_rc = extraer_resultado_correcto(self.driver)
@@ -1748,6 +2072,9 @@ class MatchDriver:
                 else:
                     estado_partido = "pre_partido"
 
+                # Extraer País y Liga de la URL
+                pais, liga = extraer_pais_liga_de_url(self.url)
+
                 # Combinar todos los datos (mismo formato que capturar_pestaña)
                 datos = {
                     "tab_id": self.match_id,
@@ -1778,6 +2105,8 @@ class MatchDriver:
                     "momentum_visitante": momentum_visitante,
                     # Meta
                     "url": self.url,
+                    "País": pais,
+                    "Liga": liga,
                 }
 
                 self.last_capture = time.time()
@@ -2045,8 +2374,15 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
 
     log.info(f"[Tab {tab_info['index']}] → Extrayendo cuotas Over/Under...")
     odds_ou = extraer_over_under(driver)
-    ou_count = sum([1 for k, v in odds_ou.items() if v])
-    log.info(f"[Tab {tab_info['index']}]   ✓ Over/Under: {ou_count}/20 valores capturados")
+    ou_count = sum(1 for v in odds_ou.values() if v)
+    if ou_count < 4:
+        log.info(f"[Tab {tab_info['index']}]   O/U escasos ({ou_count}), intentando via mercado individual...")
+        odds_ou_market = extraer_over_under_via_mercado(driver)
+        for k, v in odds_ou_market.items():
+            if v:
+                odds_ou[k] = v
+        ou_count = sum(1 for v in odds_ou.values() if v)
+    log.info(f"[Tab {tab_info['index']}]   ✓ Over/Under: {ou_count}/28 valores capturados")
 
     log.info(f"[Tab {tab_info['index']}] → Extrayendo cuotas Resultado Correcto...")
     odds_rc = extraer_resultado_correcto(driver)
@@ -2169,6 +2505,16 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
         "lay_over45": odds_ou["lay_over45"],
         "back_under45": odds_ou["back_under45"],
         "lay_under45": odds_ou["lay_under45"],
+        # Over/Under 5.5
+        "back_over55": odds_ou["back_over55"],
+        "lay_over55": odds_ou["lay_over55"],
+        "back_under55": odds_ou["back_under55"],
+        "lay_under55": odds_ou["lay_under55"],
+        # Over/Under 6.5
+        "back_over65": odds_ou["back_over65"],
+        "lay_over65": odds_ou["lay_over65"],
+        "back_under65": odds_ou["back_under65"],
+        "lay_under65": odds_ou["lay_under65"],
         # Resultado Correcto
         "back_rc_0_0": odds_rc["back_rc_0_0"],
         "lay_rc_0_0": odds_rc["lay_rc_0_0"],
@@ -2276,6 +2622,11 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
         "volumen_matched": volumen,
         "url": tab_info["url"],
     }
+
+    # Extraer País y Liga de la URL
+    pais, liga = extraer_pais_liga_de_url(tab_info["url"])
+    datos["País"] = pais
+    datos["Liga"] = liga
 
     # Log resumen
     # Emojis según estado: ⚽ en juego, ☕ descanso, 🏁 finalizado, ⏰ pre-partido
