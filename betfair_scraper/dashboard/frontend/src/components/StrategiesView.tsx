@@ -463,6 +463,17 @@ function CarteraTab({ data }: { data: Cartera }) {
   // Recalculate simulations
   const sim = simulateCartera(filteredBets, bankrollInit, brMode, flatStake)
 
+  // Derived portfolio stats
+  const activeDays = filteredBets.length > 0
+    ? new Set(filteredBets.map(b => b.timestamp_utc.slice(0, 10))).size
+    : 0
+  const dailyProfit = activeDays > 0 ? round2(sim.flatPl / activeDays) : 0
+  const betsPerDay = activeDays > 0 ? round2(filteredBets.length / activeDays) : 0
+  const evPerBet = sim.total > 0 ? round2(sim.flatPl / sim.total) : 0
+  const avgOdds = filteredBets.length > 0
+    ? round2(filteredBets.reduce((s, b) => s + getBetOdds(b), 0) / filteredBets.length)
+    : 0
+
   // Per-strategy stats
   const stratConfigs = [
     { key: "back_draw_00", label: "Back Empate 0-0", bgClass: "bg-cyan-500", active: drawParams.enabled },
@@ -1167,7 +1178,7 @@ function CarteraTab({ data }: { data: Cartera }) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <MetricCard
           title="Apuestas"
           value={`${sim.total}`}
@@ -1176,12 +1187,27 @@ function CarteraTab({ data }: { data: Cartera }) {
         <MetricCard
           title="P/L Flat"
           value={`${sim.flatPl >= 0 ? "+" : ""}${sim.flatPl.toFixed(2)} EUR`}
-          description={`ROI: ${sim.flatRoi >= 0 ? "+" : ""}${sim.flatRoi.toFixed(1)}% (10 EUR/apuesta)`}
+          description={`ROI: ${sim.flatRoi >= 0 ? "+" : ""}${sim.flatRoi.toFixed(1)}% (${flatStake} EUR/apuesta)`}
         />
         <MetricCard
           title="P/L Gestion"
           value={`${sim.managedPl >= 0 ? "+" : ""}${sim.managedPl.toFixed(2)} EUR`}
           description={`ROI: ${sim.managedRoi >= 0 ? "+" : ""}${sim.managedRoi.toFixed(1)}% | ${BANKROLL_MODES.find(m => m.key === brMode)!.label} | ${sim.managedFinalBankroll.toFixed(0)}/${bankrollInit} EUR`}
+        />
+        <MetricCard
+          title="EV/apuesta"
+          value={`${evPerBet >= 0 ? "+" : ""}${evPerBet.toFixed(2)} EUR`}
+          description={`Ganancia media por señal ejecutada`}
+        />
+        <MetricCard
+          title="Profit/día"
+          value={`${dailyProfit >= 0 ? "+" : ""}${dailyProfit.toFixed(2)} EUR`}
+          description={`${betsPerDay.toFixed(1)} apuestas/día · ${activeDays} días activos`}
+        />
+        <MetricCard
+          title="Cuota media"
+          value={`${avgOdds.toFixed(2)}`}
+          description={`Break-even WR: ${avgOdds > 0 ? (100 / avgOdds).toFixed(1) : "—"}%  ·  Edge: ${avgOdds > 0 ? (sim.winPct - 100 / avgOdds).toFixed(1) : "—"}pp`}
         />
       </div>
 
