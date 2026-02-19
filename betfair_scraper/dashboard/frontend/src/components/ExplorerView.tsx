@@ -96,6 +96,9 @@ function ProfitableRow({ result, rank }: { result: ExplorerResult; rank: number 
       <span className="text-[10px] text-zinc-500 shrink-0 tabular-nums w-9 text-right">
         {(result.win_rate * 100).toFixed(0)}%
       </span>
+      <span className="text-[10px] text-zinc-600 shrink-0 tabular-nums w-10 text-right">
+        {result.avg_odds?.toFixed(2) ?? "—"}
+      </span>
       <span className="text-xs font-bold tabular-nums shrink-0 w-16 text-right text-emerald-400">
         +{evPct.toFixed(1)}%
       </span>
@@ -149,6 +152,7 @@ export function ExplorerView() {
   const [minuteMax, setMinuteMax] = useState(80)
   const [sortCol, setSortCol] = useState<SortCol>("ev_pct")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const [chartMode, setChartMode] = useState<"scatter" | "heatmap">("scatter")
 
   // Carga inicial
   useEffect(() => {
@@ -169,6 +173,30 @@ export function ExplorerView() {
     } finally {
       setRunning(false)
     }
+  }
+
+  const handleExportCSV = () => {
+    if (profitable.length === 0) return
+    const headers = [
+      "rank","minute","condition","condition_id","target","bet_type",
+      "n_matches","wins","win_rate","avg_odds","std_odds",
+      "ev_pct","avg_pl_per_bet","total_pl"
+    ]
+    const rows = profitable.map((r, i) => [
+      i + 1, r.minute, `"${r.condition.replace(/"/g, '""')}"`, r.condition_id,
+      r.target, r.bet_type, r.n_matches, r.wins,
+      r.win_rate.toFixed(4), r.avg_odds?.toFixed(3) ?? "",
+      r.std_odds?.toFixed(3) ?? "", r.ev_pct.toFixed(4),
+      r.avg_pl_per_bet.toFixed(3), r.total_pl.toFixed(2)
+    ])
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n")
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `explorer_ev_plus_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const handleSort = (col: SortCol) => {
@@ -213,6 +241,19 @@ export function ExplorerView() {
       cond: r.condition,
       wr: Math.round(r.win_rate * 1000) / 10,
     })
+  }
+
+  // Heatmap: EV% base (condition_id="all") por target × minuto
+  const HM_MINUTES = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
+  const HM_TARGETS = ALL_TARGETS.filter(t =>
+    betTypeFilter === "all" || (betTypeFilter === "lay" ? t.startsWith("lay_") : !t.startsWith("lay_"))
+  )
+  const heatmap: Record<string, Record<number, number>> = {}
+  for (const r of (run?.results ?? [])) {
+    if (r.condition_id !== "all") continue
+    if (betTypeFilter !== "all" && (r.bet_type ?? "back") !== betTypeFilter) continue
+    if (!heatmap[r.target]) heatmap[r.target] = {}
+    heatmap[r.target][r.minute] = r.ev_pct
   }
 
   const runAt = run?.run_at ? new Date(run.run_at).toLocaleString("es-ES") : null
@@ -291,13 +332,25 @@ export function ExplorerView() {
         <>
           {/* Combinaciones rentables */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between">
+            <div className="px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between gap-3">
               <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
                 Combinaciones Rentables (EV+)
               </h2>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
-                {profitable.length} oportunidades
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
+                  {profitable.length} oportunidades
+                </span>
+                {profitable.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleExportCSV}
+                    className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors cursor-pointer"
+                    title="Descargar CSV con todas las columnas"
+                  >
+                    ↓ CSV
+                  </button>
+                )}
+              </div>
             </div>
             <div className="overflow-y-auto max-h-80 divide-y divide-zinc-800/50">
               {profitable.length === 0 ? (
@@ -406,61 +459,141 @@ export function ExplorerView() {
             </div>
           </div>
 
-          {/* Scatter chart */}
+          {/* Scatter / Heatmap */}
           {filtered.length > 0 && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-3">
-                EV% por Minuto (tamaño = N apuestas)
-              </h2>
-              <ResponsiveContainer width="100%" height={280}>
-                <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis
-                    type="number" dataKey="x" domain={[10, 85]}
-                    label={{ value: "Minuto", position: "insideBottom", offset: -10, fill: "#71717a", fontSize: 11 }}
-                    tick={{ fill: "#71717a", fontSize: 11 }}
-                  />
-                  <YAxis
-                    type="number" dataKey="y"
-                    label={{ value: "EV%", angle: -90, position: "insideLeft", fill: "#71717a", fontSize: 11 }}
-                    tick={{ fill: "#71717a", fontSize: 11 }}
-                    tickFormatter={v => `${v}%`}
-                  />
-                  <ZAxis type="number" dataKey="z" range={[30, 500]} />
-                  <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 2" />
-                  <Tooltip
-                    cursor={{ strokeDasharray: "3 3" }}
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null
-                      const d = payload[0]?.payload as { x: number; y: number; z: number; cond: string; wr: number }
+              {/* Panel header con tab toggle */}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+                  {chartMode === "scatter" ? "EV% por Minuto (tamaño = N apuestas)" : "Heatmap EV% base — Minuto × Mercado"}
+                </h2>
+                <div className="flex rounded overflow-hidden border border-zinc-700 text-xs">
+                  {(["scatter", "heatmap"] as const).map(mode => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setChartMode(mode)}
+                      className={`px-3 py-1 font-medium transition-colors cursor-pointer
+                        ${chartMode === mode
+                          ? "bg-blue-600 text-white"
+                          : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"}`}
+                    >
+                      {mode === "scatter" ? "Scatter" : "Heatmap"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {chartMode === "scatter" ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                    <XAxis
+                      type="number" dataKey="x" domain={[10, 85]}
+                      label={{ value: "Minuto", position: "insideBottom", offset: -10, fill: "#71717a", fontSize: 11 }}
+                      tick={{ fill: "#71717a", fontSize: 11 }}
+                    />
+                    <YAxis
+                      type="number" dataKey="y"
+                      label={{ value: "EV%", angle: -90, position: "insideLeft", fill: "#71717a", fontSize: 11 }}
+                      tick={{ fill: "#71717a", fontSize: 11 }}
+                      tickFormatter={v => `${v}%`}
+                    />
+                    <ZAxis type="number" dataKey="z" range={[30, 500]} />
+                    <ReferenceLine y={0} stroke="#52525b" strokeDasharray="4 2" />
+                    <Tooltip
+                      cursor={{ strokeDasharray: "3 3" }}
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null
+                        const d = payload[0]?.payload as { x: number; y: number; z: number; cond: string; wr: number }
+                        return (
+                          <div className="bg-zinc-800 border border-zinc-700 rounded p-2 text-xs text-zinc-200 max-w-xs">
+                            <div className="font-medium mb-1">{d.cond}</div>
+                            <div>Minuto: {d.x}' · EV: {d.y > 0 ? "+" : ""}{d.y.toFixed(1)}%</div>
+                            <div>Win rate: {d.wr.toFixed(1)}% · N: {d.z}</div>
+                          </div>
+                        )
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                      formatter={(value) => TARGET_LABELS[value] ?? value}
+                    />
+                    {ALL_TARGETS.filter(t => targetFilter === "all" || t === targetFilter).map(target => {
+                      const data = scatterByTarget[target] ?? []
+                      if (data.length === 0) return null
                       return (
-                        <div className="bg-zinc-800 border border-zinc-700 rounded p-2 text-xs text-zinc-200 max-w-xs">
-                          <div className="font-medium mb-1">{d.cond}</div>
-                          <div>Minuto: {d.x}' · EV: {d.y > 0 ? "+" : ""}{d.y.toFixed(1)}%</div>
-                          <div>Win rate: {d.wr.toFixed(1)}% · N: {d.z}</div>
-                        </div>
+                        <Scatter
+                          key={target}
+                          name={target}
+                          data={data}
+                          fill={TARGET_COLORS[target]}
+                          fillOpacity={0.7}
+                        />
                       )
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-                    formatter={(value) => TARGET_LABELS[value] ?? value}
-                  />
-                  {ALL_TARGETS.filter(t => targetFilter === "all" || t === targetFilter).map(target => {
-                    const data = scatterByTarget[target] ?? []
-                    if (data.length === 0) return null
-                    return (
-                      <Scatter
-                        key={target}
-                        name={target}
-                        data={data}
-                        fill={TARGET_COLORS[target]}
-                        fillOpacity={0.7}
-                      />
-                    )
-                  })}
-                </ScatterChart>
-              </ResponsiveContainer>
+                    })}
+                  </ScatterChart>
+                </ResponsiveContainer>
+              ) : (
+                /* Heatmap: EV% sin filtro (tasa base pura) para cada mercado × minuto */
+                <div className="overflow-x-auto">
+                  <p className="text-[10px] text-zinc-600 mb-2">
+                    EV% apostando en cada mercado a cada minuto sin ninguna condición adicional (tasa base pura).
+                    Verde = EV positivo · Rojo = EV negativo · Gris = sin datos.
+                  </p>
+                  <table className="text-[10px] font-mono border-separate border-spacing-0.5">
+                    <thead>
+                      <tr>
+                        <th className="text-left text-zinc-600 pr-2 font-normal whitespace-nowrap">Mercado</th>
+                        {HM_MINUTES.map(m => (
+                          <th key={m} className="text-zinc-600 font-normal text-center w-10">{m}'</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {HM_TARGETS.map(target => {
+                        const rowData = heatmap[target] ?? {}
+                        return (
+                          <tr key={target}>
+                            <td className="pr-2 py-0.5 whitespace-nowrap">
+                              <span
+                                className="text-[10px] font-semibold"
+                                style={{ color: TARGET_COLORS[target] ?? "#71717a" }}
+                              >
+                                {TARGET_LABELS[target] ?? target}
+                              </span>
+                            </td>
+                            {HM_MINUTES.map(m => {
+                              const ev = rowData[m]
+                              const bg =
+                                ev === undefined ? "rgba(39,39,42,0.4)" :
+                                ev >= 0.15 ? "rgba(16,185,129,0.65)" :
+                                ev >= 0.05 ? "rgba(16,185,129,0.4)" :
+                                ev >= 0    ? "rgba(16,185,129,0.18)" :
+                                ev >= -0.1 ? "rgba(239,68,68,0.2)" :
+                                ev >= -0.3 ? "rgba(239,68,68,0.4)" :
+                                             "rgba(239,68,68,0.6)"
+                              const textColor =
+                                ev === undefined ? "#52525b" :
+                                ev >= 0 ? "#6ee7b7" : "#fca5a5"
+                              return (
+                                <td
+                                  key={m}
+                                  className="text-center w-10 h-7 rounded-sm tabular-nums"
+                                  style={{ backgroundColor: bg, color: textColor }}
+                                  title={ev !== undefined ? `${TARGET_LABELS[target]} @ ${m}': EV ${ev >= 0 ? "+" : ""}${(ev * 100).toFixed(1)}%` : "Sin datos"}
+                                >
+                                  {ev !== undefined ? `${ev >= 0 ? "+" : ""}${(ev * 100).toFixed(0)}` : ""}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
