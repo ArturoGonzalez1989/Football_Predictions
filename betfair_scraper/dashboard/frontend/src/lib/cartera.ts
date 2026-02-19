@@ -358,8 +358,10 @@ export function calcWorstStreak(bets: CarteraBet[]): { losses: number; from: num
 
 // ── Simulation ──────────────────────────────────────────────────────────
 
-export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: BankrollMode) {
-  const FLAT_STAKE = 10
+export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: BankrollMode, flatStake = 10) {
+  const FLAT_STAKE = flatStake
+  // b.pl is always calculated by backend with 10€ stake; scale to the chosen flatStake
+  const plScale = flatStake / 10
   const KELLY_MIN_BETS = 5
 
   let flatCum = 0
@@ -375,7 +377,7 @@ export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: 
 
   for (let i = 0; i < bets.length; i++) {
     const b = bets[i]
-    flatCum = round2(flatCum + b.pl)
+    flatCum = round2(flatCum + b.pl * plScale)
     flatCumArr.push(flatCum)
     if (b.won) flatWins++
 
@@ -425,7 +427,7 @@ export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: 
 
     const stake = round2(bankroll * stakePct)
     const ratio = stake / FLAT_STAKE
-    const managedBetPl = round2(b.pl * ratio)
+    const managedBetPl = round2(b.pl * plScale * ratio)
     bankroll = round2(bankroll + managedBetPl)
     if (bankroll > peakBankroll) peakBankroll = bankroll
     managedPl = round2(managedPl + managedBetPl)

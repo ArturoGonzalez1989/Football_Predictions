@@ -74,9 +74,22 @@ def _to_float(val: str) -> Optional[float]:
         return None
 
 
-def _last_valid_score_row(rows: list[dict]) -> Optional[dict]:
-    """Return the last row that has valid (numeric) goles_local and goles_visitante.
-    Skips trailing pre_partido rows that the scraper sometimes appends after a match ends."""
+def _final_result_row(rows: list[dict]) -> Optional[dict]:
+    """Return the row that represents the final match result.
+
+    Priority:
+    1. First row with estado_partido == 'finalizado' and valid scores.
+    2. Fallback: last row with any valid numeric scores (for older CSVs
+       that may lack an explicit 'finalizado' state).
+    """
+    # 1. Look for an explicit 'finalizado' row with valid scores
+    for row in rows:
+        if row.get("estado_partido", "").strip() == "finalizado":
+            gl = _to_float(row.get("goles_local", ""))
+            gv = _to_float(row.get("goles_visitante", ""))
+            if gl is not None and gv is not None:
+                return row
+    # 2. Fallback: last row with valid scores (skips trailing pre_partido rows)
     for row in reversed(rows):
         gl = _to_float(row.get("goles_local", ""))
         gv = _to_float(row.get("goles_visitante", ""))
@@ -1463,7 +1476,7 @@ def analyze_strategy_back_draw_00() -> dict:
         bfed = _to_float(trigger_row.get("BFED", "")) or _to_float(trigger_row.get("bfed_prematch", ""))
 
         # Final result — use last row with valid scores (skip trailing pre_partido rows)
-        last_row = _last_valid_score_row(rows)
+        last_row = _final_result_row(rows)
         if last_row is None:
             continue
         gl_final = _to_float(last_row.get("goles_local", ""))
@@ -1695,7 +1708,7 @@ def analyze_strategy_xg_underperformance() -> dict:
             continue
 
         # Final result — use last row with valid scores (skip trailing pre_partido rows)
-        last_row = _last_valid_score_row(rows)
+        last_row = _final_result_row(rows)
         if last_row is None:
             continue
         gl_final = _to_float(last_row.get("goles_local", ""))
@@ -3567,7 +3580,7 @@ def analyze_strategy_goal_clustering() -> dict:
             continue
 
         # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
-        last_row = _last_valid_score_row(rows)
+        last_row = _final_result_row(rows)
         if last_row is None:
             continue
         gl_final = _to_float(last_row.get("goles_local", ""))
@@ -3736,7 +3749,7 @@ def analyze_strategy_pressure_cooker() -> dict:
             continue
 
         # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
-        last_row = _last_valid_score_row(rows)
+        last_row = _final_result_row(rows)
         if last_row is None:
             continue
         gl_final = _to_float(last_row.get("goles_local", ""))
@@ -3918,7 +3931,7 @@ def analyze_strategy_tarde_asia() -> dict:
             continue
 
         # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
-        last_row = _last_valid_score_row(rows)
+        last_row = _final_result_row(rows)
         if last_row is None:
             continue
         gl_final = _to_float(last_row.get("goles_local", ""))
@@ -4143,7 +4156,7 @@ def analyze_strategy_momentum_xg(version: str = "v1") -> dict:
             continue
 
         # Resultado final — usar última fila con scores válidos (evitar filas pre_partido al final)
-        last_row = _last_valid_score_row(rows)
+        last_row = _final_result_row(rows)
         if last_row is None:
             continue
         gl_final = _to_float(last_row.get("goles_local", ""))

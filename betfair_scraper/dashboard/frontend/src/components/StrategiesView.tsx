@@ -137,6 +137,8 @@ function configToState(cfg: CarteraConfig) {
     tardeAsiaVer: (s?.tarde_asia?.enabled === true ? "v1" : v?.tarde_asia || "off") as TardeAsiaVersion,
     momentumXGVer: (s?.momentum_xg?.version || v?.momentum_xg || "off") as MomentumXGVersion,
     brMode: (cfg.bankroll_mode || "fixed") as BankrollMode,
+    flatStake: cfg.flat_stake ?? 10,
+    bankrollInit: cfg.initial_bankroll ?? 500,
     activePreset: (cfg.active_preset || null) as PresetKey,
     riskFilter: (cfg.risk_filter || "all") as RiskFilter,
     adjDedup: cfg.adjustments.dedup ?? true,
@@ -254,6 +256,8 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [tardeAsiaVer, setTardeAsiaVer] = useState<TardeAsiaVersion>(savedState?.tardeAsiaVer || "off")
   const [momentumXGVer, setMomentumXGVer] = useState<MomentumXGVersion>(savedState?.momentumXGVer || "off")
   const [brMode, setBrMode] = useState<BankrollMode>(savedState?.brMode || "fixed")
+  const [flatStake, setFlatStake] = useState<number>(savedState?.flatStake ?? 10)
+  const [bankrollInit, setBankrollInit] = useState<number>(savedState?.bankrollInit ?? 500)
   const [activePreset, setActivePreset] = useState<PresetKey>(savedState?.activePreset || null)
   const [adjDedup, setAdjDedup] = useState(savedState?.adjDedup !== undefined ? savedState.adjDedup : true)
   const [adjMaxOdds, setAdjMaxOdds] = useState(savedState?.adjMaxOdds || 6.0)
@@ -283,6 +287,8 @@ function CarteraTab({ data }: { data: Cartera }) {
         setTardeAsiaVer(s.tardeAsiaVer)
         setMomentumXGVer(s.momentumXGVer)
         setBrMode(s.brMode)
+        setFlatStake(s.flatStake)
+        setBankrollInit(s.bankrollInit)
         setActivePreset(s.activePreset)
         setRiskFilter(s.riskFilter)
         setAdjDedup(s.adjDedup)
@@ -330,6 +336,8 @@ function CarteraTab({ data }: { data: Cartera }) {
       momentum_xg: { version: momentumXGVer },
     },
     bankroll_mode: brMode,
+    flat_stake: flatStake,
+    initial_bankroll: bankrollInit,
     active_preset: activePreset,
     risk_filter: riskFilter,
     min_duration: minDur,
@@ -355,7 +363,7 @@ function CarteraTab({ data }: { data: Cartera }) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           drawParams, xgParams, driftParams, clusteringParams,
           pressureVer, tardeAsiaVer, momentumXGVer,
-          brMode, activePreset, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
+          brMode, flatStake, bankrollInit, activePreset, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
           adjSlippage, adjConflictFilter, adjCashout, adjCashoutMinute, riskFilter, minDur,
         }))
         setSaveStatus("saved")
@@ -389,10 +397,10 @@ function CarteraTab({ data }: { data: Cartera }) {
   }
 
   // Use CO-adjusted data when CO is active, otherwise original data
-  const { managed, bets } = (adjCashout && coData) ? coData : data
+  const { bets } = (adjCashout && coData) ? coData : data
 
   const applyPreset = (key: Exclude<PresetKey, null>) => {
-    const combo = findBestCombo(bets, managed.initial_bankroll, key, riskFilter)
+    const combo = findBestCombo(bets, bankrollInit, key, riskFilter)
     setDrawParams(drawVersionToParams(combo.draw))
     setXGParams(xgVersionToParams(combo.xg))
     setDriftParams(driftVersionToParams(combo.drift))
@@ -406,7 +414,6 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   // Run per-strategy grid search optimizer
   const runOptimizer = (strategy: string) => {
-    const bankrollInit = managed.initial_bankroll
     let results: OptimizeResult<any>[] = []
     if (strategy === "draw") {
       results = optimizeDrawParams(bets, xgParams, driftParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizerMinBets)
@@ -452,7 +459,7 @@ function CarteraTab({ data }: { data: Cartera }) {
   }
 
   // Recalculate simulations
-  const sim = simulateCartera(filteredBets, managed.initial_bankroll, brMode)
+  const sim = simulateCartera(filteredBets, bankrollInit, brMode, flatStake)
 
   // Per-strategy stats
   const stratConfigs = [
@@ -473,8 +480,8 @@ function CarteraTab({ data }: { data: Cartera }) {
         : b.strategy === s.key
     )
     const wins = sBets.filter(b => b.won).length
-    const pl = round2(sBets.reduce((sum, b) => sum + b.pl, 0))
-    const staked = sBets.length * 10
+    const pl = round2(sBets.reduce((sum, b) => sum + b.pl * flatStake / 10, 0))
+    const staked = sBets.length * flatStake
     return {
       ...s,
       bets: sBets.length,
@@ -621,6 +628,30 @@ function CarteraTab({ data }: { data: Cartera }) {
             </div>
             <div>
               <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Gestión Bankroll</div>
+              <div className="flex items-center gap-3 mb-2.5">
+                <label className="flex items-center gap-1.5 text-[11px] text-zinc-400" title="Bankroll inicial para la simulación de gestión">
+                  <span className="text-zinc-500">Bankroll</span>
+                  <input
+                    type="number"
+                    min={10} max={100000} step={50}
+                    value={bankrollInit}
+                    onChange={e => setBankrollInit(Math.max(10, Number(e.target.value)))}
+                    className="w-20 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 text-[11px] text-right focus:outline-none focus:border-zinc-500"
+                  />
+                  <span className="text-zinc-500">€</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-[11px] text-zinc-400" title="Stake fijo por apuesta para la simulación flat">
+                  <span className="text-zinc-500">Stake</span>
+                  <input
+                    type="number"
+                    min={1} max={10000} step={1}
+                    value={flatStake}
+                    onChange={e => setFlatStake(Math.max(1, Number(e.target.value)))}
+                    className="w-16 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 text-[11px] text-right focus:outline-none focus:border-zinc-500"
+                  />
+                  <span className="text-zinc-500">€</span>
+                </label>
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 {BANKROLL_MODES.map(m => (
                   <button
@@ -1148,7 +1179,7 @@ function CarteraTab({ data }: { data: Cartera }) {
         <MetricCard
           title="P/L Gestion"
           value={`${sim.managedPl >= 0 ? "+" : ""}${sim.managedPl.toFixed(2)} EUR`}
-          description={`ROI: ${sim.managedRoi >= 0 ? "+" : ""}${sim.managedRoi.toFixed(1)}% | ${BANKROLL_MODES.find(m => m.key === brMode)!.label} | ${sim.managedFinalBankroll.toFixed(0)}/${managed.initial_bankroll} EUR`}
+          description={`ROI: ${sim.managedRoi >= 0 ? "+" : ""}${sim.managedRoi.toFixed(1)}% | ${BANKROLL_MODES.find(m => m.key === brMode)!.label} | ${sim.managedFinalBankroll.toFixed(0)}/${bankrollInit} EUR`}
         />
       </div>
 
@@ -1321,8 +1352,8 @@ function CarteraTab({ data }: { data: Cartera }) {
             </div>
             {sim.managedMaxDd.maxDd > 0 && (
               <div className="text-[11px] text-zinc-500 mt-1 space-y-0.5">
-                <div>Bankroll de {round2(managed.initial_bankroll + sim.managedMaxDd.peak)} cayo a {round2(managed.initial_bankroll + sim.managedMaxDd.trough)} EUR</div>
-                <div>Apuestas #{sim.managedMaxDd.peakIdx + 1} a #{sim.managedMaxDd.troughIdx + 1} | Nunca bajo de {managed.initial_bankroll} EUR</div>
+                <div>Bankroll de {round2(bankrollInit + sim.managedMaxDd.peak)} cayo a {round2(bankrollInit + sim.managedMaxDd.trough)} EUR</div>
+                <div>Apuestas #{sim.managedMaxDd.peakIdx + 1} a #{sim.managedMaxDd.troughIdx + 1} | Nunca bajo de {bankrollInit} EUR</div>
               </div>
             )}
           </div>
@@ -1347,7 +1378,7 @@ function CarteraTab({ data }: { data: Cartera }) {
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-zinc-300 mb-1">P/L Acumulado - {selLabel}</h2>
           <p className="text-xs text-zinc-500 mb-4">
-            Flat (10 EUR) vs {BANKROLL_MODES.find(m => m.key === brMode)!.label} ({managed.initial_bankroll} EUR bankroll).
+            Flat ({flatStake} EUR) vs {BANKROLL_MODES.find(m => m.key === brMode)!.label} ({bankrollInit} EUR bankroll).
           </p>
           <ResponsiveContainer width="100%" height={280}>
             <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>

@@ -679,6 +679,8 @@ export interface CarteraConfig {
     momentum_xg?: string
   }
   bankroll_mode: string
+  flat_stake?: number
+  initial_bankroll?: number
   active_preset: string | null
   risk_filter: string
   min_duration: {

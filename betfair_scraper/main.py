@@ -1617,6 +1617,7 @@ class CSVWriter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._archivos_abiertos = {}
         self._writers = {}
+        self._finalizados: set = set()  # tab_ids cuyo partido ya llegó a 'finalizado'
         self._inicializar_unificado()
 
     def _inicializar_unificado(self):
@@ -1631,6 +1632,10 @@ class CSVWriter:
 
     def escribir(self, tab_id: str, datos: dict):
         """Escribe una fila al CSV individual del partido y al unificado."""
+        # Si el partido ya alcanzó 'finalizado' en esta sesión, no añadir más filas
+        if tab_id in self._finalizados:
+            return
+
         # CSV individual
         nombre = f"partido_{tab_id}.csv"
         ruta = self.output_dir / nombre
@@ -1673,6 +1678,10 @@ class CSVWriter:
 
         self._writers[tab_id].writerow(datos)
         self._archivos_abiertos[tab_id].flush()
+
+        # Si acabamos de escribir el estado finalizado, bloquear escrituras futuras
+        if datos.get("estado_partido", "").strip() == "finalizado":
+            self._finalizados.add(tab_id)
 
         # CSV unificado
         self._w_unificado.writerow(datos)
