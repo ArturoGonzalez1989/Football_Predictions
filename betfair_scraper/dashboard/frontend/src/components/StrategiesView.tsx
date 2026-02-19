@@ -467,19 +467,17 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   return (
     <div className="space-y-6">
-      {/* Strategy Selector */}
+      {/* ============ PANEL DE CONTROL ============ */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-base font-semibold text-zinc-200">Cartera de Estrategias</h2>
-            <p className="text-xs text-zinc-500 mt-1">
-              Elige estrategias, versiones y modo de gestion de bankroll.
+            <h2 className="text-sm font-semibold text-zinc-200">Cartera de Estrategias</h2>
+            <p className="text-[10px] text-zinc-500 mt-0.5">
+              {filteredBets.length} apuestas filtradas / {bets.length} totales
+              {realistic && removedCount > 0 && <span className="text-yellow-600/80 ml-1.5">· {removedCount} eliminadas por modo realista</span>}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-zinc-600 font-mono">
-              {filteredBets.length} apuestas filtradas / {bets.length} totales
-            </span>
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={saveFilters}
@@ -525,451 +523,74 @@ function CarteraTab({ data }: { data: Cartera }) {
             </button>
           </div>
         </div>
-        {/* Optimization Presets */}
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-2 mb-2">
-            {PRESETS.map(p => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => applyPreset(p.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                  activePreset === p.key
-                    ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm shadow-indigo-500/10"
-                    : "bg-zinc-800/50 text-zinc-500 border border-zinc-700/50 hover:text-zinc-300 hover:border-zinc-600"
-                }`}
-                title={p.desc}
-              >
-                <span className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold ${
-                  activePreset === p.key ? "bg-indigo-500/30 text-indigo-300" : "bg-zinc-700/50 text-zinc-500"
-                }`}>{p.icon}</span>
-                {p.label}
-              </button>
-            ))}
+        {/* 3-column control grid: Presets | Risk+Bankroll | Realistic */}
+        <div className="grid grid-cols-3 gap-6 pb-5 mb-5 border-b border-zinc-800">
+          {/* Col 1: Presets */}
+          <div>
+            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Presets</div>
+            <div className="flex flex-col gap-1.5">
+              {PRESETS.map(p => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => applyPreset(p.key)}
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all text-left ${
+                    activePreset === p.key
+                      ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm shadow-indigo-500/10"
+                      : "bg-zinc-800/50 text-zinc-500 border border-zinc-700/50 hover:text-zinc-300 hover:border-zinc-600"
+                  }`}
+                  title={p.desc}
+                >
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                    activePreset === p.key ? "bg-indigo-500/30 text-indigo-300" : "bg-zinc-700/50 text-zinc-500"
+                  }`}>{p.icon}</span>
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-0.5">
-            {PRESETS.map(p => (
-              <div key={p.key} className={`text-[10px] leading-4 ${activePreset === p.key ? "text-indigo-400" : "text-zinc-600"}`}>
-                <span className="font-medium">{p.label} ({p.icon})</span> — {p.desc}
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Risk Filter */}
-        <div className="mb-4 pb-4 border-b border-zinc-800">
-          <div className="flex items-center justify-between mb-2">
+          {/* Col 2: Risk Filter + Bankroll */}
+          <div className="space-y-4">
             <div>
-              <h3 className="text-xs font-semibold text-zinc-400 mb-0.5">Filtro de Riesgo</h3>
-              <p className="text-[10px] text-zinc-600">Analiza apuestas según tiempo restante y déficit</p>
-            </div>
-          </div>
-          <div className="flex gap-1.5 flex-wrap">
-            {[
-              { key: "all" as RiskFilter, label: "Todas", desc: "Mostrar todas las apuestas" },
-              { key: "no_risk" as RiskFilter, label: "Sin riesgo", desc: "Solo apuestas sin limitación de tiempo" },
-              { key: "with_risk" as RiskFilter, label: "Con riesgo", desc: "Apuestas con riesgo medio/alto" },
-              { key: "medium" as RiskFilter, label: "Riesgo medio", desc: "Solo riesgo medio" },
-              { key: "high" as RiskFilter, label: "Alto riesgo", desc: "Solo alto riesgo" },
-            ].map(r => (
-              <button
-                key={r.key}
-                type="button"
-                onClick={() => { setRiskFilter(r.key); setActivePreset(null) }}
-                className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                  riskFilter === r.key
-                    ? r.key === "all"
-                      ? "bg-zinc-700/70 text-zinc-300 border border-zinc-600"
-                      : r.key === "high"
-                      ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                      : r.key === "medium"
-                      ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
-                      : r.key === "with_risk"
-                      ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40"
-                      : "bg-green-500/20 text-green-400 border border-green-500/40"
-                    : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                }`}
-                title={r.desc}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {/* Back Empate versions */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Back Empate</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {DRAW_VERSIONS.map(v => (
+              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Filtro de Riesgo</div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { key: "all" as RiskFilter, label: "Todas", desc: "Mostrar todas las apuestas" },
+                  { key: "no_risk" as RiskFilter, label: "Sin riesgo", desc: "Solo apuestas sin limitación de tiempo" },
+                  { key: "with_risk" as RiskFilter, label: "Con riesgo", desc: "Apuestas con riesgo medio/alto" },
+                  { key: "medium" as RiskFilter, label: "Riesgo medio", desc: "Solo riesgo medio" },
+                  { key: "high" as RiskFilter, label: "Alto riesgo", desc: "Solo alto riesgo" },
+                ].map(r => (
                   <button
-                    key={v.key}
+                    key={r.key}
                     type="button"
-                    onClick={() => { setDrawVer(v.key === drawVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                      drawVer === v.key
-                        ? v.key === "off"
-                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
-                          : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                    onClick={() => { setRiskFilter(r.key); setActivePreset(null) }}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      riskFilter === r.key
+                        ? r.key === "all" ? "bg-zinc-700/70 text-zinc-300 border border-zinc-600"
+                          : r.key === "high" ? "bg-red-500/20 text-red-400 border border-red-500/40"
+                          : r.key === "medium" ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
+                          : r.key === "with_risk" ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40"
+                          : "bg-green-500/20 text-green-400 border border-green-500/40"
                         : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
                     }`}
-                    title={v.desc}
+                    title={r.desc}
                   >
-                    {v.label}
+                    {r.label}
                   </button>
                 ))}
               </div>
             </div>
-            {drawVer !== "off" && (
-              <>
-                <div className="ml-[140px] mt-1.5 text-[10px] text-cyan-400/70">
-                  {drawVer === "v1" && "→ Trigger: 0-0 al min 30+"}
-                  {drawVer === "v15" && "→ Trigger: 0-0 min 30+ | Filtros: xG combinado <0.6 + Posesion Dominante <25%"}
-                  {drawVer === "v2r" && "→ Trigger: 0-0 min 30+ | Filtros: xG <0.6 + PD <20% + Tiros <8"}
-                  {drawVer === "v2" && "→ Trigger: 0-0 min 30+ | Filtros: xG <0.5 + PD <20% + Tiros <8"}
-                  {drawVer === "v3" && "→ Trigger: 0-0 min 30+ | Filtros: xG <0.6 + PD <25% + Dominancia xG asimétrica"}
-                  {drawVer === "v4" && "→ Trigger: 0-0 min 30+ | Filtros: xG <0.6 + PD <20% + Tiros <8 + Opta gap ≤10"}
-                </div>
-                <div className="ml-[140px] mt-1 flex items-center gap-1.5">
-                  <span className="text-[10px] text-zinc-500 mr-0.5">Min. activa:</span>
-                  {MIN_DUR_OPTIONS.map((opt) => {
-                    const isActiveDur = minDur.draw === opt
-                    const isRecommended = opt === DEFAULT_MIN_DUR.draw
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, draw: opt })}
-                        title={isRecommended ? `${opt} capturas (recomendado por análisis)` : `${opt} capturas`}
-                        className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
-                          isActiveDur
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : isRecommended
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    )
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-          {/* xG Underperformance versions */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">xG Underperf</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {XG_CARTERA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setXgVer(v.key === xgVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                      xgVer === v.key
-                        ? v.key === "off"
-                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
-                          : "bg-amber-500/20 text-amber-400 border border-amber-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {xgVer !== "off" && (
-              <>
-                <div className="ml-[140px] mt-1.5 text-[10px] text-amber-400/70">
-                  {xgVer === "base" && "→ Trigger: Equipo PERDIENDO + xG_equipo - goles_equipo >= 0.5 (min 15+) | Apuesta: Back Over (total+0.5)"}
-                  {xgVer === "v2" && "→ Trigger: Equipo PERDIENDO + xG_equipo - goles_equipo >= 0.5 (min 15+) | Filtro: Tiros a puerta >= 2 | Apuesta: Back Over (total+0.5)"}
-                  {xgVer === "v3" && "→ V2 + Filtro anti-DD: Entrada antes del min 70 (las tardias pierden mas)"}
-                </div>
-                <div className="ml-[140px] mt-1 flex items-center gap-1.5">
-                  <span className="text-[10px] text-zinc-500 mr-0.5">Min. activa:</span>
-                  {MIN_DUR_OPTIONS.map((opt) => {
-                    const isActiveDur = minDur.xg === opt
-                    const isRecommended = opt === DEFAULT_MIN_DUR.xg
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, xg: opt })}
-                        title={isRecommended ? `${opt} capturas (recomendado por análisis)` : `${opt} capturas`}
-                        className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
-                          isActiveDur
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : isRecommended
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    )
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-          {/* Odds Drift versions */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Odds Drift</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {DRIFT_CARTERA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setDriftVer(v.key === driftVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                      driftVer === v.key
-                        ? v.key === "off"
-                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
-                          : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {driftVer !== "off" && (
-              <>
-                <div className="ml-[140px] mt-1.5 text-[10px] text-emerald-400/70">
-                  {driftVer === "v1" && "→ Trigger: Equipo ganando 1-0 + drift odds >= 25% | Apuesta: Back equipo (mantiene ventaja)"}
-                  {driftVer === "v2" && "→ Trigger: V1 + Total goles al trigger >= 2 | Apuesta: Back equipo"}
-                  {driftVer === "v3" && "→ Trigger: V1 + Drift >= 100% | Apuesta: Back equipo"}
-                  {driftVer === "v4" && "→ Trigger: V1 + Minuto >= 45 (2a parte) + Odds <= 5.0 | Apuesta: Back equipo"}
-                  {driftVer === "v5" && "→ V1 + Filtro anti-DD: Odds <= 5.0 (cuotas extremas pierden mas)"}
-                </div>
-                <div className="ml-[140px] mt-1 flex items-center gap-1.5">
-                  <span className="text-[10px] text-zinc-500 mr-0.5">Min. activa:</span>
-                  {MIN_DUR_OPTIONS.map((opt) => {
-                    const isActiveDur = minDur.drift === opt
-                    const isRecommended = opt === DEFAULT_MIN_DUR.drift
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, drift: opt })}
-                        title={isRecommended ? `${opt} capturas (recomendado por análisis)` : `${opt} capturas`}
-                        className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
-                          isActiveDur
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : isRecommended
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    )
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-          {/* Goal Clustering versions */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Goal Clustering</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {CLUSTERING_CARTERA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setClusteringVer(v.key === clusteringVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                      clusteringVer === v.key
-                        ? v.key === "off"
-                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
-                          : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {clusteringVer !== "off" && (
-              <>
-                <div className="ml-[140px] mt-1.5 text-[10px] text-rose-400/70">
-                  {clusteringVer === "v2" && "→ Trigger: Gol reciente (min 15-80) + SoT max >= 3 | Apuesta: Back Over (total+0.5)"}
-                  {clusteringVer === "v3" && "→ V2 + Filtro anti-DD: Entrada antes del min 60 (goles tardios = WR mas bajo)"}
-                </div>
-                <div className="ml-[140px] mt-1 flex items-center gap-1.5">
-                  <span className="text-[10px] text-zinc-500 mr-0.5">Min. activa:</span>
-                  {MIN_DUR_OPTIONS.map((opt) => {
-                    const isActiveDur = minDur.clustering === opt
-                    const isRecommended = opt === DEFAULT_MIN_DUR.clustering
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, clustering: opt })}
-                        title={isRecommended ? `${opt} capturas (recomendado por análisis)` : `${opt} capturas`}
-                        className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
-                          isActiveDur
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : isRecommended
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    )
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-          {/* Pressure Cooker versions */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Pressure Cooker</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {PRESSURE_CARTERA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setPressureVer(v.key === pressureVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                      pressureVer === v.key
-                        ? v.key === "off"
-                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
-                          : "bg-orange-500/20 text-orange-400 border border-orange-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {pressureVer !== "off" && (
-              <>
-                <div className="ml-[140px] mt-1.5 text-[10px] text-orange-400/70">
-                  {pressureVer === "v1" && "→ Trigger: Empate 1-1+ entre min 65-75 | Apuesta: Back Over (total+0.5)"}
-                </div>
-                <div className="ml-[140px] mt-1 flex items-center gap-1.5">
-                  <span className="text-[10px] text-zinc-500 mr-0.5">Min. activa:</span>
-                  {MIN_DUR_OPTIONS.map((opt) => {
-                    const isActiveDur = minDur.pressure === opt
-                    const isRecommended = opt === DEFAULT_MIN_DUR.pressure
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, pressure: opt })}
-                        title={isRecommended ? `${opt} capturas (recomendado por análisis)` : `${opt} capturas`}
-                        className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
-                          isActiveDur
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : isRecommended
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    )
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-          {/* Tarde Asia versions */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Tarde Asia <span className="text-[9px] text-zinc-600">({tardeAsiaBets.length})</span></span>
-              <div className="flex gap-1.5 flex-wrap">
-                {TARDE_ASIA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setTardeAsiaVer(v.key === tardeAsiaVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                      tardeAsiaVer === v.key
-                        ? v.key === "off"
-                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
-                          : "bg-blue-500/20 text-blue-400 border border-blue-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {tardeAsiaVer !== "off" && (
-              <div className="ml-[140px] mt-1.5 text-[10px] text-blue-400/70">
-                {tardeAsiaVer === "v1" && "→ Trigger: Tarde 14-20h + Liga Asia/Alemania/Francia | Apuesta: Back Over 2.5"}
-              </div>
-            )}
-          </div>
-          {/* Momentum x xG versions */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-violet-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Momentum x xG <span className="text-[9px] text-zinc-600">({momentumXGBets.length})</span></span>
-              <div className="flex gap-1.5 flex-wrap">
-                {MOMENTUM_XG_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setMomentumXGVer(v.key === momentumXGVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                      momentumXGVer === v.key
-                        ? v.key === "off"
-                          ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600"
-                          : "bg-violet-500/20 text-violet-400 border border-violet-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {momentumXGVer !== "off" && (
-              <div className="ml-[140px] mt-1.5 text-[10px] text-violet-400/70">
-                {momentumXGVer === "v1" && "→ Trigger: Equipo dominante (SoT ratio ≥1.1x) + xG underperf >0.15 + Min 10-80 | Apuesta: Back equipo"}
-                {momentumXGVer === "v2" && "→ Trigger: Equipo dominante (SoT ratio ≥1.05x) + xG underperf >0.1 + Min 5-85 | Apuesta: Back equipo"}
-              </div>
-            )}
-          </div>
-          {/* Bankroll mode */}
-          <div className="pt-2 mt-2 border-t border-zinc-800/50">
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Gestion</span>
-              <div className="flex gap-1.5 flex-wrap">
+            <div>
+              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Gestión Bankroll</div>
+              <div className="flex flex-wrap gap-1.5">
                 {BANKROLL_MODES.map(m => (
                   <button
                     key={m.key}
                     type="button"
                     onClick={() => { setBrMode(m.key); setActivePreset(null) }}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
                       brMode === m.key
                         ? "bg-purple-500/20 text-purple-400 border border-purple-500/40"
                         : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
@@ -982,44 +603,46 @@ function CarteraTab({ data }: { data: Cartera }) {
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Realistic Adjustments Panel */}
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setRealistic(!realistic)}
-              title="Activar modo realista"
-              className={`relative w-10 h-5 rounded-full transition-colors ${realistic ? "bg-yellow-500" : "bg-zinc-700"}`}
-            >
-              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${realistic ? "translate-x-5" : ""}`} />
-            </button>
-            <div>
-              <span className="text-sm font-semibold text-zinc-200">Modo Realista</span>
-              <span className="text-[10px] text-zinc-500 ml-2">
-                {realistic ? `ON — ${removedCount} apuestas filtradas de ${rawBets.length}` : "OFF — simulacion ideal sin ajustes"}
+          {/* Col 3: Modo Realista */}
+          <div>
+            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Modo Realista</div>
+            <div className="flex items-center gap-2.5 mb-2">
+              <button
+                type="button"
+                onClick={() => setRealistic(!realistic)}
+                title="Activar modo realista"
+                className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${realistic ? "bg-yellow-500" : "bg-zinc-700"}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${realistic ? "translate-x-5" : ""}`} />
+              </button>
+              <span className={`text-xs font-medium ${realistic ? "text-yellow-400" : "text-zinc-500"}`}>
+                {realistic ? "ON" : "OFF"}
               </span>
+              {realistic && (
+                <button
+                  type="button"
+                  onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true) }}
+                  className="text-[10px] text-yellow-600 hover:text-yellow-400 transition-colors ml-1"
+                >
+                  reset
+                </button>
+              )}
             </div>
+            <p className="text-[10px] text-zinc-600">
+              {realistic
+                ? (removedCount > 0 ? `${removedCount} apuestas filtradas de ${rawBets.length}` : `Sin filtros aplicados (${rawBets.length})`)
+                : "Simulación ideal sin ajustes de ejecución"}
+            </p>
           </div>
-          {realistic && (
-            <button
-              type="button"
-              onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true) }}
-              className="text-[10px] text-yellow-500/70 hover:text-yellow-400 transition-colors"
-            >
-              Reset defaults
-            </button>
-          )}
         </div>
+
+        {/* Realistic Adjustments — full-width row, only when enabled */}
         {realistic && (
-          <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mt-3">
-            {/* Dedup toggle */}
-            <div className="bg-zinc-800/40 rounded-lg p-3">
+          <div className="grid grid-cols-7 gap-2.5 pb-5 mb-5 border-b border-zinc-800">
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-zinc-400 font-medium">Deduplicar</span>
+                <span className="text-[10px] text-zinc-400 font-medium">Dedup</span>
                 <button
                   type="button"
                   onClick={() => setAdjDedup(!adjDedup)}
@@ -1029,29 +652,11 @@ function CarteraTab({ data }: { data: Cartera }) {
                   <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjDedup ? "translate-x-4" : ""}`} />
                 </button>
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Mismo mercado/partido = 1 apuesta</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">1 apuesta / mercado</p>
             </div>
-            {/* Max odds */}
-            <div className="bg-zinc-800/40 rounded-lg p-3">
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-zinc-400 font-medium">Max Odds</span>
-                <input
-                  type="number"
-                  value={adjMaxOdds}
-                  onChange={e => setAdjMaxOdds(parseFloat(e.target.value) || 6.0)}
-                  step="0.5"
-                  min="2"
-                  max="20"
-                  title="Max odds"
-                  className="w-14 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
-                />
-              </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &gt; X (sin liquidez)</p>
-            </div>
-            {/* Min value odds */}
-            <div className="bg-zinc-800/40 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-zinc-400 font-medium">Min Odds</span>
+                <span className="text-[10px] text-zinc-400 font-medium">Min Odds</span>
                 <input
                   type="number"
                   value={adjMinOdds}
@@ -1060,15 +665,30 @@ function CarteraTab({ data }: { data: Cartera }) {
                   min="1.01"
                   max="2"
                   title="Min odds"
-                  className="w-14 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
+                  className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
                 />
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &lt; X (sin valor)</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &lt; X</p>
             </div>
-            {/* Drift min minute */}
-            <div className="bg-zinc-800/40 rounded-lg p-3">
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-zinc-400 font-medium">Drift Min'</span>
+                <span className="text-[10px] text-zinc-400 font-medium">Max Odds</span>
+                <input
+                  type="number"
+                  value={adjMaxOdds}
+                  onChange={e => setAdjMaxOdds(parseFloat(e.target.value) || 6.0)}
+                  step="0.5"
+                  min="2"
+                  max="20"
+                  title="Max odds"
+                  className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
+                />
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &gt; X</p>
+            </div>
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-zinc-400 font-medium">Drift Min'</span>
                 <input
                   type="number"
                   value={adjDriftMinMin}
@@ -1077,16 +697,15 @@ function CarteraTab({ data }: { data: Cartera }) {
                   min="5"
                   max="45"
                   title="Minuto minimo drift"
-                  className="w-14 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
+                  className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
                 />
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Drift antes del min X = excluido</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">Drift &lt; min X excluido</p>
             </div>
-            {/* Slippage */}
-            <div className="bg-zinc-800/40 rounded-lg p-3">
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-zinc-400 font-medium">Slippage</span>
-                <div className="flex items-center gap-1">
+                <span className="text-[10px] text-zinc-400 font-medium">Slippage</span>
+                <div className="flex items-center gap-0.5">
                   <input
                     type="number"
                     value={adjSlippage}
@@ -1095,17 +714,16 @@ function CarteraTab({ data }: { data: Cartera }) {
                     min="0"
                     max="10"
                     title="Porcentaje de slippage"
-                    className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-[11px] text-yellow-400 text-right"
+                    className="w-10 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
                   />
-                  <span className="text-[10px] text-zinc-500">%</span>
+                  <span className="text-[9px] text-zinc-500">%</span>
                 </div>
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Reduce odds X% (ejecucion real)</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">Reduce odds X%</p>
             </div>
-            {/* Conflict filter */}
-            <div className="bg-red-950/20 border border-red-900/30 rounded-lg p-3">
+            <div className="bg-red-950/20 border border-red-900/30 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-red-400/80 font-medium">Anti-conflicto</span>
+                <span className="text-[10px] text-red-400/80 font-medium">Anti-conf</span>
                 <button
                   type="button"
                   onClick={() => setAdjConflictFilter(!adjConflictFilter)}
@@ -1115,12 +733,11 @@ function CarteraTab({ data }: { data: Cartera }) {
                   <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjConflictFilter ? "translate-x-4" : ""}`} />
                 </button>
               </div>
-              <p className="text-[9px] text-red-900/80 leading-tight">MomXG + xGUnderf = 0% WR</p>
+              <p className="text-[9px] text-red-900/80 leading-tight">MomXG+xGUnd=0%WR</p>
             </div>
-            {/* Cashout simulation */}
-            <div className="bg-cyan-950/20 border border-cyan-900/30 rounded-lg p-3">
+            <div className="bg-cyan-950/20 border border-cyan-900/30 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-cyan-400/80 font-medium">Cash-out</span>
+                <span className="text-[10px] text-cyan-400/80 font-medium">Cash-out</span>
                 <button
                   type="button"
                   onClick={() => setAdjCashout(!adjCashout)}
@@ -1131,7 +748,7 @@ function CarteraTab({ data }: { data: Cartera }) {
                 </button>
               </div>
               {adjCashout ? (
-                <div className="flex items-center gap-1 mt-1">
+                <div className="flex items-center gap-0.5 mt-1">
                   {[60, 70, 80].map(m => (
                     <button
                       key={m}
@@ -1145,15 +762,17 @@ function CarteraTab({ data }: { data: Cartera }) {
                   {coLoading && <span className="text-[9px] text-cyan-500 animate-pulse ml-1">...</span>}
                 </div>
               ) : (
-                <p className="text-[9px] text-cyan-900/80 leading-tight">Lay en perdedoras (~min70)</p>
+                <p className="text-[9px] text-cyan-900/80 leading-tight">Lay perdedoras ~min70</p>
               )}
             </div>
           </div>
         )}
+
+        {/* Ideal vs Realistic comparison */}
         {realistic && idealSim && (
-          <div className="mt-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3">
+          <div className="mb-5 bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">Comparacion Ideal vs Realista</span>
+              <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">Comparación Ideal vs Realista</span>
             </div>
             <div className="grid grid-cols-4 gap-4 text-center">
               <div>
@@ -1175,6 +794,300 @@ function CarteraTab({ data }: { data: Cartera }) {
             </div>
           </div>
         )}
+
+        {/* Estrategias y Versiones */}
+        <div>
+          <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-3">Estrategias y Versiones</div>
+          <div className="space-y-2">
+
+            {/* Back Empate */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-cyan-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Back Empate</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {DRAW_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setDrawVer(v.key === drawVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                      drawVer === v.key
+                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {drawVer !== "off" && (
+                <>
+                  <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
+                  <span className="text-[10px] text-zinc-600 shrink-0">min</span>
+                  <div className="flex gap-1">
+                    {MIN_DUR_OPTIONS.map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => updateMinDur({ ...minDur, draw: opt })}
+                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.draw ? " (recomendado)" : ""}`}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
+                          minDur.draw === opt
+                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
+                            : opt === DEFAULT_MIN_DUR.draw
+                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
+                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* xG Underperformance */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">xG Underperf</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {XG_CARTERA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setXgVer(v.key === xgVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                      xgVer === v.key
+                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {xgVer !== "off" && (
+                <>
+                  <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
+                  <span className="text-[10px] text-zinc-600 shrink-0">min</span>
+                  <div className="flex gap-1">
+                    {MIN_DUR_OPTIONS.map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => updateMinDur({ ...minDur, xg: opt })}
+                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.xg ? " (recomendado)" : ""}`}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
+                          minDur.xg === opt
+                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
+                            : opt === DEFAULT_MIN_DUR.xg
+                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
+                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Odds Drift */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Odds Drift</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {DRIFT_CARTERA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setDriftVer(v.key === driftVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                      driftVer === v.key
+                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {driftVer !== "off" && (
+                <>
+                  <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
+                  <span className="text-[10px] text-zinc-600 shrink-0">min</span>
+                  <div className="flex gap-1">
+                    {MIN_DUR_OPTIONS.map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => updateMinDur({ ...minDur, drift: opt })}
+                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.drift ? " (recomendado)" : ""}`}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
+                          minDur.drift === opt
+                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
+                            : opt === DEFAULT_MIN_DUR.drift
+                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
+                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Goal Clustering */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Goal Clustering</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {CLUSTERING_CARTERA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setClusteringVer(v.key === clusteringVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                      clusteringVer === v.key
+                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {clusteringVer !== "off" && (
+                <>
+                  <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
+                  <span className="text-[10px] text-zinc-600 shrink-0">min</span>
+                  <div className="flex gap-1">
+                    {MIN_DUR_OPTIONS.map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => updateMinDur({ ...minDur, clustering: opt })}
+                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.clustering ? " (recomendado)" : ""}`}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
+                          minDur.clustering === opt
+                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
+                            : opt === DEFAULT_MIN_DUR.clustering
+                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
+                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Pressure Cooker */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Pressure Cooker</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {PRESSURE_CARTERA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setPressureVer(v.key === pressureVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                      pressureVer === v.key
+                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-orange-500/20 text-orange-400 border border-orange-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {pressureVer !== "off" && (
+                <>
+                  <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
+                  <span className="text-[10px] text-zinc-600 shrink-0">min</span>
+                  <div className="flex gap-1">
+                    {MIN_DUR_OPTIONS.map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => updateMinDur({ ...minDur, pressure: opt })}
+                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.pressure ? " (recomendado)" : ""}`}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
+                          minDur.pressure === opt
+                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
+                            : opt === DEFAULT_MIN_DUR.pressure
+                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
+                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Tarde Asia */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Tarde Asia <span className="text-[9px] text-zinc-600">({tardeAsiaBets.length})</span></span>
+              <div className="flex gap-1.5 flex-wrap">
+                {TARDE_ASIA_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setTardeAsiaVer(v.key === tardeAsiaVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                      tardeAsiaVer === v.key
+                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-blue-500/20 text-blue-400 border border-blue-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Momentum x xG */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />
+              <span className="text-xs text-zinc-400 w-28 shrink-0">Momentum x xG <span className="text-[9px] text-zinc-600">({momentumXGBets.length})</span></span>
+              <div className="flex gap-1.5 flex-wrap">
+                {MOMENTUM_XG_VERSIONS.map(v => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => { setMomentumXGVer(v.key === momentumXGVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                      momentumXGVer === v.key
+                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-violet-500/20 text-violet-400 border border-violet-500/40"
+                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
+                    }`}
+                    title={v.desc}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
 
       {/* Summary Cards */}
