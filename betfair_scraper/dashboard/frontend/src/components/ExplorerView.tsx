@@ -352,6 +352,19 @@ export function ExplorerView() {
                 )}
               </div>
             </div>
+            {/* Cabecera de columnas */}
+            <div className="flex items-center gap-3 px-4 py-1.5 border-b border-zinc-800 bg-zinc-950/50">
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide w-5 text-right shrink-0">#</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide flex-1 min-w-0">Condición</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 w-24 text-center">Mercado</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 w-8 text-center">Tipo</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 w-6 text-right">Min</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 tabular-nums w-8 text-right">N</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 tabular-nums w-9 text-right">WR%</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 tabular-nums w-10 text-right">Odds</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 tabular-nums w-16 text-right">EV%</span>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wide shrink-0 tabular-nums w-14 text-right">P/L</span>
+            </div>
             <div className="overflow-y-auto max-h-80 divide-y divide-zinc-800/50">
               {profitable.length === 0 ? (
                 <div className="px-4 py-6 text-center text-zinc-600 text-xs">
