@@ -180,7 +180,7 @@ export function ExplorerView() {
       r.n_matches >= minBets &&
       r.ev_pct * 100 >= minEVFilter &&
       (targetFilter === "all" || r.target === targetFilter) &&
-      (betTypeFilter === "all" || r.bet_type === betTypeFilter) &&
+      (betTypeFilter === "all" || (r.bet_type ?? "back") === betTypeFilter) &&
       r.minute >= minuteMin &&
       r.minute <= minuteMax
     )
@@ -196,7 +196,7 @@ export function ExplorerView() {
     .filter(r =>
       r.n_matches >= minBets &&
       (targetFilter === "all" || r.target === targetFilter) &&
-      (betTypeFilter === "all" || r.bet_type === betTypeFilter)
+      (betTypeFilter === "all" || (r.bet_type ?? "back") === betTypeFilter)
     )
     .sort((a, b) => b.ev_pct - a.ev_pct)
     .slice(0, 3)

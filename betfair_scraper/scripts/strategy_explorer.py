@@ -396,9 +396,13 @@ def run_strategy_exploration(
             "total_pl":        round(total_pl, 2),
         })
 
-    # Ordenar por EV% descendente, recortar
-    results.sort(key=lambda r: r["ev_pct"], reverse=True)
-    results = results[:max_results]
+    # Separar por tipo, tomar top max_results de cada uno para que ambos aparezcan
+    # (las apuestas back con odds altas dominan el top si se ordena todo junto)
+    back_res = sorted([r for r in results if r["bet_type"] == "back"],
+                      key=lambda r: r["ev_pct"], reverse=True)[:max_results]
+    lay_res  = sorted([r for r in results if r["bet_type"] == "lay"],
+                      key=lambda r: r["ev_pct"], reverse=True)[:max_results]
+    results = sorted(back_res + lay_res, key=lambda r: r["ev_pct"], reverse=True)
 
     output = {
         "run_at":           datetime.now(timezone.utc).isoformat(),
