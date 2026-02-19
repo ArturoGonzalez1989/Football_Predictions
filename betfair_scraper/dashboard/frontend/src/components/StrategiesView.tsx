@@ -4,11 +4,15 @@ import {
   type DrawVersion, type XGCarteraVersion, type DriftCarteraVersion,
   type ClusteringCarteraVersion, type PressureCarteraVersion, type TardeAsiaVersion, type MomentumXGVersion,
   type BankrollMode, type PresetKey,
-  PRESETS, DRAW_VERSIONS, XG_CARTERA_VERSIONS, DRIFT_CARTERA_VERSIONS,
-  CLUSTERING_CARTERA_VERSIONS, PRESSURE_CARTERA_VERSIONS, TARDE_ASIA_VERSIONS, MOMENTUM_XG_VERSIONS, BANKROLL_MODES,
+  PRESETS, PRESSURE_CARTERA_VERSIONS, TARDE_ASIA_VERSIONS, MOMENTUM_XG_VERSIONS, BANKROLL_MODES,
   round2,
+  type DrawFilterParams, type XGFilterParams, type DriftFilterParams, type ClusteringFilterParams,
+  DEFAULT_DRAW_PARAMS, DEFAULT_XG_PARAMS, DEFAULT_DRIFT_PARAMS, DEFAULT_CLUSTERING_PARAMS,
+  drawVersionToParams, xgVersionToParams, driftVersionToParams, clusteringVersionToParams,
   filterDrawBets, filterXGBets, filterDriftBets, filterClusteringBets, filterPressureBets, filterTardeAsiaBets, filterMomentumXGBets,
   simulateCartera, findBestCombo, getBetOdds,
+  type OptimizeCriterion, type OptimizeResult,
+  optimizeDrawParams, optimizeXGParams, optimizeDriftParams, optimizeClusteringParams,
   type RealisticAdjustments,
   applyRealisticAdjustments,
   type RiskFilter, filterByRisk, analyzeRiskBreakdown,
@@ -104,14 +108,34 @@ const MIN_DUR_OPTIONS = [1, 2, 3, 4, 5]
 
 /** Convert backend CarteraConfig to local component state shape */
 function configToState(cfg: CarteraConfig) {
+  // Read strategy params (new format) or fall back to legacy versions → params conversion
+  const s = cfg.strategies
+  const v = cfg.versions
+
+  const drawParams: DrawFilterParams = s?.draw
+    ? { enabled: s.draw.enabled, xgMax: s.draw.xgMax, possMax: s.draw.possMax, shotsMax: s.draw.shotsMax, xgDomAsym: s.draw.xgDomAsym }
+    : drawVersionToParams((v?.draw || "v1") as DrawVersion)
+
+  const xgParams: XGFilterParams = s?.xg
+    ? { enabled: s.xg.enabled, sotMin: s.xg.sotMin, minuteMax: s.xg.minuteMax }
+    : xgVersionToParams((v?.xg || "base") as XGCarteraVersion)
+
+  const driftParams: DriftFilterParams = s?.drift
+    ? { enabled: s.drift.enabled, goalDiffMin: s.drift.goalDiffMin, driftMin: s.drift.driftMin, oddsMax: s.drift.oddsMax, minuteMin: s.drift.minuteMin, momGapMin: s.drift.momGapMin }
+    : driftVersionToParams((v?.drift || "v1") as DriftCarteraVersion)
+
+  const clusteringParams: ClusteringFilterParams = s?.clustering
+    ? { enabled: s.clustering.enabled, minuteMax: s.clustering.minuteMax, xgRemMin: s.clustering.xgRemMin }
+    : clusteringVersionToParams((v?.clustering || "v2") as ClusteringCarteraVersion)
+
   return {
-    drawVer: (cfg.versions.draw || "v1") as DrawVersion,
-    xgVer: (cfg.versions.xg || "base") as XGCarteraVersion,
-    driftVer: (cfg.versions.drift || "v1") as DriftCarteraVersion,
-    clusteringVer: (cfg.versions.clustering || "v2") as ClusteringCarteraVersion,
-    pressureVer: (cfg.versions.pressure || "v1") as PressureCarteraVersion,
-    tardeAsiaVer: (cfg.versions.tarde_asia || "off") as TardeAsiaVersion,
-    momentumXGVer: (cfg.versions.momentum_xg || "off") as MomentumXGVersion,
+    drawParams,
+    xgParams,
+    driftParams,
+    clusteringParams,
+    pressureVer: (s?.pressure?.enabled === false ? "off" : v?.pressure || "v1") as PressureCarteraVersion,
+    tardeAsiaVer: (s?.tarde_asia?.enabled === true ? "v1" : v?.tarde_asia || "off") as TardeAsiaVersion,
+    momentumXGVer: (s?.momentum_xg?.version || v?.momentum_xg || "off") as MomentumXGVersion,
     brMode: (cfg.bankroll_mode || "fixed") as BankrollMode,
     activePreset: (cfg.active_preset || null) as PresetKey,
     riskFilter: (cfg.risk_filter || "all") as RiskFilter,
@@ -218,10 +242,15 @@ function getBetType(bet: CarteraBet): string {
 }
 
 function CarteraTab({ data }: { data: Cartera }) {
-  const [drawVer, setDrawVer] = useState<DrawVersion>(savedState?.drawVer || "v1")
-  const [xgVer, setXgVer] = useState<XGCarteraVersion>(savedState?.xgVer || "base")
-  const [driftVer, setDriftVer] = useState<DriftCarteraVersion>(savedState?.driftVer || "v1")
-  const [clusteringVer, setClusteringVer] = useState<ClusteringCarteraVersion>(savedState?.clusteringVer || "v2")
+  const [drawParams, setDrawParams] = useState<DrawFilterParams>(savedState?.drawParams || DEFAULT_DRAW_PARAMS)
+  const [xgParams, setXGParams] = useState<XGFilterParams>(savedState?.xgParams || DEFAULT_XG_PARAMS)
+  const [driftParams, setDriftParams] = useState<DriftFilterParams>(savedState?.driftParams || DEFAULT_DRIFT_PARAMS)
+  const [clusteringParams, setClusteringParams] = useState<ClusteringFilterParams>(savedState?.clusteringParams || DEFAULT_CLUSTERING_PARAMS)
+  // Optimizer state
+  const [optimizerOpen, setOptimizerOpen] = useState<string | null>(null)
+  const [optimizeCriterion, setOptimizeCriterion] = useState<OptimizeCriterion>("roi")
+  const [optimizerMinBets, setOptimizerMinBets] = useState(5)
+  const [optimizerResults, setOptimizerResults] = useState<{ strategy: string; results: OptimizeResult<any>[] } | null>(null)
   const [pressureVer, setPressureVer] = useState<PressureCarteraVersion>(savedState?.pressureVer || "v1")
   const [tardeAsiaVer, setTardeAsiaVer] = useState<TardeAsiaVersion>(savedState?.tardeAsiaVer || "off")
   const [momentumXGVer, setMomentumXGVer] = useState<MomentumXGVersion>(savedState?.momentumXGVer || "off")
@@ -247,10 +276,10 @@ function CarteraTab({ data }: { data: Cartera }) {
     api.getConfig()
       .then(cfg => {
         const s = configToState(cfg)
-        setDrawVer(s.drawVer)
-        setXgVer(s.xgVer)
-        setDriftVer(s.driftVer)
-        setClusteringVer(s.clusteringVer)
+        setDrawParams(s.drawParams)
+        setXGParams(s.xgParams)
+        setDriftParams(s.driftParams)
+        setClusteringParams(s.clusteringParams)
         setPressureVer(s.pressureVer)
         setTardeAsiaVer(s.tardeAsiaVer)
         setMomentumXGVer(s.momentumXGVer)
@@ -292,14 +321,14 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   /** Build CarteraConfig from current component state */
   const buildConfig = (): CarteraConfig => ({
-    versions: {
-      draw: drawVer,
-      xg: xgVer,
-      drift: driftVer,
-      clustering: clusteringVer,
-      pressure: pressureVer,
-      tarde_asia: tardeAsiaVer,
-      momentum_xg: momentumXGVer,
+    strategies: {
+      draw: { enabled: drawParams.enabled, xgMax: drawParams.xgMax, possMax: drawParams.possMax, shotsMax: drawParams.shotsMax, xgDomAsym: drawParams.xgDomAsym },
+      xg: { enabled: xgParams.enabled, sotMin: xgParams.sotMin, minuteMax: xgParams.minuteMax },
+      drift: { enabled: driftParams.enabled, goalDiffMin: driftParams.goalDiffMin, driftMin: driftParams.driftMin, oddsMax: isFinite(driftParams.oddsMax) ? driftParams.oddsMax : 999, minuteMin: driftParams.minuteMin, momGapMin: driftParams.momGapMin },
+      clustering: { enabled: clusteringParams.enabled, minuteMax: clusteringParams.minuteMax, xgRemMin: clusteringParams.xgRemMin },
+      pressure: { enabled: pressureVer !== "off" },
+      tarde_asia: { enabled: tardeAsiaVer !== "off" },
+      momentum_xg: { version: momentumXGVer },
     },
     bankroll_mode: brMode,
     active_preset: activePreset,
@@ -325,7 +354,8 @@ function CarteraTab({ data }: { data: Cartera }) {
       .then(() => {
         // Keep localStorage in sync as fallback
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          drawVer, xgVer, driftVer, clusteringVer, pressureVer, tardeAsiaVer, momentumXGVer,
+          drawParams, xgParams, driftParams, clusteringParams,
+          pressureVer, tardeAsiaVer, momentumXGVer,
           brMode, activePreset, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
           adjSlippage, adjConflictFilter, adjCashout, adjCashoutMinute, riskFilter, minDur,
         }))
@@ -337,10 +367,10 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   // Reset filters to defaults and save to backend
   const resetFilters = () => {
-    setDrawVer("v1")
-    setXgVer("base")
-    setDriftVer("v1")
-    setClusteringVer("v2")
+    setDrawParams({ ...DEFAULT_DRAW_PARAMS })
+    setXGParams({ ...DEFAULT_XG_PARAMS })
+    setDriftParams({ ...DEFAULT_DRIFT_PARAMS })
+    setClusteringParams({ ...DEFAULT_CLUSTERING_PARAMS })
     setPressureVer("v1")
     setTardeAsiaVer("off")
     setMomentumXGVer("off")
@@ -364,10 +394,10 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   const applyPreset = (key: Exclude<PresetKey, null>) => {
     const combo = findBestCombo(bets, managed.initial_bankroll, key, riskFilter)
-    setDrawVer(combo.draw)
-    setXgVer(combo.xg)
-    setDriftVer(combo.drift)
-    setClusteringVer(combo.clustering)
+    setDrawParams(drawVersionToParams(combo.draw))
+    setXGParams(xgVersionToParams(combo.xg))
+    setDriftParams(driftVersionToParams(combo.drift))
+    setClusteringParams(clusteringVersionToParams(combo.clustering))
     setPressureVer(combo.pressure)
     setTardeAsiaVer(combo.tardeAsia)
     setMomentumXGVer(combo.momentumXG)
@@ -375,11 +405,28 @@ function CarteraTab({ data }: { data: Cartera }) {
     setActivePreset(key)
   }
 
-  // Filter bets by selected versions, then re-sort chronologically
-  const drawBets = filterDrawBets(bets, drawVer)
-  const xgBets = filterXGBets(bets, xgVer)
-  const driftBets = filterDriftBets(bets, driftVer)
-  const clusteringBets = filterClusteringBets(bets, clusteringVer)
+  // Run per-strategy grid search optimizer
+  const runOptimizer = (strategy: string) => {
+    const bankrollInit = managed.initial_bankroll
+    let results: OptimizeResult<any>[] = []
+    if (strategy === "draw") {
+      results = optimizeDrawParams(bets, xgParams, driftParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+    } else if (strategy === "xg") {
+      results = optimizeXGParams(bets, drawParams, driftParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+    } else if (strategy === "drift") {
+      results = optimizeDriftParams(bets, drawParams, xgParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+    } else if (strategy === "clustering") {
+      results = optimizeClusteringParams(bets, drawParams, xgParams, driftParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+    }
+    setOptimizerResults({ strategy, results })
+    setOptimizerOpen(strategy)
+  }
+
+  // Filter bets by strategy params, then re-sort chronologically
+  const drawBets = filterDrawBets(bets, drawParams)
+  const xgBets = filterXGBets(bets, xgParams)
+  const driftBets = filterDriftBets(bets, driftParams)
+  const clusteringBets = filterClusteringBets(bets, clusteringParams)
   const pressureBets = filterPressureBets(bets, pressureVer)
   const tardeAsiaBets = filterTardeAsiaBets(bets, tardeAsiaVer)
   const momentumXGBets = filterMomentumXGBets(bets, momentumXGVer)
@@ -410,13 +457,13 @@ function CarteraTab({ data }: { data: Cartera }) {
 
   // Per-strategy stats
   const stratConfigs = [
-    { key: "back_draw_00", label: "Back Empate 0-0", bgClass: "bg-cyan-500", active: drawVer !== "off", verLabel: drawVer !== "off" ? DRAW_VERSIONS.find(v => v.key === drawVer)!.label : "" },
-    { key: "xg_underperformance", label: "xG Underperformance", bgClass: "bg-amber-500", active: xgVer !== "off", verLabel: xgVer !== "off" ? XG_CARTERA_VERSIONS.find(v => v.key === xgVer)!.label : "" },
-    { key: "odds_drift", label: "Odds Drift", bgClass: "bg-emerald-500", active: driftVer !== "off", verLabel: driftVer !== "off" ? DRIFT_CARTERA_VERSIONS.find(v => v.key === driftVer)!.label : "" },
-    { key: "goal_clustering", label: "Goal Clustering", bgClass: "bg-rose-500", active: clusteringVer !== "off", verLabel: clusteringVer !== "off" ? CLUSTERING_CARTERA_VERSIONS.find(v => v.key === clusteringVer)!.label : "" },
-    { key: "pressure_cooker", label: "Pressure Cooker", bgClass: "bg-orange-500", active: pressureVer !== "off", verLabel: pressureVer !== "off" ? PRESSURE_CARTERA_VERSIONS.find(v => v.key === pressureVer)!.label : "" },
-    { key: "tarde_asia", label: "Tarde Asia", bgClass: "bg-blue-500", active: tardeAsiaVer !== "off", verLabel: tardeAsiaVer !== "off" ? TARDE_ASIA_VERSIONS.find(v => v.key === tardeAsiaVer)!.label : "" },
-    { key: "momentum_xg", label: "Momentum x xG", bgClass: "bg-violet-500", active: momentumXGVer !== "off", verLabel: momentumXGVer !== "off" ? MOMENTUM_XG_VERSIONS.find(v => v.key === momentumXGVer)!.label : "" },
+    { key: "back_draw_00", label: "Back Empate 0-0", bgClass: "bg-cyan-500", active: drawParams.enabled },
+    { key: "xg_underperformance", label: "xG Underperformance", bgClass: "bg-amber-500", active: xgParams.enabled },
+    { key: "odds_drift", label: "Odds Drift", bgClass: "bg-emerald-500", active: driftParams.enabled },
+    { key: "goal_clustering", label: "Goal Clustering", bgClass: "bg-rose-500", active: clusteringParams.enabled },
+    { key: "pressure_cooker", label: "Pressure Cooker", bgClass: "bg-orange-500", active: pressureVer !== "off" },
+    { key: "tarde_asia", label: "Tarde Asia", bgClass: "bg-blue-500", active: tardeAsiaVer !== "off" },
+    { key: "momentum_xg", label: "Momentum x xG", bgClass: "bg-violet-500", active: momentumXGVer !== "off" },
   ]
 
   const stratStats = stratConfigs.filter(s => s.active).map(s => {
@@ -453,7 +500,7 @@ function CarteraTab({ data }: { data: Cartera }) {
     })
   }
 
-  const activeLabels = stratConfigs.filter(s => s.active).map(s => `${s.label} (${s.verLabel})`)
+  const activeLabels = stratConfigs.filter(s => s.active).map(s => s.label)
   const selLabel = activeLabels.length === 7 ? "Todas las estrategias" : activeLabels.length >= 3 ? `${activeLabels.length} estrategias` : activeLabels.length === 2 ? "2 estrategias" : activeLabels[0] || "Ninguna"
 
   return (
@@ -742,195 +789,258 @@ function CarteraTab({ data }: { data: Cartera }) {
           <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-3">Estrategias y Versiones</div>
           <div className="space-y-2">
 
-            {/* Back Empate */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Back Empate</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {DRAW_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setDrawVer(v.key === drawVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
-                      drawVer === v.key
-                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-              {drawVer !== "off" && (
-                <>
+            {/* ── Back Empate ── params: xgMax, possMax, shotsMax */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => { setDrawParams(p => ({ ...p, enabled: !p.enabled })); setActivePreset(null) }}
+                  className={`relative w-7 h-3.5 rounded-full transition-colors shrink-0 ${drawParams.enabled ? "bg-cyan-600" : "bg-zinc-700"}`}
+                  title={drawParams.enabled ? "Desactivar Back Empate" : "Activar Back Empate"}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${drawParams.enabled ? "translate-x-3.5" : ""}`} />
+                </button>
+                <span className="w-2 h-2 rounded-full bg-cyan-500 shrink-0" />
+                <span className="text-xs text-zinc-400 w-24 shrink-0">Back Empate</span>
+                {drawParams.enabled && (<>
+                  <span className="text-[10px] text-zinc-600 shrink-0">xG&lt;</span>
+                  <input type="number" min={0.3} max={1.0} step={0.05}
+                    value={drawParams.xgMax >= 1.0 ? "" : drawParams.xgMax}
+                    placeholder="∞"
+                    onChange={e => { setDrawParams(p => ({ ...p, xgMax: e.target.value === "" ? 1.0 : parseFloat(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">Pos&lt;</span>
+                  <input type="number" min={10} max={100} step={5}
+                    value={drawParams.possMax >= 100 ? "" : drawParams.possMax}
+                    placeholder="∞"
+                    onChange={e => { setDrawParams(p => ({ ...p, possMax: e.target.value === "" ? 100 : parseFloat(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">%</span>
+                  <span className="text-[10px] text-zinc-600 shrink-0">Tiros&lt;</span>
+                  <input type="number" min={4} max={20} step={1}
+                    value={drawParams.shotsMax >= 20 ? "" : drawParams.shotsMax}
+                    placeholder="∞"
+                    onChange={e => { setDrawParams(p => ({ ...p, shotsMax: e.target.value === "" ? 20 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
                   <div className="flex gap-1">
                     {MIN_DUR_OPTIONS.map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, draw: opt })}
-                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.draw ? " (recomendado)" : ""}`}
-                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
-                          minDur.draw === opt
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : opt === DEFAULT_MIN_DUR.draw
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
+                      <button key={opt} type="button" onClick={() => updateMinDur({ ...minDur, draw: opt })}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${minDur.draw === opt ? "bg-amber-500/25 text-amber-400 border border-amber-500/40" : opt === DEFAULT_MIN_DUR.draw ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40" : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"}`}
+                      >{opt}</button>
                     ))}
                   </div>
-                </>
+                  <button type="button" onClick={() => runOptimizer("draw")}
+                    title="Optimizar parámetros de Back Empate" className="ml-auto text-[10px] text-zinc-600 hover:text-amber-400 transition-colors">✦ opt</button>
+                </>)}
+              </div>
+              {/* Optimizer results panel for Back Empate */}
+              {optimizerOpen === "draw" && optimizerResults && (
+                <OptimizerPanel
+                  strategyKey="draw"
+                  results={optimizerResults.results}
+                  criterion={optimizeCriterion}
+                  minBets={optimizerMinBets}
+                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("draw") }}
+                  onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("draw") }}
+                  onApply={r => { setDrawParams(r.params as DrawFilterParams); setOptimizerOpen(null) }}
+                  onClose={() => setOptimizerOpen(null)}
+                  renderParams={r => {
+                    const p = r.params as DrawFilterParams
+                    return `xG<${p.xgMax >= 1.0 ? "∞" : p.xgMax} Pos<${p.possMax >= 100 ? "∞" : p.possMax}% Tiros<${p.shotsMax >= 20 ? "∞" : p.shotsMax}`
+                  }}
+                />
               )}
             </div>
 
-            {/* xG Underperformance */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">xG Underperf</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {XG_CARTERA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setXgVer(v.key === xgVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
-                      xgVer === v.key
-                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-amber-500/20 text-amber-400 border border-amber-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-              {xgVer !== "off" && (
-                <>
+            {/* ── xG Underperf ── params: sotMin, minuteMax */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  title={xgParams.enabled ? "Desactivar xG Underperf" : "Activar xG Underperf"}
+                  onClick={() => { setXGParams(p => ({ ...p, enabled: !p.enabled })); setActivePreset(null) }}
+                  className={`relative w-7 h-3.5 rounded-full transition-colors shrink-0 ${xgParams.enabled ? "bg-amber-600" : "bg-zinc-700"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${xgParams.enabled ? "translate-x-3.5" : ""}`} />
+                </button>
+                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                <span className="text-xs text-zinc-400 w-24 shrink-0">xG Underperf</span>
+                {xgParams.enabled && (<>
+                  <span className="text-[10px] text-zinc-600 shrink-0">SoT≥</span>
+                  <input type="number" min={0} max={5} step={1}
+                    title="SoT mínimo"
+                    placeholder="0"
+                    value={xgParams.sotMin}
+                    onChange={e => { setXGParams(p => ({ ...p, sotMin: parseInt(e.target.value) || 0 })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">Min&lt;</span>
+                  <input type="number" min={55} max={90} step={5}
+                    value={xgParams.minuteMax >= 90 ? "" : xgParams.minuteMax}
+                    placeholder="90"
+                    onChange={e => { setXGParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
                   <div className="flex gap-1">
                     {MIN_DUR_OPTIONS.map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, xg: opt })}
-                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.xg ? " (recomendado)" : ""}`}
-                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
-                          minDur.xg === opt
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : opt === DEFAULT_MIN_DUR.xg
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
+                      <button key={opt} type="button" onClick={() => updateMinDur({ ...minDur, xg: opt })}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${minDur.xg === opt ? "bg-amber-500/25 text-amber-400 border border-amber-500/40" : opt === DEFAULT_MIN_DUR.xg ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40" : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"}`}
+                      >{opt}</button>
                     ))}
                   </div>
-                </>
+                  <button type="button" onClick={() => runOptimizer("xg")}
+                    className="ml-auto text-[10px] text-zinc-600 hover:text-amber-400 transition-colors">✦ opt</button>
+                </>)}
+              </div>
+              {optimizerOpen === "xg" && optimizerResults && (
+                <OptimizerPanel
+                  strategyKey="xg"
+                  results={optimizerResults.results}
+                  criterion={optimizeCriterion}
+                  minBets={optimizerMinBets}
+                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("xg") }}
+                  onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("xg") }}
+                  onApply={r => { setXGParams(r.params as XGFilterParams); setOptimizerOpen(null) }}
+                  onClose={() => setOptimizerOpen(null)}
+                  renderParams={r => {
+                    const p = r.params as XGFilterParams
+                    return `SoT≥${p.sotMin} Min<${p.minuteMax >= 90 ? "∞" : p.minuteMax}`
+                  }}
+                />
               )}
             </div>
 
-            {/* Odds Drift */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Odds Drift</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {DRIFT_CARTERA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setDriftVer(v.key === driftVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
-                      driftVer === v.key
-                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-              {driftVer !== "off" && (
-                <>
+            {/* ── Odds Drift ── params: driftMin, oddsMax, goalDiffMin, minuteMin */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  title={driftParams.enabled ? "Desactivar Odds Drift" : "Activar Odds Drift"}
+                  onClick={() => { setDriftParams(p => ({ ...p, enabled: !p.enabled })); setActivePreset(null) }}
+                  className={`relative w-7 h-3.5 rounded-full transition-colors shrink-0 ${driftParams.enabled ? "bg-emerald-600" : "bg-zinc-700"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${driftParams.enabled ? "translate-x-3.5" : ""}`} />
+                </button>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-xs text-zinc-400 w-24 shrink-0">Odds Drift</span>
+                {driftParams.enabled && (<>
+                  <span className="text-[10px] text-zinc-600 shrink-0">Δ≥</span>
+                  <input type="number" min={30} max={200} step={10}
+                    value={driftParams.driftMin}
+                    onChange={e => { setDriftParams(p => ({ ...p, driftMin: parseInt(e.target.value) || 30 })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    title="Drift mínimo %"
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">%</span>
+                  <span className="text-[10px] text-zinc-600 shrink-0">Cuota≤</span>
+                  <input type="number" min={2} max={20} step={0.5}
+                    value={isFinite(driftParams.oddsMax) ? driftParams.oddsMax : ""}
+                    placeholder="∞"
+                    onChange={e => { setDriftParams(p => ({ ...p, oddsMax: e.target.value === "" ? Infinity : parseFloat(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">Goles≥</span>
+                  <input type="number" min={0} max={4} step={1}
+                    title="Goles diferencia mínima"
+                    placeholder="0"
+                    value={driftParams.goalDiffMin}
+                    onChange={e => { setDriftParams(p => ({ ...p, goalDiffMin: parseInt(e.target.value) || 0 })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
                   <div className="flex gap-1">
                     {MIN_DUR_OPTIONS.map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, drift: opt })}
-                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.drift ? " (recomendado)" : ""}`}
-                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
-                          minDur.drift === opt
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : opt === DEFAULT_MIN_DUR.drift
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
+                      <button key={opt} type="button" onClick={() => updateMinDur({ ...minDur, drift: opt })}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${minDur.drift === opt ? "bg-amber-500/25 text-amber-400 border border-amber-500/40" : opt === DEFAULT_MIN_DUR.drift ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40" : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"}`}
+                      >{opt}</button>
                     ))}
                   </div>
-                </>
+                  <button type="button" onClick={() => runOptimizer("drift")}
+                    className="ml-auto text-[10px] text-zinc-600 hover:text-amber-400 transition-colors">✦ opt</button>
+                </>)}
+              </div>
+              {optimizerOpen === "drift" && optimizerResults && (
+                <OptimizerPanel
+                  strategyKey="drift"
+                  results={optimizerResults.results}
+                  criterion={optimizeCriterion}
+                  minBets={optimizerMinBets}
+                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("drift") }}
+                  onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("drift") }}
+                  onApply={r => { setDriftParams(r.params as DriftFilterParams); setOptimizerOpen(null) }}
+                  onClose={() => setOptimizerOpen(null)}
+                  renderParams={r => {
+                    const p = r.params as DriftFilterParams
+                    return `Δ≥${p.driftMin}% Cuota≤${isFinite(p.oddsMax) ? p.oddsMax : "∞"} Goles≥${p.goalDiffMin}`
+                  }}
+                />
               )}
             </div>
 
-            {/* Goal Clustering */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-              <span className="text-xs text-zinc-400 w-28 shrink-0">Goal Clustering</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {CLUSTERING_CARTERA_VERSIONS.map(v => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => { setClusteringVer(v.key === clusteringVer && v.key !== "off" ? "off" : v.key); setActivePreset(null) }}
-                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
-                      clusteringVer === v.key
-                        ? v.key === "off" ? "bg-zinc-700/50 text-zinc-500 border border-zinc-600" : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
-                        : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                    }`}
-                    title={v.desc}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-              {clusteringVer !== "off" && (
-                <>
+            {/* ── Goal Clustering ── params: minuteMax, xgRemMin */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  title={clusteringParams.enabled ? "Desactivar Goal Clustering" : "Activar Goal Clustering"}
+                  onClick={() => { setClusteringParams(p => ({ ...p, enabled: !p.enabled })); setActivePreset(null) }}
+                  className={`relative w-7 h-3.5 rounded-full transition-colors shrink-0 ${clusteringParams.enabled ? "bg-rose-600" : "bg-zinc-700"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${clusteringParams.enabled ? "translate-x-3.5" : ""}`} />
+                </button>
+                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-xs text-zinc-400 w-24 shrink-0">Goal Clustering</span>
+                {clusteringParams.enabled && (<>
+                  <span className="text-[10px] text-zinc-600 shrink-0">Min&lt;</span>
+                  <input type="number" min={45} max={85} step={5}
+                    value={clusteringParams.minuteMax >= 80 ? "" : clusteringParams.minuteMax}
+                    placeholder="80"
+                    onChange={e => { setClusteringParams(p => ({ ...p, minuteMax: e.target.value === "" ? 80 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">xGrem≥</span>
+                  <input type="number" min={0} max={2} step={0.1}
+                    value={clusteringParams.xgRemMin === 0 ? "" : clusteringParams.xgRemMin}
+                    placeholder="0"
+                    onChange={e => { setClusteringParams(p => ({ ...p, xgRemMin: e.target.value === "" ? 0 : parseFloat(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
                   <div className="flex gap-1">
                     {MIN_DUR_OPTIONS.map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => updateMinDur({ ...minDur, clustering: opt })}
-                        title={`${opt} capturas${opt === DEFAULT_MIN_DUR.clustering ? " (recomendado)" : ""}`}
-                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${
-                          minDur.clustering === opt
-                            ? "bg-amber-500/25 text-amber-400 border border-amber-500/40"
-                            : opt === DEFAULT_MIN_DUR.clustering
-                              ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40"
-                              : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"
-                        }`}
-                      >
-                        {opt}
-                      </button>
+                      <button key={opt} type="button" onClick={() => updateMinDur({ ...minDur, clustering: opt })}
+                        className={`w-5 h-5 rounded text-[10px] font-bold transition-all ${minDur.clustering === opt ? "bg-amber-500/25 text-amber-400 border border-amber-500/40" : opt === DEFAULT_MIN_DUR.clustering ? "bg-zinc-800/80 text-amber-600 border border-amber-700/30 hover:border-amber-500/40" : "bg-zinc-800/50 text-zinc-600 border border-zinc-700/50 hover:text-zinc-400"}`}
+                      >{opt}</button>
                     ))}
                   </div>
-                </>
+                  <button type="button" onClick={() => runOptimizer("clustering")}
+                    className="ml-auto text-[10px] text-zinc-600 hover:text-amber-400 transition-colors">✦ opt</button>
+                </>)}
+              </div>
+              {optimizerOpen === "clustering" && optimizerResults && (
+                <OptimizerPanel
+                  strategyKey="clustering"
+                  results={optimizerResults.results}
+                  criterion={optimizeCriterion}
+                  minBets={optimizerMinBets}
+                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("clustering") }}
+                  onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("clustering") }}
+                  onApply={r => { setClusteringParams(r.params as ClusteringFilterParams); setOptimizerOpen(null) }}
+                  onClose={() => setOptimizerOpen(null)}
+                  renderParams={r => {
+                    const p = r.params as ClusteringFilterParams
+                    return `Min<${p.minuteMax >= 80 ? "∞" : p.minuteMax} xGrem≥${p.xgRemMin}`
+                  }}
+                />
               )}
             </div>
 
@@ -1269,7 +1379,9 @@ function CarteraTab({ data }: { data: Cartera }) {
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                formatter={(value: number, name: string) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                formatter={((value: number | undefined, name: string | undefined) => {
+                  if (value == null) return ["—", name ?? ""]
                   if (name === "managedPeak") return [`${value.toFixed(2)} EUR`, "Pico gestion"]
                   if (name === "flat") return [`${value.toFixed(2)} EUR`, "Flat (10 EUR)"]
                   if (name === "managed") {
@@ -1278,8 +1390,8 @@ function CarteraTab({ data }: { data: Cartera }) {
                     const modeLabel = BANKROLL_MODES.find(m => m.key === brMode)!.label
                     return [`${value.toFixed(2)} EUR${dd > 0.01 ? ` (DD: -${dd.toFixed(2)})` : ""}`, modeLabel]
                   }
-                  return [`${value.toFixed(2)} EUR`, name]
-                }}
+                  return [`${value.toFixed(2)} EUR`, name ?? ""]
+                }) as any}
                 labelFormatter={(label) => `Apuesta #${label}`}
               />
               <Legend
@@ -1324,7 +1436,7 @@ function CarteraTab({ data }: { data: Cartera }) {
             <div className="flex items-center gap-2 mb-2">
               <span className={`w-2.5 h-2.5 rounded-full ${s.bgClass}`} />
               <span className="text-sm font-medium text-zinc-200">{s.label}</span>
-              <span className="text-[10px] text-zinc-500 font-mono">{s.verLabel}</span>
+              <span className="text-[10px] text-zinc-500 font-mono">{s.bets} bets</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
@@ -1429,12 +1541,14 @@ function CarteraTab({ data }: { data: Cartera }) {
                       borderRadius: 8,
                       fontSize: 12,
                     }}
-                    formatter={(value: number, name: string) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    formatter={((value: number | undefined, name: string | undefined) => {
+                      if (value == null) return ["—", name ?? ""]
                       if (name === "pl") return [`${value.toFixed(2)} EUR`, "P/L"]
                       if (name === "roi") return [`${value.toFixed(1)}%`, "ROI"]
                       if (name === "winRate") return [`${value.toFixed(1)}%`, "Win Rate"]
-                      return [value, name]
-                    }}
+                      return [value, name ?? ""]
+                    }) as any}
                     labelFormatter={(label) => `Fecha: ${label}`}
                     content={({ active, payload }) => {
                       if (!active || !payload || !payload.length) return null
@@ -1815,6 +1929,81 @@ function CarteraTab({ data }: { data: Cartera }) {
       {filteredBets.length === 0 && (
         <div className="text-center py-12 text-zinc-500 text-sm">
           No hay apuestas en la cartera.
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Optimizer Results Panel ───────────────────────────────────────────────
+
+function OptimizerPanel({
+  strategyKey: _strategyKey,
+  results,
+  criterion,
+  minBets,
+  onChangeCriterion,
+  onChangeMinBets,
+  onApply,
+  onClose,
+  renderParams,
+}: {
+  strategyKey?: string
+  results: OptimizeResult<any>[]
+  criterion: OptimizeCriterion
+  minBets: number
+  onChangeCriterion: (c: OptimizeCriterion) => void
+  onChangeMinBets: (n: number) => void
+  onApply: (r: OptimizeResult<any>) => void
+  onClose: () => void
+  renderParams: (r: OptimizeResult<any>) => string
+}) {
+  const criterionOpts: { key: OptimizeCriterion; label: string }[] = [
+    { key: "roi", label: "Max ROI" },
+    { key: "pl", label: "Max P/L" },
+    { key: "wr", label: "Max WR" },
+    { key: "min_dd", label: "Min DD" },
+  ]
+
+  return (
+    <div className="ml-9 bg-zinc-900/70 border border-amber-900/30 rounded-lg p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-amber-500/80 font-semibold uppercase tracking-wider">Optimizador</span>
+          <div className="flex gap-1">
+            {criterionOpts.map(c => (
+              <button key={c.key} type="button" onClick={() => onChangeCriterion(c.key)}
+                className={`px-1.5 py-0.5 rounded text-[9px] transition-colors ${criterion === c.key ? "bg-amber-600/30 text-amber-400 border border-amber-600/40" : "bg-zinc-800 text-zinc-500 border border-zinc-700 hover:text-zinc-400"}`}
+              >{c.label}</button>
+            ))}
+          </div>
+          <span className="text-[9px] text-zinc-600 shrink-0">mín bets</span>
+          <input type="number" min={1} max={50} step={1} title="Mínimo de apuestas" placeholder="5"
+            value={minBets}
+            onChange={e => onChangeMinBets(parseInt(e.target.value) || 1)}
+            className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[9px] text-zinc-300 text-center"
+          />
+        </div>
+        <button type="button" onClick={onClose} title="Cerrar" className="text-zinc-600 hover:text-zinc-400 text-[10px] transition-colors">✕</button>
+      </div>
+      {results.length === 0 ? (
+        <div className="text-[10px] text-zinc-500 py-2">Sin combinaciones con ≥{minBets} apuestas</div>
+      ) : (
+        <div className="space-y-1">
+          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 text-[9px] text-zinc-600 uppercase tracking-wider pb-1 border-b border-zinc-800">
+            <span>Params</span><span className="text-right">ROI</span><span className="text-right">P/L</span><span className="text-right">WR</span><span className="text-right">N</span><span></span>
+          </div>
+          {results.map((r, i) => (
+            <div key={i} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center py-0.5 hover:bg-zinc-800/30 rounded">
+              <span className="text-[9px] text-zinc-300 font-mono truncate">{renderParams(r)}</span>
+              <span className={`text-[9px] text-right font-mono ${r.roi >= 0 ? "text-emerald-400" : "text-red-400"}`}>{r.roi >= 0 ? "+" : ""}{r.roi.toFixed(1)}%</span>
+              <span className={`text-[9px] text-right font-mono ${r.pl >= 0 ? "text-emerald-400" : "text-red-400"}`}>{r.pl >= 0 ? "+" : ""}{r.pl.toFixed(1)}</span>
+              <span className="text-[9px] text-right text-zinc-400">{r.wr.toFixed(0)}%</span>
+              <span className="text-[9px] text-right text-zinc-500">{r.nBets}</span>
+              <button type="button" onClick={() => onApply(r)}
+                className="text-[9px] text-amber-600 hover:text-amber-400 transition-colors whitespace-nowrap">Aplicar</button>
+            </div>
+          ))}
         </div>
       )}
     </div>

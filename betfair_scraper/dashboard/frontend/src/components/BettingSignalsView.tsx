@@ -103,14 +103,16 @@ export function BettingSignalsView() {
     api.getConfig()
       .then(cfg => {
         setActiveConfig(cfg)
+        const v = cfg.versions ?? {}
+        const s = cfg.strategies ?? {}
         const newCombo: VersionCombo = {
-          draw: cfg.versions.draw as any,
-          xg: cfg.versions.xg as any,
-          drift: cfg.versions.drift as any,
-          clustering: cfg.versions.clustering as any,
-          pressure: cfg.versions.pressure as any,
-          tardeAsia: cfg.versions.tarde_asia as any,
-          momentumXG: cfg.versions.momentum_xg as any,
+          draw: (v.draw || (s.draw?.enabled === false ? "off" : "v1")) as any,
+          xg: (v.xg || (s.xg?.enabled === false ? "off" : "base")) as any,
+          drift: (v.drift || (s.drift?.enabled === false ? "off" : "v1")) as any,
+          clustering: (v.clustering || (s.clustering?.enabled === false ? "off" : "v2")) as any,
+          pressure: (v.pressure || (s.pressure?.enabled === false ? "off" : "v1")) as any,
+          tardeAsia: (v.tarde_asia || (s.tarde_asia?.enabled ? "v1" : "off")) as any,
+          momentumXG: (s.momentum_xg?.version || v.momentum_xg || "off") as any,
           br: cfg.bankroll_mode as any,
         }
         const newMinDur: MinDurConfig = {
@@ -417,16 +419,44 @@ function ActiveCriteriaBlock({
         )}
       </div>
 
-      {/* Adjustments summary */}
-      {adj?.enabled && (
-        <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex flex-wrap gap-x-3 gap-y-0.5">
-          <span className="text-[10px] text-zinc-500 font-medium">Ajustes:</span>
-          {adj.min_odds && <span className="text-[10px] text-zinc-600">Odds mín {adj.min_odds}</span>}
-          {adj.max_odds && <span className="text-[10px] text-zinc-600">· Odds máx {adj.max_odds}</span>}
-          {adj.slippage_pct > 0 && <span className="text-[10px] text-zinc-600">· Slippage {adj.slippage_pct}%</span>}
-          {adj.dedup && <span className="text-[10px] text-zinc-600">· Dedup</span>}
-          {adj.conflict_filter && <span className="text-[10px] text-zinc-600">· Anti-conflicto</span>}
-          {adj.cashout_minute != null && <span className="text-[10px] text-zinc-600">· Cash-out min {adj.cashout_minute}</span>}
+      {/* Risk filter + realistic mode */}
+      {activeConfig && (
+        <div className="mt-3 pt-2.5 border-t border-zinc-800/60 space-y-1.5">
+          {/* Risk filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 font-medium min-w-[110px]">Filtro de riesgo:</span>
+            {(() => {
+              const rf = activeConfig.risk_filter
+              const labels: Record<string, { label: string; color: string }> = {
+                all:       { label: "Todas las apuestas", color: "text-zinc-400" },
+                no_risk:   { label: "Sin riesgo",         color: "text-emerald-400" },
+                with_risk: { label: "Con riesgo",         color: "text-amber-400" },
+                medium:    { label: "Riesgo medio",       color: "text-amber-400" },
+                high:      { label: "Alto riesgo",        color: "text-red-400" },
+              }
+              const { label, color } = labels[rf] ?? { label: rf, color: "text-zinc-400" }
+              return <span className={`text-[10px] font-medium ${color}`}>{label}</span>
+            })()}
+          </div>
+
+          {/* Realistic mode */}
+          <div className="flex items-start gap-2">
+            <span className="text-[10px] text-zinc-500 font-medium min-w-[110px] pt-px">Modo realista:</span>
+            {adj?.enabled ? (
+              <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                <span className="text-[10px] text-blue-400 font-medium">ON</span>
+                {adj.min_odds != null && <span className="text-[10px] text-zinc-500">· Odds mín {adj.min_odds}</span>}
+                {adj.max_odds != null && <span className="text-[10px] text-zinc-500">· Odds máx {adj.max_odds}</span>}
+                {adj.slippage_pct > 0 && <span className="text-[10px] text-zinc-500">· Slippage {adj.slippage_pct}%</span>}
+                {adj.dedup && <span className="text-[10px] text-zinc-500">· Dedup</span>}
+                {adj.conflict_filter && <span className="text-[10px] text-zinc-500">· Anti-conflicto</span>}
+                {adj.drift_min_minute != null && <span className="text-[10px] text-zinc-500">· Drift mín min {adj.drift_min_minute}</span>}
+                {adj.cashout_minute != null && <span className="text-[10px] text-zinc-500">· Cash-out min {adj.cashout_minute}</span>}
+              </div>
+            ) : (
+              <span className="text-[10px] text-zinc-600">OFF — sin filtros adicionales</span>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -484,6 +484,12 @@ export interface CarteraBet {
   passes_v4?: boolean
   passes_v5?: boolean
   passes_v6?: boolean
+  // back_draw raw stats (for dynamic param filtering)
+  xg_total?: number | null
+  poss_diff?: number | null
+  shots_total?: number | null
+  // xg_underperf raw stats
+  sot_team?: number | null
   // synthetic attribute fields
   synth_xg_dominance?: number | null
   synth_pressure_index_v?: number | null
@@ -652,14 +658,25 @@ export interface PlacedBetsResponse {
 
 // ── Cartera configuration (single source of truth) ─────────────────────
 export interface CarteraConfig {
-  versions: {
-    draw: string
-    xg: string
-    drift: string
-    clustering: string
-    pressure: string
-    tarde_asia: string
-    momentum_xg: string
+  /** New param-based format (replaces legacy `versions`) */
+  strategies?: {
+    draw?: { enabled: boolean; xgMax: number; possMax: number; shotsMax: number; xgDomAsym: boolean }
+    xg?: { enabled: boolean; sotMin: number; minuteMax: number }
+    drift?: { enabled: boolean; goalDiffMin: number; driftMin: number; oddsMax: number; minuteMin: number; momGapMin: number }
+    clustering?: { enabled: boolean; minuteMax: number; xgRemMin: number }
+    pressure?: { enabled: boolean }
+    tarde_asia?: { enabled: boolean }
+    momentum_xg?: { version: string }
+  }
+  /** Legacy version format — kept for backward compat when reading old configs */
+  versions?: {
+    draw?: string
+    xg?: string
+    drift?: string
+    clustering?: string
+    pressure?: string
+    tarde_asia?: string
+    momentum_xg?: string
   }
   bankroll_mode: string
   active_preset: string | null

@@ -23,7 +23,6 @@ import type { Capture, OddsTimeline } from "../lib/api"
 import {
   computePressureTimeline,
   buildDivergenceTimeline,
-  type DivergencePoint,
 } from "../lib/trading"
 
 interface PriceVsRealityProps {
@@ -150,11 +149,12 @@ export function PriceVsReality({ captures, oddsTimeline, homeName }: PriceVsReal
               borderRadius: 8,
               fontSize: 11,
             }}
-            formatter={(value: number, name: string) => {
-              if (name === "pressure") return [`${value.toFixed(1)}`, "Pressure Index"]
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            formatter={((value: number | undefined, name: string | undefined) => {
+              if (name === "pressure") return [value != null ? `${value.toFixed(1)}` : "—", "Pressure Index"]
               if (name === "odds") return [value ? `${value.toFixed(2)}` : "—", "Back Odds"]
               return [null, null]
-            }}
+            }) as any}
             labelFormatter={(label) => `Minute ${label}'`}
           />
 

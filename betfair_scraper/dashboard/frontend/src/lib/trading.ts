@@ -15,10 +15,6 @@ function num(v: string | undefined | null): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-function clamp(v: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, v))
-}
-
 // ─── Pressure Index ──────────────────────────────────────────────────────────
 
 export interface PressureSnapshot {

@@ -43,7 +43,7 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
     setActing(true)
     setMessage(null)
     try {
-      const stopRes = await api.stopScraper()
+      await api.stopScraper()
       // Wait a moment for processes to fully terminate
       await new Promise(r => setTimeout(r, 2000))
       const startRes = await api.startScraper()

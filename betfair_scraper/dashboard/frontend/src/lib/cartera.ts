@@ -154,47 +154,128 @@ function meetsMinOdds(b: CarteraBet): boolean {
   return odds >= minOdds
 }
 
-// ── Filter functions ────────────────────────────────────────────────────
+// ── Strategy filter params (replaces discrete version selectors) ────────
 
-export function filterDrawBets(bets: CarteraBet[], version: DrawVersion): CarteraBet[] {
-  if (version === "off") return []
-  const drawBets = bets.filter(b => b.strategy === "back_draw_00")
-  if (version === "v1") return drawBets
-  if (version === "v15") return drawBets.filter(b => b.passes_v15)
-  if (version === "v2r") return drawBets.filter(b => b.passes_v2r)
-  if (version === "v2") return drawBets.filter(b => b.passes_v2)
-  if (version === "v3") return drawBets.filter(b => b.passes_v3)
-  return drawBets
+export interface DrawFilterParams {
+  enabled: boolean
+  xgMax: number        // 1.0 = no filter (V1 base), 0.6 = V1.5/V2r, 0.5 = V2
+  possMax: number      // 100 = no filter, 25 = V1.5, 20 = V2r/V2
+  shotsMax: number     // 20 = no filter, 8 = V2r/V2
+  xgDomAsym: boolean   // false = no filter, true = V3 xG-dominance asymmetry filter
 }
 
-export function filterXGBets(bets: CarteraBet[], version: XGCarteraVersion): CarteraBet[] {
-  if (version === "off") return []
-  const xgBets = bets.filter(b => b.strategy === "xg_underperformance")
-  if (version === "base") return xgBets
-  if (version === "v2") return xgBets.filter(b => b.passes_v2)
-  if (version === "v3") return xgBets.filter(b => b.passes_v3)
-  return xgBets
+export interface XGFilterParams {
+  enabled: boolean
+  sotMin: number    // 0 = no filter (base), 2 = V2+
+  minuteMax: number // 90 = no filter, 70 = V3
 }
 
-export function filterDriftBets(bets: CarteraBet[], version: DriftCarteraVersion): CarteraBet[] {
-  if (version === "off") return []
-  const driftBets = bets.filter(b => b.strategy === "odds_drift")
-  if (version === "v1") return driftBets
-  if (version === "v2") return driftBets.filter(b => b.passes_v2)
-  if (version === "v3") return driftBets.filter(b => b.passes_v3)
-  if (version === "v4") return driftBets.filter(b => b.passes_v4)
-  if (version === "v5") return driftBets.filter(b => b.passes_v5)
-  if (version === "v6") return driftBets.filter(b => b.passes_v6)
-  return driftBets
+export interface DriftFilterParams {
+  enabled: boolean
+  goalDiffMin: number  // 0 = no filter (V1), 2 = V2
+  driftMin: number     // 30 = base trigger, 100 = V3
+  oddsMax: number      // Infinity = no filter, 5 = V4/V5
+  minuteMin: number    // 0 = no filter, 45 = V4
+  momGapMin: number    // 0 = no filter, 200 = V6
 }
 
-export function filterClusteringBets(bets: CarteraBet[], version: ClusteringCarteraVersion): CarteraBet[] {
-  if (version === "off") return []
-  const clusteringBets = bets.filter(b => b.strategy === "goal_clustering")
-  if (version === "v2") return clusteringBets
-  if (version === "v3") return clusteringBets.filter(b => b.passes_v3)
-  if (version === "v4") return clusteringBets.filter(b => b.passes_v4)
-  return clusteringBets
+export interface ClusteringFilterParams {
+  enabled: boolean
+  minuteMax: number  // 80 = base, 60 = V3
+  xgRemMin: number   // 0 = no filter, 0.8 = V4
+}
+
+export const DEFAULT_DRAW_PARAMS: DrawFilterParams = { enabled: true, xgMax: 1.0, possMax: 100, shotsMax: 20, xgDomAsym: false }
+export const DEFAULT_XG_PARAMS: XGFilterParams = { enabled: true, sotMin: 0, minuteMax: 90 }
+export const DEFAULT_DRIFT_PARAMS: DriftFilterParams = { enabled: true, goalDiffMin: 0, driftMin: 30, oddsMax: Infinity, minuteMin: 0, momGapMin: 0 }
+export const DEFAULT_CLUSTERING_PARAMS: ClusteringFilterParams = { enabled: true, minuteMax: 80, xgRemMin: 0 }
+
+// ── Version → Params adapters (for preset system compatibility) ──────────
+
+export function drawVersionToParams(v: DrawVersion): DrawFilterParams {
+  if (v === "off")  return { ...DEFAULT_DRAW_PARAMS, enabled: false }
+  if (v === "v1")   return { ...DEFAULT_DRAW_PARAMS, enabled: true }
+  if (v === "v15")  return { enabled: true, xgMax: 0.6, possMax: 25, shotsMax: 20, xgDomAsym: false }
+  if (v === "v2r")  return { enabled: true, xgMax: 0.6, possMax: 20, shotsMax: 8, xgDomAsym: false }
+  if (v === "v2")   return { enabled: true, xgMax: 0.5, possMax: 20, shotsMax: 8, xgDomAsym: false }
+  if (v === "v3")   return { enabled: true, xgMax: 0.6, possMax: 25, shotsMax: 20, xgDomAsym: true }
+  return DEFAULT_DRAW_PARAMS
+}
+
+export function xgVersionToParams(v: XGCarteraVersion): XGFilterParams {
+  if (v === "off")   return { ...DEFAULT_XG_PARAMS, enabled: false }
+  if (v === "base")  return { ...DEFAULT_XG_PARAMS, enabled: true }
+  if (v === "v2")    return { enabled: true, sotMin: 2, minuteMax: 90 }
+  if (v === "v3")    return { enabled: true, sotMin: 2, minuteMax: 70 }
+  return DEFAULT_XG_PARAMS
+}
+
+export function driftVersionToParams(v: DriftCarteraVersion): DriftFilterParams {
+  if (v === "off")  return { ...DEFAULT_DRIFT_PARAMS, enabled: false }
+  if (v === "v1")   return { ...DEFAULT_DRIFT_PARAMS, enabled: true }
+  if (v === "v2")   return { enabled: true, goalDiffMin: 2, driftMin: 30, oddsMax: Infinity, minuteMin: 0, momGapMin: 0 }
+  if (v === "v3")   return { enabled: true, goalDiffMin: 0, driftMin: 100, oddsMax: Infinity, minuteMin: 0, momGapMin: 0 }
+  if (v === "v4")   return { enabled: true, goalDiffMin: 0, driftMin: 30, oddsMax: 5, minuteMin: 45, momGapMin: 0 }
+  if (v === "v5")   return { enabled: true, goalDiffMin: 0, driftMin: 30, oddsMax: 5, minuteMin: 0, momGapMin: 0 }
+  if (v === "v6")   return { enabled: true, goalDiffMin: 0, driftMin: 30, oddsMax: 5, minuteMin: 0, momGapMin: 200 }
+  return DEFAULT_DRIFT_PARAMS
+}
+
+export function clusteringVersionToParams(v: ClusteringCarteraVersion): ClusteringFilterParams {
+  if (v === "off")  return { ...DEFAULT_CLUSTERING_PARAMS, enabled: false }
+  if (v === "v2")   return { ...DEFAULT_CLUSTERING_PARAMS, enabled: true }
+  if (v === "v3")   return { enabled: true, minuteMax: 60, xgRemMin: 0 }
+  if (v === "v4")   return { enabled: true, minuteMax: 80, xgRemMin: 0.8 }
+  return DEFAULT_CLUSTERING_PARAMS
+}
+
+// ── Param-based filter functions ─────────────────────────────────────────
+
+export function filterDrawBets(bets: CarteraBet[], p: DrawFilterParams): CarteraBet[] {
+  if (!p.enabled) return []
+  return bets.filter(b => {
+    if (b.strategy !== "back_draw_00") return false
+    if (p.xgMax < 1.0 && b.xg_total != null && b.xg_total >= p.xgMax) return false
+    if (p.possMax < 100 && b.poss_diff != null && b.poss_diff >= p.possMax) return false
+    if (p.shotsMax < 20 && b.shots_total != null && b.shots_total >= p.shotsMax) return false
+    if (p.xgDomAsym && b.synth_xg_dominance != null) {
+      if (b.synth_xg_dominance >= 0.45 && b.synth_xg_dominance <= 0.55) return false
+    }
+    return true
+  })
+}
+
+export function filterXGBets(bets: CarteraBet[], p: XGFilterParams): CarteraBet[] {
+  if (!p.enabled) return []
+  return bets.filter(b => {
+    if (b.strategy !== "xg_underperformance") return false
+    if (p.sotMin > 0 && b.sot_team != null && b.sot_team < p.sotMin) return false
+    if (p.minuteMax < 90 && b.minuto != null && b.minuto >= p.minuteMax) return false
+    return true
+  })
+}
+
+export function filterDriftBets(bets: CarteraBet[], p: DriftFilterParams): CarteraBet[] {
+  if (!p.enabled) return []
+  return bets.filter(b => {
+    if (b.strategy !== "odds_drift") return false
+    if (p.goalDiffMin > 0 && b.goal_diff != null && b.goal_diff < p.goalDiffMin) return false
+    if (p.driftMin > 30 && b.drift_pct != null && b.drift_pct < p.driftMin) return false
+    if (isFinite(p.oddsMax) && b.back_odds != null && b.back_odds > p.oddsMax) return false
+    if (p.minuteMin > 0 && b.minuto != null && b.minuto <= p.minuteMin) return false
+    if (p.momGapMin > 0 && b.synth_momentum_gap != null && b.synth_momentum_gap <= p.momGapMin) return false
+    return true
+  })
+}
+
+export function filterClusteringBets(bets: CarteraBet[], p: ClusteringFilterParams): CarteraBet[] {
+  if (!p.enabled) return []
+  return bets.filter(b => {
+    if (b.strategy !== "goal_clustering") return false
+    if (p.minuteMax < 80 && b.minuto != null && b.minuto >= p.minuteMax) return false
+    if (p.xgRemMin > 0 && b.synth_xg_remaining != null && b.synth_xg_remaining < p.xgRemMin) return false
+    return true
+  })
 }
 
 export function filterPressureBets(bets: CarteraBet[], version: PressureCarteraVersion): CarteraBet[] {
@@ -380,10 +461,10 @@ export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: 
 // ── Combo evaluation & optimization ────────────────────────────────────
 
 export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number, riskFilter: RiskFilter = "all") {
-  const drawBets = filterDrawBets(bets, combo.draw)
-  const xgBets = filterXGBets(bets, combo.xg)
-  const driftBets = filterDriftBets(bets, combo.drift)
-  const clusteringBets = filterClusteringBets(bets, combo.clustering)
+  const drawBets = filterDrawBets(bets, drawVersionToParams(combo.draw))
+  const xgBets = filterXGBets(bets, xgVersionToParams(combo.xg))
+  const driftBets = filterDriftBets(bets, driftVersionToParams(combo.drift))
+  const clusteringBets = filterClusteringBets(bets, clusteringVersionToParams(combo.clustering))
   const pressureBets = filterPressureBets(bets, combo.pressure)
   const tardeAsiaBets = filterTardeAsiaBets(bets, combo.tardeAsia)
   const momentumXGBets = filterMomentumXGBets(bets, combo.momentumXG)
@@ -400,6 +481,184 @@ export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollI
   const sim = simulateCartera(filtered, bankrollInit, combo.br)
   const riskBreakdown = analyzeRiskBreakdown(filtered)
   return { ...sim, combo, filtered, riskBreakdown }
+}
+
+// ── Per-strategy param optimizer ─────────────────────────────────────────
+
+export type OptimizeCriterion = "roi" | "pl" | "wr" | "min_dd"
+
+export interface OptimizeResult<P> {
+  params: P
+  roi: number
+  pl: number
+  wr: number
+  nBets: number
+  dd: number
+}
+
+/**
+ * Build the combined filtered bet list from individual strategy params.
+ * Used by the per-strategy optimizer to evaluate param combinations.
+ */
+export function buildCarteraBets(
+  allBets: CarteraBet[],
+  draw: DrawFilterParams,
+  xg: XGFilterParams,
+  drift: DriftFilterParams,
+  clustering: ClusteringFilterParams,
+  pressure: PressureCarteraVersion,
+  tardeAsia: TardeAsiaVersion,
+  momentumXG: MomentumXGVersion,
+  riskFilter: RiskFilter = "all",
+): CarteraBet[] {
+  const combined = [
+    ...filterDrawBets(allBets, draw),
+    ...filterXGBets(allBets, xg),
+    ...filterDriftBets(allBets, drift),
+    ...filterClusteringBets(allBets, clustering),
+    ...filterPressureBets(allBets, pressure),
+    ...filterTardeAsiaBets(allBets, tardeAsia),
+    ...filterMomentumXGBets(allBets, momentumXG),
+  ]
+    .filter(meetsMinOdds)
+    .sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || ""))
+  return filterByRisk(combined, riskFilter)
+}
+
+function scoreResult(sim: ReturnType<typeof simulateCartera>, criterion: OptimizeCriterion): number {
+  switch (criterion) {
+    case "roi":    return sim.flatRoi
+    case "pl":     return sim.flatPl
+    case "wr":     return sim.winPct + sim.total * 0.01
+    case "min_dd": return sim.managedPl - sim.managedMaxDd.maxDd * 2 + sim.winPct * 0.5
+    default:       return sim.flatRoi
+  }
+}
+
+export function optimizeDrawParams(
+  allBets: CarteraBet[],
+  currentXG: XGFilterParams,
+  currentDrift: DriftFilterParams,
+  currentClustering: ClusteringFilterParams,
+  currentPressure: PressureCarteraVersion,
+  currentTardeAsia: TardeAsiaVersion,
+  currentMomentumXG: MomentumXGVersion,
+  bankrollInit: number,
+  criterion: OptimizeCriterion = "roi",
+  minBets = 5,
+): OptimizeResult<DrawFilterParams>[] {
+  const xgMaxOpts = [0.4, 0.5, 0.6, 0.7, 0.8, 1.0]
+  const possMaxOpts = [15, 20, 25, 30, 100]
+  const shotsMaxOpts = [6, 8, 10, 20]
+  const results: { r: OptimizeResult<DrawFilterParams>; score: number }[] = []
+
+  for (const xgMax of xgMaxOpts) {
+    for (const possMax of possMaxOpts) {
+      for (const shotsMax of shotsMaxOpts) {
+        const p: DrawFilterParams = { enabled: true, xgMax, possMax, shotsMax, xgDomAsym: false }
+        const bets = buildCarteraBets(allBets, p, currentXG, currentDrift, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
+        if (bets.length < minBets) continue
+        const sim = simulateCartera(bets, bankrollInit, "fixed")
+        const r: OptimizeResult<DrawFilterParams> = { params: p, roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct }
+        results.push({ r, score: scoreResult(sim, criterion) })
+      }
+    }
+  }
+
+  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => x.r)
+}
+
+export function optimizeXGParams(
+  allBets: CarteraBet[],
+  currentDraw: DrawFilterParams,
+  currentDrift: DriftFilterParams,
+  currentClustering: ClusteringFilterParams,
+  currentPressure: PressureCarteraVersion,
+  currentTardeAsia: TardeAsiaVersion,
+  currentMomentumXG: MomentumXGVersion,
+  bankrollInit: number,
+  criterion: OptimizeCriterion = "roi",
+  minBets = 5,
+): OptimizeResult<XGFilterParams>[] {
+  const sotMinOpts = [0, 1, 2, 3]
+  const minuteMaxOpts = [60, 70, 80, 90]
+  const results: { p: XGFilterParams; score: number; roi: number; pl: number; wr: number; nBets: number; dd: number }[] = []
+
+  for (const sotMin of sotMinOpts) {
+    for (const minuteMax of minuteMaxOpts) {
+      const p: XGFilterParams = { enabled: true, sotMin, minuteMax }
+      const bets = buildCarteraBets(allBets, currentDraw, p, currentDrift, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
+      if (bets.length < minBets) continue
+      const sim = simulateCartera(bets, bankrollInit, "fixed")
+      results.push({ p, score: scoreResult(sim, criterion), roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
+    }
+  }
+
+  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => ({ params: x.p, roi: x.roi, pl: x.pl, wr: x.wr, nBets: x.nBets, dd: x.dd }))
+}
+
+export function optimizeDriftParams(
+  allBets: CarteraBet[],
+  currentDraw: DrawFilterParams,
+  currentXG: XGFilterParams,
+  currentClustering: ClusteringFilterParams,
+  currentPressure: PressureCarteraVersion,
+  currentTardeAsia: TardeAsiaVersion,
+  currentMomentumXG: MomentumXGVersion,
+  bankrollInit: number,
+  criterion: OptimizeCriterion = "roi",
+  minBets = 5,
+): OptimizeResult<DriftFilterParams>[] {
+  const goalDiffMinOpts = [0, 1, 2]
+  const driftMinOpts = [30, 50, 100, 150]
+  const oddsMaxOpts = [5, 7, 10, Infinity]
+  const minuteMinOpts = [0, 30, 45]
+  const results: { p: DriftFilterParams; score: number; roi: number; pl: number; wr: number; nBets: number; dd: number }[] = []
+
+  for (const goalDiffMin of goalDiffMinOpts) {
+    for (const driftMin of driftMinOpts) {
+      for (const oddsMax of oddsMaxOpts) {
+        for (const minuteMin of minuteMinOpts) {
+          const p: DriftFilterParams = { enabled: true, goalDiffMin, driftMin, oddsMax, minuteMin, momGapMin: 0 }
+          const bets = buildCarteraBets(allBets, currentDraw, currentXG, p, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
+          if (bets.length < minBets) continue
+          const sim = simulateCartera(bets, bankrollInit, "fixed")
+          results.push({ p, score: scoreResult(sim, criterion), roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
+        }
+      }
+    }
+  }
+
+  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => ({ params: x.p, roi: x.roi, pl: x.pl, wr: x.wr, nBets: x.nBets, dd: x.dd }))
+}
+
+export function optimizeClusteringParams(
+  allBets: CarteraBet[],
+  currentDraw: DrawFilterParams,
+  currentXG: XGFilterParams,
+  currentDrift: DriftFilterParams,
+  currentPressure: PressureCarteraVersion,
+  currentTardeAsia: TardeAsiaVersion,
+  currentMomentumXG: MomentumXGVersion,
+  bankrollInit: number,
+  criterion: OptimizeCriterion = "roi",
+  minBets = 5,
+): OptimizeResult<ClusteringFilterParams>[] {
+  const minuteMaxOpts = [50, 60, 70, 80]
+  const xgRemMinOpts = [0, 0.5, 0.8, 1.2]
+  const results: { p: ClusteringFilterParams; score: number; roi: number; pl: number; wr: number; nBets: number; dd: number }[] = []
+
+  for (const minuteMax of minuteMaxOpts) {
+    for (const xgRemMin of xgRemMinOpts) {
+      const p: ClusteringFilterParams = { enabled: true, minuteMax, xgRemMin }
+      const bets = buildCarteraBets(allBets, currentDraw, currentXG, currentDrift, p, currentPressure, currentTardeAsia, currentMomentumXG)
+      if (bets.length < minBets) continue
+      const sim = simulateCartera(bets, bankrollInit, "fixed")
+      results.push({ p, score: scoreResult(sim, criterion), roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
+    }
+  }
+
+  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => ({ params: x.p, roi: x.roi, pl: x.pl, wr: x.wr, nBets: x.nBets, dd: x.dd }))
 }
 
 export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>, riskFilter: RiskFilter = "all"): VersionCombo {
