@@ -16,39 +16,53 @@ import {
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const TARGET_COLORS: Record<string, string> = {
-  // Back
-  draw:        "#06b6d4",
-  over_05:     "#22c55e",
-  over_15:     "#84cc16",
-  over_25:     "#eab308",
-  home_win:    "#3b82f6",
-  away_win:    "#f97316",
-  btts:        "#a855f7",
-  // Lay (tonos más oscuros del mismo color base)
-  lay_draw:    "#0e7490",
-  lay_home:    "#1d4ed8",
-  lay_away:    "#c2410c",
-  lay_over_05: "#166534",
-  lay_over_15: "#3f6212",
-  lay_over_25: "#92400e",
+  // Back — colores vivos
+  draw:             "#06b6d4",
+  over_05:          "#22c55e",
+  over_15:          "#84cc16",
+  over_25:          "#eab308",
+  under_15:         "#10b981",
+  under_25:         "#14b8a6",
+  over_35:          "#ef4444",
+  home_win:         "#3b82f6",
+  away_win:         "#f97316",
+  btts:             "#a855f7",
+  // Lay — tonos más oscuros del mismo color base
+  lay_draw:         "#0e7490",
+  lay_home:         "#1d4ed8",
+  lay_away:         "#c2410c",
+  lay_over_05:      "#166534",
+  lay_over_15:      "#3f6212",
+  lay_over_25:      "#92400e",
+  lay_under_15:     "#065f46",
+  lay_under_25:     "#115e59",
+  lay_over_35:      "#7f1d1d",
+  lay_score_actual: "#6d28d9",
 }
 
 const TARGET_LABELS: Record<string, string> = {
   // Back
-  draw:        "Empate",
-  over_05:     "Over 0.5",
-  over_15:     "Over 1.5",
-  over_25:     "Over 2.5",
-  home_win:    "Victoria Local",
-  away_win:    "Victoria Visitante",
-  btts:        "BTTS",
+  draw:             "Empate",
+  over_05:          "Over 0.5",
+  over_15:          "Over 1.5",
+  over_25:          "Over 2.5",
+  under_15:         "Under 1.5",
+  under_25:         "Under 2.5",
+  over_35:          "Over 3.5",
+  home_win:         "Victoria Local",
+  away_win:         "Victoria Visitante",
+  btts:             "BTTS",
   // Lay
-  lay_draw:    "Lay Empate",
-  lay_home:    "Lay Local",
-  lay_away:    "Lay Visitante",
-  lay_over_05: "Lay Over 0.5",
-  lay_over_15: "Lay Over 1.5",
-  lay_over_25: "Lay Over 2.5",
+  lay_draw:         "Lay Empate",
+  lay_home:         "Lay Local",
+  lay_away:         "Lay Visitante",
+  lay_over_05:      "Lay Over 0.5",
+  lay_over_15:      "Lay Over 1.5",
+  lay_over_25:      "Lay Over 2.5",
+  lay_under_15:     "Lay Under 1.5",
+  lay_under_25:     "Lay Under 2.5",
+  lay_over_35:      "Lay Over 3.5",
+  lay_score_actual: "Lay Score Actual",
 }
 
 const ALL_TARGETS = Object.keys(TARGET_LABELS)

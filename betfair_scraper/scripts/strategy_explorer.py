@@ -36,21 +36,29 @@ CHECKPOINTS = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
 # Target → {"col": columna de odds en el CSV, "type": "back"|"lay"}
 # btts usa back_over15 como proxy (el mercado más cercano disponible)
 # lay_* : apostar CONTRA ese resultado. Lay odds > 10 filtradas (responsabilidad excesiva).
+# lay_score_actual se maneja dinámicamente (columna lay_rc_{gl}_{gv}), no está aquí.
 TARGETS: dict[str, dict] = {
-    "draw":        {"col": "back_draw",   "type": "back"},
-    "over_05":     {"col": "back_over05", "type": "back"},
-    "over_15":     {"col": "back_over15", "type": "back"},
-    "over_25":     {"col": "back_over25", "type": "back"},
-    "home_win":    {"col": "back_home",   "type": "back"},
-    "away_win":    {"col": "back_away",   "type": "back"},
-    "btts":        {"col": "back_over15", "type": "back"},
-    # Lay targets (ganamos si el evento NO ocurre)
-    "lay_draw":    {"col": "lay_draw",    "type": "lay"},
-    "lay_home":    {"col": "lay_home",    "type": "lay"},
-    "lay_away":    {"col": "lay_away",    "type": "lay"},
-    "lay_over_05": {"col": "lay_over05",  "type": "lay"},
-    "lay_over_15": {"col": "lay_over15",  "type": "lay"},
-    "lay_over_25": {"col": "lay_over25",  "type": "lay"},
+    # Back — resultado OCURRE
+    "draw":         {"col": "back_draw",    "type": "back"},
+    "over_05":      {"col": "back_over05",  "type": "back"},
+    "over_15":      {"col": "back_over15",  "type": "back"},
+    "over_25":      {"col": "back_over25",  "type": "back"},
+    "under_15":     {"col": "back_under15", "type": "back"},
+    "under_25":     {"col": "back_under25", "type": "back"},
+    "over_35":      {"col": "back_over35",  "type": "back"},
+    "home_win":     {"col": "back_home",    "type": "back"},
+    "away_win":     {"col": "back_away",    "type": "back"},
+    "btts":         {"col": "back_over15",  "type": "back"},  # proxy
+    # Lay — resultado NO OCURRE
+    "lay_draw":     {"col": "lay_draw",     "type": "lay"},
+    "lay_home":     {"col": "lay_home",     "type": "lay"},
+    "lay_away":     {"col": "lay_away",     "type": "lay"},
+    "lay_over_05":  {"col": "lay_over05",   "type": "lay"},
+    "lay_over_15":  {"col": "lay_over15",   "type": "lay"},
+    "lay_over_25":  {"col": "lay_over25",   "type": "lay"},
+    "lay_under_15": {"col": "lay_under15",  "type": "lay"},
+    "lay_under_25": {"col": "lay_under25",  "type": "lay"},
+    "lay_over_35":  {"col": "lay_over35",   "type": "lay"},
 }
 
 
@@ -60,21 +68,29 @@ def _target_won(target: str, gl: int, gv: int) -> bool:
     """¿Ganó nuestra apuesta dado el marcador final?
     Back: ganamos si el evento ocurrió.
     Lay:  ganamos si el evento NO ocurrió.
+    lay_score_actual se maneja fuera de esta función (requiere estado del checkpoint).
     """
+    # Back targets
     if target == "draw":        return gl == gv
     if target == "over_05":     return (gl + gv) > 0
     if target == "over_15":     return (gl + gv) > 1
     if target == "over_25":     return (gl + gv) > 2
+    if target == "under_15":    return (gl + gv) <= 1
+    if target == "under_25":    return (gl + gv) <= 2
+    if target == "over_35":     return (gl + gv) > 3
     if target == "home_win":    return gl > gv
     if target == "away_win":    return gv > gl
     if target == "btts":        return gl > 0 and gv > 0
-    # Lay: ganamos si el evento nombrado NO ocurre
-    if target == "lay_draw":    return gl != gv
-    if target == "lay_home":    return gl <= gv    # local NO ganó
-    if target == "lay_away":    return gv <= gl    # visitante NO ganó
-    if target == "lay_over_05": return (gl + gv) == 0
-    if target == "lay_over_15": return (gl + gv) <= 1
-    if target == "lay_over_25": return (gl + gv) <= 2
+    # Lay targets (ganamos si el evento nombrado NO ocurre)
+    if target == "lay_draw":     return gl != gv
+    if target == "lay_home":     return gl <= gv      # local NO ganó
+    if target == "lay_away":     return gv <= gl      # visitante NO ganó
+    if target == "lay_over_05":  return (gl + gv) == 0
+    if target == "lay_over_15":  return (gl + gv) <= 1
+    if target == "lay_over_25":  return (gl + gv) <= 2
+    if target == "lay_under_15": return (gl + gv) > 1   # gana si hay Over 1.5
+    if target == "lay_under_25": return (gl + gv) > 2   # gana si hay Over 2.5
+    if target == "lay_over_35":  return (gl + gv) <= 3  # gana si hay ≤3 goles
     return False
 
 
@@ -199,6 +215,136 @@ def _define_conditions() -> list[dict]:
         ),
     })
 
+    # 11. Diferencia de goles en el campo
+    conditions.append({
+        "id": "home_lead_1",
+        "label": "Local gana por 1",
+        "test": lambda s: s["gl"] - s["gv"] == 1,
+    })
+    conditions.append({
+        "id": "home_lead_2plus",
+        "label": "Local gana por 2+",
+        "test": lambda s: s["gl"] - s["gv"] >= 2,
+    })
+    conditions.append({
+        "id": "away_lead_1",
+        "label": "Visitante gana por 1",
+        "test": lambda s: s["gv"] - s["gl"] == 1,
+    })
+    conditions.append({
+        "id": "away_lead_2plus",
+        "label": "Visitante gana por 2+",
+        "test": lambda s: s["gv"] - s["gl"] >= 2,
+    })
+
+    # 12. Goles totales en el campo (no confundir con resultado final)
+    conditions.append({
+        "id": "goals_in_game_1",
+        "label": "1 gol marcado (en el campo)",
+        "test": lambda s: s["gl"] + s["gv"] == 1,
+    })
+    conditions.append({
+        "id": "goals_in_game_2",
+        "label": "2 goles marcados (en el campo)",
+        "test": lambda s: s["gl"] + s["gv"] == 2,
+    })
+    conditions.append({
+        "id": "goals_in_game_3plus",
+        "label": "3+ goles marcados (en el campo)",
+        "test": lambda s: s["gl"] + s["gv"] >= 3,
+    })
+
+    # 13. Tiros a puerta (shots on target)
+    for thr in [3, 5]:
+        t = thr
+        conditions.append({
+            "id": f"sot_lt_{t}",
+            "label": f"Tiros a puerta < {t}",
+            "test": lambda s, _t=t: s["tiros_puerta_total"] is not None and s["tiros_puerta_total"] < _t,
+        })
+    for thr in [3, 5, 8]:
+        t = thr
+        conditions.append({
+            "id": f"sot_gt_{t}",
+            "label": f"Tiros a puerta > {t}",
+            "test": lambda s, _t=t: s["tiros_puerta_total"] is not None and s["tiros_puerta_total"] > _t,
+        })
+
+    # 14. Corners totales
+    for thr in [4, 6]:
+        t = thr
+        conditions.append({
+            "id": f"corners_lt_{t}",
+            "label": f"Corners totales < {t}",
+            "test": lambda s, _t=t: s["corners_total"] is not None and s["corners_total"] < _t,
+        })
+    for thr in [6, 10]:
+        t = thr
+        conditions.append({
+            "id": f"corners_gt_{t}",
+            "label": f"Corners totales > {t}",
+            "test": lambda s, _t=t: s["corners_total"] is not None and s["corners_total"] > _t,
+        })
+
+    # 15. Grandes ocasiones (big chances)
+    for thr in [2, 4]:
+        t = thr
+        conditions.append({
+            "id": f"bc_gt_{t}",
+            "label": f"Grandes ocasiones > {t}",
+            "test": lambda s, _t=t: s["big_chances_total"] is not None and s["big_chances_total"] > _t,
+        })
+
+    # 16. Partido animado: 0-0 pero xG alto (goles pendientes)
+    for thr in [1.0, 1.5]:
+        t = thr
+        conditions.append({
+            "id": f"score_00_xg_gt_{str(t).replace('.', '_')}",
+            "label": f"0-0 pero xG > {t:.1f} (goles pendientes)",
+            "test": lambda s, _t=t: (
+                s["gl"] == 0 and s["gv"] == 0
+                and s["xg_total"] is not None and s["xg_total"] > _t
+            ),
+        })
+
+    # 17. Segunda mitad
+    conditions.append({
+        "id": "second_half",
+        "label": "Segunda mitad (min > 45)",
+        "test": lambda s: s["checkpoint_min"] > 45,
+    })
+
+    # 18. 0-0 en segunda mitad
+    conditions.append({
+        "id": "score_00_2h",
+        "label": "0-0 en segunda mitad",
+        "test": lambda s: s["gl"] == 0 and s["gv"] == 0 and s["checkpoint_min"] > 45,
+    })
+
+    # 19. 0-0 segunda mitad + xG bajo (partido muy cerrado)
+    conditions.append({
+        "id": "score_00_2h_xg_lt_0_5",
+        "label": "0-0 segunda mitad y xG < 0.5",
+        "test": lambda s: (
+            s["gl"] == 0 and s["gv"] == 0 and s["checkpoint_min"] > 45
+            and s["xg_total"] is not None and s["xg_total"] < 0.5
+        ),
+    })
+
+    # 20. Local gana 1-0 en segunda mitad (¿aguantará el resultado?)
+    conditions.append({
+        "id": "score_10_2h",
+        "label": "1-0 en segunda mitad",
+        "test": lambda s: s["gl"] == 1 and s["gv"] == 0 and s["checkpoint_min"] > 45,
+    })
+
+    # 21. Visitante gana 0-1 en segunda mitad
+    conditions.append({
+        "id": "score_01_2h",
+        "label": "0-1 en segunda mitad",
+        "test": lambda s: s["gl"] == 0 and s["gv"] == 1 and s["checkpoint_min"] > 45,
+    })
+
     return conditions
 
 
@@ -248,28 +394,70 @@ def _extract_state_at_minute(rows: list[dict], checkpoint_minute: int) -> Option
         if (poss_l is not None or poss_v is not None) else None
     )
 
-    odds = {
-        "back_draw":   _to_float(row.get("back_draw", "")),
-        "back_home":   _to_float(row.get("back_home", "")),
-        "back_away":   _to_float(row.get("back_away", "")),
-        "back_over05": _to_float(row.get("back_over05", "")),
-        "back_over15": _to_float(row.get("back_over15", "")),
-        "back_over25": _to_float(row.get("back_over25", "")),
-        "lay_draw":    _to_float(row.get("lay_draw", "")),
-        "lay_home":    _to_float(row.get("lay_home", "")),
-        "lay_away":    _to_float(row.get("lay_away", "")),
-        "lay_over05":  _to_float(row.get("lay_over05", "")),
-        "lay_over15":  _to_float(row.get("lay_over15", "")),
-        "lay_over25":  _to_float(row.get("lay_over25", "")),
+    # Tiros a puerta (shots on target)
+    tp_l = _to_float(row.get("tiros_puerta_local", ""))
+    tp_v = _to_float(row.get("tiros_puerta_visitante", ""))
+    tiros_puerta_total = (
+        int(tp_l or 0) + int(tp_v or 0)
+        if (tp_l is not None or tp_v is not None) else None
+    )
+
+    # Corners
+    c_l = _to_float(row.get("corners_local", ""))
+    c_v = _to_float(row.get("corners_visitante", ""))
+    corners_total = (
+        int(c_l or 0) + int(c_v or 0)
+        if (c_l is not None or c_v is not None) else None
+    )
+
+    # Grandes ocasiones (big chances)
+    bc_l = _to_float(row.get("big_chances_local", ""))
+    bc_v = _to_float(row.get("big_chances_visitante", ""))
+    big_chances_total = (
+        int(bc_l or 0) + int(bc_v or 0)
+        if (bc_l is not None or bc_v is not None) else None
+    )
+
+    # Odds: mercados estáticos
+    odds: dict[str, Optional[float]] = {
+        "back_draw":    _to_float(row.get("back_draw", "")),
+        "back_home":    _to_float(row.get("back_home", "")),
+        "back_away":    _to_float(row.get("back_away", "")),
+        "back_over05":  _to_float(row.get("back_over05", "")),
+        "back_over15":  _to_float(row.get("back_over15", "")),
+        "back_over25":  _to_float(row.get("back_over25", "")),
+        "back_under15": _to_float(row.get("back_under15", "")),
+        "back_under25": _to_float(row.get("back_under25", "")),
+        "back_over35":  _to_float(row.get("back_over35", "")),
+        "lay_draw":     _to_float(row.get("lay_draw", "")),
+        "lay_home":     _to_float(row.get("lay_home", "")),
+        "lay_away":     _to_float(row.get("lay_away", "")),
+        "lay_over05":   _to_float(row.get("lay_over05", "")),
+        "lay_over15":   _to_float(row.get("lay_over15", "")),
+        "lay_over25":   _to_float(row.get("lay_over25", "")),
+        "lay_under15":  _to_float(row.get("lay_under15", "")),
+        "lay_under25":  _to_float(row.get("lay_under25", "")),
+        "lay_over35":   _to_float(row.get("lay_over35", "")),
     }
 
+    # Odds: Lay Correct Score (dinámico — lay_rc_{g}_{v})
+    # Precargamos los marcadores más comunes (gl+gv ≤ 5, cada equipo ≤ 3)
+    for g in range(4):
+        for v in range(4):
+            col = f"lay_rc_{g}_{v}"
+            odds[col] = _to_float(row.get(col, ""))
+
     return {
-        "gl":          int(gl),
-        "gv":          int(gv),
-        "xg_total":    round(xg_total, 3) if xg_total is not None else None,
-        "shots_total": shots_total,
-        "poss_diff":   round(poss_diff, 1) if poss_diff is not None else None,
-        "odds":        odds,
+        "gl":                 int(gl),
+        "gv":                 int(gv),
+        "xg_total":           round(xg_total, 3) if xg_total is not None else None,
+        "shots_total":        shots_total,
+        "poss_diff":          round(poss_diff, 1) if poss_diff is not None else None,
+        "tiros_puerta_total": tiros_puerta_total,
+        "corners_total":      corners_total,
+        "big_chances_total":  big_chances_total,
+        "checkpoint_min":     checkpoint_minute,
+        "odds":               odds,
     }
 
 
@@ -289,7 +477,7 @@ def run_strategy_exploration(
     finished = _get_cached_finished_data()
     conditions = _define_conditions()
 
-    # Acumulador: (minute, cond_id, target) → {n, wins, odds_list, pl_sum, label}
+    # Acumulador: (minute, cond_id, target) → {n, wins, odds_list, pl_sum, label, bet_type}
     accum: dict[tuple, dict] = {}
 
     for match in finished:
@@ -318,6 +506,7 @@ def run_strategy_exploration(
                 except Exception:
                     continue
 
+                # ── Targets estáticos ──────────────────────────────────────
                 for target, tinfo in TARGETS.items():
                     odds_col = tinfo["col"]
                     bet_type = tinfo["type"]
@@ -348,6 +537,34 @@ def run_strategy_exploration(
 
                     entry["odds_list"].append(odds_val)
                     entry["pl_sum"] += _calc_pl(bet_type, odds_val, won)
+
+                # ── Target especial: Lay Score Actual (columna dinámica) ───
+                gl_now, gv_now = state["gl"], state["gv"]
+                if gl_now <= 3 and gv_now <= 3:
+                    rc_col = f"lay_rc_{gl_now}_{gv_now}"
+                    odds_val = state["odds"].get(rc_col)
+                    if odds_val is not None and 1.05 <= odds_val <= 10.0:
+                        target = "lay_score_actual"
+                        # Ganamos si el marcador final es DISTINTO al del checkpoint
+                        won = (gl_final != gl_now) or (gv_final != gv_now)
+
+                        key = (minute, cond["id"], target)
+                        if key not in accum:
+                            accum[key] = {
+                                "n": 0,
+                                "wins": 0,
+                                "odds_list": [],
+                                "pl_sum": 0.0,
+                                "label": cond["label"],
+                                "bet_type": "lay",
+                            }
+
+                        entry = accum[key]
+                        entry["n"] += 1
+                        if won:
+                            entry["wins"] += 1
+                        entry["odds_list"].append(odds_val)
+                        entry["pl_sum"] += _calc_pl("lay", odds_val, won)
 
     # ── Construir lista de resultados ──────────────────────────────────────────
     results = []
@@ -437,16 +654,16 @@ if __name__ == "__main__":
 
     n_matches = result["n_total_matches"]
     n_results = result["n_results"]
-    print(f"\nDone en {elapsed:.1f}s — {n_results} combinaciones rentables de {n_matches} partidos")
+    print(f"\nDone en {elapsed:.1f}s — {n_results} combinaciones ({n_matches} partidos)")
     print(f"Guardado en: {RESULTS_JSON}\n")
 
     if result["results"]:
         print("Top 5 descubrimientos:")
-        print(f"{'Min':>4} {'Condición':<40} {'Target':<12} {'N':>4} {'WR%':>6} {'Odds':>6} {'EV%':>7} {'P/L':>8}")
-        print("-" * 95)
+        print(f"{'Min':>4} {'Condición':<40} {'Target':<16} {'N':>4} {'WR%':>6} {'Odds':>6} {'EV%':>7} {'P/L':>8}")
+        print("-" * 100)
         for r in result["results"][:5]:
             print(
-                f"{r['minute']:>4} {r['condition']:<40} {r['target']:<12} "
+                f"{r['minute']:>4} {r['condition']:<40} {r['target']:<16} "
                 f"{r['n_matches']:>4} {r['win_rate']*100:>5.1f}% {r['avg_odds']:>6.2f} "
                 f"{r['ev_pct']*100:>6.1f}% {r['total_pl']:>8.1f}€"
             )
