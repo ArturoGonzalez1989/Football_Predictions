@@ -257,6 +257,8 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [momentumXGVer, setMomentumXGVer] = useState<MomentumXGVersion>(savedState?.momentumXGVer || "off")
   const [brMode, setBrMode] = useState<BankrollMode>(savedState?.brMode || "fixed")
   const [flatStake, setFlatStake] = useState<number>(savedState?.flatStake ?? 10)
+  const [showRiskAnalysis, setShowRiskAnalysis] = useState(false)
+  const [showRiskMetrics, setShowRiskMetrics] = useState(false)
   const [bankrollInit, setBankrollInit] = useState<number>(savedState?.bankrollInit ?? 500)
   const [activePreset, setActivePreset] = useState<PresetKey>(savedState?.activePreset || null)
   const [adjDedup, setAdjDedup] = useState(savedState?.adjDedup !== undefined ? savedState.adjDedup : true)
@@ -1185,13 +1187,18 @@ function CarteraTab({ data }: { data: Cartera }) {
 
       {/* Time + Score Risk Analysis */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
+        <button
+          type="button"
+          onClick={() => setShowRiskAnalysis(v => !v)}
+          className="w-full flex items-center justify-between group"
+        >
+          <div className="text-left">
             <h2 className="text-sm font-semibold text-zinc-300">Análisis de Riesgo Tiempo + Marcador</h2>
             <p className="text-[10px] text-zinc-500 mt-0.5">Comparativa de rendimiento según limitación de tiempo y déficit</p>
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <span className={`text-zinc-500 group-hover:text-zinc-300 transition-transform duration-200 text-xs ml-4 ${showRiskAnalysis ? "rotate-180" : ""}`}>▼</span>
+        </button>
+        {showRiskAnalysis && (<><div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
           {/* No Risk */}
           <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
             <div className="flex items-center gap-2 mb-2">
@@ -1325,12 +1332,20 @@ function CarteraTab({ data }: { data: Cartera }) {
             </div>
           </div>
         )}
+        </>)}
       </div>
 
       {/* Risk metrics */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-zinc-300 mb-4">Riesgo</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button
+          type="button"
+          onClick={() => setShowRiskMetrics(v => !v)}
+          className="w-full flex items-center justify-between group"
+        >
+          <h2 className="text-sm font-semibold text-zinc-300">Riesgo</h2>
+          <span className={`text-zinc-500 group-hover:text-zinc-300 transition-transform duration-200 text-xs ml-4 ${showRiskMetrics ? "rotate-180" : ""}`}>▼</span>
+        </button>
+        {showRiskMetrics && <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Max Drawdown Flat */}
           <div>
             <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Max Drawdown Flat</div>
@@ -1370,7 +1385,7 @@ function CarteraTab({ data }: { data: Cartera }) {
               </div>
             )}
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* Cumulative P/L Chart */}
