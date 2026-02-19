@@ -89,6 +89,12 @@ async def save_cartera_config(config: Dict[str, Any]) -> Dict[str, Any]:
             json.dumps(config, indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
+        # Clear analytics cache so next cartera request uses new min_duration values
+        try:
+            from utils import csv_reader as _csv_reader
+            _csv_reader.clear_analytics_cache()
+        except Exception:
+            pass
         return {"status": "ok", "path": str(_CONFIG_PATH)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Could not save config: {e}")

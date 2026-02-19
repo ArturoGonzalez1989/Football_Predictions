@@ -98,6 +98,25 @@ def _final_result_row(rows: list[dict]) -> Optional[dict]:
     return None
 
 
+def _check_min_dur(rows: list[dict], start_idx: int, min_dur: int, condition_fn) -> Optional[dict]:
+    """
+    Starting at start_idx, check that condition_fn(row) holds for min_dur consecutive rows.
+    Returns the min_dur-th row (entry row) if condition persists, else None.
+    Stops early if rows run out.
+    """
+    if min_dur <= 1:
+        return rows[start_idx] if start_idx < len(rows) else None
+    count = 0
+    for i in range(start_idx, len(rows)):
+        if condition_fn(rows[i]):
+            count += 1
+            if count >= min_dur:
+                return rows[i]
+        else:
+            return None  # signal broke before reaching min_dur
+    return None  # ran out of rows
+
+
 def _lookback_val(rows: list[dict], idx: int, col: str, minutes_back: int) -> Optional[float]:
     """Get value of *col* from approximately *minutes_back* minutes before rows[idx]."""
     cur_min = _to_float(rows[idx].get("minuto", "")) or 0
@@ -1419,8 +1438,7 @@ def calculate_stat_correlations() -> dict:
     }
 
 
-@_cached_result("strategy_back_draw_00")
-def analyze_strategy_back_draw_00() -> dict:
+def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
     """Analyze the 'Back Draw at 0-0 from min 30' strategy across all finished matches."""
     finished_matches = _get_all_finished_matches()
 
@@ -1437,7 +1455,7 @@ def analyze_strategy_back_draw_00() -> dict:
 
         matches_with_data += 1
 
-        # Find first row where min >= 30 and score is 0-0
+        # Find first row where min >= 30 and score is 0-0, then check persistence
         trigger_row = None
         trigger_idx = None
         for ri, row in enumerate(rows):
@@ -1446,8 +1464,15 @@ def analyze_strategy_back_draw_00() -> dict:
             gv = _to_float(row.get("goles_visitante", ""))
             if minuto is not None and gl is not None and gv is not None:
                 if minuto >= 30 and int(gl) == 0 and int(gv) == 0:
-                    trigger_row = row
-                    trigger_idx = ri
+                    # Check persistence: score must stay 0-0 for min_dur consecutive rows
+                    def _still_00(r):
+                        _gl = _to_float(r.get("goles_local", ""))
+                        _gv = _to_float(r.get("goles_visitante", ""))
+                        return _gl is not None and _gv is not None and int(_gl) == 0 and int(_gv) == 0
+                    entry_row = _check_min_dur(rows, ri, min_dur, _still_00)
+                    if entry_row is not None:
+                        trigger_row = entry_row
+                        trigger_idx = rows.index(entry_row)
                     break
 
         if trigger_row is None:
@@ -1684,8 +1709,7 @@ def calculate_time_score_risk(
     }
 
 
-@_cached_result("strategy_xg_underperformance")
-def analyze_strategy_xg_underperformance() -> dict:
+def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
     """Analyze the 'xG Underperformance - Back Over' strategy across all finished matches.
 
     Trigger: team xG - goals >= 0.5 AND team is currently LOSING.
@@ -1728,7 +1752,7 @@ def analyze_strategy_xg_underperformance() -> dict:
         # One trigger per team per match
         triggered = {"home": False, "away": False}
 
-        for row in rows:
+        for ri, row in enumerate(rows):
             minuto = _to_float(row.get("minuto", ""))
             if minuto is None or minuto < 15:
                 continue
@@ -1751,6 +1775,30 @@ def analyze_strategy_xg_underperformance() -> dict:
                 xg_excess = team_xg - team_goals
                 if xg_excess < 0.5 or opp_goals <= team_goals:
                     continue
+
+                # Check persistence: signal must hold for min_dur consecutive rows
+                if min_dur > 1:
+                    end_idx = ri + min_dur - 1
+                    if end_idx >= len(rows):
+                        continue  # not enough rows remaining
+                    row = rows[end_idx]
+                    # Re-read values from the entry row
+                    _gl_e = _to_float(row.get("goles_local", ""))
+                    _gv_e = _to_float(row.get("goles_visitante", ""))
+                    _xg_h_e = _to_float(row.get("xg_local", ""))
+                    _xg_a_e = _to_float(row.get("xg_visitante", ""))
+                    if _gl_e is None or _gv_e is None or _xg_h_e is None or _xg_a_e is None:
+                        continue
+                    _team_xg_e = _xg_h_e if team == "home" else _xg_a_e
+                    _team_goals_e = int(_gl_e) if team == "home" else int(_gv_e)
+                    _opp_goals_e = int(_gv_e) if team == "home" else int(_gl_e)
+                    if (_team_xg_e - _team_goals_e) < 0.5 or _opp_goals_e <= _team_goals_e:
+                        continue  # signal broke
+                    gl_i = int(_gl_e)
+                    gv_i = int(_gv_e)
+                    _min_e = _to_float(row.get("minuto", ""))
+                    if _min_e is not None:
+                        minuto = _min_e
 
                 triggered[team] = True
                 total_at_trigger = gl_i + gv_i
@@ -1834,8 +1882,7 @@ def analyze_strategy_xg_underperformance() -> dict:
 
 # ── Odds Drift Contrarian Strategy ──────────────────────────────────────
 
-@_cached_result("strategy_odds_drift")
-def analyze_strategy_odds_drift() -> dict:
+def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
     """Analyze the 'Odds Drift Contrarian' strategy across all finished matches.
 
     Trigger: team's back odds increase >30% within 10 min AND team is currently WINNING.
@@ -1923,6 +1970,19 @@ def analyze_strategy_odds_drift() -> dict:
                     # KEY: team must be WINNING
                     if team_goals <= opp_goals:
                         continue
+
+                    # Min duration persistence: team must stay winning for min_dur rows
+                    if min_dur > 1:
+                        persist_ok = True
+                        for pi in range(idx + 1, min(idx + min_dur, len(data_points))):
+                            pr = data_points[pi][1]  # row
+                            pg = _to_float(pr.get("goles_local" if team == "home" else "goles_visitante", ""))
+                            po = _to_float(pr.get("goles_visitante" if team == "home" else "goles_local", ""))
+                            if pg is None or po is None or int(pg) <= int(po):
+                                persist_ok = False
+                                break
+                        if not persist_ok:
+                            continue
 
                     triggered[team] = True
                     goal_diff = team_goals - opp_goals
@@ -2028,17 +2088,26 @@ def analyze_strategy_odds_drift() -> dict:
 
 # ── Cartera (Portfolio) ─────────────────────────────────────────────────
 
-@_cached_result("cartera")
 def analyze_cartera() -> dict:
     """Combined portfolio view of all strategies with flat and managed bankroll simulations."""
-    draw_data = analyze_strategy_back_draw_00()
-    xg_data = analyze_strategy_xg_underperformance()
-    drift_data = analyze_strategy_odds_drift()
-    clustering_data = analyze_strategy_goal_clustering()
-    pressure_data = analyze_strategy_pressure_cooker()
-    tarde_asia_data = analyze_strategy_tarde_asia()
-    momentum_xg_v1_data = analyze_strategy_momentum_xg(version="v1")
-    momentum_xg_v2_data = analyze_strategy_momentum_xg(version="v2")
+    import json as _json
+    from api.config import load_config as _load_config
+    cfg = _load_config()
+    md = cfg.get("min_duration", {})
+
+    # Manual cache key including min_duration values
+    cache_key = f"cartera_{_json.dumps(md, sort_keys=True)}"
+    if cache_key in _result_cache:
+        return _result_cache[cache_key]
+
+    draw_data = analyze_strategy_back_draw_00(min_dur=md.get("draw", 1))
+    xg_data = analyze_strategy_xg_underperformance(min_dur=md.get("xg", 2))
+    drift_data = analyze_strategy_odds_drift(min_dur=md.get("drift", 2))
+    clustering_data = analyze_strategy_goal_clustering(min_dur=md.get("clustering", 4))
+    pressure_data = analyze_strategy_pressure_cooker(min_dur=md.get("pressure", 2))
+    tarde_asia_data = analyze_strategy_tarde_asia(min_dur=1)
+    momentum_xg_v1_data = analyze_strategy_momentum_xg(version="v1", min_dur=1)
+    momentum_xg_v2_data = analyze_strategy_momentum_xg(version="v2", min_dur=1)
 
     all_bets = []
     for b in draw_data.get("bets", []):
@@ -2097,7 +2166,7 @@ def analyze_cartera() -> dict:
                 "pl": round(pp, 2),
                 "roi": round(pp / (nn * 10) * 100, 1) if nn else 0}
 
-    return {
+    result = {
         "total_bets": n,
         "flat": {
             "pl": flat_pl,
@@ -2123,6 +2192,8 @@ def analyze_cartera() -> dict:
         },
         "bets": all_bets,
     }
+    _result_cache[cache_key] = result
+    return result
 
 
 # ── Cash-out simulation ─────────────────────────────────────────────────
@@ -3533,7 +3604,7 @@ def detect_watchlist(versions: dict | None = None) -> list:
     return watchlist
 
 
-def analyze_strategy_goal_clustering() -> dict:
+def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
     """
     Analiza Goal Clustering V2: Tras gol + SoT max >= 3
 
@@ -3624,6 +3695,13 @@ def analyze_strategy_goal_clustering() -> dict:
                     sot_max = max(int(sot_l), int(sot_v))
 
                     if sot_max >= 3:
+                        # Min duration: wait min_dur rows before entering
+                        if min_dur > 1:
+                            end_idx = idx + min_dur - 1
+                            if end_idx >= len(rows):
+                                continue  # not enough rows remaining
+                            row = rows[end_idx]
+
                         # Obtener cuotas Over
                         over_field = _get_over_odds_field(total_now)
 
@@ -3711,7 +3789,7 @@ def analyze_strategy_goal_clustering() -> dict:
     return results
 
 
-def analyze_strategy_pressure_cooker() -> dict:
+def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
     """
     Pressure Cooker V1: Back Over en empates con goles (min 65-75)
 
@@ -3768,7 +3846,7 @@ def analyze_strategy_pressure_cooker() -> dict:
 
         # Buscar primera fila con empate 1-1+ entre min 65-75
         trigger_found = False
-        for row in rows:
+        for idx, row in enumerate(rows):
             if row.get("estado_partido") != "en_juego":
                 continue
 
@@ -3789,6 +3867,13 @@ def analyze_strategy_pressure_cooker() -> dict:
             if trigger_found:
                 continue
             trigger_found = True
+
+            # Min duration: wait min_dur rows before entering
+            if min_dur > 1:
+                end_idx = idx + min_dur - 1
+                if end_idx >= len(rows):
+                    continue  # not enough rows remaining
+                row = rows[end_idx]
 
             total_goals = int(gl) + int(gv)
             results["draws_65_75"] += 1
@@ -3890,7 +3975,7 @@ def analyze_strategy_pressure_cooker() -> dict:
     return results
 
 
-def analyze_strategy_tarde_asia() -> dict:
+def analyze_strategy_tarde_asia(min_dur: int = 1) -> dict:
     """
     Tarde Asia High Scoring V1: Back Over 2.5 en partidos tarde de Asia/Alemania/Francia
 
@@ -4013,7 +4098,7 @@ def analyze_strategy_tarde_asia() -> dict:
 
         # Buscar primera fila con cuotas Over 2.5
         bet_placed = False
-        for row in rows:
+        for idx, row in enumerate(rows):
             if bet_placed:
                 break
 
@@ -4030,6 +4115,16 @@ def analyze_strategy_tarde_asia() -> dict:
             gv = _to_float(row.get("goles_visitante", ""))
             if gl is None or gv is None:
                 continue
+
+            # Min duration: wait min_dur rows before entering
+            if min_dur > 1:
+                end_idx = idx + min_dur - 1
+                if end_idx >= len(rows):
+                    continue  # not enough rows remaining
+                row = rows[end_idx]
+                _min_e = _to_float(row.get("minuto", ""))
+                if _min_e is not None:
+                    minuto = _min_e
 
             # Colocar apuesta
             bet_placed = True
@@ -4082,7 +4177,7 @@ def analyze_strategy_tarde_asia() -> dict:
 
 
 
-def analyze_strategy_momentum_xg(version: str = "v1") -> dict:
+def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
     """
     Momentum Dominante x xG: BACK equipo con dominancia en tiros a puerta pero xG no convertido
 
@@ -4174,7 +4269,7 @@ def analyze_strategy_momentum_xg(version: str = "v1") -> dict:
 
         # Buscar trigger de momentum dominante
         bet_placed = False
-        for row in rows:
+        for idx, row in enumerate(rows):
             if bet_placed:
                 break
 
@@ -4241,6 +4336,16 @@ def analyze_strategy_momentum_xg(version: str = "v1") -> dict:
 
             if dominant_team is None:
                 continue
+
+            # Min duration: wait min_dur rows before entering
+            if min_dur > 1:
+                end_idx = idx + min_dur - 1
+                if end_idx >= len(rows):
+                    continue  # not enough rows remaining
+                row = rows[end_idx]
+                _min_e = _to_float(row.get("minuto", ""))
+                if _min_e is not None:
+                    minuto = _min_e
 
             # Trigger encontrado
             bet_placed = True
