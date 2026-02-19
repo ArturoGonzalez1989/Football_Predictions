@@ -776,4 +776,47 @@ export const api = {
   // Cartera configuration
   getConfig: () => get<CarteraConfig>("/config/cartera"),
   saveConfig: (config: CarteraConfig) => put<{ status: string }>("/config/cartera", config),
+
+  // Strategy Explorer
+  getExplorerResults: (minSample?: number, maxResults?: number) => {
+    const params = new URLSearchParams()
+    if (minSample !== undefined) params.set("min_sample", String(minSample))
+    if (maxResults !== undefined) params.set("max_results", String(maxResults))
+    const qs = params.toString()
+    return get<ExplorationRun>(`/explorer/results${qs ? `?${qs}` : ""}`)
+  },
+  runExploration: (minSample?: number, maxResults?: number) => {
+    const params = new URLSearchParams()
+    if (minSample !== undefined) params.set("min_sample", String(minSample))
+    if (maxResults !== undefined) params.set("max_results", String(maxResults))
+    const qs = params.toString()
+    return post<ExplorationRun>(`/explorer/run${qs ? `?${qs}` : ""}`)
+  },
+}
+
+// ── Explorer interfaces ───────────────────────────────────────────────────────
+
+export interface ExplorerResult {
+  minute:          number
+  condition:       string
+  condition_id:    string
+  target:          string
+  bet_type:        "back" | "lay"
+  n_matches:       number
+  wins:            number
+  win_rate:        number
+  avg_odds:        number | null
+  std_odds:        number | null
+  ev_pct:          number
+  avg_pl_per_bet:  number
+  total_pl:        number
+}
+
+export interface ExplorationRun {
+  run_at:           string
+  n_total_matches:  number
+  n_results:        number
+  min_sample:       number
+  max_results:      number
+  results:          ExplorerResult[]
 }

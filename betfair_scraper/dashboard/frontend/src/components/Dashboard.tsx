@@ -9,8 +9,9 @@ import { DataQualityView } from "./DataQualityView"
 import { PlacedBetsView } from "./PlacedBetsView"
 import { AnalyticsView } from "./AnalyticsView"
 import { StrategiesView } from "./StrategiesView"
+import { ExplorerView } from "./ExplorerView"
 
-type View = "signals" | "bets" | "live" | "upcoming" | "finished" | "quality" | "strategies" | "analytics"
+type View = "signals" | "bets" | "live" | "upcoming" | "finished" | "quality" | "strategies" | "analytics" | "explorer"
 
 export function Dashboard() {
   const [view, setView] = useState<View>("signals")
@@ -86,6 +87,17 @@ export function Dashboard() {
             }
             label="Strategies"
             badgeColor="purple"
+          />
+          <NavItem
+            active={view === "explorer"}
+            onClick={() => setView("explorer")}
+            icon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            }
+            label="Explorador"
+            badgeColor="violet"
           />
           <NavItem
             active={view === "live"}
@@ -210,6 +222,8 @@ export function Dashboard() {
         {view === "quality" && <DataQualityView />}
 
         {view === "strategies" && <StrategiesView />}
+
+        {view === "explorer" && <ExplorerView />}
 
         {view === "analytics" && <AnalyticsView />}
       </main>
