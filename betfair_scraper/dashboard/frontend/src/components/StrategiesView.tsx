@@ -11,7 +11,7 @@ import {
   drawVersionToParams, xgVersionToParams, driftVersionToParams, clusteringVersionToParams,
   filterDrawBets, filterXGBets, filterDriftBets, filterClusteringBets, filterPressureBets, filterTardeAsiaBets, filterMomentumXGBets,
   simulateCartera, findBestCombo, getBetOdds,
-  type OptimizeCriterion, type OptimizeResult,
+  type OptimizeResult,
   optimizeDrawParams, optimizeXGParams, optimizeDriftParams, optimizeClusteringParams,
   type RealisticAdjustments,
   applyRealisticAdjustments,
@@ -248,7 +248,6 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [clusteringParams, setClusteringParams] = useState<ClusteringFilterParams>(savedState?.clusteringParams || DEFAULT_CLUSTERING_PARAMS)
   // Optimizer state
   const [optimizerOpen, setOptimizerOpen] = useState<string | null>(null)
-  const [optimizeCriterion, setOptimizeCriterion] = useState<OptimizeCriterion>("roi")
   const [optimizerMinBets, setOptimizerMinBets] = useState(5)
   const [optimizerResults, setOptimizerResults] = useState<{ strategy: string; results: OptimizeResult<any>[] } | null>(null)
   const [pressureVer, setPressureVer] = useState<PressureCarteraVersion>(savedState?.pressureVer || "v1")
@@ -410,13 +409,13 @@ function CarteraTab({ data }: { data: Cartera }) {
     const bankrollInit = managed.initial_bankroll
     let results: OptimizeResult<any>[] = []
     if (strategy === "draw") {
-      results = optimizeDrawParams(bets, xgParams, driftParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+      results = optimizeDrawParams(bets, xgParams, driftParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizerMinBets)
     } else if (strategy === "xg") {
-      results = optimizeXGParams(bets, drawParams, driftParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+      results = optimizeXGParams(bets, drawParams, driftParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizerMinBets)
     } else if (strategy === "drift") {
-      results = optimizeDriftParams(bets, drawParams, xgParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+      results = optimizeDriftParams(bets, drawParams, xgParams, clusteringParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizerMinBets)
     } else if (strategy === "clustering") {
-      results = optimizeClusteringParams(bets, drawParams, xgParams, driftParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizeCriterion, optimizerMinBets)
+      results = optimizeClusteringParams(bets, drawParams, xgParams, driftParams, pressureVer, tardeAsiaVer, momentumXGVer, bankrollInit, optimizerMinBets)
     }
     setOptimizerResults({ strategy, results })
     setOptimizerOpen(strategy)
@@ -843,9 +842,7 @@ function CarteraTab({ data }: { data: Cartera }) {
                 <OptimizerPanel
                   strategyKey="draw"
                   results={optimizerResults.results}
-                  criterion={optimizeCriterion}
                   minBets={optimizerMinBets}
-                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("draw") }}
                   onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("draw") }}
                   onApply={r => { setDrawParams(r.params as DrawFilterParams); setOptimizerOpen(null) }}
                   onClose={() => setOptimizerOpen(null)}
@@ -903,9 +900,7 @@ function CarteraTab({ data }: { data: Cartera }) {
                 <OptimizerPanel
                   strategyKey="xg"
                   results={optimizerResults.results}
-                  criterion={optimizeCriterion}
                   minBets={optimizerMinBets}
-                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("xg") }}
                   onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("xg") }}
                   onApply={r => { setXGParams(r.params as XGFilterParams); setOptimizerOpen(null) }}
                   onClose={() => setOptimizerOpen(null)}
@@ -971,9 +966,7 @@ function CarteraTab({ data }: { data: Cartera }) {
                 <OptimizerPanel
                   strategyKey="drift"
                   results={optimizerResults.results}
-                  criterion={optimizeCriterion}
                   minBets={optimizerMinBets}
-                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("drift") }}
                   onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("drift") }}
                   onApply={r => { setDriftParams(r.params as DriftFilterParams); setOptimizerOpen(null) }}
                   onClose={() => setOptimizerOpen(null)}
@@ -1030,9 +1023,7 @@ function CarteraTab({ data }: { data: Cartera }) {
                 <OptimizerPanel
                   strategyKey="clustering"
                   results={optimizerResults.results}
-                  criterion={optimizeCriterion}
                   minBets={optimizerMinBets}
-                  onChangeCriterion={c => { setOptimizeCriterion(c); runOptimizer("clustering") }}
                   onChangeMinBets={n => { setOptimizerMinBets(n); runOptimizer("clustering") }}
                   onApply={r => { setClusteringParams(r.params as ClusteringFilterParams); setOptimizerOpen(null) }}
                   onClose={() => setOptimizerOpen(null)}
@@ -1940,9 +1931,7 @@ function CarteraTab({ data }: { data: Cartera }) {
 function OptimizerPanel({
   strategyKey: _strategyKey,
   results,
-  criterion,
   minBets,
-  onChangeCriterion,
   onChangeMinBets,
   onApply,
   onClose,
@@ -1950,33 +1939,40 @@ function OptimizerPanel({
 }: {
   strategyKey?: string
   results: OptimizeResult<any>[]
-  criterion: OptimizeCriterion
   minBets: number
-  onChangeCriterion: (c: OptimizeCriterion) => void
   onChangeMinBets: (n: number) => void
   onApply: (r: OptimizeResult<any>) => void
   onClose: () => void
   renderParams: (r: OptimizeResult<any>) => string
 }) {
-  const criterionOpts: { key: OptimizeCriterion; label: string }[] = [
-    { key: "roi", label: "Max ROI" },
-    { key: "pl", label: "Max P/L" },
-    { key: "wr", label: "Max WR" },
-    { key: "min_dd", label: "Min DD" },
-  ]
+  type SortKey = "roi" | "pl" | "wr" | "nBets"
+  const [sortKey, setSortKey] = useState<SortKey>("pl")
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === "desc" ? "asc" : "desc")
+    else { setSortKey(key); setSortDir("desc") }
+  }
+
+  const sorted = [...results].sort((a, b) => {
+    const diff = a[sortKey] - b[sortKey]
+    return sortDir === "desc" ? -diff : diff
+  })
+
+  const SortIndicator = ({ k }: { k: SortKey }) =>
+    sortKey === k ? <span className="ml-0.5">{sortDir === "desc" ? "▼" : "▲"}</span> : null
+
+  const ColHeader = ({ k, label, className }: { k: SortKey; label: string; className?: string }) => (
+    <button type="button" onClick={() => handleSort(k)}
+      className={`text-right text-[9px] uppercase tracking-wider transition-colors select-none ${sortKey === k ? "text-amber-400" : "text-zinc-600 hover:text-zinc-400"} ${className ?? ""}`}
+    >{label}<SortIndicator k={k} /></button>
+  )
 
   return (
     <div className="ml-9 bg-zinc-900/70 border border-amber-900/30 rounded-lg p-3">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-amber-500/80 font-semibold uppercase tracking-wider">Optimizador</span>
-          <div className="flex gap-1">
-            {criterionOpts.map(c => (
-              <button key={c.key} type="button" onClick={() => onChangeCriterion(c.key)}
-                className={`px-1.5 py-0.5 rounded text-[9px] transition-colors ${criterion === c.key ? "bg-amber-600/30 text-amber-400 border border-amber-600/40" : "bg-zinc-800 text-zinc-500 border border-zinc-700 hover:text-zinc-400"}`}
-              >{c.label}</button>
-            ))}
-          </div>
           <span className="text-[9px] text-zinc-600 shrink-0">mín bets</span>
           <input type="number" min={1} max={50} step={1} title="Mínimo de apuestas" placeholder="5"
             value={minBets}
@@ -1990,10 +1986,15 @@ function OptimizerPanel({
         <div className="text-[10px] text-zinc-500 py-2">Sin combinaciones con ≥{minBets} apuestas</div>
       ) : (
         <div className="space-y-1">
-          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 text-[9px] text-zinc-600 uppercase tracking-wider pb-1 border-b border-zinc-800">
-            <span>Params</span><span className="text-right">ROI</span><span className="text-right">P/L</span><span className="text-right">WR</span><span className="text-right">N</span><span></span>
+          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 pb-1 border-b border-zinc-800">
+            <span className="text-[9px] text-zinc-600 uppercase tracking-wider">Params</span>
+            <ColHeader k="roi" label="ROI" />
+            <ColHeader k="pl" label="P/L" />
+            <ColHeader k="wr" label="WR" />
+            <ColHeader k="nBets" label="N" />
+            <span />
           </div>
-          {results.map((r, i) => (
+          {sorted.map((r, i) => (
             <div key={i} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center py-0.5 hover:bg-zinc-800/30 rounded">
               <span className="text-[9px] text-zinc-300 font-mono truncate">{renderParams(r)}</span>
               <span className={`text-[9px] text-right font-mono ${r.roi >= 0 ? "text-emerald-400" : "text-red-400"}`}>{r.roi >= 0 ? "+" : ""}{r.roi.toFixed(1)}%</span>

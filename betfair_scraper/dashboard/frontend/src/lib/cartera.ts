@@ -485,8 +485,6 @@ export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollI
 
 // ── Per-strategy param optimizer ─────────────────────────────────────────
 
-export type OptimizeCriterion = "roi" | "pl" | "wr" | "min_dd"
-
 export interface OptimizeResult<P> {
   params: P
   roi: number
@@ -525,16 +523,6 @@ export function buildCarteraBets(
   return filterByRisk(combined, riskFilter)
 }
 
-function scoreResult(sim: ReturnType<typeof simulateCartera>, criterion: OptimizeCriterion): number {
-  switch (criterion) {
-    case "roi":    return sim.flatRoi
-    case "pl":     return sim.flatPl
-    case "wr":     return sim.winPct + sim.total * 0.01
-    case "min_dd": return sim.managedPl - sim.managedMaxDd.maxDd * 2 + sim.winPct * 0.5
-    default:       return sim.flatRoi
-  }
-}
-
 export function optimizeDrawParams(
   allBets: CarteraBet[],
   currentXG: XGFilterParams,
@@ -544,13 +532,12 @@ export function optimizeDrawParams(
   currentTardeAsia: TardeAsiaVersion,
   currentMomentumXG: MomentumXGVersion,
   bankrollInit: number,
-  criterion: OptimizeCriterion = "roi",
   minBets = 5,
 ): OptimizeResult<DrawFilterParams>[] {
   const xgMaxOpts = [0.4, 0.5, 0.6, 0.7, 0.8, 1.0]
   const possMaxOpts = [15, 20, 25, 30, 100]
   const shotsMaxOpts = [6, 8, 10, 20]
-  const results: { r: OptimizeResult<DrawFilterParams>; score: number }[] = []
+  const results: OptimizeResult<DrawFilterParams>[] = []
 
   for (const xgMax of xgMaxOpts) {
     for (const possMax of possMaxOpts) {
@@ -559,13 +546,12 @@ export function optimizeDrawParams(
         const bets = buildCarteraBets(allBets, p, currentXG, currentDrift, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
         if (bets.length < minBets) continue
         const sim = simulateCartera(bets, bankrollInit, "fixed")
-        const r: OptimizeResult<DrawFilterParams> = { params: p, roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct }
-        results.push({ r, score: scoreResult(sim, criterion) })
+        results.push({ params: p, roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
       }
     }
   }
 
-  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => x.r)
+  return results.sort((a, b) => b.pl - a.pl).slice(0, 15)
 }
 
 export function optimizeXGParams(
@@ -577,12 +563,11 @@ export function optimizeXGParams(
   currentTardeAsia: TardeAsiaVersion,
   currentMomentumXG: MomentumXGVersion,
   bankrollInit: number,
-  criterion: OptimizeCriterion = "roi",
   minBets = 5,
 ): OptimizeResult<XGFilterParams>[] {
   const sotMinOpts = [0, 1, 2, 3]
   const minuteMaxOpts = [60, 70, 80, 90]
-  const results: { p: XGFilterParams; score: number; roi: number; pl: number; wr: number; nBets: number; dd: number }[] = []
+  const results: OptimizeResult<XGFilterParams>[] = []
 
   for (const sotMin of sotMinOpts) {
     for (const minuteMax of minuteMaxOpts) {
@@ -590,11 +575,11 @@ export function optimizeXGParams(
       const bets = buildCarteraBets(allBets, currentDraw, p, currentDrift, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
       if (bets.length < minBets) continue
       const sim = simulateCartera(bets, bankrollInit, "fixed")
-      results.push({ p, score: scoreResult(sim, criterion), roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
+      results.push({ params: p, roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
     }
   }
 
-  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => ({ params: x.p, roi: x.roi, pl: x.pl, wr: x.wr, nBets: x.nBets, dd: x.dd }))
+  return results.sort((a, b) => b.pl - a.pl).slice(0, 15)
 }
 
 export function optimizeDriftParams(
@@ -606,14 +591,13 @@ export function optimizeDriftParams(
   currentTardeAsia: TardeAsiaVersion,
   currentMomentumXG: MomentumXGVersion,
   bankrollInit: number,
-  criterion: OptimizeCriterion = "roi",
   minBets = 5,
 ): OptimizeResult<DriftFilterParams>[] {
   const goalDiffMinOpts = [0, 1, 2]
   const driftMinOpts = [30, 50, 100, 150]
   const oddsMaxOpts = [5, 7, 10, Infinity]
   const minuteMinOpts = [0, 30, 45]
-  const results: { p: DriftFilterParams; score: number; roi: number; pl: number; wr: number; nBets: number; dd: number }[] = []
+  const results: OptimizeResult<DriftFilterParams>[] = []
 
   for (const goalDiffMin of goalDiffMinOpts) {
     for (const driftMin of driftMinOpts) {
@@ -623,13 +607,13 @@ export function optimizeDriftParams(
           const bets = buildCarteraBets(allBets, currentDraw, currentXG, p, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
           if (bets.length < minBets) continue
           const sim = simulateCartera(bets, bankrollInit, "fixed")
-          results.push({ p, score: scoreResult(sim, criterion), roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
+          results.push({ params: p, roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
         }
       }
     }
   }
 
-  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => ({ params: x.p, roi: x.roi, pl: x.pl, wr: x.wr, nBets: x.nBets, dd: x.dd }))
+  return results.sort((a, b) => b.pl - a.pl).slice(0, 15)
 }
 
 export function optimizeClusteringParams(
@@ -641,12 +625,11 @@ export function optimizeClusteringParams(
   currentTardeAsia: TardeAsiaVersion,
   currentMomentumXG: MomentumXGVersion,
   bankrollInit: number,
-  criterion: OptimizeCriterion = "roi",
   minBets = 5,
 ): OptimizeResult<ClusteringFilterParams>[] {
   const minuteMaxOpts = [50, 60, 70, 80]
   const xgRemMinOpts = [0, 0.5, 0.8, 1.2]
-  const results: { p: ClusteringFilterParams; score: number; roi: number; pl: number; wr: number; nBets: number; dd: number }[] = []
+  const results: OptimizeResult<ClusteringFilterParams>[] = []
 
   for (const minuteMax of minuteMaxOpts) {
     for (const xgRemMin of xgRemMinOpts) {
@@ -654,11 +637,11 @@ export function optimizeClusteringParams(
       const bets = buildCarteraBets(allBets, currentDraw, currentXG, currentDrift, p, currentPressure, currentTardeAsia, currentMomentumXG)
       if (bets.length < minBets) continue
       const sim = simulateCartera(bets, bankrollInit, "fixed")
-      results.push({ p, score: scoreResult(sim, criterion), roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
+      results.push({ params: p, roi: sim.flatRoi, pl: sim.flatPl, wr: sim.winPct, nBets: sim.total, dd: sim.flatMaxDd.ddPct })
     }
   }
 
-  return results.sort((a, b) => b.score - a.score).slice(0, 10).map(x => ({ params: x.p, roi: x.roi, pl: x.pl, wr: x.wr, nBets: x.nBets, dd: x.dd }))
+  return results.sort((a, b) => b.pl - a.pl).slice(0, 15)
 }
 
 export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>, riskFilter: RiskFilter = "all"): VersionCombo {
