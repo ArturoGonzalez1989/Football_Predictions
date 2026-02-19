@@ -9,7 +9,7 @@ import {
   round2,
   filterDrawBets, filterXGBets, filterDriftBets, filterClusteringBets, filterPressureBets, filterTardeAsiaBets, filterMomentumXGBets,
   simulateCartera, findBestCombo, getBetOdds,
-  type RealisticAdjustments, DEFAULT_ADJUSTMENTS,
+  type RealisticAdjustments,
   applyRealisticAdjustments,
   type RiskFilter, filterByRisk, analyzeRiskBreakdown,
 } from "../lib/cartera"
@@ -115,7 +115,6 @@ function configToState(cfg: CarteraConfig) {
     brMode: (cfg.bankroll_mode || "fixed") as BankrollMode,
     activePreset: (cfg.active_preset || null) as PresetKey,
     riskFilter: (cfg.risk_filter || "all") as RiskFilter,
-    realistic: cfg.adjustments.enabled ?? false,
     adjDedup: cfg.adjustments.dedup ?? true,
     adjMaxOdds: cfg.adjustments.max_odds ?? 6.0,
     adjMinOdds: cfg.adjustments.min_odds ?? 1.15,
@@ -228,7 +227,6 @@ function CarteraTab({ data }: { data: Cartera }) {
   const [momentumXGVer, setMomentumXGVer] = useState<MomentumXGVersion>(savedState?.momentumXGVer || "off")
   const [brMode, setBrMode] = useState<BankrollMode>(savedState?.brMode || "fixed")
   const [activePreset, setActivePreset] = useState<PresetKey>(savedState?.activePreset || null)
-  const [realistic, setRealistic] = useState(savedState?.realistic || false)
   const [adjDedup, setAdjDedup] = useState(savedState?.adjDedup !== undefined ? savedState.adjDedup : true)
   const [adjMaxOdds, setAdjMaxOdds] = useState(savedState?.adjMaxOdds || 6.0)
   const [adjMinOdds, setAdjMinOdds] = useState(savedState?.adjMinOdds || 1.15)
@@ -259,7 +257,6 @@ function CarteraTab({ data }: { data: Cartera }) {
         setBrMode(s.brMode)
         setActivePreset(s.activePreset)
         setRiskFilter(s.riskFilter)
-        setRealistic(s.realistic)
         setAdjDedup(s.adjDedup)
         setAdjMaxOdds(s.adjMaxOdds)
         setAdjMinOdds(s.adjMinOdds)
@@ -309,7 +306,7 @@ function CarteraTab({ data }: { data: Cartera }) {
     risk_filter: riskFilter,
     min_duration: minDur,
     adjustments: {
-      enabled: realistic,
+      enabled: true,
       dedup: adjDedup,
       max_odds: adjMaxOdds,
       min_odds: adjMinOdds,
@@ -329,7 +326,7 @@ function CarteraTab({ data }: { data: Cartera }) {
         // Keep localStorage in sync as fallback
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           drawVer, xgVer, driftVer, clusteringVer, pressureVer, tardeAsiaVer, momentumXGVer,
-          brMode, activePreset, realistic, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
+          brMode, activePreset, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
           adjSlippage, adjConflictFilter, adjCashout, adjCashoutMinute, riskFilter, minDur,
         }))
         setSaveStatus("saved")
@@ -349,7 +346,6 @@ function CarteraTab({ data }: { data: Cartera }) {
     setMomentumXGVer("off")
     setBrMode("fixed")
     setActivePreset(null)
-    setRealistic(false)
     setAdjDedup(true)
     setAdjMaxOdds(6.0)
     setAdjMinOdds(1.15)
@@ -391,11 +387,9 @@ function CarteraTab({ data }: { data: Cartera }) {
     (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
 
-  // Apply realistic adjustments if enabled
-  const currentAdj: RealisticAdjustments = realistic
-    ? { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin, slippagePct: adjSlippage, conflictFilter: adjConflictFilter }
-    : DEFAULT_ADJUSTMENTS
-  let filteredBets = realistic ? applyRealisticAdjustments(rawBets, currentAdj) : rawBets
+  // Apply realistic adjustments (always active — each filter controlled independently)
+  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin, slippagePct: adjSlippage, conflictFilter: adjConflictFilter }
+  let filteredBets = applyRealisticAdjustments(rawBets, currentAdj)
   const removedCount = rawBets.length - filteredBets.length
 
   // Apply risk filter
@@ -408,14 +402,11 @@ function CarteraTab({ data }: { data: Cartera }) {
     const csv = generateCarteraCSV(filteredBets)
     const timestamp = new Date().toISOString().split('T')[0]
     const presetLabel = activePreset ? `_${activePreset}` : ''
-    const realisticLabel = realistic ? '_realista' : ''
-    downloadCSV(`cartera${presetLabel}${realisticLabel}_${timestamp}.csv`, csv)
+    downloadCSV(`cartera${presetLabel}_${timestamp}.csv`, csv)
   }
 
   // Recalculate simulations
   const sim = simulateCartera(filteredBets, managed.initial_bankroll, brMode)
-  // Also calculate ideal sim for comparison when realistic mode is on
-  const idealSim = realistic ? simulateCartera(rawBets, managed.initial_bankroll, brMode) : null
 
   // Per-strategy stats
   const stratConfigs = [
@@ -474,7 +465,7 @@ function CarteraTab({ data }: { data: Cartera }) {
             <h2 className="text-sm font-semibold text-zinc-200">Cartera de Estrategias</h2>
             <p className="text-[10px] text-zinc-500 mt-0.5">
               {filteredBets.length} apuestas filtradas / {bets.length} totales
-              {realistic && removedCount > 0 && <span className="text-yellow-600/80 ml-1.5">· {removedCount} eliminadas por modo realista</span>}
+              {removedCount > 0 && <span className="text-yellow-600/80 ml-1.5">· {removedCount} eliminadas por filtros realistas</span>}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -523,18 +514,18 @@ function CarteraTab({ data }: { data: Cartera }) {
             </button>
           </div>
         </div>
-        {/* 3-column control grid: Presets | Risk+Bankroll | Realistic */}
-        <div className="grid grid-cols-3 gap-6 pb-5 mb-5 border-b border-zinc-800">
+        {/* 2-column control grid: Presets | Risk+Bankroll */}
+        <div className="grid grid-cols-2 gap-6 pb-5 mb-5 border-b border-zinc-800">
           {/* Col 1: Presets */}
           <div>
             <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Presets</div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {PRESETS.map(p => (
                 <button
                   key={p.key}
                   type="button"
                   onClick={() => applyPreset(p.key)}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all text-left ${
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                     activePreset === p.key
                       ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm shadow-indigo-500/10"
                       : "bg-zinc-800/50 text-zinc-500 border border-zinc-700/50 hover:text-zinc-300 hover:border-zinc-600"
@@ -603,50 +594,28 @@ function CarteraTab({ data }: { data: Cartera }) {
               </div>
             </div>
           </div>
-
-          {/* Col 3: Modo Realista */}
-          <div>
-            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Modo Realista</div>
-            <div className="flex items-center gap-2.5 mb-2">
-              <button
-                type="button"
-                onClick={() => setRealistic(!realistic)}
-                title="Activar modo realista"
-                className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${realistic ? "bg-yellow-500" : "bg-zinc-700"}`}
-              >
-                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${realistic ? "translate-x-5" : ""}`} />
-              </button>
-              <span className={`text-xs font-medium ${realistic ? "text-yellow-400" : "text-zinc-500"}`}>
-                {realistic ? "ON" : "OFF"}
-              </span>
-              {realistic && (
-                <button
-                  type="button"
-                  onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true) }}
-                  className="text-[10px] text-yellow-600 hover:text-yellow-400 transition-colors ml-1"
-                >
-                  reset
-                </button>
-              )}
-            </div>
-            <p className="text-[10px] text-zinc-600">
-              {realistic
-                ? (removedCount > 0 ? `${removedCount} apuestas filtradas de ${rawBets.length}` : `Sin filtros aplicados (${rawBets.length})`)
-                : "Simulación ideal sin ajustes de ejecución"}
-            </p>
-          </div>
         </div>
 
-        {/* Realistic Adjustments — full-width row, only when enabled */}
-        {realistic && (
-          <div className="grid grid-cols-7 gap-2.5 pb-5 mb-5 border-b border-zinc-800">
+        {/* Filtros Realistas — always visible, each filter independent */}
+        <div className="pb-5 mb-5 border-b border-zinc-800">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Filtros Realistas</div>
+            <button
+              type="button"
+              onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true) }}
+              className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+            >
+              reset
+            </button>
+          </div>
+          <div className="grid grid-cols-7 gap-2.5">
             <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] text-zinc-400 font-medium">Dedup</span>
                 <button
                   type="button"
                   onClick={() => setAdjDedup(!adjDedup)}
-                  title="Deduplicar apuestas"
+                  title="Deduplicar apuestas — mismo mercado/partido = 1 apuesta"
                   className={`relative w-8 h-4 rounded-full transition-colors ${adjDedup ? "bg-yellow-500" : "bg-zinc-700"}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjDedup ? "translate-x-4" : ""}`} />
@@ -727,7 +696,7 @@ function CarteraTab({ data }: { data: Cartera }) {
                 <button
                   type="button"
                   onClick={() => setAdjConflictFilter(!adjConflictFilter)}
-                  title="Filtrar par toxico MomXG + xGUnderperf"
+                  title="Filtrar par tóxico MomXG + xGUnderperf"
                   className={`relative w-8 h-4 rounded-full transition-colors ${adjConflictFilter ? "bg-red-600" : "bg-zinc-700"}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjConflictFilter ? "translate-x-4" : ""}`} />
@@ -766,34 +735,7 @@ function CarteraTab({ data }: { data: Cartera }) {
               )}
             </div>
           </div>
-        )}
-
-        {/* Ideal vs Realistic comparison */}
-        {realistic && idealSim && (
-          <div className="mb-5 bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">Comparación Ideal vs Realista</span>
-            </div>
-            <div className="grid grid-cols-4 gap-4 text-center">
-              <div>
-                <div className="text-[10px] text-zinc-500 mb-0.5">Apuestas</div>
-                <div className="text-xs text-zinc-400">{idealSim.total} → <span className="text-yellow-400 font-medium">{sim.total}</span></div>
-              </div>
-              <div>
-                <div className="text-[10px] text-zinc-500 mb-0.5">Win Rate</div>
-                <div className="text-xs text-zinc-400">{idealSim.winPct}% → <span className="text-yellow-400 font-medium">{sim.winPct}%</span></div>
-              </div>
-              <div>
-                <div className="text-[10px] text-zinc-500 mb-0.5">P/L Flat</div>
-                <div className="text-xs text-zinc-400">{idealSim.flatPl >= 0 ? "+" : ""}{idealSim.flatPl.toFixed(0)} → <span className={`font-medium ${sim.flatPl >= 0 ? "text-green-400" : "text-red-400"}`}>{sim.flatPl >= 0 ? "+" : ""}{sim.flatPl.toFixed(0)}</span></div>
-              </div>
-              <div>
-                <div className="text-[10px] text-zinc-500 mb-0.5">ROI Flat</div>
-                <div className="text-xs text-zinc-400">{idealSim.flatRoi >= 0 ? "+" : ""}{idealSim.flatRoi.toFixed(1)}% → <span className={`font-medium ${sim.flatRoi >= 0 ? "text-green-400" : "text-red-400"}`}>{sim.flatRoi >= 0 ? "+" : ""}{sim.flatRoi.toFixed(1)}%</span></div>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Estrategias y Versiones */}
         <div>
