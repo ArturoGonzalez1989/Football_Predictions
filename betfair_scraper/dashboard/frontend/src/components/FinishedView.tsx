@@ -15,6 +15,18 @@ interface FinishedViewProps {
   onRefresh: () => void
 }
 
+// Extract "YYYY-MM-DD" from a start_time string (local date)
+function matchDate(startTime: string | undefined | null): string {
+  if (!startTime) return ""
+  const d = new Date(startTime)
+  return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-CA") // "YYYY-MM-DD"
+}
+
+function fmtDateChip(isoDate: string): string {
+  const d = new Date(isoDate + "T12:00:00")
+  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" }) // "18 feb"
+}
+
 export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [full, setFull] = useState<MatchFull | null>(null)
@@ -23,6 +35,16 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [dateFilter, setDateFilter] = useState<string | null>(null)
+
+  // Unique dates sorted descending
+  const availableDates = Array.from(
+    new Set(matches.map(m => matchDate(m.start_time)).filter(Boolean))
+  ).sort((a, b) => b.localeCompare(a))
+
+  const visibleMatches = dateFilter
+    ? matches.filter(m => matchDate(m.start_time) === dateFilter)
+    : matches
 
   useEffect(() => {
     if (!selectedId) { setFull(null); setMomentum(null); setAllCaptures(null); return }
@@ -38,10 +60,17 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
     }).catch(() => {}).finally(() => setLoading(false))
   }, [selectedId])
 
-  // Auto-select first match
+  // Auto-select first visible match
   useEffect(() => {
-    if (!selectedId && matches.length > 0) setSelectedId(matches[0].match_id)
-  }, [matches, selectedId])
+    if (!selectedId && visibleMatches.length > 0) setSelectedId(visibleMatches[0].match_id)
+  }, [visibleMatches, selectedId])
+
+  // When filter changes, clear selection if no longer visible
+  useEffect(() => {
+    if (selectedId && !visibleMatches.find(m => m.match_id === selectedId)) {
+      setSelectedId(visibleMatches[0]?.match_id ?? null)
+    }
+  }, [dateFilter])
 
   const selected = matches.find(m => m.match_id === selectedId)
 
@@ -60,17 +89,38 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
     <div className="flex h-screen">
       {/* Match list panel */}
       <div className="w-72 shrink-0 border-r border-zinc-800 overflow-y-auto">
-        <div className="p-4 border-b border-zinc-800">
-          <h1 className="text-lg font-semibold text-zinc-100">Finalizados</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">{matches.length} matches</p>
+        <div className="p-4 border-b border-zinc-800 space-y-2.5">
+          <div>
+            <h1 className="text-lg font-semibold text-zinc-100">Finalizados</h1>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {visibleMatches.length}{dateFilter ? ` de ${matches.length}` : ""} partidos
+            </p>
+          </div>
+          {availableDates.length > 1 && (
+            <div className="flex flex-wrap gap-1">
+              <button
+                type="button"
+                onClick={() => setDateFilter(null)}
+                className={`px-2 py-0.5 rounded text-[10px] transition-colors ${!dateFilter ? "bg-zinc-600 text-zinc-100" : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
+              >Todas</button>
+              {availableDates.map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDateFilter(dateFilter === d ? null : d)}
+                  className={`px-2 py-0.5 rounded text-[10px] transition-colors ${dateFilter === d ? "bg-blue-600/70 text-blue-100" : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
+                >{fmtDateChip(d)}</button>
+              ))}
+            </div>
+          )}
         </div>
-        {matches.length === 0 ? (
+        {visibleMatches.length === 0 ? (
           <div className="p-6 text-center text-zinc-500 text-sm">
-            No finished matches yet
+            No hay partidos para esta fecha
           </div>
         ) : (
           <div className="divide-y divide-zinc-800/50">
-            {matches.map(m => {
+            {visibleMatches.map(m => {
               const [home, away] = m.name.split(" - ")
               return (
                 <div key={m.match_id} className={`relative group ${selectedId === m.match_id ? "bg-zinc-800/50" : "hover:bg-zinc-800/30"}`}>
