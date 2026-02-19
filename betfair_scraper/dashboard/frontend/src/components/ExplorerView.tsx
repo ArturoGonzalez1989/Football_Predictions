@@ -71,46 +71,38 @@ type SortCol = keyof Pick<ExplorerResult, "minute" | "n_matches" | "win_rate" | 
 
 // ── Subcomponentes ────────────────────────────────────────────────────────────
 
-function DiscoveryCard({ result, rank }: { result: ExplorerResult; rank: number }) {
+function ProfitableRow({ result, rank }: { result: ExplorerResult; rank: number }) {
   const evPct = result.ev_pct * 100
-  const winPct = result.win_rate * 100
-  const isPositive = evPct >= 0
-  const medals = ["🥇", "🥈", "🥉"]
-
+  const color = TARGET_COLORS[result.target] ?? "#52525b"
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col gap-2">
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-lg">{medals[rank] ?? "•"}</span>
-        <span
-          className={`text-xl font-bold tabular-nums ${isPositive ? "text-emerald-400" : "text-red-400"}`}
-        >
-          {isPositive ? "+" : ""}{evPct.toFixed(1)}% EV
-        </span>
-      </div>
-      <div className="text-xs text-zinc-300 font-medium leading-snug">{result.condition}</div>
-      <div className="flex items-center gap-2 flex-wrap">
-        <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-          style={{ backgroundColor: TARGET_COLORS[result.target] + "30", color: TARGET_COLORS[result.target] }}
-        >
-          {TARGET_LABELS[result.target] ?? result.target}
-        </span>
-        <span className="text-[10px] text-zinc-500">min {result.minute}'</span>
-      </div>
-      <div className="grid grid-cols-3 gap-1 mt-1">
-        <Stat label="WR" value={`${winPct.toFixed(0)}%`} />
-        <Stat label="Odds" value={result.avg_odds?.toFixed(2) ?? "—"} />
-        <Stat label="N" value={String(result.n_matches)} />
-      </div>
-    </div>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="text-center">
-      <div className="text-[9px] text-zinc-600 uppercase tracking-wide">{label}</div>
-      <div className="text-xs text-zinc-300 font-mono font-semibold">{value}</div>
+    <div
+      className="flex items-center gap-3 px-4 py-2 hover:bg-zinc-800/30 transition-colors"
+      style={{ borderLeft: `3px solid ${color}` }}
+    >
+      <span className="text-[10px] text-zinc-600 w-5 text-right shrink-0">#{rank}</span>
+      <span className="text-xs text-zinc-300 truncate flex-1 min-w-0">{result.condition}</span>
+      <span
+        className="text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap"
+        style={{ backgroundColor: color + "25", color }}
+      >
+        {TARGET_LABELS[result.target] ?? result.target}
+      </span>
+      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0
+        ${result.bet_type === "lay" ? "bg-orange-500/15 text-orange-400" : "bg-blue-500/15 text-blue-400"}`}>
+        {result.bet_type === "lay" ? "LAY" : "BACK"}
+      </span>
+      <span className="text-[10px] text-zinc-500 shrink-0">{result.minute}'</span>
+      <span className="text-[10px] text-zinc-600 shrink-0 tabular-nums">N:{result.n_matches}</span>
+      <span className="text-[10px] text-zinc-500 shrink-0 tabular-nums w-9 text-right">
+        {(result.win_rate * 100).toFixed(0)}%
+      </span>
+      <span className="text-xs font-bold tabular-nums shrink-0 w-16 text-right text-emerald-400">
+        +{evPct.toFixed(1)}%
+      </span>
+      <span className={`text-[10px] tabular-nums shrink-0 w-14 text-right
+        ${result.total_pl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+        {result.total_pl >= 0 ? "+" : ""}{result.total_pl.toFixed(0)}€
+      </span>
     </div>
   )
 }
@@ -205,15 +197,10 @@ export function ExplorerView() {
       return dir * (aVal - bVal)
     })
 
-  // Top 3 siempre por EV (ignora el orden actual de la tabla)
-  const top3 = [...(run?.results ?? [])]
-    .filter(r =>
-      r.n_matches >= minBets &&
-      (targetFilter === "all" || r.target === targetFilter) &&
-      (betTypeFilter === "all" || (r.bet_type ?? "back") === betTypeFilter)
-    )
+  // Todas las combinaciones EV > 0, ordenadas por EV% desc (respeta filtros activos)
+  const profitable = filtered
+    .filter(r => r.ev_pct > 0)
     .sort((a, b) => b.ev_pct - a.ev_pct)
-    .slice(0, 3)
 
   // Datos del scatter agrupados por target
   const scatterByTarget: Record<string, { x: number; y: number; z: number; cond: string; wr: number }[]> = {}
@@ -302,19 +289,28 @@ export function ExplorerView() {
 
       {run && (
         <>
-          {/* Top 3 discovery cards */}
-          {top3.length > 0 && (
-            <div>
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-3">
-                Top Descubrimientos
+          {/* Combinaciones rentables */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between">
+              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+                Combinaciones Rentables (EV+)
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {top3.map((r, i) => (
-                  <DiscoveryCard key={`${r.minute}-${r.condition_id}-${r.target}`} result={r} rank={i} />
-                ))}
-              </div>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
+                {profitable.length} oportunidades
+              </span>
             </div>
-          )}
+            <div className="overflow-y-auto max-h-80 divide-y divide-zinc-800/50">
+              {profitable.length === 0 ? (
+                <div className="px-4 py-6 text-center text-zinc-600 text-xs">
+                  Ninguna combinación con EV positivo con los filtros actuales
+                </div>
+              ) : (
+                profitable.map((r, i) => (
+                  <ProfitableRow key={`${r.minute}-${r.condition_id}-${r.target}`} result={r} rank={i + 1} />
+                ))
+              )}
+            </div>
+          </div>
 
           {/* Filtros */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
