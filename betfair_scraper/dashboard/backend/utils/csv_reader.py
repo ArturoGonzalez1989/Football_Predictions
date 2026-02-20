@@ -74,6 +74,12 @@ def _to_float(val: str) -> Optional[float]:
         return None
 
 
+def _median(values: list) -> float:
+    sorted_vals = sorted(values)
+    n = len(sorted_vals)
+    return (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2 if n % 2 == 0 else sorted_vals[n // 2]
+
+
 def _final_result_row(rows: list[dict]) -> Optional[dict]:
     """Return the row that represents the final match result.
 
@@ -115,6 +121,31 @@ def _check_min_dur(rows: list[dict], start_idx: int, min_dur: int, condition_fn)
         else:
             return None  # signal broke before reaching min_dur
     return None  # ran out of rows
+
+
+def _count_odds_stability(rows: list[dict], trigger_idx: int, odds_col: str, trigger_value: float, window: int = 10) -> tuple:
+    """Count consecutive rows BACKWARD from trigger_idx where odds_col was within 30% of trigger_value.
+    Returns (stability_count, min_odds_in_window):
+      - stability_count: 1 = single-capture spike, N = N consecutive stable rows
+      - min_odds_in_window: minimum odds seen in those consecutive rows (conservative P/L reference)
+    A value is considered stable if it is within [trigger_value * 0.70, trigger_value * 1.30].
+    The ±30% window rejects jumps like 1.14→1.85 (63%) while accepting drift like 1.70→1.85 (9%).
+    """
+    if trigger_value <= 0 or trigger_idx < 0 or trigger_idx >= len(rows):
+        return 1, trigger_value
+    low = trigger_value * 0.70
+    high = trigger_value * 1.30
+    count = 0
+    min_odds = trigger_value
+    for i in range(trigger_idx, max(-1, trigger_idx - window - 1), -1):
+        v = _to_float(rows[i].get(odds_col, ""))
+        if v is not None and v > 0 and low <= v <= high:
+            count += 1
+            if v < min_odds:
+                min_odds = v
+        else:
+            break
+    return max(1, count), min_odds
 
 
 def _lookback_val(rows: list[dict], idx: int, col: str, minutes_back: int) -> Optional[float]:
@@ -662,7 +693,7 @@ def load_momentum_data(match_id: str) -> dict:
     for row in rows:
         m = row.get("minuto", "")
         try:
-            minute_val = int(m.replace("'", "").strip()) if m else None
+            minute_val = int(float(m.replace("'", "").strip())) if m else None
         except ValueError:
             minute_val = None
 
@@ -739,6 +770,43 @@ ALL_STAT_COLUMNS = STAT_COLUMNS + [
 ]
 
 
+def _clean_odds_outliers(rows: list, ratio: float = 5.0) -> list:
+    """Replace outlier odds values with "" to avoid distorting strategy analysis.
+
+    An outlier is any value > median*ratio or < median/ratio.
+    Requires >=3 valid data points per column; otherwise leaves that column unchanged.
+    Returns NEW dicts — does NOT mutate originals.
+    """
+    if len(rows) < 3:
+        return rows
+
+    all_odds_cols = [col for pair in ODDS_COLUMNS for col in pair]
+    medians = {}
+    for col in all_odds_cols:
+        vals = []
+        for r in rows:
+            v = _to_float(r.get(col, ""))
+            if v is not None and v > 0:
+                vals.append(v)
+        if len(vals) >= 3:
+            medians[col] = _median(vals)
+
+    if not medians:
+        return rows
+
+    cleaned = []
+    for row in rows:
+        new_row = dict(row)
+        for col, med in medians.items():
+            if med <= 0:
+                continue
+            val = _to_float(row.get(col, ""))
+            if val is not None and (val > med * ratio or val < med / ratio):
+                new_row[col] = ""
+        cleaned.append(new_row)
+    return cleaned
+
+
 def load_match_full(match_id: str) -> dict:
     """Carga resumen completo de un partido finalizado: stats, cuotas, timeline."""
     csv_path = _resolve_csv_path(match_id)
@@ -775,7 +843,7 @@ def load_match_full(match_id: str) -> dict:
     for row in rows:
         m = row.get("minuto", "")
         try:
-            minute_val = int(m.replace("'", "").strip()) if m else None
+            minute_val = int(float(m.replace("'", "").strip())) if m else None
         except ValueError:
             minute_val = None
 
@@ -872,6 +940,24 @@ def _get_cached_finished_data() -> list[dict]:
             csv_path = _resolve_csv_path(game["match_id"])
             if csv_path.exists():
                 rows = _read_csv_rows(csv_path)
+                # Outlier stats on RAW rows (for Data Quality reporting)
+                bh_vals = []
+                for r in rows:
+                    v = _to_float(r.get("back_home", ""))
+                    if v is not None and v > 0:
+                        bh_vals.append(v)
+                raw_with_odds = len(bh_vals)
+                raw_total_rows = len(rows)
+                bh_outliers = 0
+                min_bh = min(bh_vals) if bh_vals else None
+                max_bh = max(bh_vals) if bh_vals else None
+                gap_count, avg_gap_size = _calculate_gap_segments(rows)
+                if len(bh_vals) >= 3:
+                    med = _median(bh_vals)
+                    if med > 0:
+                        bh_outliers = sum(1 for v in bh_vals if v > med * 5 or v < med / 5)
+                # Clean rows for strategy analysis (removes outlier odds)
+                rows = _clean_odds_outliers(rows)
                 # Try to get URL from games.csv mapping by match name
                 game_url = game.get("url") or url_map.get(game["name"], "")
                 finished.append({
@@ -880,6 +966,13 @@ def _get_cached_finished_data() -> list[dict]:
                     "url": game_url,  # URL from matches.json or games.csv
                     "csv_path": csv_path,
                     "rows": rows,
+                    "raw_total_rows": raw_total_rows,
+                    "raw_with_odds": raw_with_odds,
+                    "back_home_outliers": bh_outliers,
+                    "min_back_home": min_bh,
+                    "max_back_home": max_bh,
+                    "gap_count": gap_count,
+                    "avg_gap_size": avg_gap_size,
                 })
 
     _analytics_cache = {"finished": finished}
@@ -947,6 +1040,44 @@ def _calculate_match_gaps(rows: list[dict]) -> int:
         gaps = all_minutes - minutes_captured
         return len(gaps)
     return 0
+
+
+def _calculate_gap_segments(rows: list[dict]) -> tuple[int, float]:
+    """Return (total_missing_minutes, avg_segment_size).
+    A segment is a consecutive block of missing minutes.
+    E.g. missing=[4,8,9] → segments=[1,2] → avg=1.5
+    """
+    minutes_captured = set()
+    for row in rows:
+        m = row.get("minuto", "")
+        if m:
+            try:
+                minutes_captured.add(int(float(m.replace("'", "").strip())))
+            except (ValueError, AttributeError):
+                pass
+
+    if not minutes_captured:
+        return 0, 0.0
+
+    max_min = max(minutes_captured)
+    missing = sorted(set(range(1, max_min + 1)) - minutes_captured)
+    if not missing:
+        return 0, 0.0
+
+    # Group consecutive minutes into segments
+    segments = []
+    seg_start = missing[0]
+    seg_len = 1
+    for i in range(1, len(missing)):
+        if missing[i] == missing[i - 1] + 1:
+            seg_len += 1
+        else:
+            segments.append(seg_len)
+            seg_len = 1
+    segments.append(seg_len)
+
+    avg = round(sum(segments) / len(segments), 1)
+    return len(missing), avg
 
 
 @_cached_result("quality_distribution")
@@ -1113,6 +1244,78 @@ def get_low_quality_matches(threshold: int = 50) -> list[dict]:
     low_quality.sort(key=lambda x: x["quality"])
 
     return low_quality
+
+
+@_cached_result("odds_coverage")
+def analyze_odds_coverage() -> dict:
+    """Analyze odds scraping coverage across all finished matches."""
+    finished_matches = _get_all_finished_matches()
+
+    if not finished_matches:
+        return {
+            "avg_coverage": 0,
+            "total_matches": 0,
+            "no_odds": 0,
+            "partial_odds": 0,
+            "good_odds": 0,
+            "total_outlier_matches": 0,
+            "bins": [],
+            "matches": [],
+        }
+
+    match_list = []
+    coverages = []
+
+    for match in finished_matches:
+        # Use precomputed stats from cache (raw rows before outlier cleaning)
+        total         = match.get("raw_total_rows", len(match.get("rows") or []))
+        with_odds     = match.get("raw_with_odds", 0)
+        pct           = round(with_odds / total * 100, 1) if total > 0 else 0.0
+        outlier_count = match.get("back_home_outliers", 0)
+
+        raw_min_bh = match.get("min_back_home")
+        raw_max_bh = match.get("max_back_home")
+        coverages.append(pct)
+        match_list.append({
+            "match_id":       match["match_id"],
+            "name":           match["name"],
+            "coverage_pct":   pct,
+            "rows_with_odds": with_odds,
+            "total_rows":     total,
+            "outlier_count":  outlier_count,
+            "min_back_home":  round(raw_min_bh, 2) if raw_min_bh is not None else None,
+            "max_back_home":  round(raw_max_bh, 2) if raw_max_bh is not None else None,
+            "gap_count":      match.get("gap_count", 0),
+            "avg_gap_size":   match.get("avg_gap_size", 0.0),
+        })
+
+    # Sort by coverage ascending (worst first), then by outlier_count descending
+    match_list.sort(key=lambda x: (x["coverage_pct"], -x["outlier_count"]))
+
+    avg_coverage = round(sum(coverages) / len(coverages), 1) if coverages else 0
+    no_odds = sum(1 for p in coverages if p == 0)
+    partial_odds = sum(1 for p in coverages if 0 < p < 80)
+    good_odds = sum(1 for p in coverages if p >= 80)
+
+    bins = [
+        {"label": "0%",    "count": sum(1 for p in coverages if p == 0)},
+        {"label": "1-25%", "count": sum(1 for p in coverages if 0 < p <= 25)},
+        {"label": "26-50%","count": sum(1 for p in coverages if 25 < p <= 50)},
+        {"label": "51-75%","count": sum(1 for p in coverages if 50 < p <= 75)},
+        {"label": "76-99%","count": sum(1 for p in coverages if 75 < p < 100)},
+        {"label": "100%",  "count": sum(1 for p in coverages if p == 100)},
+    ]
+
+    return {
+        "avg_coverage": avg_coverage,
+        "total_matches": len(finished_matches),
+        "no_odds": no_odds,
+        "partial_odds": partial_odds,
+        "good_odds": good_odds,
+        "bins": bins,
+        "matches": match_list,
+        "total_outlier_matches": sum(1 for m in match_list if m["outlier_count"] > 0),
+    }
 
 
 @_cached_result("momentum_patterns")
@@ -1512,13 +1715,17 @@ def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
         draw_won = int(gl_final) == int(gv_final)
         ft_score = f"{int(gl_final)}-{int(gv_final)}"
 
+        # Stability + conservative odds (min in window)
+        _stab_count, _cons_odds = _count_odds_stability(rows, trigger_idx, "back_draw", back_draw or 0)
+
         # P/L calculation (stake 10, 5% commission on winnings)
         stake = 10
         if draw_won and back_draw:
-            gross = (back_draw - 1) * stake
-            pl = gross * 0.95  # net of commission
+            pl = round((back_draw - 1) * stake * 0.95, 2)
+            pl_conservative = round((_cons_odds - 1) * stake * 0.95, 2)
         else:
             pl = -stake
+            pl_conservative = -stake
 
         # Check strategy filters
         passes_xg_05 = xg_total is not None and xg_total < 0.5
@@ -1564,7 +1771,9 @@ def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
             "bfed_prematch": bfed,
             "ft_score": ft_score,
             "won": draw_won,
-            "pl": round(pl, 2),
+            "pl": pl,
+            "pl_conservative": pl_conservative,
+            "conservative_odds": round(_cons_odds, 2),
             "passes_v2": passes_v2,
             "passes_v15": passes_v15,
             "passes_v2r": passes_v2r,
@@ -1572,6 +1781,7 @@ def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
             "passes_v4": passes_v4,
             "synth_xg_dominance": xg_dom,
             "synth_pressure_index_v": press_v,
+            "stability_count": _stab_count,
             "timestamp_utc": trigger_row.get("timestamp_utc", ""),
             "País": trigger_row.get("País", "Desconocido"),
             "Liga": trigger_row.get("Liga", "Desconocida"),
@@ -1833,6 +2043,10 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                 passes_v2 = sot_int is not None and sot_int >= 2
                 passes_v3 = passes_v2 and minuto < 70  # V3: V2 + entrada temprana
 
+                _entry_idx = (ri + min_dur - 1) if min_dur > 1 else ri
+                _stab_xg, _cons_xg = _count_odds_stability(rows, _entry_idx, over_field or "back_over25", back_over or 0)
+                pl = round((back_over - 1) * stake * 0.95, 2) if more_goals else -stake
+                pl_conservative = round((_cons_xg - 1) * stake * 0.95, 2) if more_goals else -stake
                 bets.append({
                     "match": match["name"],
                     "match_id": match["match_id"],
@@ -1849,9 +2063,12 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                     "shots_team": shots_int,
                     "ft_score": ft_score,
                     "won": more_goals,
-                    "pl": round(pl, 2),
+                    "pl": pl,
+                    "pl_conservative": pl_conservative,
+                    "conservative_odds": round(_cons_xg, 2),
                     "passes_v2": passes_v2,
                     "passes_v3": passes_v3,
+                    "stability_count": _stab_xg,
                     "timestamp_utc": row.get("timestamp_utc", ""),
                     "País": row.get("País", "Desconocido"),
                     "Liga": row.get("Liga", "Desconocida"),
@@ -1994,10 +2211,14 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
                     else:
                         won = ft_gv > ft_gl
 
+                    _drift_odds_col = "back_home" if team == "home" else "back_away"
+                    _stab_drift, _cons_drift = _count_odds_stability(rows, curr_ri, _drift_odds_col, curr_odds or 0)
                     if won:
                         pl = round((curr_odds - 1) * STAKE * (1 - COMMISSION), 2)
+                        pl_conservative = round((_cons_drift - 1) * STAKE * (1 - COMMISSION), 2)
                     else:
                         pl = -STAKE
+                        pl_conservative = -STAKE
 
                     # Stats at trigger
                     sfx = "_local" if team == "home" else "_visitante"
@@ -2026,6 +2247,7 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
                         dominant_team=team
                     )
 
+                    _drift_odds_col = "back_home" if team == "home" else "back_away"
                     bets.append({
                         "match": match["name"],
                         "match_id": match["match_id"],
@@ -2041,13 +2263,16 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
                         "shots_team": int(shots_t) if shots_t is not None else None,
                         "ft_score": ft_score,
                         "won": won,
-                        "pl": round(pl, 2),
+                        "pl": pl,
+                        "pl_conservative": pl_conservative,
+                        "conservative_odds": round(_cons_drift, 2),
                         "passes_v2": passes_v2,
                         "passes_v3": passes_v3,
                         "passes_v4": passes_v4,
                         "passes_v5": passes_v5,
                         "passes_v6": passes_v6,
                         "synth_momentum_gap": mom_gap,
+                        "stability_count": _stab_drift,
                         "timestamp_utc": curr_row.get("timestamp_utc", ""),
                         "risk_level": risk_info["risk_level"],
                         "risk_reason": risk_info["risk_reason"],
@@ -3733,6 +3958,10 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
                             passes_v4 = xg_rem is not None and xg_rem > 0.8
 
                             # Guardar bet (solo si hay cuota válida)
+                            _gc_entry_idx = (idx + min_dur - 1) if min_dur > 1 else idx
+                            _stab_gc, _cons_gc = _count_odds_stability(rows, _gc_entry_idx, over_field, over_odds or 0)
+                            pl = round((over_odds - 1) * stake * 0.95, 2) if over_won else -stake
+                            pl_conservative = round((_cons_gc - 1) * stake * 0.95, 2) if over_won else -stake
                             results["bets"].append({
                                 "match": match_name,
                                 "match_id": match_id,
@@ -3744,10 +3973,13 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
                                 "over_line": f"Over {total_now + 0.5}",
                                 "ft_score": ft_score,
                                 "won": over_won,
-                                "pl": round(pl, 2),
+                                "pl": pl,
+                                "pl_conservative": pl_conservative,
+                                "conservative_odds": round(_cons_gc, 2),
                                 "passes_v3": passes_v3,
                                 "passes_v4": passes_v4,
                                 "synth_xg_remaining": xg_rem,
+                                "stability_count": _stab_gc,
                                 "timestamp_utc": row.get("timestamp_utc", ""),
                                 "País": row.get("País", "Desconocido"),
                                 "Liga": row.get("Liga", "Desconocida"),
@@ -3931,12 +4163,12 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
             # Resultado
             won = total_final > total_goals
             stake = 10
-            if won:
-                pl = round((over_odds - 1) * stake * 0.95, 2)
-            else:
-                pl = -stake
-
             over_line = f"Over {total_goals + 0.5}"
+
+            _pc_entry_idx = (idx + min_dur - 1) if min_dur > 1 else idx
+            _stab_pc, _cons_pc = _count_odds_stability(rows, _pc_entry_idx, over_field or "back_over25", over_odds or 0)
+            pl = round((over_odds - 1) * stake * 0.95, 2) if won else -stake
+            pl_conservative = round((_cons_pc - 1) * stake * 0.95, 2) if won else -stake
 
             results["bets"].append({
                 "match": match_name,
@@ -3947,10 +4179,13 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
                 "over_line": over_line,
                 "ft_score": ft_score,
                 "won": won,
-                "pl": round(pl, 2),
+                "pl": pl,
+                "pl_conservative": pl_conservative,
+                "conservative_odds": round(_cons_pc, 2),
                 "sot_delta": int(sot_delta),
                 "corners_delta": int(corners_delta),
                 "shots_delta": int(shots_delta),
+                "stability_count": _stab_pc,
                 "timestamp_utc": row.get("timestamp_utc", ""),
                 "País": row.get("País", "Desconocido"),
                 "Liga": row.get("Liga", "Desconocida"),
@@ -4134,10 +4369,10 @@ def analyze_strategy_tarde_asia(min_dur: int = 1) -> dict:
             # Resultado
             won = total_final > 2.5
             stake = 10
-            if won:
-                pl = round((over_25_odds - 1) * stake * 0.95, 2)
-            else:
-                pl = -stake
+            _ta_entry_idx = (idx + min_dur - 1) if min_dur > 1 else idx
+            _stab_ta, _cons_ta = _count_odds_stability(rows, _ta_entry_idx, "back_over25", over_25_odds or 0)
+            pl = round((over_25_odds - 1) * stake * 0.95, 2) if won else -stake
+            pl_conservative = round((_cons_ta - 1) * stake * 0.95, 2) if won else -stake
 
             results["bets"].append({
                 "match": match_name,
@@ -4148,9 +4383,12 @@ def analyze_strategy_tarde_asia(min_dur: int = 1) -> dict:
                 "over_line": "Over 2.5",
                 "ft_score": ft_score,
                 "won": won,
-                "pl": round(pl, 2),
+                "pl": pl,
+                "pl_conservative": pl_conservative,
+                "conservative_odds": round(_cons_ta, 2),
                 "liga": liga_match,
                 "hora_local": hora_local,
+                "stability_count": _stab_ta,
                 "timestamp_utc": row.get("timestamp_utc", ""),
                 "País": row.get("País", "Desconocido"),
                 "Liga": row.get("Liga", "Desconocida"),
@@ -4361,12 +4599,13 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
                 team_label = "Visitante"
                 xg_underperf = xg_underperf_visitante
 
-            # Calcular P/L
+            # Calcular P/L con cuota conservadora (mínimo en ventana de estabilidad)
             stake = 10
-            if won:
-                pl = round((back_odds - 1) * stake * 0.95, 2)
-            else:
-                pl = -stake
+            _mx_odds_col = "back_home" if dominant_team == "home" else "back_away"
+            _mx_entry_idx = (idx + min_dur - 1) if min_dur > 1 else idx
+            _stab_mx, _cons_mx = _count_odds_stability(rows, _mx_entry_idx, _mx_odds_col, back_odds or 0)
+            pl = round((back_odds - 1) * stake * 0.95, 2) if won else -stake
+            pl_conservative = round((_cons_mx - 1) * stake * 0.95, 2) if won else -stake
 
             # Calcular riesgo por tiempo + marcador
             risk_info = calculate_time_score_risk(
@@ -4388,7 +4627,10 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
                 "back_odds": round(back_odds, 2),
                 "ft_score": ft_score,
                 "won": won,
-                "pl": round(pl, 2),
+                "pl": pl,
+                "pl_conservative": pl_conservative,
+                "conservative_odds": round(_cons_mx, 2),
+                "stability_count": _stab_mx,
                 "timestamp_utc": row.get("timestamp_utc", ""),
                 "risk_level": risk_info["risk_level"],
                 "risk_reason": risk_info["risk_reason"],

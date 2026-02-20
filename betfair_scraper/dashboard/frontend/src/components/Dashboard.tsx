@@ -20,6 +20,7 @@ export function Dashboard() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [error, setError] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState(isSoundEnabled)
+  const [gotoMatchId, setGotoMatchId] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     try {
@@ -216,14 +217,23 @@ export function Dashboard() {
           <FinishedView
             matches={matches.finished}
             onRefresh={refresh}
+            initialMatchId={gotoMatchId ?? undefined}
           />
         )}
 
-        {view === "quality" && <DataQualityView />}
+        {view === "quality" && (
+          <DataQualityView
+            onNavigateToMatch={(id) => { setGotoMatchId(id); setView("finished") }}
+          />
+        )}
 
         {view === "strategies" && <StrategiesView />}
 
-        {view === "explorer" && <ExplorerView />}
+        {view === "explorer" && (
+          <ExplorerView
+            onNavigateToMatch={(id) => { setGotoMatchId(id); setView("finished") }}
+          />
+        )}
 
         {view === "analytics" && <AnalyticsView />}
       </main>

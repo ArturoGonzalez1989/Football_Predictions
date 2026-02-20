@@ -129,7 +129,11 @@ async function post<T>(path: string, body?: any): Promise<T> {
 
 async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { method: "DELETE" })
-  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  if (!res.ok) {
+    let detail = `API error: ${res.status}`
+    try { const body = await res.json(); if (body.detail) detail = body.detail } catch { /* ignore */ }
+    throw new Error(detail)
+  }
   return res.json()
 }
 
@@ -215,6 +219,30 @@ export interface LowQualityMatch {
   quality: number
   total_captures: number
   gap_count: number
+}
+
+export interface OddsCoverageMatch {
+  match_id: string
+  name: string
+  coverage_pct: number
+  rows_with_odds: number
+  total_rows: number
+  outlier_count: number
+  min_back_home: number | null
+  max_back_home: number | null
+  gap_count: number
+  avg_gap_size: number
+}
+
+export interface OddsCoverage {
+  avg_coverage: number
+  total_matches: number
+  no_odds: number
+  partial_odds: number
+  good_odds: number
+  total_outlier_matches: number
+  bins: { label: string; count: number }[]
+  matches: OddsCoverageMatch[]
 }
 
 export interface MomentumPatterns {
@@ -500,6 +528,16 @@ export interface CarteraBet {
   risk_reason?: string
   time_remaining?: number
   deficit?: number
+  // stability: consecutive captures where bet odds were in valid range at trigger time
+  stability_count?: number
+  // conservative P/L: calculated with minimum odds seen in stability window
+  pl_conservative?: number
+  // raw conservative odds (minimum in stability window) — used by applyRealisticAdjustments
+  conservative_odds?: number
+  // cash-out simulation fields (set by backend when adjCashout is on)
+  cashout_applied?: boolean
+  cashout_minute_actual?: number
+  cashout_lay_odds?: number
   // geographic fields
   País?: string
   Liga?: string
@@ -732,6 +770,8 @@ export const api = {
   getStatsCoverage: () => get<StatsCoverage>("/analytics/quality/stats-coverage"),
   getGapAnalysis: () => get<GapAnalysis>("/analytics/quality/gaps"),
   getLowQualityMatches: (threshold: number) => get<{ threshold: number; matches: LowQualityMatch[] }>(`/analytics/quality/low-quality-matches?threshold=${threshold}`),
+  getOddsCoverage: () => get<OddsCoverage>("/analytics/quality/odds-coverage"),
+  clearAnalyticsCache: () => post<{ status: string; message: string }>("/analytics/cache/clear"),
 
   // Insights endpoints
   getMomentumPatterns: () => get<MomentumPatterns>("/analytics/insights/momentum-patterns"),
@@ -785,6 +825,15 @@ export const api = {
     const qs = params.toString()
     return get<ExplorationRun>(`/explorer/results${qs ? `?${qs}` : ""}`)
   },
+  getExplorerMatches: (condition_id: string, target: string, minutes: number[], bet_type: string) => {
+    const params = new URLSearchParams({
+      condition_id,
+      target,
+      minutes: minutes.join(","),
+      bet_type,
+    })
+    return get<{ matches: ExplorerMatchRow[]; count: number }>(`/explorer/matches?${params}`)
+  },
   runExploration: (minSample?: number, maxResults?: number) => {
     const params = new URLSearchParams()
     if (minSample !== undefined) params.set("min_sample", String(minSample))
@@ -795,6 +844,16 @@ export const api = {
 }
 
 // ── Explorer interfaces ───────────────────────────────────────────────────────
+
+export interface ExplorerMatchRow {
+  match_id:              string
+  match_name:            string
+  score_at_checkpoint:   string
+  final_score:           string
+  odds:                  number | null
+  won:                   boolean
+  pl:                    number
+}
 
 export interface ExplorerResult {
   minute:          number

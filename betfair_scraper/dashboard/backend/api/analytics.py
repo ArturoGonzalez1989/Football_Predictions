@@ -44,6 +44,12 @@ async def get_low_quality_matches(threshold: int = Query(50, ge=0, le=100)) -> D
     }
 
 
+@router.get("/quality/odds-coverage")
+async def get_odds_coverage() -> Dict[str, Any]:
+    """Get odds scraping coverage distribution across all finished matches."""
+    return csv_reader.analyze_odds_coverage()
+
+
 # ==================== INSIGHTS ENDPOINTS ====================
 
 @router.get("/insights/momentum-patterns")

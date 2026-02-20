@@ -120,19 +120,19 @@ function configToState(cfg: CarteraConfig) {
   const v = cfg.versions
 
   const drawParams: DrawFilterParams = s?.draw
-    ? { enabled: s.draw.enabled, xgMax: s.draw.xgMax, possMax: s.draw.possMax, shotsMax: s.draw.shotsMax, xgDomAsym: s.draw.xgDomAsym }
+    ? { enabled: s.draw.enabled, xgMax: s.draw.xgMax, possMax: s.draw.possMax, shotsMax: s.draw.shotsMax, xgDomAsym: s.draw.xgDomAsym, minuteMin: s.draw.minuteMin ?? 0, minuteMax: s.draw.minuteMax ?? 90 }
     : drawVersionToParams((v?.draw || "v1") as DrawVersion)
 
   const xgParams: XGFilterParams = s?.xg
-    ? { enabled: s.xg.enabled, sotMin: s.xg.sotMin, minuteMax: s.xg.minuteMax }
+    ? { enabled: s.xg.enabled, sotMin: s.xg.sotMin, minuteMin: s.xg.minuteMin ?? 0, minuteMax: s.xg.minuteMax ?? 90 }
     : xgVersionToParams((v?.xg || "base") as XGCarteraVersion)
 
   const driftParams: DriftFilterParams = s?.drift
-    ? { enabled: s.drift.enabled, goalDiffMin: s.drift.goalDiffMin, driftMin: s.drift.driftMin, oddsMax: s.drift.oddsMax, minuteMin: s.drift.minuteMin, momGapMin: s.drift.momGapMin }
+    ? { enabled: s.drift.enabled, goalDiffMin: s.drift.goalDiffMin, driftMin: s.drift.driftMin, oddsMax: s.drift.oddsMax, minuteMin: s.drift.minuteMin ?? 0, minuteMax: s.drift.minuteMax ?? 90, momGapMin: s.drift.momGapMin }
     : driftVersionToParams((v?.drift || "v1") as DriftCarteraVersion)
 
   const clusteringParams: ClusteringFilterParams = s?.clustering
-    ? { enabled: s.clustering.enabled, minuteMax: s.clustering.minuteMax, xgRemMin: s.clustering.xgRemMin }
+    ? { enabled: s.clustering.enabled, minuteMin: s.clustering.minuteMin ?? 0, minuteMax: s.clustering.minuteMax ?? 90, xgRemMin: s.clustering.xgRemMin }
     : clusteringVersionToParams((v?.clustering || "v2") as ClusteringCarteraVersion)
 
   return {
@@ -274,11 +274,25 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const [adjDriftMinMin, setAdjDriftMinMin] = useState(savedState?.adjDriftMinMin || 15)
   const [adjSlippage, setAdjSlippage] = useState(savedState?.adjSlippage || 2)
   const [adjConflictFilter, setAdjConflictFilter] = useState(savedState?.adjConflictFilter !== undefined ? savedState.adjConflictFilter : true)
+  const [adjStability, setAdjStability] = useState<number>(savedState?.adjStability ?? 1)
+  const [adjConservativeOdds, setAdjConservativeOdds] = useState<boolean>(savedState?.adjConservativeOdds ?? false)
   const [adjCashout, setAdjCashout] = useState<boolean>(savedState?.adjCashout ?? false)
   const [adjCashoutMinute, setAdjCashoutMinute] = useState<number>(savedState?.adjCashoutMinute ?? 70)
   const [riskFilter, setRiskFilter] = useState<RiskFilter>(savedState?.riskFilter || "all")
   const [minDur, setMinDur] = useState<MinDurConfig>(savedState?.minDur || DEFAULT_MIN_DUR)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [histSort, setHistSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "date", dir: "asc" })
+  // Per-strategy minute range (version-based strategies)
+  const [pressureMinuteMin, setPressureMinuteMin] = useState<number>(savedState?.pressureMinuteMin ?? 0)
+  const [pressureMinuteMax, setPressureMinuteMax] = useState<number>(savedState?.pressureMinuteMax ?? 90)
+  const [tardeAsiaMinuteMin, setTardeAsiaMinuteMin] = useState<number>(savedState?.tardeAsiaMinuteMin ?? 0)
+  const [tardeAsiaMinuteMax, setTardeAsiaMinuteMax] = useState<number>(savedState?.tardeAsiaMinuteMax ?? 90)
+  const [momentumMinuteMin, setMomentumMinuteMin] = useState<number>(savedState?.momentumMinuteMin ?? 0)
+  const [momentumMinuteMax, setMomentumMinuteMax] = useState<number>(savedState?.momentumMinuteMax ?? 90)
+  // Global minute range (Filtros Realistas — overrides all strategies when enabled)
+  const [adjGlobalMinEnabled, setAdjGlobalMinEnabled] = useState<boolean>(savedState?.adjGlobalMinEnabled ?? false)
+  const [adjGlobalMinMin, setAdjGlobalMinMin] = useState<number | null>(savedState?.adjGlobalMinMin ?? null)
+  const [adjGlobalMinMax, setAdjGlobalMinMax] = useState<number | null>(savedState?.adjGlobalMinMax ?? null)
   const configLoadedRef = useRef(false)
 
   // Load config from backend on mount (overrides localStorage if backend has saved config)
@@ -306,6 +320,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
         setAdjDriftMinMin(s.adjDriftMinMin)
         setAdjSlippage(s.adjSlippage)
         setAdjConflictFilter(s.adjConflictFilter)
+        if (s.adjStability != null) setAdjStability(s.adjStability)
+        if (s.adjConservativeOdds != null) setAdjConservativeOdds(s.adjConservativeOdds)
         setAdjCashout(s.adjCashout)
         setAdjCashoutMinute(s.adjCashoutMinute)
         setMinDur(s.minDur)
@@ -379,7 +395,9 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
           drawParams, xgParams, driftParams, clusteringParams,
           pressureVer, tardeAsiaVer, momentumXGVer,
           brMode, flatStake, bankrollInit, activePreset, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
-          adjSlippage, adjConflictFilter, adjCashout, adjCashoutMinute, riskFilter, minDur,
+          adjSlippage, adjConflictFilter, adjStability, adjConservativeOdds, adjCashout, adjCashoutMinute, riskFilter, minDur,
+          pressureMinuteMin, pressureMinuteMax, tardeAsiaMinuteMin, tardeAsiaMinuteMax, momentumMinuteMin, momentumMinuteMax,
+          adjGlobalMinEnabled, adjGlobalMinMin, adjGlobalMinMax,
         }))
         setSaveStatus("saved")
         setTimeout(() => setSaveStatus("idle"), 2000)
@@ -408,6 +426,10 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
     setAdjCashoutMinute(70)
     setRiskFilter("all")
     setMinDur({ ...DEFAULT_MIN_DUR })
+    setPressureMinuteMin(0); setPressureMinuteMax(90)
+    setTardeAsiaMinuteMin(0); setTardeAsiaMinuteMax(90)
+    setMomentumMinuteMin(0); setMomentumMinuteMax(90)
+    setAdjGlobalMinEnabled(false); setAdjGlobalMinMin(null); setAdjGlobalMinMax(null)
     localStorage.removeItem(STORAGE_KEY)
   }
 
@@ -448,15 +470,18 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const xgBets = filterXGBets(bets, xgParams)
   const driftBets = filterDriftBets(bets, driftParams)
   const clusteringBets = filterClusteringBets(bets, clusteringParams)
-  const pressureBets = filterPressureBets(bets, pressureVer)
-  const tardeAsiaBets = filterTardeAsiaBets(bets, tardeAsiaVer)
-  const momentumXGBets = filterMomentumXGBets(bets, momentumXGVer)
+  const pressureBets = filterPressureBets(bets, pressureVer,
+    (pressureMinuteMin > 0 || pressureMinuteMax < 90) ? { min: pressureMinuteMin, max: pressureMinuteMax } : undefined)
+  const tardeAsiaBets = filterTardeAsiaBets(bets, tardeAsiaVer,
+    (tardeAsiaMinuteMin > 0 || tardeAsiaMinuteMax < 90) ? { min: tardeAsiaMinuteMin, max: tardeAsiaMinuteMax } : undefined)
+  const momentumXGBets = filterMomentumXGBets(bets, momentumXGVer,
+    (momentumMinuteMin > 0 || momentumMinuteMax < 90) ? { min: momentumMinuteMin, max: momentumMinuteMax } : undefined)
   const rawBets = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets, ...tardeAsiaBets, ...momentumXGBets].sort((a, b) =>
     (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
 
   // Apply realistic adjustments (always active — each filter controlled independently)
-  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin, slippagePct: adjSlippage, conflictFilter: adjConflictFilter }
+  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: null, slippagePct: adjSlippage, conflictFilter: adjConflictFilter, minStability: adjStability, conservativeOdds: adjConservativeOdds, globalMinuteMin: adjGlobalMinEnabled ? adjGlobalMinMin : null, globalMinuteMax: adjGlobalMinEnabled ? adjGlobalMinMax : null }
   let filteredBets = applyRealisticAdjustments(rawBets, currentAdj)
   const removedCount = rawBets.length - filteredBets.length
 
@@ -593,11 +618,16 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
             </button>
           </div>
         </div>
-        {/* 2-column control grid: Presets | Risk+Bankroll */}
-        <div className="grid grid-cols-2 gap-6 pb-5 mb-5 border-b border-zinc-800">
-          {/* Col 1: Presets */}
-          <div>
-            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Presets</div>
+        {/* ── 2×2 Modular Control Cards ── */}
+        <div className="grid grid-cols-2 gap-4 pb-5 mb-5 border-b border-zinc-800">
+          {/* Card: PRESETS */}
+          <div className="bg-zinc-900/40 rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="h-0.5 bg-cyan-500/40" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold text-cyan-500/70 uppercase tracking-widest">Presets</span>
+                <span className="text-zinc-700 text-sm select-none">⠿</span>
+              </div>
             <div className="flex flex-wrap gap-1.5">
               {PRESETS.map(p => (
                 <button
@@ -619,11 +649,16 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
               ))}
             </div>
           </div>
+          </div>
 
-          {/* Col 2: Risk Filter + Bankroll */}
-          <div className="space-y-4">
-            <div>
-              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Filtro de Riesgo</div>
+          {/* Card: FILTRO DE RIESGO */}
+          <div className="bg-zinc-900/40 rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="h-0.5 bg-red-500/40" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest">Filtro de Riesgo</span>
+                <span className="text-zinc-700 text-sm select-none">⠿</span>
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 {[
                   { key: "all" as RiskFilter, label: "Todas", desc: "Mostrar todas las apuestas" },
@@ -652,8 +687,16 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 ))}
               </div>
             </div>
-            <div>
-              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">Gestión Bankroll</div>
+          </div>
+
+          {/* Card: GESTIÓN BANKROLL */}
+          <div className="bg-zinc-900/40 rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="h-0.5 bg-purple-500/40" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold text-purple-500/70 uppercase tracking-widest">Gestión Bankroll</span>
+                <span className="text-zinc-700 text-sm select-none">⠿</span>
+              </div>
               <div className="flex items-center gap-3 mb-2.5">
                 <label className="flex items-center gap-1.5 text-[11px] text-zinc-400" title="Bankroll inicial para la simulación de gestión">
                   <span className="text-zinc-500">Bankroll</span>
@@ -697,21 +740,25 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Filtros Realistas — always visible, each filter independent */}
-        <div className="pb-5 mb-5 border-b border-zinc-800">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Filtros Realistas</div>
-            <button
-              type="button"
-              onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true) }}
-              className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
-            >
-              reset
-            </button>
-          </div>
-          <div className="grid grid-cols-7 gap-2.5">
+          {/* Card: FILTROS REALISTAS */}
+          <div className="bg-zinc-900/40 rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="h-0.5 bg-emerald-500/40" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest">Filtros Realistas</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true); setAdjStability(1); setAdjConservativeOdds(false); setAdjGlobalMinEnabled(false); setAdjGlobalMinMin(null); setAdjGlobalMinMax(null) }}
+                    className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                  >
+                    reset
+                  </button>
+                  <span className="text-zinc-700 text-sm select-none">⠿</span>
+                </div>
+              </div>
+          <div className="grid grid-cols-5 gap-2">
             <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] text-zinc-400 font-medium">Dedup</span>
@@ -724,7 +771,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjDedup ? "translate-x-4" : ""}`} />
                 </button>
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">1 apuesta / mercado</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">Cuenta solo 1 señal por mercado aunque lleguen varias capturas seguidas</p>
             </div>
             <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
@@ -740,7 +787,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
                 />
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &lt; X</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">Descarta cuotas muy bajas (poco valor esperado al apostar)</p>
             </div>
             <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
@@ -756,23 +803,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
                 />
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Excluye odds &gt; X</p>
-            </div>
-            <div className="bg-zinc-800/40 rounded-lg p-2.5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-zinc-400 font-medium">Drift Min'</span>
-                <input
-                  type="number"
-                  value={adjDriftMinMin}
-                  onChange={e => setAdjDriftMinMin(parseInt(e.target.value) || 15)}
-                  step="5"
-                  min="5"
-                  max="45"
-                  title="Minuto minimo drift"
-                  className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
-                />
-              </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Drift &lt; min X excluido</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">Descarta cuotas altas (mayor ruido de mercado, peor liquidez)</p>
             </div>
             <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
@@ -791,7 +822,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   <span className="text-[9px] text-zinc-500">%</span>
                 </div>
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Reduce odds X%</p>
+              <p className="text-[9px] text-zinc-600 leading-tight">Simula no conseguir la cuota exacta en el mercado real (recomendado: 2%)</p>
             </div>
             <div className="bg-red-950/20 border border-red-900/30 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
@@ -805,7 +836,37 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjConflictFilter ? "translate-x-4" : ""}`} />
                 </button>
               </div>
-              <p className="text-[9px] text-red-900/80 leading-tight">MomXG+xGUnd=0%WR</p>
+              <p className="text-[9px] text-red-900/80 leading-tight">Elimina Momentum xG si xG Underperf actúa en el partido (0% WR histórico en esa combinación)</p>
+            </div>
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-zinc-400 font-medium">Estab.</span>
+                <input
+                  type="number"
+                  value={adjStability}
+                  onChange={e => setAdjStability(Math.max(1, parseInt(e.target.value) || 1))}
+                  step="1"
+                  min="1"
+                  max="10"
+                  title="Mín capturas consecutivas con cuota estable (1 = sin filtro)"
+                  className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-right"
+                />
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Mín capturas consecutivas con cuota estable antes de señal (filtra picos puntuales)</p>
+            </div>
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-zinc-400 font-medium">P/L cons.</span>
+                <button
+                  type="button"
+                  onClick={() => setAdjConservativeOdds(!adjConservativeOdds)}
+                  title="Usar cuota mínima del periodo de estabilidad (más conservador)"
+                  className={`relative w-8 h-4 rounded-full transition-colors ${adjConservativeOdds ? "bg-yellow-500" : "bg-zinc-700"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjConservativeOdds ? "translate-x-4" : ""}`} />
+                </button>
+              </div>
+              <p className="text-[9px] text-zinc-600 leading-tight">Calcula P/L con la cuota más baja del periodo estable (resultado más conservador)</p>
             </div>
             <div className="bg-cyan-950/20 border border-cyan-900/30 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
@@ -834,8 +895,49 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   {coLoading && <span className="text-[9px] text-cyan-500 animate-pulse ml-1">...</span>}
                 </div>
               ) : (
-                <p className="text-[9px] text-cyan-900/80 leading-tight">Lay perdedoras ~min70</p>
+                <p className="text-[9px] text-cyan-900/80 leading-tight">Simula limitar pérdidas colocando un lay en apuestas que van perdiendo</p>
               )}
+            </div>
+            {/* Rango Min' global */}
+            <div className="bg-zinc-800/40 rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-zinc-400 font-medium">Rango Min'</span>
+                <button
+                  type="button"
+                  onClick={() => setAdjGlobalMinEnabled(v => !v)}
+                  title="Activar/desactivar rango de minuto global"
+                  className={`relative w-8 h-4 rounded-full transition-colors ${adjGlobalMinEnabled ? "bg-yellow-500" : "bg-zinc-700"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjGlobalMinEnabled ? "translate-x-4" : ""}`} />
+                </button>
+              </div>
+              {adjGlobalMinEnabled ? (
+                <div className="flex items-center gap-1 mt-1">
+                  <input
+                    type="number"
+                    min={0} max={89} step={5}
+                    value={adjGlobalMinMin ?? ""}
+                    placeholder="0"
+                    onChange={e => setAdjGlobalMinMin(e.target.value === "" ? null : parseInt(e.target.value))}
+                    className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-center"
+                    title="Minuto mínimo global"
+                  />
+                  <span className="text-[9px] text-zinc-600">–</span>
+                  <input
+                    type="number"
+                    min={1} max={90} step={5}
+                    value={adjGlobalMinMax ?? ""}
+                    placeholder="90"
+                    onChange={e => setAdjGlobalMinMax(e.target.value === "" ? null : parseInt(e.target.value))}
+                    className="w-12 bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-yellow-400 text-center"
+                    title="Minuto máximo global"
+                  />
+                </div>
+              ) : (
+                <p className="text-[9px] text-zinc-600 leading-tight">Franja global · aplica a todas las estrategias, ignora rangos individuales</p>
+              )}
+            </div>
+          </div>
             </div>
           </div>
         </div>
@@ -880,6 +982,20 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     placeholder="∞"
                     onChange={e => { setDrawParams(p => ({ ...p, shotsMax: e.target.value === "" ? 20 : parseInt(e.target.value) })); setActivePreset(null) }}
                     className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <input type="number" min={0} max={89} step={5}
+                    value={drawParams.minuteMin === 0 ? "" : drawParams.minuteMin}
+                    placeholder="0"
+                    onChange={e => { setDrawParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[9px] text-zinc-600">–</span>
+                  <input type="number" min={1} max={90} step={5}
+                    value={drawParams.minuteMax >= 90 ? "" : drawParams.minuteMax}
+                    placeholder="90"
+                    onChange={e => { setDrawParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
@@ -933,12 +1049,19 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     onChange={e => { setXGParams(p => ({ ...p, sotMin: parseInt(e.target.value) || 0 })); setActivePreset(null) }}
                     className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
-                  <span className="text-[10px] text-zinc-600 shrink-0">Min&lt;</span>
-                  <input type="number" min={55} max={90} step={5}
+                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <input type="number" min={0} max={89} step={5}
+                    value={xgParams.minuteMin === 0 ? "" : xgParams.minuteMin}
+                    placeholder="0"
+                    onChange={e => { setXGParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[9px] text-zinc-600">–</span>
+                  <input type="number" min={1} max={90} step={5}
                     value={xgParams.minuteMax >= 90 ? "" : xgParams.minuteMax}
                     placeholder="90"
                     onChange={e => { setXGParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
@@ -1006,6 +1129,20 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     onChange={e => { setDriftParams(p => ({ ...p, goalDiffMin: parseInt(e.target.value) || 0 })); setActivePreset(null) }}
                     className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
+                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <input type="number" min={0} max={89} step={5}
+                    value={driftParams.minuteMin === 0 ? "" : driftParams.minuteMin}
+                    placeholder="0"
+                    onChange={e => { setDriftParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[9px] text-zinc-600">–</span>
+                  <input type="number" min={1} max={90} step={5}
+                    value={driftParams.minuteMax >= 90 ? "" : driftParams.minuteMax}
+                    placeholder="90"
+                    onChange={e => { setDriftParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
                   <div className="flex gap-1">
@@ -1049,12 +1186,19 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                 <span className="text-xs text-zinc-400 w-24 shrink-0">Goal Clustering</span>
                 {clusteringParams.enabled && (<>
-                  <span className="text-[10px] text-zinc-600 shrink-0">Min&lt;</span>
-                  <input type="number" min={45} max={85} step={5}
-                    value={clusteringParams.minuteMax >= 80 ? "" : clusteringParams.minuteMax}
-                    placeholder="80"
-                    onChange={e => { setClusteringParams(p => ({ ...p, minuteMax: e.target.value === "" ? 80 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <input type="number" min={0} max={89} step={5}
+                    value={clusteringParams.minuteMin === 0 ? "" : clusteringParams.minuteMin}
+                    placeholder="0"
+                    onChange={e => { setClusteringParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[9px] text-zinc-600">–</span>
+                  <input type="number" min={1} max={90} step={5}
+                    value={clusteringParams.minuteMax >= 90 ? "" : clusteringParams.minuteMax}
+                    placeholder="90"
+                    onChange={e => { setClusteringParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
                   <span className="text-[10px] text-zinc-600 shrink-0">xGrem≥</span>
                   <input type="number" min={0} max={2} step={0.1}
@@ -1136,6 +1280,20 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                       </button>
                     ))}
                   </div>
+                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <input type="number" min={0} max={89} step={5}
+                    value={pressureMinuteMin === 0 ? "" : pressureMinuteMin}
+                    placeholder="0"
+                    onChange={e => { setPressureMinuteMin(e.target.value === "" ? 0 : parseInt(e.target.value)); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
+                  <span className="text-[9px] text-zinc-600">–</span>
+                  <input type="number" min={1} max={90} step={5}
+                    value={pressureMinuteMax >= 90 ? "" : pressureMinuteMax}
+                    placeholder="90"
+                    onChange={e => { setPressureMinuteMax(e.target.value === "" ? 90 : parseInt(e.target.value)); setActivePreset(null) }}
+                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
                 </>
               )}
             </div>
@@ -1161,6 +1319,22 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   </button>
                 ))}
               </div>
+              {tardeAsiaVer !== "off" && (<>
+                <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                <input type="number" min={0} max={89} step={5}
+                  value={tardeAsiaMinuteMin === 0 ? "" : tardeAsiaMinuteMin}
+                  placeholder="0"
+                  onChange={e => { setTardeAsiaMinuteMin(e.target.value === "" ? 0 : parseInt(e.target.value)); setActivePreset(null) }}
+                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                />
+                <span className="text-[9px] text-zinc-600">–</span>
+                <input type="number" min={1} max={90} step={5}
+                  value={tardeAsiaMinuteMax >= 90 ? "" : tardeAsiaMinuteMax}
+                  placeholder="90"
+                  onChange={e => { setTardeAsiaMinuteMax(e.target.value === "" ? 90 : parseInt(e.target.value)); setActivePreset(null) }}
+                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                />
+              </>)}
             </div>
 
             {/* Momentum x xG */}
@@ -1184,6 +1358,22 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   </button>
                 ))}
               </div>
+              {momentumXGVer !== "off" && (<>
+                <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                <input type="number" min={0} max={89} step={5}
+                  value={momentumMinuteMin === 0 ? "" : momentumMinuteMin}
+                  placeholder="0"
+                  onChange={e => { setMomentumMinuteMin(e.target.value === "" ? 0 : parseInt(e.target.value)); setActivePreset(null) }}
+                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                />
+                <span className="text-[9px] text-zinc-600">–</span>
+                <input type="number" min={1} max={90} step={5}
+                  value={momentumMinuteMax >= 90 ? "" : momentumMinuteMax}
+                  placeholder="90"
+                  onChange={e => { setMomentumMinuteMax(e.target.value === "" ? 90 : parseInt(e.target.value)); setActivePreset(null) }}
+                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                />
+              </>)}
             </div>
 
           </div>
@@ -1903,42 +2093,83 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
       })()}
 
       {/* Combined Bets Table */}
-      {filteredBets.length > 0 && (
+      {filteredBets.length > 0 && (() => {
+        const _sortedIdxs = filteredBets.map((_, i) => i)
+        const _histMult = histSort.dir === "asc" ? 1 : -1
+        _sortedIdxs.sort((a, b) => {
+          const ba = filteredBets[a], bb = filteredBets[b]
+          const da = sim.betDetails[a], db = sim.betDetails[b]
+          switch (histSort.col) {
+            case "date": return _histMult * ((ba.timestamp_utc ?? "") < (bb.timestamp_utc ?? "") ? -1 : 1)
+            case "strategy": return _histMult * (ba.strategy_label ?? "").localeCompare(bb.strategy_label ?? "")
+            case "type": return _histMult * getBetType(ba).localeCompare(getBetType(bb))
+            case "match": return _histMult * (ba.match ?? "").localeCompare(bb.match ?? "")
+            case "min": return _histMult * ((ba.minuto ?? 0) - (bb.minuto ?? 0))
+            case "odds": return _histMult * (getBetOdds(ba) - getBetOdds(bb))
+            case "ft": return _histMult * ((ba.won ? 1 : 0) - (bb.won ? 1 : 0))
+            case "pl": return _histMult * (ba.pl - bb.pl)
+            case "flatCum": return _histMult * ((sim.flatCumulative[a] ?? 0) - (sim.flatCumulative[b] ?? 0))
+            case "stake": return _histMult * ((da?.stake ?? 0) - (db?.stake ?? 0))
+            case "plManaged": return _histMult * ((da?.plManaged ?? 0) - (db?.plManaged ?? 0))
+            case "managedCum": return _histMult * ((sim.managedCumulative[a] ?? 0) - (sim.managedCumulative[b] ?? 0))
+            case "bankroll": return _histMult * ((da?.bankrollAfter ?? 0) - (db?.bankrollAfter ?? 0))
+            case "co": return _histMult * ((ba.cashout_applied ? 1 : 0) - (bb.cashout_applied ? 1 : 0))
+            default: return 0
+          }
+        })
+        const sortedHistIndexes = _sortedIdxs
+
+        const thSort = (col: string, align: "left" | "right" | "center" = "right") => {
+          const active = histSort.col === col
+          return (
+            <th
+              className={`text-${align} py-2 px-1.5 text-xs font-medium cursor-pointer select-none whitespace-nowrap ${active ? "text-blue-400" : "text-zinc-500 hover:text-zinc-300"}`}
+              onClick={() => setHistSort(prev => prev.col === col ? { col, dir: prev.dir === "asc" ? "desc" : "asc" } : { col, dir: "asc" })}
+            >
+              {col === "date" ? "Fecha" : col === "strategy" ? "Estrategia" : col === "type" ? "Tipo" : col === "match" ? "Partido" : col === "min" ? "Min" : col === "odds" ? "Odds" : col === "ft" ? "FT" : col === "co" ? "CO" : col === "pl" ? "P/L Flat" : col === "flatCum" ? "Acum. Flat" : col === "stake" ? "Stake" : col === "plManaged" ? "P/L Gestion" : col === "managedCum" ? "Acum. Gestion" : "Bankroll"}
+              <span className="ml-0.5">{active ? (histSort.dir === "asc" ? "▲" : "▼") : "⇅"}</span>
+            </th>
+          )
+        }
+
+        return (
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-zinc-300 mb-1">Historial de apuestas (cronologico)</h2>
+          <h2 className="text-sm font-semibold text-zinc-300 mb-1">Historial de apuestas</h2>
           <p className="text-xs text-zinc-500 mb-4">
-            {selLabel} | {BANKROLL_MODES.find(m => m.key === brMode)!.label} - ordenadas por fecha.
+            {selLabel} | {BANKROLL_MODES.find(m => m.key === brMode)!.label} — haz clic en una columna para ordenar.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800">
                   <th className="text-center py-2 px-1.5 text-xs font-medium text-zinc-500">#</th>
-                  <th className="text-left py-2 px-1.5 text-xs font-medium text-zinc-500">Fecha</th>
-                  <th className="text-left py-2 px-1.5 text-xs font-medium text-zinc-500">Estrategia</th>
-                  <th className="text-left py-2 px-1.5 text-xs font-medium text-zinc-500">Tipo</th>
-                  <th className="text-left py-2 px-1.5 text-xs font-medium text-zinc-500">Partido</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">Min</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">Odds</th>
-                  <th className="text-center py-2 px-1.5 text-xs font-medium text-zinc-500">FT</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">P/L Flat</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">Acum. Flat</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">Stake</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">P/L Gestion</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">Acum. Gestion</th>
-                  <th className="text-right py-2 px-1.5 text-xs font-medium text-zinc-500">Bankroll</th>
+                  {thSort("date", "left")}
+                  {thSort("strategy", "left")}
+                  {thSort("type", "left")}
+                  {thSort("match", "left")}
+                  {thSort("min")}
+                  {thSort("odds")}
+                  {thSort("ft", "center")}
+                  {adjCashout && thSort("co", "center")}
+                  {thSort("pl")}
+                  {thSort("flatCum")}
+                  {thSort("stake")}
+                  {thSort("plManaged")}
+                  {thSort("managedCum")}
+                  {thSort("bankroll")}
                 </tr>
               </thead>
               <tbody>
-                {filteredBets.map((b, i) => {
-                  const det = sim.betDetails[i]
+                {sortedHistIndexes.map((origIdx) => {
+                  const b = filteredBets[origIdx]
+                  const det = sim.betDetails[origIdx]
                   const odds = getBetOdds(b)
                   return (
                     <tr
-                      key={`${b.match_id}-${b.strategy}-${i}`}
+                      key={`${b.match_id}-${b.strategy}-${origIdx}`}
                       className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
                     >
-                      <td className="py-2 px-1.5 text-center text-xs text-zinc-600">{i + 1}</td>
+                      <td className="py-2 px-1.5 text-center text-xs text-zinc-600">{origIdx + 1}</td>
                       <td className="py-2 px-1.5 text-xs text-zinc-500 whitespace-nowrap">
                         {b.timestamp_utc ? (() => {
                           const d = new Date(b.timestamp_utc)
@@ -1971,14 +2202,30 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                       <td className="py-2 px-1.5 text-center text-xs">
                         <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
                       </td>
+                      {adjCashout && (
+                        <td className="py-2 px-1.5 text-center text-xs">
+                          {b.cashout_applied ? (() => {
+                            const saved = (b.pl + 10) * flatStake / 10
+                            return (
+                              <span
+                                className={`inline-flex flex-col items-center px-1.5 py-0.5 rounded text-[10px] font-medium leading-tight ${saved >= 0 ? "bg-cyan-500/20 text-cyan-400" : "bg-amber-500/20 text-amber-400"}`}
+                                title={`Cash-out en min ~${b.cashout_minute_actual ?? "?"} · Lay ${b.cashout_lay_odds?.toFixed(2) ?? "?"}`}
+                              >
+                                <span>CO</span>
+                                <span>{saved >= 0 ? "+" : ""}{saved.toFixed(2)}</span>
+                              </span>
+                            )
+                          })() : <span className="text-zinc-700">—</span>}
+                        </td>
+                      )}
                       <td className="py-2 px-1.5 text-right text-xs font-medium">
                         <span className={b.pl >= 0 ? "text-green-400" : "text-red-400"}>
-                          {b.pl >= 0 ? "+" : ""}{b.pl.toFixed(2)}
+                          {b.pl >= 0 ? "+" : ""}{(b.pl * flatStake / 10).toFixed(2)}
                         </span>
                       </td>
                       <td className="py-2 px-1.5 text-right text-xs font-mono">
-                        <span className={(sim.flatCumulative[i] ?? 0) >= 0 ? "text-blue-400" : "text-red-400"}>
-                          {(sim.flatCumulative[i] ?? 0) >= 0 ? "+" : ""}{(sim.flatCumulative[i] ?? 0).toFixed(2)}
+                        <span className={(sim.flatCumulative[origIdx] ?? 0) >= 0 ? "text-blue-400" : "text-red-400"}>
+                          {(sim.flatCumulative[origIdx] ?? 0) >= 0 ? "+" : ""}{(sim.flatCumulative[origIdx] ?? 0).toFixed(2)}
                         </span>
                       </td>
                       <td className="py-2 px-1.5 text-right text-xs text-purple-400">{det?.stake.toFixed(2) ?? "-"}</td>
@@ -1988,8 +2235,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                         </span>
                       </td>
                       <td className="py-2 px-1.5 text-right text-xs font-mono">
-                        <span className={(sim.managedCumulative[i] ?? 0) >= 0 ? "text-purple-400" : "text-red-400"}>
-                          {(sim.managedCumulative[i] ?? 0) >= 0 ? "+" : ""}{(sim.managedCumulative[i] ?? 0).toFixed(2)}
+                        <span className={(sim.managedCumulative[origIdx] ?? 0) >= 0 ? "text-purple-400" : "text-red-400"}>
+                          {(sim.managedCumulative[origIdx] ?? 0) >= 0 ? "+" : ""}{(sim.managedCumulative[origIdx] ?? 0).toFixed(2)}
                         </span>
                       </td>
                       <td className="py-2 px-1.5 text-right text-xs text-purple-300 font-mono">{det?.bankrollAfter.toFixed(0) ?? "-"}</td>
@@ -2000,7 +2247,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
             </table>
           </div>
         </div>
-      )}
+      )
+      })()}
 
       {filteredBets.length === 0 && (
         <div className="text-center py-12 text-zinc-500 text-sm">
