@@ -1,0 +1,35 @@
+13:51:19 [INFO] 📝 Log guardándose en: logs/scraper_20260218_135119.log
+13:51:19 [INFO] Cargados 0 partidos desde games.csv
+13:51:19 [INFO] Usando URLs desde config.MATCH_URLS (sin scheduling)
+13:51:19 [INFO] 
+Iniciando observador con 1 partidos.
+13:51:19 [INFO] Ciclo: 30s | Output: data/
+13:51:19 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 5 ciclos (detección de cambios)
+13:51:19 [INFO] 🧹 Limpiando ventanas Betfair antiguas...
+13:51:19 [WARNING] Script de limpieza no encontrado: C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\close_betfair_windows.ps1
+13:51:19 [INFO] Cargados 0 partidos desde games.csv
+13:51:19 [INFO] 
+🚀 Iniciando 1 drivers Chrome (partidos en vivo o próximos)...
+13:51:19 [INFO] 🔧 Creando driver de login: utrecht-feyenoord-apuestas-35189654
+13:51:19 [INFO] 🔧 Creando driver para: utrecht-feyenoord-apuestas-35189654
+13:51:24 [INFO] ✓ Cookies aceptadas automáticamente
+13:51:25 [INFO] ✓ Driver listo: utrecht-feyenoord-apuestas-35189654
+13:51:25 [INFO] ============================================================
+13:51:25 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+13:51:25 [INFO] Tienes 0 segundos...
+13:51:25 [INFO] El scraper comenzará automáticamente después.
+13:51:25 [INFO] ============================================================
+13:51:25 [INFO] ✓ 1 drivers creados exitosamente
+13:51:25 [INFO] ============================================================
+13:51:25 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+13:51:25 [INFO] ============================================================
+13:51:25 [INFO] 
+--- Ciclo #1 ---
+13:51:25 [INFO] 📸 Capturando 1 partidos en paralelo...
+13:51:33 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo información del partido...
+13:51:51 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Match Odds...
+13:51:52 [WARNING] ⟳ [utrecht-feyenoord-apuestas-35189654] Match Odds incompletos (0/3), refrescando...
+13:52:21 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+13:52:40 [DEBUG] [utrecht-feyenoord-apuestas-35189654] → Extrayendo cuotas Over/Under...
+13:52:41 [DEBUG] [utrecht-feyenoord-apuestas-35189654] O/U escasos (0), intentando via mercado individual...
+13:52:42 [DEBUG] No se encontraron links de mercados O/U en sidebar

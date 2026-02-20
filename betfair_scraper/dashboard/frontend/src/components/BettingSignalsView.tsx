@@ -8,72 +8,147 @@ const DEFAULT_COMBO: VersionCombo = {
   draw: "v2r", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed"
 }
 
-// ── Strategy criteria text mapping ────────────────────────────────────────────
-const STRATEGY_CRITERIA: Record<string, { label: string; color: string; versions: Record<string, string[]> }> = {
-  draw: {
-    label: "Back Empate",
-    color: "text-cyan-400",
-    versions: {
-      v1:  ["Score 0-0", "Min ≥ 30"],
-      v15: ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 25%"],
-      v2r: ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 20%", "Tiros totales < 8"],
-      v2:  ["Score 0-0", "Min ≥ 30", "xG total < 0.5", "Pos. diff < 20%", "Tiros totales < 8"],
-      v3:  ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 25%", "Dominancia xG asimétrica"],
-      v4:  ["Score 0-0", "Min ≥ 30", "xG total < 0.6", "Pos. diff < 20%", "Tiros < 8", "Gap Opta ≤ 10"],
-    },
-  },
-  xg: {
-    label: "xG Underperf.",
-    color: "text-amber-400",
-    versions: {
-      base: ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15"],
-      v2:   ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15", "SoT equipo ≥ 2"],
-      v3:   ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15", "SoT equipo ≥ 2", "Min < 70"],
-    },
-  },
-  drift: {
-    label: "Odds Drift",
-    color: "text-emerald-400",
-    versions: {
-      v1: ["Ganando 1-0", "Drift odds ≥ 25%"],
-      v2: ["Diferencia goles ≥ 2", "Drift odds ≥ 25%"],
-      v3: ["Drift odds ≥ 100%"],
-      v4: ["2ª parte (min > 45)", "Odds ≤ 5.0", "Drift ≥ 25%"],
-      v5: ["Odds ≤ 5.0", "Drift ≥ 25%"],
-      v6: ["Odds ≤ 5.0", "Drift ≥ 25%", "Momentum gap > 200"],
-    },
-  },
-  clustering: {
-    label: "Goal Clustering",
-    color: "text-rose-400",
-    versions: {
-      v2: ["Gol reciente (min 15-80)", "SoT máx equipo ≥ 3"],
-      v3: ["Gol reciente (min 15-80)", "SoT máx ≥ 3", "Min < 60"],
-      v4: ["Gol reciente (min 15-80)", "SoT máx ≥ 3", "xG restante > 0.8"],
-    },
-  },
-  pressure: {
-    label: "Pressure Cooker",
-    color: "text-orange-400",
-    versions: {
-      v1: ["Empate 1-1+ entre min 65-75"],
-    },
-  },
-  tardeAsia: {
-    label: "Tarde Asia",
-    color: "text-sky-400",
-    versions: {
-      v1: ["Hora local 14-20h", "Liga Asia / Alemania / Francia"],
-    },
-  },
-  momentumXG: {
-    label: "Momentum × xG",
-    color: "text-violet-400",
-    versions: {
-      v1: ["Equipo dominante (SoT ratio)", "xG underperf > 0.1", "Min 5-85", "Odds 1.3–4.5"],
-      v2: ["Equipo dominante (SoT ratio ≥ 1.05×)", "xG underperf > 0.1", "Min 5-85", "Odds 1.5–3.5"],
-    },
-  },
+// ── Strategy display metadata (label + color only) ───────────────────────────
+const STRATEGY_META_DISPLAY: Record<string, { label: string; color: string }> = {
+  draw:       { label: "Back Empate",     color: "text-cyan-400" },
+  xg:         { label: "xG Underperf.",   color: "text-amber-400" },
+  drift:      { label: "Odds Drift",      color: "text-emerald-400" },
+  clustering: { label: "Goal Clustering", color: "text-rose-400" },
+  pressure:   { label: "Pressure Cooker", color: "text-orange-400" },
+  tardeAsia:  { label: "Tarde Asia",      color: "text-sky-400" },
+  momentumXG: { label: "Momentum × xG",  color: "text-violet-400" },
+}
+
+// ── Dynamic criteria builder — reads from cartera_config.strategies ───────────
+// This ensures the displayed conditions ALWAYS match what the live detector uses.
+function buildCriteria(
+  strategy: string,
+  ver: string,
+  cfgStrategies: CarteraConfig["strategies"],
+): string[] {
+  const s = cfgStrategies ?? {}
+
+  switch (strategy) {
+    case "draw": {
+      const d = s.draw
+      const xgMax    = d?.xgMax    ?? (ver === "v2" ? 0.5 : 0.6)
+      const possMax  = d?.possMax  ?? (ver === "v15" || ver === "v3" ? 25 : 20)
+      const shots    = d?.shotsMax ?? 8
+      const minMin   = d?.minuteMin ?? 0
+      const minMax   = d?.minuteMax ?? 90
+      const criteria = ["Score 0-0", "Min ≥ 30"]
+      if (ver !== "v1") {
+        criteria.push(`xG total < ${xgMax}`)
+        criteria.push(`Pos. diff < ${possMax}%`)
+        if (ver === "v2r" || ver === "v2") criteria.push(`Tiros totales < ${shots}`)
+        if (ver === "v3" || d?.xgDomAsym)  criteria.push("Dominancia xG asimétrica")
+        if (ver === "v4") criteria.push("Gap Opta ≤ 10")
+      }
+      if (minMin > 0)   criteria.push(`Min ≥ ${minMin}`)
+      if (minMax < 90)  criteria.push(`Min < ${minMax}`)
+      return criteria
+    }
+
+    case "xg": {
+      const x = s.xg
+      const sotMin    = x?.sotMin    ?? 0
+      const minuteMin = x?.minuteMin ?? 0
+      const minuteMax = x?.minuteMax ?? 90
+      const criteria = ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15"]
+      if (sotMin > 0)     criteria.push(`SoT equipo ≥ ${sotMin}`)
+      if (minuteMin > 0)  criteria.push(`Min ≥ ${minuteMin}`)
+      if (minuteMax < 90) criteria.push(`Min < ${minuteMax}`)
+      return criteria
+    }
+
+    case "drift": {
+      const d = s.drift
+      const driftMin    = d?.driftMin    ?? 30
+      const goalDiffMin = d?.goalDiffMin ?? 0
+      const oddsMax     = d?.oddsMax
+      const minuteMin   = d?.minuteMin   ?? 0
+      const minuteMax   = d?.minuteMax   ?? 90
+      const momGapMin   = d?.momGapMin   ?? 0
+      const criteria: string[] = []
+      // Version-specific score / range conditions
+      if (ver === "v1") {
+        criteria.push(goalDiffMin > 0
+          ? `Ventaja ≥ ${goalDiffMin} gol`
+          : "Ganando (cualquier marcador)")
+      } else if (ver === "v2") {
+        criteria.push("Diferencia goles ≥ 2")
+      } else if (ver === "v4") {
+        criteria.push("2ª parte (min > 45)")
+      }
+      // Drift threshold — V3 has fixed 100%
+      criteria.push(ver === "v3" ? "Drift odds ≥ 100%" : `Drift odds ≥ ${driftMin}%`)
+      if (minuteMin > 0)  criteria.push(`Min ≥ ${minuteMin}`)
+      if (minuteMax < 90) criteria.push(`Min < ${minuteMax}`)
+      if (oddsMax != null && oddsMax < 999) criteria.push(`Odds ≤ ${oddsMax}`)
+      if (momGapMin > 0)  criteria.push(`Momentum gap > ${momGapMin}`)
+      return criteria
+    }
+
+    case "clustering": {
+      const c = s.clustering
+      const minuteMin = c?.minuteMin ?? 0
+      const minuteMax = c?.minuteMax ?? 90
+      const xgRemMin  = c?.xgRemMin  ?? 0
+      // The entry window is min 15 to effectiveMax; goal must be recent within that window
+      const effectiveMax = minuteMax < 90 ? minuteMax : 80
+      const criteria = [`Gol reciente · min ${minuteMin > 15 ? minuteMin : 15}-${effectiveMax}`, "SoT máx equipo ≥ 3"]
+      if (xgRemMin > 0) criteria.push(`xG restante > ${xgRemMin}`)
+      return criteria
+    }
+
+    case "pressure": {
+      const p = s.pressure
+      const minMin = p?.minuteMin ?? 0
+      const minMax = p?.minuteMax ?? 90
+      const criteria = ["Empate 1-1+ entre min 65-75"]
+      if (minMin > 0)  criteria.push(`Min ≥ ${minMin}`)
+      if (minMax < 90) criteria.push(`Min < ${minMax}`)
+      return criteria
+    }
+
+    case "tardeAsia": {
+      const t = s.tarde_asia
+      const minMin = t?.minuteMin ?? 0
+      const minMax = t?.minuteMax ?? 90
+      const criteria = ["Hora local 14-20h", "Liga Asia / Alemania / Francia"]
+      if (minMin > 0)  criteria.push(`Min ≥ ${minMin}`)
+      if (minMax < 90) criteria.push(`Min < ${minMax}`)
+      return criteria
+    }
+
+    case "momentumXG": {
+      const m = s.momentum_xg
+      const minMin = m?.minuteMin ?? 0
+      const minMax = m?.minuteMax ?? 90
+      const base = ver === "v2"
+        ? ["Equipo dominante (SoT ratio ≥ 1.05×)", "xG underperf > 0.1", "Min 5-85", "Odds 1.5–3.5"]
+        : ["Equipo dominante (SoT ratio)", "xG underperf > 0.1", "Min 5-85", "Odds 1.3–4.5"]
+      if (minMin > 0)  base.push(`Min ≥ ${minMin}`)
+      if (minMax < 90) base.push(`Min < ${minMax}`)
+      return base
+    }
+
+    default:
+      return []
+  }
+}
+
+// ── Market-based dedup key ────────────────────────────────────────────────────
+// Mirrors cartera.ts betMarketKey() logic so live registration and backtest
+// analysis use the same discriminator: 1 bet per match per MARKET, not per strategy.
+function signalMarketKey(matchId: string, recommendation: string): string {
+  const rec = (recommendation ?? "").toUpperCase()
+  if (rec.includes("DRAW")) return `${matchId}:draw`
+  if (rec.includes("HOME")) return `${matchId}:home`
+  if (rec.includes("AWAY")) return `${matchId}:away`
+  const m = rec.match(/OVER\s+(\d+\.?\d*)/)
+  if (m) return `${matchId}:over_${m[1]}`
+  return `${matchId}:unknown`
 }
 
 // Recommended min durations — overridden by backend config on load
@@ -89,6 +164,11 @@ export function BettingSignalsView() {
   const [minDur, setMinDur] = useState<MinDurConfig>(DEFAULT_MIN_DUR)
   const [activeConfig, setActiveConfig] = useState<CarteraConfig | null>(null)
   const prevSignalKeys = useRef<Set<string> | null>(null)
+  // Track auto-registered paper bets to avoid duplicates across polling cycles
+  const autoRegisteredRef = useRef<Set<string>>(new Set())
+  // On first fetch, pre-populate autoRegistered with already-mature signals so we don't retroactively register them
+  const firstFetchDoneRef = useRef(false)
+  const activeConfigRef = useRef<CarteraConfig | null>(null)
   const comboRef = useRef(combo)
   comboRef.current = combo
   const minDurRef = useRef(minDur)
@@ -102,6 +182,7 @@ export function BettingSignalsView() {
     api.getConfig()
       .then(cfg => {
         setActiveConfig(cfg)
+        activeConfigRef.current = cfg
         const v = cfg.versions ?? {}
         const s = cfg.strategies ?? {}
         const newCombo: VersionCombo = {
@@ -140,7 +221,7 @@ export function BettingSignalsView() {
       setWatchlist(wl)
       setError(null)
 
-      // Check for NEW signals
+      // Check for NEW signals (alert sound)
       const currentKeys = new Set(
         (data.signals || []).map((s) => `${s.match_id}:${s.strategy}`)
       )
@@ -149,6 +230,56 @@ export function BettingSignalsView() {
         if (hasNew) playSignalAlert()
       }
       prevSignalKeys.current = currentKeys
+
+      // Auto-register mature signals as paper bets — ONLY when odds are favorable (green, not red)
+      // On first fetch, mark ALL mature signals (favorable or not) as already seen to avoid retroactive registration
+      const allMature = (data.signals || []).filter(s => s.is_mature === true)
+      const matureSignals = allMature.filter(s => s.odds_favorable === true)
+      if (!firstFetchDoneRef.current) {
+        firstFetchDoneRef.current = true
+        allMature.forEach(s => autoRegisteredRef.current.add(signalMarketKey(s.match_id, s.recommendation)))
+      } else {
+        const stake = activeConfigRef.current?.flat_stake ?? 10
+        // Conflict filter: skip Momentum XG when xG Underperf is also mature for the same match (0% WR pair)
+        const matureXGUnderperf = new Set(
+          matureSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
+        )
+        for (const sig of matureSignals) {
+          if ((sig.strategy === "momentum_xg_v1" || sig.strategy === "momentum_xg_v2")
+              && matureXGUnderperf.has(sig.match_id)) {
+            continue
+          }
+          const key = signalMarketKey(sig.match_id, sig.recommendation)
+          if (autoRegisteredRef.current.has(key)) continue
+          autoRegisteredRef.current.add(key)
+          api.placeBet({
+          match_id: sig.match_id,
+          match_name: sig.match_name,
+          match_url: sig.match_url,
+          strategy: sig.strategy,
+          strategy_name: sig.strategy_name,
+          minute: sig.minute,
+          score: sig.score,
+          recommendation: sig.recommendation,
+          back_odds: sig.back_odds,
+          min_odds: sig.min_odds,
+          expected_value: sig.expected_value,
+          confidence: sig.confidence,
+          win_rate_historical: sig.win_rate_historical,
+          roi_historical: sig.roi_historical,
+          sample_size: sig.sample_size,
+          bet_type: "paper",
+          stake,
+          notes: "Auto-registrado",
+          }).catch((err) => {
+            // 409 = duplicate (backend dedup) — keep in set to avoid retrying
+            // Any other error: remove from set so it retries next cycle
+            if (!String(err?.message).includes("409")) {
+              autoRegisteredRef.current.delete(key)
+            }
+          })
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to fetch signals")
     } finally {
@@ -341,9 +472,7 @@ function ActiveCriteriaBlock({
   minDur: MinDurConfig
   activeConfig: CarteraConfig | null
 }) {
-  const strategyKeys: Array<keyof typeof STRATEGY_CRITERIA> = [
-    "draw", "xg", "drift", "clustering", "pressure", "tardeAsia", "momentumXG"
-  ]
+  const strategyKeys = ["draw", "xg", "drift", "clustering", "pressure", "tardeAsia", "momentumXG"]
 
   const comboKeyMap: Record<string, string> = {
     draw: "draw", xg: "xg", drift: "drift",
@@ -361,6 +490,7 @@ function ActiveCriteriaBlock({
   })
 
   const adj = activeConfig?.adjustments
+  const cfgStrategies = activeConfig?.strategies
 
   return (
     <div className="bg-zinc-900/30 border border-zinc-800 rounded-lg p-4">
@@ -374,9 +504,10 @@ function ActiveCriteriaBlock({
 
       <div className="space-y-2">
         {activeStrategies.map(k => {
-          const meta = STRATEGY_CRITERIA[k]
+          const meta = STRATEGY_META_DISPLAY[k]
           const ver = combo[comboKeyMap[k] as keyof VersionCombo] as string
-          const criteria = meta.versions[ver] || []
+          // Build criteria dynamically from config so display matches live detector exactly
+          const criteria = buildCriteria(k, ver, cfgStrategies)
           const durKey = k as keyof MinDurConfig
           const hasDur = durKey in minDur
           const dur = hasDur ? minDur[durKey] : null
@@ -410,7 +541,7 @@ function ActiveCriteriaBlock({
           <div className="flex items-center gap-2 pt-1">
             <span className="text-[10px] text-zinc-600">OFF:</span>
             <span className="text-[10px] text-zinc-700">
-              {offStrategies.map(k => STRATEGY_CRITERIA[k].label).join(" · ")}
+              {offStrategies.map(k => STRATEGY_META_DISPLAY[k].label).join(" · ")}
             </span>
           </div>
         )}
@@ -447,8 +578,17 @@ function ActiveCriteriaBlock({
                 {adj.slippage_pct > 0 && <span className="text-[10px] text-zinc-500">· Slippage {adj.slippage_pct}%</span>}
                 {adj.dedup && <span className="text-[10px] text-zinc-500">· Dedup</span>}
                 {adj.conflict_filter && <span className="text-[10px] text-zinc-500">· Anti-conflicto</span>}
-                {adj.drift_min_minute != null && <span className="text-[10px] text-zinc-500">· Drift mín min {adj.drift_min_minute}</span>}
+                {adj.allow_contrarias === false && <span className="text-[10px] text-zinc-500">· Sin contrarias</span>}
+                {(adj.stability ?? 1) > 1 && <span className="text-[10px] text-zinc-500">· Estab. ≥ {adj.stability}</span>}
+                {adj.conservative_odds && <span className="text-[10px] text-zinc-500">· P/L conservador</span>}
+                {adj.drift_min_minute != null && adj.drift_min_minute > 0 && <span className="text-[10px] text-zinc-500">· Drift mín min {adj.drift_min_minute}</span>}
+                {(adj.global_minute_min != null || adj.global_minute_max != null) && (
+                  <span className="text-[10px] text-zinc-500">
+                    · Rango min {adj.global_minute_min ?? 0}–{adj.global_minute_max ?? 90}
+                  </span>
+                )}
                 {adj.cashout_minute != null && <span className="text-[10px] text-zinc-500">· Cash-out min {adj.cashout_minute}</span>}
+                {adj.cashout_pct != null && <span className="text-[10px] text-cyan-600">· CO umbral {adj.cashout_pct}%</span>}
               </div>
             ) : (
               <span className="text-[10px] text-zinc-600">OFF — sin filtros adicionales</span>

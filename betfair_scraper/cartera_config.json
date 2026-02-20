@@ -1,31 +1,77 @@
 {
-  "versions": {
-    "draw": "v2r",
-    "xg": "base",
-    "drift": "v1",
-    "clustering": "v2",
-    "pressure": "v1",
-    "tarde_asia": "off",
-    "momentum_xg": "off"
+  "strategies": {
+    "draw": {
+      "enabled": true,
+      "xgMax": 0.6,
+      "possMax": 25,
+      "shotsMax": 20,
+      "xgDomAsym": false,
+      "minuteMin": 0,
+      "minuteMax": 90
+    },
+    "xg": {
+      "enabled": true,
+      "sotMin": 2,
+      "minuteMin": 0,
+      "minuteMax": 70
+    },
+    "drift": {
+      "enabled": true,
+      "goalDiffMin": 0,
+      "driftMin": 30,
+      "oddsMax": 999,
+      "minuteMin": 0,
+      "minuteMax": 90,
+      "momGapMin": 0
+    },
+    "clustering": {
+      "enabled": true,
+      "minuteMin": 0,
+      "minuteMax": 60,
+      "xgRemMin": 0
+    },
+    "pressure": {
+      "enabled": true,
+      "minuteMin": 0,
+      "minuteMax": 90
+    },
+    "tarde_asia": {
+      "enabled": true,
+      "minuteMin": 0,
+      "minuteMax": 90
+    },
+    "momentum_xg": {
+      "version": "v2",
+      "minuteMin": 0,
+      "minuteMax": 90
+    }
   },
   "bankroll_mode": "fixed",
-  "active_preset": null,
-  "risk_filter": "all",
+  "flat_stake": 1,
+  "initial_bankroll": 100,
+  "active_preset": "max_pl",
+  "risk_filter": "no_risk",
   "min_duration": {
     "draw": 1,
     "xg": 2,
     "drift": 2,
     "clustering": 4,
-    "pressure": 2
+    "pressure": 4
   },
   "adjustments": {
-    "enabled": false,
+    "enabled": true,
     "dedup": true,
-    "max_odds": 6.0,
+    "max_odds": 6,
     "min_odds": 1.15,
-    "drift_min_minute": 15,
+    "drift_min_minute": 30,
     "slippage_pct": 2,
     "conflict_filter": true,
-    "cashout_minute": null
+    "allow_contrarias": true,
+    "stability": 1,
+    "conservative_odds": false,
+    "global_minute_min": null,
+    "global_minute_max": null,
+    "cashout_minute": null,
+    "cashout_pct": 20
   }
 }

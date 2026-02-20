@@ -17,6 +17,12 @@ export interface Match {
   last_capture: string | null
   last_capture_ago_seconds: number | null
   csv_exists: boolean
+  // Per-match log health (live only)
+  log_status?: "ok" | "error" | "init" | "creating" | "unknown"
+  log_minute?: number
+  log_score?: string
+  log_ts?: string
+  log_msg?: string
 }
 
 export interface MatchesGrouped {
@@ -674,7 +680,7 @@ export interface PlacedBet {
   bet_type: "paper" | "real"
   stake: number
   notes?: string
-  status: "pending" | "won" | "lost"
+  status: "pending" | "won" | "lost" | "cashout"
   result?: string
   pl?: number
   // Live enrichment (pending bets only)
@@ -683,6 +689,11 @@ export interface PlacedBet {
   live_status?: string
   would_win_now?: boolean
   potential_pl?: number
+  // Cashout recommendation / auto-cashout
+  suggest_cashout?: boolean
+  cashout_lay_current?: number
+  cashout_threshold?: number
+  cashout_pl?: number
 }
 
 export interface PlacedBetsResponse {
@@ -690,6 +701,7 @@ export interface PlacedBetsResponse {
   pending: number
   won: number
   lost: number
+  cashout: number
   total_pl: number
   bets: PlacedBet[]
 }
@@ -698,13 +710,13 @@ export interface PlacedBetsResponse {
 export interface CarteraConfig {
   /** New param-based format (replaces legacy `versions`) */
   strategies?: {
-    draw?: { enabled: boolean; xgMax: number; possMax: number; shotsMax: number; xgDomAsym: boolean }
-    xg?: { enabled: boolean; sotMin: number; minuteMax: number }
-    drift?: { enabled: boolean; goalDiffMin: number; driftMin: number; oddsMax: number; minuteMin: number; momGapMin: number }
-    clustering?: { enabled: boolean; minuteMax: number; xgRemMin: number }
-    pressure?: { enabled: boolean }
-    tarde_asia?: { enabled: boolean }
-    momentum_xg?: { version: string }
+    draw?: { enabled: boolean; xgMax: number; possMax: number; shotsMax: number; xgDomAsym: boolean; minuteMin?: number; minuteMax?: number }
+    xg?: { enabled: boolean; sotMin: number; minuteMin?: number; minuteMax: number }
+    drift?: { enabled: boolean; goalDiffMin: number; driftMin: number; oddsMax: number; minuteMin: number; minuteMax?: number; momGapMin: number }
+    clustering?: { enabled: boolean; minuteMin?: number; minuteMax: number; xgRemMin: number }
+    pressure?: { enabled: boolean; minuteMin?: number; minuteMax?: number }
+    tarde_asia?: { enabled: boolean; minuteMin?: number; minuteMax?: number }
+    momentum_xg?: { version: string; minuteMin?: number; minuteMax?: number }
   }
   /** Legacy version format — kept for backward compat when reading old configs */
   versions?: {
@@ -736,7 +748,13 @@ export interface CarteraConfig {
     drift_min_minute: number
     slippage_pct: number
     conflict_filter: boolean
+    allow_contrarias?: boolean
+    stability?: number
+    conservative_odds?: boolean
+    global_minute_min?: number | null
+    global_minute_max?: number | null
     cashout_minute: number | null
+    cashout_pct?: number
   }
 }
 
@@ -763,6 +781,7 @@ export const api = {
   stopScraper: () => post<{ ok: boolean; message: string }>("/system/scraper/stop"),
   restartBackend: () => post<{ ok: boolean; message: string; old_pid?: number; new_pid?: number }>("/system/backend/restart"),
   restartFrontend: () => post<{ ok: boolean; message: string; pid?: number }>("/system/frontend/restart"),
+  cleanupChrome: () => post<{ ok: boolean; killed: number; protected: number; message: string }>("/system/chrome/cleanup"),
 
   // Quality endpoints
   getQualityOverview: () => get<QualityOverview>("/analytics/quality/overview"),
@@ -789,10 +808,13 @@ export const api = {
   getStrategyTardeAsia: () => get<StrategyTardeAsia>("/analytics/strategies/tarde-asia"),
   getStrategyMomentumXGV1: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v1"),
   getStrategyMomentumXGV2: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v2"),
-  getCartera: (cashoutMinute?: number) =>
-    get<Cartera>(cashoutMinute !== undefined
-      ? `/analytics/strategies/cartera?cashout_minute=${cashoutMinute}`
-      : "/analytics/strategies/cartera"),
+  getCartera: (cashoutMinute?: number, cashoutLayPct?: number) => {
+    const params = new URLSearchParams()
+    if (cashoutMinute !== undefined) params.set("cashout_minute", String(cashoutMinute))
+    if (cashoutLayPct !== undefined) params.set("cashout_lay_pct", String(cashoutLayPct))
+    const q = params.toString()
+    return get<Cartera>(q ? `/analytics/strategies/cartera?${q}` : "/analytics/strategies/cartera")
+  },
 
   // Betting signals
   getBettingSignals: (versions?: Record<string, string>, minDur?: Record<string, number>) => {

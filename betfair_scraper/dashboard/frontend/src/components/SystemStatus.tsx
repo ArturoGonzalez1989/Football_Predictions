@@ -96,6 +96,20 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
     setTimeout(() => setMessage(null), 8000)
   }
 
+  async function handleCleanupChrome() {
+    setActing(true)
+    setMessage(null)
+    try {
+      const res = await api.cleanupChrome()
+      setMessage({ text: res.message, ok: res.ok })
+      onRefresh()
+    } catch {
+      setMessage({ text: "Error conectando con backend", ok: false })
+    }
+    setActing(false)
+    setTimeout(() => setMessage(null), 8000)
+  }
+
   async function handleRestartFrontend() {
     if (!confirm("¿Reiniciar el frontend del dashboard? La página se recargará automáticamente.")) {
       return
@@ -244,10 +258,47 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
             {status.memory_mb ? `${status.memory_mb} MB` : "—"}
           </div>
         </div>
-        <div className="rounded-lg bg-zinc-800/50 p-2.5">
-          <div className="text-zinc-500 text-[10px] uppercase tracking-wider">Chrome</div>
-          <div className="font-mono text-zinc-200 mt-0.5">
-            {status.chrome_processes} procs
+        <div className={cn(
+          "rounded-lg p-2.5",
+          status.chrome_processes >= 100
+            ? "bg-red-500/10 border border-red-500/30"
+            : status.chrome_processes >= 30
+              ? "bg-amber-500/10 border border-amber-500/30"
+              : "bg-zinc-800/50"
+        )}>
+          <div className="flex items-center justify-between">
+            <div className="text-zinc-500 text-[10px] uppercase tracking-wider">Chrome</div>
+            {status.chrome_processes >= 30 && (
+              <button
+                type="button"
+                onClick={handleCleanupChrome}
+                disabled={acting}
+                title="Matar procesos Chrome huérfanos (no hijos del scraper)"
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Limpiar
+              </button>
+            )}
+          </div>
+          <div className="flex items-baseline gap-1.5 mt-0.5">
+            <span className={cn(
+              "font-mono font-bold text-lg",
+              status.chrome_processes >= 100 ? "text-red-400"
+                : status.chrome_processes >= 30 ? "text-amber-400"
+                : "text-zinc-200"
+            )}>
+              {status.chrome_processes}
+            </span>
+            <span className="text-zinc-500 text-[10px]">procs</span>
+            {status.chrome_processes >= 100 && (
+              <span className="text-red-400 text-[10px] font-medium animate-pulse">⚠ excesivo</span>
+            )}
+            {status.chrome_processes >= 30 && status.chrome_processes < 100 && (
+              <span className="text-amber-400 text-[10px] font-medium">↑ alto</span>
+            )}
           </div>
         </div>
       </div>

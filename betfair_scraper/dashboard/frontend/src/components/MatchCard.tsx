@@ -17,6 +17,60 @@ interface MatchCardProps {
   onDelete?: () => void
 }
 
+function MatchHealthChip({ match }: { match: Match }) {
+  const s = match.log_status
+  if (!s || s === "unknown") return null
+
+  if (s === "ok") {
+    const label = match.log_minute != null
+      ? `✓ m${match.log_minute}${match.log_score ? ` ${match.log_score}` : ""}`
+      : "✓ ok"
+    return (
+      <span
+        className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-green-500/10 text-green-400 border border-green-500/20"
+        title={`Última captura exitosa a las ${match.log_ts ?? "—"}`}
+      >
+        {label}
+      </span>
+    )
+  }
+
+  if (s === "init") {
+    return (
+      <span
+        className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse"
+        title="Inicializando driver Chrome para este partido"
+      >
+        ⚙ init
+      </span>
+    )
+  }
+
+  if (s === "creating") {
+    return (
+      <span
+        className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse"
+        title="Creando driver Chrome para este partido"
+      >
+        ⚙ arranque
+      </span>
+    )
+  }
+
+  if (s === "error") {
+    return (
+      <span
+        className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-red-500/15 text-red-400 border border-red-500/30 font-bold"
+        title={match.log_msg ? `Error: ${match.log_msg}` : "Error en la última captura — revisa los logs"}
+      >
+        ⚠ error
+      </span>
+    )
+  }
+
+  return null
+}
+
 export function MatchCard({ match, onDelete }: MatchCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -79,7 +133,7 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
                 {away}
               </h3>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <CaptureIndicator
                 captureCount={match.capture_count}
                 lastCaptureAgo={match.last_capture_ago_seconds}
@@ -93,6 +147,10 @@ export function MatchCard({ match, onDelete }: MatchCardProps) {
                 <span className="text-xs text-zinc-600">
                   Quality: {detail.quality}%
                 </span>
+              )}
+              {/* Per-match log health chip */}
+              {match.status === "live" && match.log_status && (
+                <MatchHealthChip match={match} />
               )}
             </div>
           </div>

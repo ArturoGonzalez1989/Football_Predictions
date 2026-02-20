@@ -60,6 +60,31 @@ async def get_explorer_results(
     return _run_exploration(min_sample, max_results)
 
 
+@router.get("/matches")
+async def get_combination_matches(
+    condition_id: str = Query(...),
+    target: str = Query(...),
+    minutes: str = Query(...),   # coma-separado, e.g. "15" o "15,20,25"
+    bet_type: str = Query("back"),
+) -> Dict[str, Any]:
+    """Devuelve los partidos individuales de una combinación condition×target×minuto(s)."""
+    minute_list = [int(m.strip()) for m in minutes.split(",") if m.strip().lstrip("-").isdigit()]
+    if not minute_list:
+        raise HTTPException(status_code=400, detail="minutes must be a non-empty comma-separated list of integers")
+
+    scripts_dir = str(_SCRIPTS_DIR)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+
+    try:
+        import strategy_explorer as se
+        importlib.reload(se)
+        matches = se.get_matches_for_combination(condition_id, target, minute_list, bet_type)
+        return {"matches": matches, "count": len(matches)}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed: {exc}") from exc
+
+
 @router.post("/run")
 async def run_explorer(
     min_sample: int = Query(5, ge=1, le=50),

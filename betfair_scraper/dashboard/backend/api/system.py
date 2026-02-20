@@ -262,6 +262,64 @@ def restart_backend():
         return {"ok": False, "message": f"Error reiniciando backend: {e}"}
 
 
+@router.post("/chrome/cleanup")
+def cleanup_chrome():
+    """Mata procesos Chrome huérfanos (no hijos del scraper activo)."""
+    if not HAS_PSUTIL:
+        return {"ok": False, "killed": 0, "message": "psutil no disponible"}
+
+    import time
+
+    # Proteger los Chrome que son hijos del scraper activo
+    scraper_proc = _find_scraper_process()
+    protected_pids: set = set()
+    if scraper_proc:
+        try:
+            protected_pids.add(scraper_proc.pid)
+            for child in scraper_proc.children(recursive=True):
+                protected_pids.add(child.pid)
+        except Exception:
+            pass
+
+    # Recoger procs Chrome huérfanos
+    to_kill = []
+    for proc in psutil.process_iter(["pid", "name"]):
+        try:
+            if proc.info["name"] and "chrome" in proc.info["name"].lower():
+                if proc.pid not in protected_pids:
+                    to_kill.append(proc)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    # Terminate suavemente
+    for proc in to_kill:
+        try:
+            proc.terminate()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+    time.sleep(1.5)
+
+    # Force-kill los que sobrevivan
+    force_killed = 0
+    for proc in to_kill:
+        try:
+            if proc.is_running():
+                proc.kill()
+                force_killed += 1
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+    killed = len(to_kill)
+    protected = len(protected_pids)
+    return {
+        "ok": True,
+        "killed": killed,
+        "protected": protected,
+        "message": f"Eliminados {killed} procesos Chrome huérfanos ({protected} protegidos del scraper activo)",
+    }
+
+
 def _find_frontend_process():
     """Busca el proceso del frontend (npm/vite)."""
     if not HAS_PSUTIL:

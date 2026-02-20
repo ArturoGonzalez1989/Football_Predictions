@@ -637,6 +637,103 @@ def run_strategy_exploration(
     return output
 
 
+# ── Detalle de partidos para una combinación ─────────────────────────────────
+
+def get_matches_for_combination(
+    condition_id: str,
+    target: str,
+    minutes: list[int],
+    bet_type: str = "back",
+) -> list[dict]:
+    """
+    Devuelve los partidos individuales que cumplen una combinación
+    (condition_id, target, minutes, bet_type).
+
+    `minutes` puede ser una lista (cuando el usuario agrupa varios checkpoints).
+    Se desduplicа por match_id (cada partido aparece una sola vez).
+    """
+    finished = _get_cached_finished_data()
+    conditions = _define_conditions()
+
+    # Localizar la condición
+    cond = next((c for c in conditions if c["id"] == condition_id), None)
+    if cond is None:
+        return []
+
+    # Config del target
+    if target == "lay_score_actual":
+        target_col = None
+    else:
+        tinfo = TARGETS.get(target)
+        if tinfo is None:
+            return []
+        target_col = tinfo["col"]
+
+    seen_ids: dict[str, bool] = {}   # match_id → ya añadido
+    results: list[dict] = []
+
+    for minute in sorted(minutes):
+        for match in finished:
+            rows = match.get("rows") or []
+            if not rows or len(rows) < 5:
+                continue
+
+            # Deduplicar: mismo partido solo una vez (tomar el primer minuto que lo incluya)
+            if match["match_id"] in seen_ids:
+                continue
+
+            final_row = _final_result_row(rows)
+            if final_row is None:
+                continue
+            gl_f = _to_float(final_row.get("goles_local", ""))
+            gv_f = _to_float(final_row.get("goles_visitante", ""))
+            if gl_f is None or gv_f is None:
+                continue
+            gl_final, gv_final = int(gl_f), int(gv_f)
+
+            state = _extract_state_at_minute(rows, minute)
+            if state is None:
+                continue
+
+            try:
+                if not cond["test"](state):
+                    continue
+            except Exception:
+                continue
+
+            gl_now, gv_now = state["gl"], state["gv"]
+
+            if target == "lay_score_actual":
+                if gl_now > 3 or gv_now > 3:
+                    continue
+                rc_col = f"lay_rc_{gl_now}_{gv_now}"
+                odds_val = state["odds"].get(rc_col)
+                if odds_val is None or not (1.05 <= odds_val <= 10.0):
+                    continue
+                won = (gl_final != gl_now) or (gv_final != gv_now)
+            else:
+                odds_val = state["odds"].get(target_col)
+                if odds_val is None or odds_val < 1.05:
+                    continue
+                if bet_type == "lay" and odds_val > 10.0:
+                    continue
+                won = _target_won(target, gl_final, gv_final)
+
+            pl = _calc_pl(bet_type, odds_val, won)
+            seen_ids[match["match_id"]] = True
+            results.append({
+                "match_id":             match["match_id"],
+                "match_name":           match["name"],
+                "score_at_checkpoint":  f"{gl_now}-{gv_now}",
+                "final_score":          f"{gl_final}-{gv_final}",
+                "odds":                 round(odds_val, 2),
+                "won":                  won,
+                "pl":                   round(pl, 2),
+            })
+
+    return sorted(results, key=lambda r: r["pl"], reverse=True)
+
+
 # ── Ejecución standalone ──────────────────────────────────────────────────────
 
 if __name__ == "__main__":

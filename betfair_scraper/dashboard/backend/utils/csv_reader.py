@@ -2476,13 +2476,16 @@ def _co_calc_pl(back_odds: float, lay_odds: float, stake: float = 10.0) -> float
     return round(gross * 0.95, 2) if gross > 0 else round(gross, 2)
 
 
-def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int) -> dict:
-    """Apply cashout simulation to cartera data for losing bets.
+def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int = None, *, cashout_lay_pct: float = None) -> dict:
+    """Apply cashout simulation to cartera data for ALL bets (winners and losers).
 
-    For each losing bet with a partido CSV, finds lay odds at approximately
-    cashout_minute (after trigger) and computes CO P&L. Only replaces the
-    original P&L if the CO result is better (less negative).
+    cashout_minute == -1 → "Pesimista": worst lay odds in the full period
+      (trigger_min, 90] — most conservative, models bad execution timing.
+    cashout_minute > 0  → "Minuto": row closest to that minute (original).
+    cashout_lay_pct     → "Lay%": first row where lay >= entry_back * (1 + lay_pct/100).
 
+    CO is applied unconditionally when the threshold is crossed — no look-ahead bias.
+    Winning bets where threshold is crossed will have their P/L reduced (premature exit).
     Returns a deep copy of cartera_data with modified pl values and
     recomputed cumulative arrays and strategy summaries.
     """
@@ -2491,10 +2494,9 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int) -> dict:
     bets = result.get("bets", [])
     stake = 10.0
     co_count = 0
+    pessimistic = cashout_minute is not None and cashout_minute == -1
 
     for bet in bets:
-        if bet.get("won", False):
-            continue  # only losing bets need CO
 
         strategy = bet.get("strategy", "")
         match_id = bet.get("match_id", "")
@@ -2512,19 +2514,48 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int) -> dict:
         if not rows:
             continue
 
-        # Find valid row closest to cashout_minute, strictly after trigger
-        best_row = None
-        best_dist = float("inf")
-        for row in rows:
-            m = _to_float(row.get("minuto", ""))
-            if m is None or m <= trigger_min:
-                continue
-            if _co_is_corrupted(row, back_col, lay_col):
-                continue
-            dist = abs(m - cashout_minute)
-            if dist < best_dist:
-                best_dist = dist
-                best_row = row
+        if cashout_lay_pct is not None:
+            # First row where lay >= entry_back * (1 + lay_pct/100)
+            threshold = back_odds * (1.0 + cashout_lay_pct / 100.0)
+            best_row = None
+            for row in rows:
+                m = _to_float(row.get("minuto", ""))
+                if m is None or m <= trigger_min:
+                    continue
+                if _co_is_corrupted(row, back_col, lay_col):
+                    continue
+                lay_val = _to_float(row.get(lay_col, ""))
+                if lay_val and lay_val >= threshold:
+                    best_row = row
+                    break
+        elif pessimistic:
+            # Worst lay odds (highest) in full post-signal window — conservative
+            best_row = None
+            worst_lay = -1.0
+            for row in rows:
+                m = _to_float(row.get("minuto", ""))
+                if m is None or m <= trigger_min:
+                    continue
+                if _co_is_corrupted(row, back_col, lay_col):
+                    continue
+                lay_val = _to_float(row.get(lay_col, ""))
+                if lay_val and lay_val > worst_lay:
+                    worst_lay = lay_val
+                    best_row = row
+        else:
+            # Closest row to cashout_minute, strictly after trigger (original)
+            best_row = None
+            best_dist = float("inf")
+            for row in rows:
+                m = _to_float(row.get("minuto", ""))
+                if m is None or m <= trigger_min:
+                    continue
+                if _co_is_corrupted(row, back_col, lay_col):
+                    continue
+                dist = abs(m - cashout_minute)
+                if dist < best_dist:
+                    best_dist = dist
+                    best_row = row
 
         if best_row is None:
             continue
@@ -2534,12 +2565,12 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int) -> dict:
             continue
 
         co_pl = _co_calc_pl(back_odds, lay_odds, stake)
-        if co_pl > bet["pl"]:  # only apply if improvement
-            bet["pl"] = co_pl
-            bet["cashout_applied"] = True
-            bet["cashout_minute_actual"] = _to_float(best_row.get("minuto", ""))
-            bet["cashout_lay_odds"] = round(lay_odds, 2)
-            co_count += 1
+        # Apply unconditionally — threshold crossed means CO executed, regardless of outcome
+        bet["pl"] = co_pl
+        bet["cashout_applied"] = True
+        bet["cashout_minute_actual"] = _to_float(best_row.get("minuto", ""))
+        bet["cashout_lay_odds"] = round(lay_odds, 2)
+        co_count += 1
 
     # Recompute flat cumulative
     bets.sort(key=lambda x: x.get("timestamp_utc", ""))
@@ -2562,11 +2593,12 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int) -> dict:
     managed_cum = []
     for b in bets:
         bet_size = round(bankroll * pct, 2)
-        if b.get("won", False):
+        if b.get("cashout_applied"):
+            # CO takes priority over won/lost — threshold was crossed, we exited early
+            profit = round(b["pl"] / stake * bet_size, 2)
+        elif b.get("won", False):
             odds = b.get("back_draw") or b.get("back_over_odds") or b.get("back_odds") or 1
             profit = round((odds - 1) * bet_size * 0.95, 2) if odds and odds > 1 else -bet_size
-        elif b.get("cashout_applied"):
-            profit = round(b["pl"] / stake * bet_size, 2)
         else:
             profit = -bet_size
         bankroll += profit
@@ -2601,6 +2633,8 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int) -> dict:
         [b for b in bets if b["strategy"] in ("momentum_xg_v1", "momentum_xg_v2")]
     )
 
+    result["cashout_mode"] = "lay_pct" if cashout_lay_pct is not None else "minute"
+    result["cashout_lay_pct"] = cashout_lay_pct
     result["cashout_minute"] = cashout_minute
     result["cashout_applied_count"] = co_count
     return result
@@ -2832,6 +2866,21 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         for family in _DEFAULT_MIN_DUR
     }
 
+    # --- Strategy thresholds from cartera_config (single source of truth) ---
+    # These flow from analytics.py → here, ensuring live detector == historical analysis.
+    _drift_base_pct     = float(versions.get("drift_threshold", 30))       # cartera.ts default: 30%
+    _drift_odds_max     = float(versions.get("drift_odds_max", 999))        # cartera.ts v1 default: Infinity
+    _drift_goal_diff_min = int(versions.get("drift_goal_diff_min", 0))      # cartera.ts v1 default: 0
+    _drift_minute_min   = int(versions.get("drift_minute_min", 0))          # cartera.ts v1 default: 0
+    _drift_mom_gap_min  = float(versions.get("drift_mom_gap_min", 0))       # cartera.ts v1 default: 0
+    _clustering_min_max = int(versions.get("clustering_minute_max", 90))    # cartera.ts v3 default: 60
+    _clustering_xg_rem  = float(versions.get("clustering_xg_rem_min", 0))  # cartera.ts default: 0
+    _xg_minute_max      = int(versions.get("xg_minute_max", 90))            # cartera.ts v3 default: 70
+    _xg_sot_min         = int(versions.get("xg_sot_min", 0))               # cartera.ts base default: 0
+    _draw_xg_max        = float(versions.get("draw_xg_max", 1.0))           # cartera.ts v2r default: 0.6
+    _draw_poss_max      = float(versions.get("draw_poss_max", 100))         # cartera.ts v2r default: 20
+    _draw_shots_max     = float(versions.get("draw_shots_max", 20))         # cartera.ts v2r default: 8
+
     # --- Load first-seen timestamps from signals_log for age calculation ---
     _log_file = Path(__file__).parent.parent.parent / "signals_log.csv"
     first_seen_map: dict[tuple, datetime] = {}
@@ -2842,7 +2891,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     _mid = _row.get("match_id", "").strip()
                     _strat = _row.get("strategy", "").strip()
                     _ts = _row.get("timestamp_utc", "").strip()
-                    if _mid and _strat and _ts:
+                    if _mid and _strat and _ts and (_mid, _strat) not in first_seen_map:
                         try:
                             first_seen_map[(_mid, _strat)] = datetime.strptime(_ts, "%Y-%m-%d %H:%M:%S")
                         except ValueError:
@@ -3030,8 +3079,11 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         if minuto is None:
             continue
 
-        goles_local = _to_float(latest.get("goles_local", "")) or 0
-        goles_visitante = _to_float(latest.get("goles_visitante", "")) or 0
+        _raw_gl = _to_float(latest.get("goles_local", ""))
+        _raw_gv = _to_float(latest.get("goles_visitante", ""))
+        goals_data_ok = _raw_gl is not None and _raw_gv is not None
+        goles_local = _raw_gl if _raw_gl is not None else 0
+        goles_visitante = _raw_gv if _raw_gv is not None else 0
         xg_local = _to_float(latest.get("xg_local", ""))
         xg_visitante = _to_float(latest.get("xg_visitante", ""))
         posesion_local = _to_float(latest.get("posesion_local", ""))
@@ -3051,7 +3103,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         pressure_ver = versions.get("pressure", "v1")
 
         # === STRATEGY 1: Back Empate (version-specific conditions) ===
+        # goals_data_ok guards against scraper not capturing goal data (None→0 would cause false 0-0 triggers)
         if draw_ver != "off" and (minuto >= 30 and
+            goals_data_ok and
             goles_local == 0 and goles_visitante == 0 and
             xg_local is not None and xg_visitante is not None):
 
@@ -3144,18 +3198,27 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     continue
 
                 # Version-specific filters
+                # _xg_sot_min and _xg_minute_max come from cartera_config strategies.xg
                 xg_thresholds = {"xg_excess": ">= 0.5"}
                 if xg_ver == "base":
-                    pass  # No extra filter
+                    # Use config params if explicitly set
+                    if _xg_sot_min > 0 and sot_team < _xg_sot_min:
+                        continue
+                    if _xg_minute_max < 90 and minuto >= _xg_minute_max:
+                        continue
                 elif xg_ver == "v2":
-                    if sot_team < 2:
+                    sot_cutoff = max(2, _xg_sot_min)
+                    if sot_team < sot_cutoff:
                         continue
-                    xg_thresholds["shots_on_target"] = ">= 2"
+                    xg_thresholds["shots_on_target"] = f">= {sot_cutoff}"
                 elif xg_ver == "v3":
-                    if sot_team < 2 or minuto >= 70:
+                    # minuteMax from config (cartera.ts v3 = 70, config xg.minuteMax = 70)
+                    sot_cutoff = max(2, _xg_sot_min)
+                    min_cutoff = _xg_minute_max if _xg_minute_max < 90 else 70
+                    if sot_team < sot_cutoff or minuto >= min_cutoff:
                         continue
-                    xg_thresholds["shots_on_target"] = ">= 2"
-                    xg_thresholds["minute"] = "< 70"
+                    xg_thresholds["shots_on_target"] = f">= {sot_cutoff}"
+                    xg_thresholds["minute"] = f"< {min_cutoff}"
 
                 meta = STRATEGY_META["xg_underperformance"]
                 min_odds = calculate_min_odds(meta["win_rate"])
@@ -3203,7 +3266,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
         # === STRATEGY 3: Odds Drift Contrarian (version-specific) ===
         goal_diff = abs(int(goles_local) - int(goles_visitante))
-        if drift_ver != "off" and goal_diff >= 1 and goles_local != goles_visitante:
+        if drift_ver != "off" and minuto >= 30 and goal_diff >= 1 and goles_local != goles_visitante:
             # Require current score confirmed in at least 3 captures (avoid post-goal transitional odds)
             score_confirm_count = 0
             for check_row in rows[-6:]:
@@ -3240,14 +3303,20 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     if odds_before and odds_now and odds_before > 0:
                         drift_pct_val = ((odds_now - odds_before) / odds_before) * 100
 
-                        # Base condition: drift >= 25%
-                        if drift_pct_val >= 25:
+                        # Base condition: drift >= _drift_base_pct (from cartera_config, default 30%)
+                        # Aligned to cartera.ts DEFAULT_DRIFT_PARAMS.driftMin = 30
+                        if drift_pct_val >= _drift_base_pct:
                             # Version-specific additional filters
                             drift_passes = True
-                            drift_thresholds = {"drift_pct": ">= 25%"}
+                            drift_thresholds = {"drift_pct": f">= {_drift_base_pct:.0f}%"}
                             if drift_ver == "v1":
-                                # V1 base: only 1-0 scores
-                                drift_passes = goal_diff == 1 and (goles_local + goles_visitante) == 1
+                                # V1: no extra score restriction (aligned to cartera.ts v1 = DEFAULT_DRIFT_PARAMS)
+                                # goalDiffMin=0 → accept any goal difference >= 1
+                                if _drift_goal_diff_min > 0 and goal_diff < _drift_goal_diff_min:
+                                    drift_passes = False
+                                if _drift_odds_max < 999 and odds_now > _drift_odds_max:
+                                    drift_passes = False
+                                    drift_thresholds["odds"] = f"<= {_drift_odds_max}"
                             elif drift_ver == "v2":
                                 # V2: goal_diff >= 2
                                 drift_passes = goal_diff >= 2
@@ -3352,9 +3421,11 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 sot_max = max(tiros_puerta_local, tiros_puerta_visitante)
 
                 if sot_max >= 3:
-                    # V3 extra filter: minute < 75
-                    if clustering_ver == "v3" and minuto >= 75:
-                        pass  # skip - too late for V3
+                    # minuteMax filter: from cartera_config strategies.clustering.minuteMax
+                    # cartera.ts: v3 → minuteMax=60, v2 → 90 (no filter), v4 → 80
+                    # _clustering_min_max defaults to 90 (no filter) but config will supply 60 for v3
+                    if _clustering_min_max < 90 and minuto >= _clustering_min_max:
+                        pass  # skip - past minuteMax from config
                     else:
                         total_actual = int(goles_local) + int(goles_visitante)
                         over_line = total_actual + 0.5
@@ -3362,8 +3433,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                         meta = STRATEGY_META["goal_clustering"]
                         min_odds = calculate_min_odds(meta["win_rate"])
                         cl_thresholds = {"minute_range": "15-80", "sot_max": ">= 3"}
-                        if clustering_ver == "v3":
-                            cl_thresholds["minute"] = "< 75"
+                        if _clustering_min_max < 90:
+                            cl_thresholds["minute"] = f"< {_clustering_min_max}"
 
                         cl_over_field = _get_over_odds_field(total_actual)
                         cl_over_odds = _to_float(latest.get(cl_over_field, "")) if cl_over_field else None

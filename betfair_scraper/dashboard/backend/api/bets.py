@@ -63,6 +63,23 @@ class PlacedBet(BaseModel):
     status: str  # "pending", "won", "lost"
 
 
+def _get_lay_col(recommendation: str) -> Optional[str]:
+    """Devuelve la columna de lay del CSV correspondiente a la recomendación."""
+    rec = recommendation.upper()
+    if "DRAW" in rec:
+        return "lay_draw"
+    if "HOME" in rec:
+        return "lay_home"
+    if "AWAY" in rec:
+        return "lay_away"
+    # Over X.5
+    for line, col in [("4.5", "lay_over45"), ("3.5", "lay_over35"),
+                       ("2.5", "lay_over25"), ("1.5", "lay_over15"), ("0.5", "lay_over05")]:
+        if line in rec:
+            return col
+    return None
+
+
 def _get_active_match_ids() -> set[str]:
     """Obtiene el conjunto de match_ids que están actualmente en games.csv"""
     if not GAMES_CSV.exists():
@@ -132,7 +149,7 @@ def _check_would_win(recommendation: str, gl: float, gv: float) -> bool:
     return False
 
 
-def _enrich_with_live_data(bet: dict, is_match_active: bool = True) -> dict:
+def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct: float = 20.0) -> dict:
     """Enriquecer un bet pendiente con datos live del CSV del partido.
 
     Args:
@@ -147,13 +164,10 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True) -> dict:
         csv_path = _resolve_csv_path(match_id)
         rows = _read_csv_rows(csv_path)
         if not rows:
-            # Si no hay CSV y el partido no está activo, marcar como perdida
+            # Sin datos CSV: no podemos determinar resultado, dejar como pending
+            # para resolución manual
             if not is_match_active:
-                bet["status"] = "lost"
-                bet["result"] = "lost"
-                bet["pl"] = -_to_float(bet.get("stake", 10))
                 bet["live_status"] = "no_data"
-                bet["_needs_csv_update"] = True
             return bet
 
         # Find last meaningful row (skip pre_partido rows that may appear after the match)
@@ -188,9 +202,35 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True) -> dict:
         else:
             bet["potential_pl"] = round(-stake, 2)
 
-        # NOTE: Auto-settlement disabled - bets should only be resolved manually
-        # using the resolve_pending_bets.py script or through user action.
-        # The API only enriches pending bets with live data for visualization.
+        # Cashout recommendation: lay_actual >= entry_back * (1 + cashout_pct/100)
+        recommendation = bet.get("recommendation", "")
+        lay_col = _get_lay_col(recommendation)
+        if lay_col and odds > 1:
+            lay_now = _to_float(last.get(lay_col))
+            if lay_now and lay_now > 1:
+                threshold = round(odds * (1.0 + cashout_pct / 100.0), 2)
+                bet["cashout_lay_current"] = round(lay_now, 2)
+                bet["cashout_threshold"] = threshold
+                bet["suggest_cashout"] = lay_now >= threshold
+                if lay_now >= threshold:
+                    # cashout_pl: stake * (back_odds / lay_now - 1)
+                    # Negativo cuando B < L (recortamos pérdida), positivo cuando B > L (bloqueamos ganancia)
+                    bet["cashout_pl"] = round(stake * (odds / lay_now - 1), 2)
+
+        # Auto-settle: if match is no longer in games.csv AND we have late-game data
+        # Only auto-settle if minuto >= 85 or estado indicates match ended
+        finished_states = ("finalizado", "finished", "ft", "full_time", "ended")
+        has_final_data = (minuto is not None and minuto >= 85) or estado in finished_states
+        if not is_match_active and has_final_data:
+            if would_win:
+                bet["status"] = "won"
+                bet["result"] = "won"
+                bet["pl"] = bet["potential_pl"]
+            else:
+                bet["status"] = "lost"
+                bet["result"] = "lost"
+                bet["pl"] = round(-stake, 2)
+            bet["_needs_csv_update"] = True
 
     except Exception:
         pass
@@ -217,11 +257,51 @@ def _update_csv_rows(updates: dict[str, dict]):
         writer.writerows(rows)
 
 
+def _market_key_from_recommendation(recommendation: str) -> str:
+    """Deriva la clave de mercado desde la recomendación — espejo de cartera.ts betMarketKey.
+    Garantiza dedup por mercado (draw/home/away/over_X.5), no por estrategia.
+    """
+    rec = (recommendation or "").upper()
+    if "DRAW" in rec:
+        return "draw"
+    if "HOME" in rec:
+        return "home"
+    if "AWAY" in rec:
+        return "away"
+    m = re.search(r"OVER\s+(\d+\.?\d*)", rec)
+    if m:
+        return f"over_{m.group(1)}"
+    return recommendation  # fallback: clave literal
+
+
+def _has_pending_bet(match_id: str, recommendation: str) -> bool:
+    """Devuelve True si ya existe una apuesta pendiente para este match+mercado.
+    Usa clave de mercado (draw/home/away/over_X.5) en lugar de estrategia,
+    igual que el dedup de cartera.ts.
+    """
+    if not PLACED_BETS_CSV.exists():
+        return False
+    market_key = _market_key_from_recommendation(recommendation)
+    with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if (row.get("match_id") == match_id
+                    and _market_key_from_recommendation(row.get("recommendation", "")) == market_key
+                    and row.get("status") == "pending"):
+                return True
+    return False
+
+
 @router.post("/api/bets/place", response_model=PlacedBet)
 async def place_bet(bet: PlaceBetRequest):
     """Registra una apuesta realizada (paper trading o real)"""
     try:
         _ensure_csv_exists()
+
+        # Deduplication: don't register if there's already a pending bet for same match+market
+        if _has_pending_bet(bet.match_id, bet.recommendation):
+            # Return a dummy response (409 would break the frontend gracefully)
+            raise HTTPException(status_code=409, detail="Ya existe una apuesta pendiente para este partido y estrategia")
 
         bet_id = _get_next_id()
         timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -305,15 +385,48 @@ async def get_placed_bets():
         # Get active match IDs from games.csv
         active_match_ids = _get_active_match_ids()
 
+        # Load cashout_pct from config (single source of truth)
+        try:
+            from api.config import load_config as _load_cfg
+            _cfg = _load_cfg()
+            cashout_pct = float(_cfg.get("adjustments", {}).get("cashout_pct", 20))
+        except Exception:
+            cashout_pct = 20.0
+
         # Enrich pending bets with live data (for visualization only, not settlement)
         for bet in bets:
             if bet.get("status") == "pending":
                 match_id = bet.get("match_id", "")
                 is_active = match_id in active_match_ids
-                _enrich_with_live_data(bet, is_match_active=is_active)
+                _enrich_with_live_data(bet, is_match_active=is_active, cashout_pct=cashout_pct)
+
+        # Auto-cashout: paper bets con suggest_cashout → liquidar con cashout_pl
+        for bet in bets:
+            if (bet.get("status") == "pending"
+                    and bet.get("bet_type") == "paper"
+                    and bet.get("suggest_cashout")
+                    and "cashout_pl" in bet):
+                bet["status"] = "cashout"
+                bet["result"] = "cashout"
+                bet["pl"] = bet["cashout_pl"]
+                bet["_needs_csv_update"] = True
+
+        # Persist auto-settled and auto-cashed bets to CSV
+        csv_updates = {}
+        for bet in bets:
+            if bet.pop("_needs_csv_update", False):
+                bid = str(bet.get("id", ""))
+                if bid:
+                    csv_updates[bid] = {
+                        "status": bet["status"],
+                        "result": bet.get("result", ""),
+                        "pl": str(bet.get("pl", "")),
+                    }
+        if csv_updates:
+            _update_csv_rows(csv_updates)
 
         # Compute stats
-        stats = {"pending": 0, "won": 0, "lost": 0}
+        stats = {"pending": 0, "won": 0, "lost": 0, "cashout": 0}
         total_pl = 0.0
         for bet in bets:
             status = bet.get("status", "pending")
@@ -329,6 +442,7 @@ async def get_placed_bets():
             "pending": stats.get("pending", 0),
             "won": stats.get("won", 0),
             "lost": stats.get("lost", 0),
+            "cashout": stats.get("cashout", 0),
             "total_pl": round(total_pl, 2),
             "bets": bets
         }

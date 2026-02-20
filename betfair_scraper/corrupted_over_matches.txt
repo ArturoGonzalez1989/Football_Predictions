@@ -1,0 +1,36 @@
+# Partidos con cuotas Over/Under congeladas
+# Estos partidos se excluyen de estrategias Over/Under pero mantienen datos Match Odds
+# Total: 31 partidos
+# Generado automáticamente - ver FROZEN_ODDS_REPORT.md
+
+35172745
+35172770
+35172773
+35215933
+35215939
+35216498
+35216502
+35216574
+35216585
+35216679
+35216706
+35238051
+35239864
+35240941
+35240945
+35240972
+35242276
+35243
+35243
+35243387
+35243475
+35243488
+35243577
+35244
+35244371
+35247005
+35248598
+35256329
+35257642
+35273415
+olympiakos-nicosia-fc-omonia-fc-aradippou-apuestas

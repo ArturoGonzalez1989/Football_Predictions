@@ -154,8 +154,21 @@ function configToState(cfg: CarteraConfig) {
     adjDriftMinMin: cfg.adjustments.drift_min_minute ?? 15,
     adjSlippage: cfg.adjustments.slippage_pct ?? 2,
     adjConflictFilter: cfg.adjustments.conflict_filter ?? true,
+    adjAllowContrarias: cfg.adjustments.allow_contrarias ?? false,
+    adjStability: cfg.adjustments.stability ?? 1,
+    adjConservativeOdds: cfg.adjustments.conservative_odds ?? false,
+    adjGlobalMinMin: cfg.adjustments.global_minute_min ?? null,
+    adjGlobalMinMax: cfg.adjustments.global_minute_max ?? null,
+    adjGlobalMinEnabled: cfg.adjustments.global_minute_min != null || cfg.adjustments.global_minute_max != null,
     adjCashout: cfg.adjustments.cashout_minute != null,
     adjCashoutMinute: cfg.adjustments.cashout_minute ?? 70,
+    coLayPct: cfg.adjustments.cashout_pct ?? 20,
+    pressureMinuteMin: cfg.strategies?.pressure?.minuteMin ?? 0,
+    pressureMinuteMax: cfg.strategies?.pressure?.minuteMax ?? 90,
+    tardeAsiaMinuteMin: cfg.strategies?.tarde_asia?.minuteMin ?? 0,
+    tardeAsiaMinuteMax: cfg.strategies?.tarde_asia?.minuteMax ?? 90,
+    momentumMinuteMin: cfg.strategies?.momentum_xg?.minuteMin ?? 0,
+    momentumMinuteMax: cfg.strategies?.momentum_xg?.minuteMax ?? 90,
     minDur: {
       draw: cfg.min_duration.draw ?? 1,
       xg: cfg.min_duration.xg ?? 2,
@@ -274,10 +287,9 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const [adjDriftMinMin, setAdjDriftMinMin] = useState(savedState?.adjDriftMinMin || 15)
   const [adjSlippage, setAdjSlippage] = useState(savedState?.adjSlippage || 2)
   const [adjConflictFilter, setAdjConflictFilter] = useState(savedState?.adjConflictFilter !== undefined ? savedState.adjConflictFilter : true)
+  const [adjAllowContrarias, setAdjAllowContrarias] = useState<boolean>(savedState?.adjAllowContrarias ?? false)
   const [adjStability, setAdjStability] = useState<number>(savedState?.adjStability ?? 1)
   const [adjConservativeOdds, setAdjConservativeOdds] = useState<boolean>(savedState?.adjConservativeOdds ?? false)
-  const [adjCashout, setAdjCashout] = useState<boolean>(savedState?.adjCashout ?? false)
-  const [adjCashoutMinute, setAdjCashoutMinute] = useState<number>(savedState?.adjCashoutMinute ?? 70)
   const [riskFilter, setRiskFilter] = useState<RiskFilter>(savedState?.riskFilter || "all")
   const [minDur, setMinDur] = useState<MinDurConfig>(savedState?.minDur || DEFAULT_MIN_DUR)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
@@ -320,30 +332,40 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
         setAdjDriftMinMin(s.adjDriftMinMin)
         setAdjSlippage(s.adjSlippage)
         setAdjConflictFilter(s.adjConflictFilter)
-        if (s.adjStability != null) setAdjStability(s.adjStability)
-        if (s.adjConservativeOdds != null) setAdjConservativeOdds(s.adjConservativeOdds)
-        setAdjCashout(s.adjCashout)
-        setAdjCashoutMinute(s.adjCashoutMinute)
+        setAdjAllowContrarias(s.adjAllowContrarias)
+        setAdjStability(s.adjStability)
+        setAdjConservativeOdds(s.adjConservativeOdds)
+        setAdjGlobalMinMin(s.adjGlobalMinMin)
+        setAdjGlobalMinMax(s.adjGlobalMinMax)
+        setAdjGlobalMinEnabled(s.adjGlobalMinEnabled)
+        setCoLayPct(s.coLayPct)
+        setPressureMinuteMin(s.pressureMinuteMin)
+        setPressureMinuteMax(s.pressureMinuteMax)
+        setTardeAsiaMinuteMin(s.tardeAsiaMinuteMin)
+        setTardeAsiaMinuteMax(s.tardeAsiaMinuteMax)
+        setMomentumMinuteMin(s.momentumMinuteMin)
+        setMomentumMinuteMax(s.momentumMinuteMax)
         setMinDur(s.minDur)
       })
       .catch(() => { /* backend unreachable — keep localStorage values */ })
   }, [])
 
-  // CO-adjusted cartera data (fetched from backend when adjCashout is on)
-  const [coData, setCoData] = useState<Cartera | null>(null)
-  const [coLoading, setCoLoading] = useState(false)
+  // Cashout analysis tab state
+  const [coLayPct, setCoLayPct] = useState<number>(20)
+  const [coLayData, setCoLayData] = useState<Cartera | null>(null)
+  const [coLayLoading, setCoLayLoading] = useState(false)
 
-  useEffect(() => {
-    if (!adjCashout) {
-      setCoData(null)
-      return
+  const fetchCashoutAnalysis = async (pct: number) => {
+    setCoLayLoading(true)
+    try {
+      const d = await api.getCartera(undefined, pct)
+      setCoLayData(d)
+    } catch (e) {
+      console.error("Error fetching cashout analysis:", e)
+    } finally {
+      setCoLayLoading(false)
     }
-    setCoLoading(true)
-    api.getCartera(adjCashoutMinute)
-      .then(d => setCoData(d))
-      .catch(console.error)
-      .finally(() => setCoLoading(false))
-  }, [adjCashout, adjCashoutMinute])
+  }
 
   const updateMinDur = (newMinDur: MinDurConfig) => {
     setMinDur(newMinDur)
@@ -358,13 +380,13 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   /** Build CarteraConfig from current component state */
   const buildConfig = (): CarteraConfig => ({
     strategies: {
-      draw: { enabled: drawParams.enabled, xgMax: drawParams.xgMax, possMax: drawParams.possMax, shotsMax: drawParams.shotsMax, xgDomAsym: drawParams.xgDomAsym },
-      xg: { enabled: xgParams.enabled, sotMin: xgParams.sotMin, minuteMax: xgParams.minuteMax },
-      drift: { enabled: driftParams.enabled, goalDiffMin: driftParams.goalDiffMin, driftMin: driftParams.driftMin, oddsMax: isFinite(driftParams.oddsMax) ? driftParams.oddsMax : 999, minuteMin: driftParams.minuteMin, momGapMin: driftParams.momGapMin },
-      clustering: { enabled: clusteringParams.enabled, minuteMax: clusteringParams.minuteMax, xgRemMin: clusteringParams.xgRemMin },
-      pressure: { enabled: pressureVer !== "off" },
-      tarde_asia: { enabled: tardeAsiaVer !== "off" },
-      momentum_xg: { version: momentumXGVer },
+      draw: { enabled: drawParams.enabled, xgMax: drawParams.xgMax, possMax: drawParams.possMax, shotsMax: drawParams.shotsMax, xgDomAsym: drawParams.xgDomAsym, minuteMin: drawParams.minuteMin, minuteMax: drawParams.minuteMax },
+      xg: { enabled: xgParams.enabled, sotMin: xgParams.sotMin, minuteMin: xgParams.minuteMin, minuteMax: xgParams.minuteMax },
+      drift: { enabled: driftParams.enabled, goalDiffMin: driftParams.goalDiffMin, driftMin: driftParams.driftMin, oddsMax: isFinite(driftParams.oddsMax) ? driftParams.oddsMax : 999, minuteMin: driftParams.minuteMin, minuteMax: driftParams.minuteMax, momGapMin: driftParams.momGapMin },
+      clustering: { enabled: clusteringParams.enabled, minuteMin: clusteringParams.minuteMin, minuteMax: clusteringParams.minuteMax, xgRemMin: clusteringParams.xgRemMin },
+      pressure: { enabled: pressureVer !== "off", minuteMin: pressureMinuteMin, minuteMax: pressureMinuteMax },
+      tarde_asia: { enabled: tardeAsiaVer !== "off", minuteMin: tardeAsiaMinuteMin, minuteMax: tardeAsiaMinuteMax },
+      momentum_xg: { version: momentumXGVer, minuteMin: momentumMinuteMin, minuteMax: momentumMinuteMax },
     },
     bankroll_mode: brMode,
     flat_stake: flatStake,
@@ -380,7 +402,13 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
       drift_min_minute: adjDriftMinMin,
       slippage_pct: adjSlippage,
       conflict_filter: adjConflictFilter,
-      cashout_minute: adjCashout ? adjCashoutMinute : null,
+      allow_contrarias: adjAllowContrarias,
+      stability: adjStability,
+      conservative_odds: adjConservativeOdds,
+      global_minute_min: adjGlobalMinEnabled ? (adjGlobalMinMin ?? null) : null,
+      global_minute_max: adjGlobalMinEnabled ? (adjGlobalMinMax ?? null) : null,
+      cashout_minute: null,
+      cashout_pct: coLayPct,
     },
   })
 
@@ -395,9 +423,9 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
           drawParams, xgParams, driftParams, clusteringParams,
           pressureVer, tardeAsiaVer, momentumXGVer,
           brMode, flatStake, bankrollInit, activePreset, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
-          adjSlippage, adjConflictFilter, adjStability, adjConservativeOdds, adjCashout, adjCashoutMinute, riskFilter, minDur,
+          adjSlippage, adjConflictFilter, adjAllowContrarias, adjStability, adjConservativeOdds, riskFilter, minDur,
           pressureMinuteMin, pressureMinuteMax, tardeAsiaMinuteMin, tardeAsiaMinuteMax, momentumMinuteMin, momentumMinuteMax,
-          adjGlobalMinEnabled, adjGlobalMinMin, adjGlobalMinMax,
+          adjGlobalMinEnabled, adjGlobalMinMin, adjGlobalMinMax, coLayPct,
         }))
         setSaveStatus("saved")
         setTimeout(() => setSaveStatus("idle"), 2000)
@@ -422,8 +450,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
     setAdjDriftMinMin(15)
     setAdjSlippage(2)
     setAdjConflictFilter(true)
-    setAdjCashout(false)
-    setAdjCashoutMinute(70)
+    setAdjAllowContrarias(false)
     setRiskFilter("all")
     setMinDur({ ...DEFAULT_MIN_DUR })
     setPressureMinuteMin(0); setPressureMinuteMax(90)
@@ -433,8 +460,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
     localStorage.removeItem(STORAGE_KEY)
   }
 
-  // Use CO-adjusted data when CO is active, otherwise original data
-  const { bets } = (adjCashout && coData) ? coData : data
+  const { bets } = data
 
   const applyPreset = (key: Exclude<PresetKey, null>) => {
     const combo = findBestCombo(bets, bankrollInit, key, riskFilter)
@@ -481,7 +507,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   )
 
   // Apply realistic adjustments (always active — each filter controlled independently)
-  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: null, slippagePct: adjSlippage, conflictFilter: adjConflictFilter, minStability: adjStability, conservativeOdds: adjConservativeOdds, globalMinuteMin: adjGlobalMinEnabled ? adjGlobalMinMin : null, globalMinuteMax: adjGlobalMinEnabled ? adjGlobalMinMax : null }
+  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: null, slippagePct: adjSlippage, conflictFilter: adjConflictFilter, allowContrarias: adjAllowContrarias, minStability: adjStability, conservativeOdds: adjConservativeOdds, globalMinuteMin: adjGlobalMinEnabled ? adjGlobalMinMin : null, globalMinuteMax: adjGlobalMinEnabled ? adjGlobalMinMax : null }
   let filteredBets = applyRealisticAdjustments(rawBets, currentAdj)
   const removedCount = rawBets.length - filteredBets.length
 
@@ -490,6 +516,14 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
 
   // Calculate risk breakdown for analysis
   const riskBreakdown = analyzeRiskBreakdown(filteredBets)
+
+  // CO analysis bets (Tab 2) — same filters applied on coLayData
+  const coRawBets = coLayData ? [...filterDrawBets(coLayData.bets, drawParams), ...filterXGBets(coLayData.bets, xgParams), ...filterDriftBets(coLayData.bets, driftParams), ...filterClusteringBets(coLayData.bets, clusteringParams),
+    ...filterPressureBets(coLayData.bets, pressureVer, (pressureMinuteMin > 0 || pressureMinuteMax < 90) ? { min: pressureMinuteMin, max: pressureMinuteMax } : undefined),
+    ...filterTardeAsiaBets(coLayData.bets, tardeAsiaVer, (tardeAsiaMinuteMin > 0 || tardeAsiaMinuteMax < 90) ? { min: tardeAsiaMinuteMin, max: tardeAsiaMinuteMax } : undefined),
+    ...filterMomentumXGBets(coLayData.bets, momentumXGVer, (momentumMinuteMin > 0 || momentumMinuteMax < 90) ? { min: momentumMinuteMin, max: momentumMinuteMax } : undefined),
+  ].sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")) : []
+  const coFilteredBets = filterByRisk(applyRealisticAdjustments(coRawBets, currentAdj), riskFilter)
 
   const handleDownloadCSV = () => {
     const csv = generateCarteraCSV(filteredBets)
@@ -500,6 +534,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
 
   // Recalculate simulations
   const sim = simulateCartera(filteredBets, bankrollInit, brMode, flatStake)
+  // CO simulation — only when CO data is loaded
+  const simCO = coLayData ? simulateCartera(coFilteredBets, bankrollInit, brMode, flatStake) : null
 
   // Derived portfolio stats
   const activeDays = filteredBets.length > 0
@@ -544,7 +580,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   })
 
   // Chart data with running peak for drawdown visualization
-  const chartData: { idx: number; flat: number; managed: number; managedPeak: number }[] = []
+  const chartData: { idx: number; flat: number; managed: number; managedPeak: number; flatCO: number | null; managedCO: number | null }[] = []
   let runPeak = -Infinity
   for (let i = 0; i < filteredBets.length; i++) {
     const managed = sim.managedCumulative[i] ?? 0
@@ -554,8 +590,20 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
       flat: sim.flatCumulative[i] ?? 0,
       managed,
       managedPeak: runPeak,
+      flatCO: simCO ? (simCO.flatCumulative[i] ?? null) : null,
+      managedCO: simCO ? (simCO.managedCumulative[i] ?? null) : null,
     })
   }
+
+  // CO per-strategy stats
+  const coStratPl = simCO ? new Map(stratConfigs.map(s => {
+    const coBets = coFilteredBets.filter(b =>
+      s.key === "momentum_xg"
+        ? (b.strategy === "momentum_xg_v1" || b.strategy === "momentum_xg_v2")
+        : b.strategy === s.key
+    )
+    return [s.key, round2(coBets.reduce((sum, b) => sum + b.pl * flatStake / 10, 0))]
+  })) : null
 
   const activeLabels = stratConfigs.filter(s => s.active).map(s => s.label)
   const selLabel = activeLabels.length === 7 ? "Todas las estrategias" : activeLabels.length >= 3 ? `${activeLabels.length} estrategias` : activeLabels.length === 2 ? "2 estrategias" : activeLabels[0] || "Ninguna"
@@ -750,7 +798,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true); setAdjStability(1); setAdjConservativeOdds(false); setAdjGlobalMinEnabled(false); setAdjGlobalMinMin(null); setAdjGlobalMinMax(null) }}
+                    onClick={() => { setAdjDedup(true); setAdjMaxOdds(6.0); setAdjMinOdds(1.15); setAdjDriftMinMin(15); setAdjSlippage(2); setAdjConflictFilter(true); setAdjAllowContrarias(false); setAdjStability(1); setAdjConservativeOdds(false); setAdjGlobalMinEnabled(false); setAdjGlobalMinMin(null); setAdjGlobalMinMax(null) }}
                     className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
                   >
                     reset
@@ -838,6 +886,20 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
               </div>
               <p className="text-[9px] text-red-900/80 leading-tight">Elimina Momentum xG si xG Underperf actúa en el partido (0% WR histórico en esa combinación)</p>
             </div>
+            <div className="bg-orange-950/20 border border-orange-900/30 rounded-lg p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-orange-400/80 font-medium">Contrarias</span>
+                <button
+                  type="button"
+                  onClick={() => setAdjAllowContrarias(!adjAllowContrarias)}
+                  title="ON = permite dos señales del mismo mercado en el mismo partido (Draw + Home/Away). OFF = solo la primera señal del mercado match_odds por partido"
+                  className={`relative w-8 h-4 rounded-full transition-colors ${adjAllowContrarias ? "bg-orange-600" : "bg-zinc-700"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjAllowContrarias ? "translate-x-4" : ""}`} />
+                </button>
+              </div>
+              <p className="text-[9px] text-orange-900/80 leading-tight">OFF = solo 1 señal de match_odds por partido (descarta Draw si ya hay Home/Away, o viceversa)</p>
+            </div>
             <div className="bg-zinc-800/40 rounded-lg p-2.5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] text-zinc-400 font-medium">Estab.</span>
@@ -867,36 +929,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 </button>
               </div>
               <p className="text-[9px] text-zinc-600 leading-tight">Calcula P/L con la cuota más baja del periodo estable (resultado más conservador)</p>
-            </div>
-            <div className="bg-cyan-950/20 border border-cyan-900/30 rounded-lg p-2.5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-cyan-400/80 font-medium">Cash-out</span>
-                <button
-                  type="button"
-                  onClick={() => setAdjCashout(!adjCashout)}
-                  title="Simular cash-out en apuestas perdedoras"
-                  className={`relative w-8 h-4 rounded-full transition-colors ${adjCashout ? "bg-cyan-600" : "bg-zinc-700"}`}
-                >
-                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjCashout ? "translate-x-4" : ""}`} />
-                </button>
-              </div>
-              {adjCashout ? (
-                <div className="flex items-center gap-0.5 mt-1">
-                  {[60, 70, 80].map(m => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setAdjCashoutMinute(m)}
-                      className={`flex-1 text-[9px] px-1 py-0.5 rounded transition-colors ${adjCashoutMinute === m ? "bg-cyan-700 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}
-                    >
-                      {m}'
-                    </button>
-                  ))}
-                  {coLoading && <span className="text-[9px] text-cyan-500 animate-pulse ml-1">...</span>}
-                </div>
-              ) : (
-                <p className="text-[9px] text-cyan-900/80 leading-tight">Simula limitar pérdidas colocando un lay en apuestas que van perdiendo</p>
-              )}
             </div>
             {/* Rango Min' global */}
             <div className="bg-zinc-800/40 rounded-lg p-2.5">
@@ -983,19 +1015,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     onChange={e => { setDrawParams(p => ({ ...p, shotsMax: e.target.value === "" ? 20 : parseInt(e.target.value) })); setActivePreset(null) }}
                     className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
-                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                   <input type="number" min={0} max={89} step={5}
                     value={drawParams.minuteMin === 0 ? "" : drawParams.minuteMin}
                     placeholder="0"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setDrawParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
-                  <span className="text-[9px] text-zinc-600">–</span>
+                  <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
                   <input type="number" min={1} max={90} step={5}
                     value={drawParams.minuteMax >= 90 ? "" : drawParams.minuteMax}
                     placeholder="90"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setDrawParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
@@ -1049,19 +1083,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     onChange={e => { setXGParams(p => ({ ...p, sotMin: parseInt(e.target.value) || 0 })); setActivePreset(null) }}
                     className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
-                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                   <input type="number" min={0} max={89} step={5}
                     value={xgParams.minuteMin === 0 ? "" : xgParams.minuteMin}
                     placeholder="0"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setXGParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
-                  <span className="text-[9px] text-zinc-600">–</span>
+                  <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
                   <input type="number" min={1} max={90} step={5}
                     value={xgParams.minuteMax >= 90 ? "" : xgParams.minuteMax}
                     placeholder="90"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setXGParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
@@ -1129,19 +1165,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     onChange={e => { setDriftParams(p => ({ ...p, goalDiffMin: parseInt(e.target.value) || 0 })); setActivePreset(null) }}
                     className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
-                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                   <input type="number" min={0} max={89} step={5}
                     value={driftParams.minuteMin === 0 ? "" : driftParams.minuteMin}
                     placeholder="0"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setDriftParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
-                  <span className="text-[9px] text-zinc-600">–</span>
+                  <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
                   <input type="number" min={1} max={90} step={5}
                     value={driftParams.minuteMax >= 90 ? "" : driftParams.minuteMax}
                     placeholder="90"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setDriftParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
                   <span className="text-zinc-700/50 mx-0.5 shrink-0">·</span>
                   <span className="text-[10px] text-zinc-600 shrink-0">min</span>
@@ -1186,19 +1224,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                 <span className="text-xs text-zinc-400 w-24 shrink-0">Goal Clustering</span>
                 {clusteringParams.enabled && (<>
-                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                   <input type="number" min={0} max={89} step={5}
                     value={clusteringParams.minuteMin === 0 ? "" : clusteringParams.minuteMin}
                     placeholder="0"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setClusteringParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
-                  <span className="text-[9px] text-zinc-600">–</span>
+                  <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
                   <input type="number" min={1} max={90} step={5}
                     value={clusteringParams.minuteMax >= 90 ? "" : clusteringParams.minuteMax}
                     placeholder="90"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setClusteringParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
                   <span className="text-[10px] text-zinc-600 shrink-0">xGrem≥</span>
                   <input type="number" min={0} max={2} step={0.1}
@@ -1280,19 +1320,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                       </button>
                     ))}
                   </div>
-                  <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                  <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                   <input type="number" min={0} max={89} step={5}
                     value={pressureMinuteMin === 0 ? "" : pressureMinuteMin}
                     placeholder="0"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setPressureMinuteMin(e.target.value === "" ? 0 : parseInt(e.target.value)); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
-                  <span className="text-[9px] text-zinc-600">–</span>
+                  <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
                   <input type="number" min={1} max={90} step={5}
                     value={pressureMinuteMax >= 90 ? "" : pressureMinuteMax}
                     placeholder="90"
+                    disabled={adjGlobalMinEnabled}
                     onChange={e => { setPressureMinuteMax(e.target.value === "" ? 90 : parseInt(e.target.value)); setActivePreset(null) }}
-                    className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                    className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
                 </>
               )}
@@ -1320,19 +1362,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 ))}
               </div>
               {tardeAsiaVer !== "off" && (<>
-                <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                 <input type="number" min={0} max={89} step={5}
                   value={tardeAsiaMinuteMin === 0 ? "" : tardeAsiaMinuteMin}
                   placeholder="0"
+                  disabled={adjGlobalMinEnabled}
                   onChange={e => { setTardeAsiaMinuteMin(e.target.value === "" ? 0 : parseInt(e.target.value)); setActivePreset(null) }}
-                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                 />
-                <span className="text-[9px] text-zinc-600">–</span>
+                <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
                 <input type="number" min={1} max={90} step={5}
                   value={tardeAsiaMinuteMax >= 90 ? "" : tardeAsiaMinuteMax}
                   placeholder="90"
+                  disabled={adjGlobalMinEnabled}
                   onChange={e => { setTardeAsiaMinuteMax(e.target.value === "" ? 90 : parseInt(e.target.value)); setActivePreset(null) }}
-                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                 />
               </>)}
             </div>
@@ -1359,19 +1403,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 ))}
               </div>
               {momentumXGVer !== "off" && (<>
-                <span className="text-[10px] text-zinc-600 shrink-0">Min'</span>
+                <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                 <input type="number" min={0} max={89} step={5}
                   value={momentumMinuteMin === 0 ? "" : momentumMinuteMin}
                   placeholder="0"
+                  disabled={adjGlobalMinEnabled}
                   onChange={e => { setMomentumMinuteMin(e.target.value === "" ? 0 : parseInt(e.target.value)); setActivePreset(null) }}
-                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                 />
-                <span className="text-[9px] text-zinc-600">–</span>
+                <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
                 <input type="number" min={1} max={90} step={5}
                   value={momentumMinuteMax >= 90 ? "" : momentumMinuteMax}
                   placeholder="90"
+                  disabled={adjGlobalMinEnabled}
                   onChange={e => { setMomentumMinuteMax(e.target.value === "" ? 90 : parseInt(e.target.value)); setActivePreset(null) }}
-                  className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                 />
               </>)}
             </div>
@@ -1381,38 +1427,54 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MetricCard
-          title="Apuestas"
-          value={`${sim.total}`}
-          description={`${sim.winPct}% WR (${sim.wins}/${sim.total})`}
-        />
-        <MetricCard
-          title="P/L Flat"
-          value={`${sim.flatPl >= 0 ? "+" : ""}${sim.flatPl.toFixed(2)} EUR`}
-          description={`ROI: ${sim.flatRoi >= 0 ? "+" : ""}${sim.flatRoi.toFixed(1)}% (${flatStake} EUR/apuesta)`}
-        />
-        <MetricCard
-          title="P/L Gestion"
-          value={`${sim.managedPl >= 0 ? "+" : ""}${sim.managedPl.toFixed(2)} EUR`}
-          description={`ROI: ${sim.managedRoi >= 0 ? "+" : ""}${sim.managedRoi.toFixed(1)}% | ${BANKROLL_MODES.find(m => m.key === brMode)!.label} | ${sim.managedFinalBankroll.toFixed(0)}/${bankrollInit} EUR`}
-        />
-        <MetricCard
-          title="EV/apuesta"
-          value={`${evPerBet >= 0 ? "+" : ""}${evPerBet.toFixed(2)} EUR`}
-          description={`Ganancia media por señal ejecutada`}
-        />
-        <MetricCard
-          title="Profit/día"
-          value={`${dailyProfit >= 0 ? "+" : ""}${dailyProfit.toFixed(2)} EUR`}
-          description={`${betsPerDay.toFixed(1)} apuestas/día · ${activeDays} días activos`}
-        />
-        <MetricCard
-          title="Cuota media"
-          value={`${avgOdds.toFixed(2)}`}
-          description={`Break-even WR: ${avgOdds > 0 ? (100 / avgOdds).toFixed(1) : "—"}%  ·  Edge: ${avgOdds > 0 ? (sim.winPct - 100 / avgOdds).toFixed(1) : "—"}pp`}
-        />
-      </div>
+      {(() => {
+        const coFlatPl = simCO ? round2(simCO.flatPl) : null
+        const coManagedPl = simCO ? round2(simCO.managedPl) : null
+        const coEvPerBet = simCO && simCO.total > 0 ? round2(simCO.flatPl / simCO.total) : null
+        const coDailyProfit = simCO && activeDays > 0 ? round2(simCO.flatPl / activeDays) : null
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MetricCard
+              title="Apuestas"
+              value={`${sim.total}`}
+              description={`${sim.winPct}% WR (${sim.wins}/${sim.total})`}
+            />
+            <MetricCard
+              title="P/L Flat"
+              value={`${sim.flatPl >= 0 ? "+" : ""}${sim.flatPl.toFixed(2)} EUR`}
+              description={`ROI: ${sim.flatRoi >= 0 ? "+" : ""}${sim.flatRoi.toFixed(1)}% (${flatStake} EUR/apuesta)`}
+              coValue={coFlatPl != null ? `${coFlatPl >= 0 ? "+" : ""}${coFlatPl.toFixed(2)} EUR` : null}
+              coDelta={coFlatPl != null ? round2(coFlatPl - sim.flatPl) : null}
+            />
+            <MetricCard
+              title="P/L Gestion"
+              value={`${sim.managedPl >= 0 ? "+" : ""}${sim.managedPl.toFixed(2)} EUR`}
+              description={`ROI: ${sim.managedRoi >= 0 ? "+" : ""}${sim.managedRoi.toFixed(1)}% | ${BANKROLL_MODES.find(m => m.key === brMode)!.label} | ${sim.managedFinalBankroll.toFixed(0)}/${bankrollInit} EUR`}
+              coValue={coManagedPl != null ? `${coManagedPl >= 0 ? "+" : ""}${coManagedPl.toFixed(2)} EUR` : null}
+              coDelta={coManagedPl != null ? round2(coManagedPl - sim.managedPl) : null}
+            />
+            <MetricCard
+              title="EV/apuesta"
+              value={`${evPerBet >= 0 ? "+" : ""}${evPerBet.toFixed(2)} EUR`}
+              description={`Ganancia media por señal ejecutada`}
+              coValue={coEvPerBet != null ? `${coEvPerBet >= 0 ? "+" : ""}${coEvPerBet.toFixed(2)} EUR` : null}
+              coDelta={coEvPerBet != null ? round2(coEvPerBet - evPerBet) : null}
+            />
+            <MetricCard
+              title="Profit/día"
+              value={`${dailyProfit >= 0 ? "+" : ""}${dailyProfit.toFixed(2)} EUR`}
+              description={`${betsPerDay.toFixed(1)} apuestas/día · ${activeDays} días activos`}
+              coValue={coDailyProfit != null ? `${coDailyProfit >= 0 ? "+" : ""}${coDailyProfit.toFixed(2)} EUR` : null}
+              coDelta={coDailyProfit != null ? round2(coDailyProfit - dailyProfit) : null}
+            />
+            <MetricCard
+              title="Cuota media"
+              value={`${avgOdds.toFixed(2)}`}
+              description={`Break-even WR: ${avgOdds > 0 ? (100 / avgOdds).toFixed(1) : "—"}%  ·  Edge: ${avgOdds > 0 ? (sim.winPct - 100 / avgOdds).toFixed(1) : "—"}pp`}
+            />
+          </div>
+        )
+      })()}
 
       {/* Time + Score Risk Analysis */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
@@ -1620,9 +1682,20 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
       {/* Cumulative P/L Chart */}
       {chartData.length > 0 && (
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-zinc-300 mb-1">P/L Acumulado - {selLabel}</h2>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-sm font-semibold text-zinc-300">P/L Acumulado - {selLabel}</h2>
+            {simCO && (
+              <span className="flex items-center gap-1.5 text-[10px] text-cyan-500/70">
+                <span className="inline-block w-6 border-t-2 border-dashed border-cyan-500/70" />
+                CO {coLayPct}% activo
+              </span>
+            )}
+            {!simCO && (
+              <span className="text-[10px] text-zinc-600">Activa "Análisis Cashout" para ver comparativa CO</span>
+            )}
+          </div>
           <p className="text-xs text-zinc-500 mb-4">
-            Flat ({flatStake} EUR) vs {BANKROLL_MODES.find(m => m.key === brMode)!.label} ({bankrollInit} EUR bankroll).
+            Flat ({flatStake} EUR) vs {BANKROLL_MODES.find(m => m.key === brMode)!.label} ({bankrollInit} EUR bankroll){simCO ? ` · líneas discontinuas = con CO (lay +${coLayPct}%)` : ""}.
           </p>
           <ResponsiveContainer width="100%" height={280}>
             <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
@@ -1650,6 +1723,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   if (value == null) return ["—", name ?? ""]
                   if (name === "managedPeak") return [`${value.toFixed(2)} EUR`, "Pico gestion"]
                   if (name === "flat") return [`${value.toFixed(2)} EUR`, "Flat (10 EUR)"]
+                  if (name === "flatCO") return [`${value.toFixed(2)} EUR`, `Flat CO (lay +${coLayPct}%)`]
+                  if (name === "managedCO") return [`${value.toFixed(2)} EUR`, `Gestion CO (lay +${coLayPct}%)`]
                   if (name === "managed") {
                     const point = chartData.find(d => Math.abs(d.managed - value) < 0.01)
                     const dd = point ? round2(point.managedPeak - point.managed) : 0
@@ -1665,7 +1740,9 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 height={28}
                 formatter={(value) => {
                   if (value === "flat") return "Flat (10 EUR)"
+                  if (value === "flatCO") return `Flat CO (lay +${coLayPct}%)`
                   if (value === "managed") return BANKROLL_MODES.find(m => m.key === brMode)!.label
+                  if (value === "managedCO") return `Gestion CO (lay +${coLayPct}%)`
                   if (value === "managedPeak") return "Pico gestion (DD)"
                   return value
                 }}
@@ -1688,7 +1765,9 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 />
               )}
               <Line type="monotone" dataKey="flat" stroke="#3b82f6" strokeWidth={2} dot={false} />
+              {simCO && <Line type="monotone" dataKey="flatCO" stroke="#22d3ee" strokeWidth={2} dot={false} strokeDasharray="6 3" connectNulls />}
               <Line type="monotone" dataKey="managed" stroke="#a855f7" strokeWidth={2} dot={false} />
+              {simCO && <Line type="monotone" dataKey="managedCO" stroke="#c084fc" strokeWidth={1.5} dot={false} strokeDasharray="6 3" strokeOpacity={0.8} connectNulls />}
               <Line type="monotone" dataKey="managedPeak" stroke="#ef4444" strokeWidth={1} dot={false} strokeDasharray="4 4" strokeOpacity={0.4} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -1697,69 +1776,85 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
 
       {/* Strategy Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {stratStats.map(s => (
-          <div key={s.key} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${s.bgClass}`} />
-              <span className="text-sm font-medium text-zinc-200">{s.label}</span>
-              <span className="text-[10px] text-zinc-500 font-mono">{s.bets} bets</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div className="text-lg font-bold text-zinc-100">{s.bets}</div>
-                <div className="text-[10px] text-zinc-500">Apuestas</div>
+        {stratStats.map(s => {
+          const copl = coStratPl?.get(s.key) ?? null
+          const coDelta = copl != null ? round2(copl - s.pl) : null
+          return (
+            <div key={s.key} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`w-2.5 h-2.5 rounded-full ${s.bgClass}`} />
+                <span className="text-sm font-medium text-zinc-200">{s.label}</span>
+                <span className="text-[10px] text-zinc-500 font-mono">{s.bets} bets</span>
               </div>
-              <div>
-                <div className="text-lg font-bold text-zinc-100">{s.winPct}%</div>
-                <div className="text-[10px] text-zinc-500">Win Rate</div>
-              </div>
-              <div>
-                <div className={`text-lg font-bold ${s.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
-                  {s.pl >= 0 ? "+" : ""}{s.pl}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-lg font-bold text-zinc-100">{s.bets}</div>
+                  <div className="text-[10px] text-zinc-500">Apuestas</div>
                 </div>
-                <div className="text-[10px] text-zinc-500">P/L (ROI: {s.roi}%)</div>
+                <div>
+                  <div className="text-lg font-bold text-zinc-100">{s.winPct}%</div>
+                  <div className="text-[10px] text-zinc-500">Win Rate</div>
+                </div>
+                <div>
+                  <div className={`text-lg font-bold ${s.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {s.pl >= 0 ? "+" : ""}{s.pl}
+                  </div>
+                  <div className="text-[10px] text-zinc-500">P/L (ROI: {s.roi}%)</div>
+                </div>
               </div>
+              {copl != null && (
+                <div className="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between">
+                  <span className="text-[10px] text-cyan-600">CO lay +{coLayPct}%</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-bold ${copl >= 0 ? "text-cyan-400" : "text-amber-400"}`}>
+                      {copl >= 0 ? "+" : ""}{copl}
+                    </span>
+                    {coDelta != null && coDelta !== 0 && (
+                      <span className={`text-[10px] font-medium ${coDelta > 0 ? "text-green-500" : "text-red-500"}`}>
+                        ({coDelta > 0 ? "+" : ""}{coDelta.toFixed(2)})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Daily Performance Visualization */}
       {filteredBets.length > 0 && (() => {
-        // Group bets by day
+        // Group bets by day (original)
         const dailyData = new Map<string, { date: string, pl: number, stake: number, won: number, total: number }>()
-
         filteredBets.forEach(bet => {
-          const betAny = bet as any
-          const timestamp = betAny.timestamp_utc || ""
-          if (!timestamp) return
-
-          // Extract date (YYYY-MM-DD)
+          const timestamp = (bet as any).timestamp_utc || ""
           const date = timestamp.split(" ")[0] || timestamp.split("T")[0]
           if (!date) return
-
-          const pl = bet.pl || 0
-          const stake = 10 // Default stake
-          const won = bet.won ? 1 : 0
-
-          if (!dailyData.has(date)) {
-            dailyData.set(date, { date, pl: 0, stake: 0, won: 0, total: 0 })
-          }
-
+          if (!dailyData.has(date)) dailyData.set(date, { date, pl: 0, stake: 0, won: 0, total: 0 })
           const day = dailyData.get(date)!
-          day.pl += pl
-          day.stake += stake
-          day.won += won
+          day.pl += bet.pl || 0
+          day.stake += 10
+          day.won += bet.won ? 1 : 0
           day.total += 1
         })
 
-        // Convert to array and sort by date
+        // Group CO bets by day (when available)
+        const coDailyPl = coLayData ? new Map<string, number>() : null
+        if (coDailyPl) {
+          coFilteredBets.forEach(bet => {
+            const timestamp = (bet as any).timestamp_utc || ""
+            const date = timestamp.split(" ")[0] || timestamp.split("T")[0]
+            if (!date) return
+            coDailyPl.set(date, (coDailyPl.get(date) ?? 0) + (bet.pl || 0))
+          })
+        }
+
         const dailyArray = Array.from(dailyData.values()).sort((a, b) => a.date.localeCompare(b.date))
 
-        // Calculate ROI for each day
         const chartData = dailyArray.map(day => ({
           date: day.date,
           pl: parseFloat(day.pl.toFixed(2)),
+          plCO: coDailyPl ? parseFloat((coDailyPl.get(day.date) ?? day.pl).toFixed(2)) : undefined,
           roi: day.stake > 0 ? parseFloat(((day.pl / day.stake) * 100).toFixed(1)) : 0,
           winRate: day.total > 0 ? parseFloat(((day.won / day.total) * 100).toFixed(1)) : 0,
           bets: day.total
@@ -1769,9 +1864,12 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
 
         return (
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-            <h2 className="text-sm font-semibold text-zinc-300 mb-1">Rendimiento Diario</h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-sm font-semibold text-zinc-300">Rendimiento Diario</h2>
+              {simCO && <span className="text-[10px] text-cyan-600">barras cyan = P/L con CO lay +{coLayPct}%</span>}
+            </div>
             <p className="text-xs text-zinc-500 mb-4">
-              P/L y ROI agregados por día
+              P/L agregado por día{simCO ? " · barras transparentes = sin CO, barras cyan = con CO" : ""}
             </p>
 
             <div className="h-80">
@@ -1801,47 +1899,35 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     label={{ value: "ROI (%)", angle: 90, position: "insideRight", fill: "#71717a", fontSize: 11 }}
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#18181b",
-                      border: "1px solid #27272a",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    formatter={((value: number | undefined, name: string | undefined) => {
-                      if (value == null) return ["—", name ?? ""]
-                      if (name === "pl") return [`${value.toFixed(2)} EUR`, "P/L"]
-                      if (name === "roi") return [`${value.toFixed(1)}%`, "ROI"]
-                      if (name === "winRate") return [`${value.toFixed(1)}%`, "Win Rate"]
-                      return [value, name ?? ""]
-                    }) as any}
-                    labelFormatter={(label) => `Fecha: ${label}`}
+                    contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
                     content={({ active, payload }) => {
                       if (!active || !payload || !payload.length) return null
-                      const data = payload[0].payload
+                      const d = payload[0].payload
                       return (
                         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
-                          <div className="text-xs text-zinc-400 mb-2">{data.date}</div>
+                          <div className="text-xs text-zinc-400 mb-2">{d.date}</div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between gap-4">
                               <span className="text-xs text-zinc-500">P/L:</span>
-                              <span className={`text-sm font-semibold ${data.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
-                                {data.pl >= 0 ? "+" : ""}{data.pl.toFixed(2)} EUR
-                              </span>
+                              <span className={`text-sm font-semibold ${d.pl >= 0 ? "text-green-400" : "text-red-400"}`}>{d.pl >= 0 ? "+" : ""}{d.pl.toFixed(2)} EUR</span>
                             </div>
+                            {d.plCO != null && d.plCO !== d.pl && (
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-xs text-cyan-600">P/L CO ({coLayPct}%):</span>
+                                <span className={`text-sm font-semibold ${d.plCO >= 0 ? "text-cyan-400" : "text-amber-400"}`}>{d.plCO >= 0 ? "+" : ""}{d.plCO.toFixed(2)} EUR</span>
+                              </div>
+                            )}
                             <div className="flex items-center justify-between gap-4">
                               <span className="text-xs text-zinc-500">ROI:</span>
-                              <span className={`text-sm font-semibold ${data.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
-                                {data.roi >= 0 ? "+" : ""}{data.roi.toFixed(1)}%
-                              </span>
+                              <span className={`text-sm font-semibold ${d.roi >= 0 ? "text-green-400" : "text-red-400"}`}>{d.roi >= 0 ? "+" : ""}{d.roi.toFixed(1)}%</span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                               <span className="text-xs text-zinc-500">Win Rate:</span>
-                              <span className="text-sm font-semibold text-blue-400">{data.winRate.toFixed(1)}%</span>
+                              <span className="text-sm font-semibold text-blue-400">{d.winRate.toFixed(1)}%</span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                               <span className="text-xs text-zinc-500">Apuestas:</span>
-                              <span className="text-sm font-semibold text-zinc-300">{data.bets}</span>
+                              <span className="text-sm font-semibold text-zinc-300">{d.bets}</span>
                             </div>
                           </div>
                         </div>
@@ -1849,19 +1935,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     }}
                   />
                   <ReferenceLine yAxisId="left" y={0} stroke="#52525b" strokeDasharray="3 3" />
-                  <Bar yAxisId="left" dataKey="pl" fill="#a855f7" radius={[4, 4, 0, 0]}>
+                  {/* Original P/L bars */}
+                  <Bar yAxisId="left" dataKey="pl" radius={[4, 4, 0, 0]} fillOpacity={simCO ? 0.35 : 1}>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.pl >= 0 ? "#10b981" : "#ef4444"} />
                     ))}
                   </Bar>
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="roi"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ fill: "#3b82f6", r: 3 }}
-                  />
+                  {/* CO P/L bars (when available) — overlaid, slightly narrower via opacity */}
+                  {simCO && (
+                    <Bar yAxisId="left" dataKey="plCO" radius={[3, 3, 0, 0]} fillOpacity={0.75}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`co-cell-${index}`} fill={(entry.plCO ?? 0) >= 0 ? "#22d3ee" : "#f59e0b"} />
+                      ))}
+                    </Bar>
+                  )}
+                  <Line yAxisId="right" type="monotone" dataKey="roi" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6", r: 3 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -2092,7 +2180,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
         )
       })()}
 
-      {/* Combined Bets Table */}
+      {/* Bet History — Unified with CO columns */}
       {filteredBets.length > 0 && (() => {
         const _sortedIdxs = filteredBets.map((_, i) => i)
         const _histMult = histSort.dir === "asc" ? 1 : -1
@@ -2113,7 +2201,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
             case "plManaged": return _histMult * ((da?.plManaged ?? 0) - (db?.plManaged ?? 0))
             case "managedCum": return _histMult * ((sim.managedCumulative[a] ?? 0) - (sim.managedCumulative[b] ?? 0))
             case "bankroll": return _histMult * ((da?.bankrollAfter ?? 0) - (db?.bankrollAfter ?? 0))
-            case "co": return _histMult * ((ba.cashout_applied ? 1 : 0) - (bb.cashout_applied ? 1 : 0))
             default: return 0
           }
         })
@@ -2126,128 +2213,205 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
               className={`text-${align} py-2 px-1.5 text-xs font-medium cursor-pointer select-none whitespace-nowrap ${active ? "text-blue-400" : "text-zinc-500 hover:text-zinc-300"}`}
               onClick={() => setHistSort(prev => prev.col === col ? { col, dir: prev.dir === "asc" ? "desc" : "asc" } : { col, dir: "asc" })}
             >
-              {col === "date" ? "Fecha" : col === "strategy" ? "Estrategia" : col === "type" ? "Tipo" : col === "match" ? "Partido" : col === "min" ? "Min" : col === "odds" ? "Odds" : col === "ft" ? "FT" : col === "co" ? "CO" : col === "pl" ? "P/L Flat" : col === "flatCum" ? "Acum. Flat" : col === "stake" ? "Stake" : col === "plManaged" ? "P/L Gestion" : col === "managedCum" ? "Acum. Gestion" : "Bankroll"}
+              {col === "date" ? "Fecha" : col === "strategy" ? "Estrategia" : col === "type" ? "Tipo" : col === "match" ? "Partido" : col === "min" ? "Min" : col === "odds" ? "Odds" : col === "ft" ? "FT" : col === "pl" ? "P/L Flat" : col === "flatCum" ? "Acum. Flat" : col === "stake" ? "Stake" : col === "plManaged" ? "P/L Gestion" : col === "managedCum" ? "Acum. Gestion" : "Bankroll"}
               <span className="ml-0.5">{active ? (histSort.dir === "asc" ? "▲" : "▼") : "⇅"}</span>
             </th>
           )
         }
 
+        // CO lookup map — match CO bets to original bets by composite key
+        const coLayBetMap = coLayData ? new Map(
+          coFilteredBets.map(b => [`${b.match_id}|${b.strategy}|${b.timestamp_utc}`, b])
+        ) : null
+
+        // CO stats on ALL bets (winners + losers)
+        const coRescued = coLayData ? coFilteredBets.filter(b => !b.won && b.cashout_applied).length : 0
+        const coPenalized = coLayData ? coFilteredBets.filter(b => b.won && b.cashout_applied).length : 0
+        const plCOAll = simCO ? round2(simCO.flatPl) : null
+        const coNetImpact = plCOAll != null ? round2(plCOAll - sim.flatPl) : null
+
         return (
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-zinc-300 mb-1">Historial de apuestas</h2>
-          <p className="text-xs text-zinc-500 mb-4">
-            {selLabel} | {BANKROLL_MODES.find(m => m.key === brMode)!.label} — haz clic en una columna para ordenar.
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800">
-                  <th className="text-center py-2 px-1.5 text-xs font-medium text-zinc-500">#</th>
-                  {thSort("date", "left")}
-                  {thSort("strategy", "left")}
-                  {thSort("type", "left")}
-                  {thSort("match", "left")}
-                  {thSort("min")}
-                  {thSort("odds")}
-                  {thSort("ft", "center")}
-                  {adjCashout && thSort("co", "center")}
-                  {thSort("pl")}
-                  {thSort("flatCum")}
-                  {thSort("stake")}
-                  {thSort("plManaged")}
-                  {thSort("managedCum")}
-                  {thSort("bankroll")}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedHistIndexes.map((origIdx) => {
-                  const b = filteredBets[origIdx]
-                  const det = sim.betDetails[origIdx]
-                  const odds = getBetOdds(b)
-                  return (
-                    <tr
-                      key={`${b.match_id}-${b.strategy}-${origIdx}`}
-                      className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
-                    >
-                      <td className="py-2 px-1.5 text-center text-xs text-zinc-600">{origIdx + 1}</td>
-                      <td className="py-2 px-1.5 text-xs text-zinc-500 whitespace-nowrap">
-                        {b.timestamp_utc ? (() => {
-                          const d = new Date(b.timestamp_utc)
-                          return isNaN(d.getTime()) ? "-" : `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")} ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
-                        })() : "-"}
-                      </td>
-                      <td className="py-2 px-1.5 text-xs">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          b.strategy === "back_draw_00"
-                            ? "bg-cyan-500/15 text-cyan-400"
-                            : b.strategy === "odds_drift"
-                            ? "bg-emerald-500/15 text-emerald-400"
-                            : b.strategy === "goal_clustering"
-                            ? "bg-rose-500/15 text-rose-400"
-                            : b.strategy === "pressure_cooker"
-                            ? "bg-orange-500/15 text-orange-400"
-                            : "bg-amber-500/15 text-amber-400"
-                        }`}>
-                          {b.strategy_label}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1.5 text-xs">
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/15 text-blue-400">
-                          {getBetType(b)}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1.5 text-zinc-300 text-xs max-w-[160px] truncate" title={b.match}>{b.match}</td>
-                      <td className="py-2 px-1.5 text-right text-zinc-400 text-xs">{b.minuto ?? "-"}</td>
-                      <td className="py-2 px-1.5 text-right text-zinc-400 text-xs">{odds.toFixed(2)}</td>
-                      <td className="py-2 px-1.5 text-center text-xs">
-                        <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
-                      </td>
-                      {adjCashout && (
-                        <td className="py-2 px-1.5 text-center text-xs">
-                          {b.cashout_applied ? (() => {
-                            const saved = (b.pl + 10) * flatStake / 10
-                            return (
-                              <span
-                                className={`inline-flex flex-col items-center px-1.5 py-0.5 rounded text-[10px] font-medium leading-tight ${saved >= 0 ? "bg-cyan-500/20 text-cyan-400" : "bg-amber-500/20 text-amber-400"}`}
-                                title={`Cash-out en min ~${b.cashout_minute_actual ?? "?"} · Lay ${b.cashout_lay_odds?.toFixed(2) ?? "?"}`}
-                              >
-                                <span>CO</span>
-                                <span>{saved >= 0 ? "+" : ""}{saved.toFixed(2)}</span>
-                              </span>
-                            )
-                          })() : <span className="text-zinc-700">—</span>}
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+            {/* Header with CO controls */}
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+              <h2 className="text-sm font-semibold text-zinc-300">Historial de apuestas</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-500">CO umbral</span>
+                <input
+                  type="number"
+                  min={5} max={100} step={5}
+                  value={coLayPct}
+                  title="Porcentaje de subida de cuota lay sobre el precio de entrada"
+                  placeholder="20"
+                  onChange={e => setCoLayPct(Math.max(5, Math.min(100, parseInt(e.target.value) || 20)))}
+                  className="w-14 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs text-cyan-400 text-center focus:outline-none focus:border-zinc-500"
+                />
+                <span className="text-xs text-zinc-500">%</span>
+                <button
+                  type="button"
+                  onClick={() => fetchCashoutAnalysis(coLayPct)}
+                  disabled={coLayLoading}
+                  className="px-3 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                >
+                  {coLayLoading ? "Analizando..." : coLayData ? "Actualizar CO" : "Simular CO"}
+                </button>
+                {coLayLoading && <span className="text-cyan-400 animate-pulse text-[10px]">●</span>}
+              </div>
+            </div>
+
+            {/* CO summary bar */}
+            {coLayData && !coLayLoading && (
+              <div className="flex items-center gap-4 mb-4 p-3 bg-cyan-950/20 border border-cyan-900/30 rounded-lg flex-wrap text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-zinc-500">P/L sin CO:</span>
+                  <span className={`font-semibold ${sim.flatPl >= 0 ? "text-green-400" : "text-red-400"}`}>{sim.flatPl >= 0 ? "+" : ""}{sim.flatPl.toFixed(2)}€</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-zinc-500">P/L con CO:</span>
+                  <span className={`font-semibold ${plCOAll != null && plCOAll >= 0 ? "text-green-400" : "text-amber-400"}`}>{plCOAll != null ? `${plCOAll >= 0 ? "+" : ""}${plCOAll.toFixed(2)}€` : "—"}</span>
+                </div>
+                {coNetImpact != null && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-zinc-500">Impacto neto:</span>
+                    <span className={`font-semibold ${coNetImpact >= 0 ? "text-green-400" : "text-red-400"}`}>{coNetImpact >= 0 ? "+" : ""}{coNetImpact.toFixed(2)}€</span>
+                  </div>
+                )}
+                <div className="w-px h-4 bg-zinc-700" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-zinc-500">Rescatadas:</span>
+                  <span className="font-semibold text-cyan-400">{coRescued}</span>
+                  <span className="text-zinc-600">(perdedoras con CO)</span>
+                </div>
+                {coPenalized > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-zinc-500">Salidas prematuras:</span>
+                    <span className="font-semibold text-amber-400">{coPenalized}</span>
+                    <span className="text-zinc-600">(ganadoras cerradas antes)</span>
+                  </div>
+                )}
+                <span className="text-[10px] text-zinc-600 ml-auto">lay +{coLayPct}% sobre odds entrada</span>
+              </div>
+            )}
+
+            <p className="text-xs text-zinc-500 mb-4">
+              {selLabel} | {BANKROLL_MODES.find(m => m.key === brMode)!.label} — haz clic en una columna para ordenar.{coLayData ? " Columnas cyan = simulación cashout." : ""}
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-800">
+                    <th className="text-center py-2 px-1.5 text-xs font-medium text-zinc-500">#</th>
+                    {thSort("date", "left")}
+                    {thSort("strategy", "left")}
+                    {thSort("type", "left")}
+                    {thSort("match", "left")}
+                    {thSort("min")}
+                    {thSort("odds")}
+                    {thSort("ft", "center")}
+                    {thSort("pl")}
+                    {thSort("flatCum")}
+                    {thSort("stake")}
+                    {thSort("plManaged")}
+                    {thSort("managedCum")}
+                    {thSort("bankroll")}
+                    {coLayData && <>
+                      <th className="text-center py-2 px-1.5 text-xs font-medium text-cyan-700 border-l border-zinc-700/60">CO</th>
+                      <th className="text-right py-2 px-1.5 text-xs font-medium text-cyan-700">Lay CO</th>
+                      <th className="text-right py-2 px-1.5 text-xs font-medium text-cyan-700">Min CO</th>
+                      <th className="text-right py-2 px-1.5 text-xs font-medium text-cyan-700">P/L CO</th>
+                    </>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedHistIndexes.map((origIdx) => {
+                    const b = filteredBets[origIdx]
+                    const det = sim.betDetails[origIdx]
+                    const odds = getBetOdds(b)
+                    const coB = coLayBetMap?.get(`${b.match_id}|${b.strategy}|${b.timestamp_utc}`)
+                    return (
+                      <tr
+                        key={`${b.match_id}-${b.strategy}-${origIdx}`}
+                        className={`border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors${coB?.cashout_applied ? " bg-cyan-950/10" : ""}`}
+                      >
+                        <td className="py-2 px-1.5 text-center text-xs text-zinc-600">{origIdx + 1}</td>
+                        <td className="py-2 px-1.5 text-xs text-zinc-500 whitespace-nowrap">
+                          {b.timestamp_utc ? (() => {
+                            const d = new Date(b.timestamp_utc)
+                            return isNaN(d.getTime()) ? "-" : `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")} ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
+                          })() : "-"}
                         </td>
-                      )}
-                      <td className="py-2 px-1.5 text-right text-xs font-medium">
-                        <span className={b.pl >= 0 ? "text-green-400" : "text-red-400"}>
-                          {b.pl >= 0 ? "+" : ""}{(b.pl * flatStake / 10).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1.5 text-right text-xs font-mono">
-                        <span className={(sim.flatCumulative[origIdx] ?? 0) >= 0 ? "text-blue-400" : "text-red-400"}>
-                          {(sim.flatCumulative[origIdx] ?? 0) >= 0 ? "+" : ""}{(sim.flatCumulative[origIdx] ?? 0).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1.5 text-right text-xs text-purple-400">{det?.stake.toFixed(2) ?? "-"}</td>
-                      <td className="py-2 px-1.5 text-right text-xs font-medium">
-                        <span className={(det?.plManaged ?? 0) >= 0 ? "text-green-400" : "text-red-400"}>
-                          {det ? `${det.plManaged >= 0 ? "+" : ""}${det.plManaged.toFixed(2)}` : "-"}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1.5 text-right text-xs font-mono">
-                        <span className={(sim.managedCumulative[origIdx] ?? 0) >= 0 ? "text-purple-400" : "text-red-400"}>
-                          {(sim.managedCumulative[origIdx] ?? 0) >= 0 ? "+" : ""}{(sim.managedCumulative[origIdx] ?? 0).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="py-2 px-1.5 text-right text-xs text-purple-300 font-mono">{det?.bankrollAfter.toFixed(0) ?? "-"}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        <td className="py-2 px-1.5 text-xs">
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            b.strategy === "back_draw_00"
+                              ? "bg-cyan-500/15 text-cyan-400"
+                              : b.strategy === "odds_drift"
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : b.strategy === "goal_clustering"
+                              ? "bg-rose-500/15 text-rose-400"
+                              : b.strategy === "pressure_cooker"
+                              ? "bg-orange-500/15 text-orange-400"
+                              : "bg-amber-500/15 text-amber-400"
+                          }`}>
+                            {b.strategy_label}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1.5 text-xs">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/15 text-blue-400">
+                            {getBetType(b)}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1.5 text-zinc-300 text-xs max-w-[160px] truncate" title={b.match}>{b.match}</td>
+                        <td className="py-2 px-1.5 text-right text-zinc-400 text-xs">{b.minuto ?? "-"}</td>
+                        <td className="py-2 px-1.5 text-right text-zinc-400 text-xs">{odds.toFixed(2)}</td>
+                        <td className="py-2 px-1.5 text-center text-xs">
+                          <span className={b.won ? "text-green-400" : "text-red-400"}>{b.ft_score}</span>
+                        </td>
+                        <td className="py-2 px-1.5 text-right text-xs font-medium">
+                          <span className={b.pl >= 0 ? "text-green-400" : "text-red-400"}>
+                            {b.pl >= 0 ? "+" : ""}{(b.pl * flatStake / 10).toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1.5 text-right text-xs font-mono">
+                          <span className={(sim.flatCumulative[origIdx] ?? 0) >= 0 ? "text-blue-400" : "text-red-400"}>
+                            {(sim.flatCumulative[origIdx] ?? 0) >= 0 ? "+" : ""}{(sim.flatCumulative[origIdx] ?? 0).toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1.5 text-right text-xs text-purple-400">{det?.stake.toFixed(2) ?? "-"}</td>
+                        <td className="py-2 px-1.5 text-right text-xs font-medium">
+                          <span className={(det?.plManaged ?? 0) >= 0 ? "text-green-400" : "text-red-400"}>
+                            {det ? `${det.plManaged >= 0 ? "+" : ""}${det.plManaged.toFixed(2)}` : "-"}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1.5 text-right text-xs font-mono">
+                          <span className={(sim.managedCumulative[origIdx] ?? 0) >= 0 ? "text-purple-400" : "text-red-400"}>
+                            {(sim.managedCumulative[origIdx] ?? 0) >= 0 ? "+" : ""}{(sim.managedCumulative[origIdx] ?? 0).toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1.5 text-right text-xs text-purple-300 font-mono">{det?.bankrollAfter.toFixed(0) ?? "-"}</td>
+                        {coLayData && <>
+                          <td className="py-2 px-1.5 text-center text-xs border-l border-zinc-700/60">
+                            {coB?.cashout_applied
+                              ? <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-cyan-500/20 text-cyan-400">✓</span>
+                              : <span className="text-zinc-700">—</span>}
+                          </td>
+                          <td className="py-2 px-1.5 text-right text-xs text-cyan-400/80">{coB?.cashout_lay_odds?.toFixed(2) ?? "—"}</td>
+                          <td className="py-2 px-1.5 text-right text-xs text-cyan-400/80">{coB?.cashout_minute_actual != null ? `${Math.round(coB.cashout_minute_actual)}'` : "—"}</td>
+                          <td className="py-2 px-1.5 text-right text-xs font-medium">
+                            {coB ? (
+                              <span className={coB.pl >= 0 ? "text-green-400" : coB.cashout_applied ? "text-amber-400" : "text-red-400"}>
+                                {coB.pl >= 0 ? "+" : ""}{(coB.pl * flatStake / 10).toFixed(2)}
+                              </span>
+                            ) : <span className="text-zinc-700">—</span>}
+                          </td>
+                        </>}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )
+        )
       })()}
 
       {filteredBets.length === 0 && (
@@ -2355,16 +2519,33 @@ function MetricCard({
   title,
   value,
   description,
+  coValue,
+  coDelta,
 }: {
   title: string
   value: string | number
   description: string
+  coValue?: string | null
+  coDelta?: number | null
 }) {
   return (
     <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
       <div className="text-xs text-zinc-500 mb-1">{title}</div>
       <div className="text-2xl font-bold text-zinc-100 mb-0.5">{value}</div>
       <div className="text-xs text-zinc-600">{description}</div>
+      {coValue != null && (
+        <div className="mt-1.5 pt-1.5 border-t border-zinc-800 flex items-center justify-between gap-2">
+          <span className="text-[10px] text-cyan-700">con CO</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-cyan-400">{coValue}</span>
+            {coDelta != null && coDelta !== 0 && (
+              <span className={`text-[10px] font-medium ${coDelta > 0 ? "text-green-500" : "text-red-500"}`}>
+                ({coDelta > 0 ? "+" : ""}{coDelta.toFixed(2)})
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

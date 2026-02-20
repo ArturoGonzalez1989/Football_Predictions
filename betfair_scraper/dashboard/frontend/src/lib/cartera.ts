@@ -746,6 +746,7 @@ export interface RealisticAdjustments {
   driftMinMinute: number | null  // Min minuto para drift (null = sin filtro)
   slippagePct: number     // % de slippage sobre odds (0 = sin slippage)
   conflictFilter: boolean // Eliminar MomXG cuando xG Underperf activa en mismo partido (par tóxico)
+  allowContrarias: boolean // Permitir apuestas contrarias (Draw + Home/Away en mismo partido)
   minStability: number    // Min capturas consecutivas con cuota estable antes de la señal (1 = sin filtro)
   conservativeOdds: boolean // Usar cuota mínima del periodo (pl_conservative) en vez del trigger
   globalMinuteMin: number | null  // null = OFF — filtra todos los bets antes de este minuto
@@ -759,6 +760,7 @@ export const DEFAULT_ADJUSTMENTS: RealisticAdjustments = {
   driftMinMinute: null,
   slippagePct: 0,
   conflictFilter: false,
+  allowContrarias: false,
   minStability: 1,
   conservativeOdds: false,
   globalMinuteMin: null,
@@ -769,9 +771,10 @@ export const REALISTIC_ADJUSTMENTS: RealisticAdjustments = {
   dedup: true,
   maxOdds: 6.0,
   minOdds: 1.15,
-  driftMinMinute: 15,
+  driftMinMinute: 30,
   slippagePct: 2,
   conflictFilter: true,
+  allowContrarias: false,
   minStability: 1,
   conservativeOdds: false,
   globalMinuteMin: null,
@@ -852,6 +855,26 @@ export function applyRealisticAdjustments(
       if (b.strategy === "momentum_xg_v1" || b.strategy === "momentum_xg_v2") {
         return !matchesWithXGUnderperf.has(b.match_id)
       }
+      return true
+    })
+  }
+
+  // 5b. Anti-contrarias: remove later conflicting match_odds bets (Draw vs Home/Away) on same match
+  //     A "contraria" = same match has both a DRAW bet and a HOME/AWAY bet (same market, opposite sides)
+  //     OVER/UNDER bets are a different market and are never considered contrarias.
+  if (!adj.allowContrarias) {
+    const seenMatchOddsType = new Map<string, string>()  // match_id → first bet type seen
+    result = result.filter(b => {
+      const isMatchOdds = b.strategy === "back_draw_00" || b.strategy === "odds_drift"
+      if (!isMatchOdds) return true
+      const betType = b.strategy === "back_draw_00" ? "draw" : (b.team ?? "home")
+      const firstType = seenMatchOddsType.get(b.match_id)
+      if (firstType === undefined) {
+        seenMatchOddsType.set(b.match_id, betType)
+        return true
+      }
+      // Contraria: different match_odds bet type on same match → remove later one
+      if (firstType !== betType) return false
       return true
     })
   }

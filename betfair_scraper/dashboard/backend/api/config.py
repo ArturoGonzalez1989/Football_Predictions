@@ -47,6 +47,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "slippage_pct": 2,
         "conflict_filter": True,
         "cashout_minute": None,
+        "cashout_pct": 20,
     },
 }
 

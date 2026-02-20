@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { api, type Match, type MatchFull, type MomentumData, type AllCaptures } from "../lib/api"
+import { api, type Match, type MatchFull, type MomentumData, type AllCaptures, type Capture, type OddsTimeline } from "../lib/api"
 import { MomentumChart, XgChart } from "./MomentumChart"
 import { StatsBar } from "./StatsBar"
 import { SiegeMeter } from "./SiegeMeter"
@@ -10,9 +10,96 @@ import {
   ResponsiveContainer, Legend,
 } from "recharts"
 
+// ── All Captures column definitions ──────────────────────────────────────────
+
+type CaptureCol = {
+  label: string
+  oddsCol?: boolean
+  render: (cap: Capture, odds: OddsTimeline | undefined) => string
+}
+type ColGroup = { id: string; label: string; cols: CaptureCol[] }
+
+const CAPTURE_GROUPS: ColGroup[] = [
+  { id: "xg", label: "xG", cols: [
+    { label: "xG H",     render: c => c.xg_local || "-" },
+    { label: "xG A",     render: c => c.xg_visitante || "-" },
+  ]},
+  { id: "poss", label: "Posesión", cols: [
+    { label: "Pos H",    render: c => c.posesion_local || "-" },
+    { label: "Pos A",    render: c => c.posesion_visitante || "-" },
+  ]},
+  { id: "shots", label: "Tiros", cols: [
+    { label: "Shots H",  render: c => c.tiros_local || "-" },
+    { label: "Shots A",  render: c => c.tiros_visitante || "-" },
+    { label: "OnTgt H",  render: c => c.tiros_puerta_local || "-" },
+    { label: "OnTgt A",  render: c => c.tiros_puerta_visitante || "-" },
+    { label: "Blk H",    render: c => c.blocked_shots_local || "-" },
+    { label: "Blk A",    render: c => c.blocked_shots_visitante || "-" },
+  ]},
+  { id: "corners", label: "Córners", cols: [
+    { label: "Cor H",    render: c => c.corners_local || "-" },
+    { label: "Cor A",    render: c => c.corners_visitante || "-" },
+  ]},
+  { id: "bigch", label: "Big Ch", cols: [
+    { label: "Big Ch H", render: c => c.big_chances_local || "-" },
+    { label: "Big Ch A", render: c => c.big_chances_visitante || "-" },
+  ]},
+  { id: "passes", label: "Pases", cols: [
+    { label: "Pass H",   render: c => c.total_passes_local || "-" },
+    { label: "Pass A",   render: c => c.total_passes_visitante || "-" },
+    { label: "Tack H",   render: c => c.tackles_local || "-" },
+    { label: "Tack A",   render: c => c.tackles_visitante || "-" },
+  ]},
+  { id: "attacks", label: "Ataques", cols: [
+    { label: "Att H",    render: c => c.attacks_local || "-" },
+    { label: "Att A",    render: c => c.attacks_visitante || "-" },
+    { label: "DngAtt H", render: c => c.dangerous_attacks_local || "-" },
+    { label: "DngAtt A", render: c => c.dangerous_attacks_visitante || "-" },
+  ]},
+  { id: "cards", label: "Faltas/TJ", cols: [
+    { label: "Fouls H",  render: c => c.fouls_conceded_local || "-" },
+    { label: "Fouls A",  render: c => c.fouls_conceded_visitante || "-" },
+    { label: "YC H",     render: c => c.tarjetas_amarillas_local || "-" },
+    { label: "YC A",     render: c => c.tarjetas_amarillas_visitante || "-" },
+    { label: "RC H",     render: c => c.tarjetas_rojas_local || "-" },
+    { label: "RC A",     render: c => c.tarjetas_rojas_visitante || "-" },
+  ]},
+  { id: "momentum", label: "Momentum", cols: [
+    { label: "Mom H",    render: c => { const v = parseFloat(c.momentum_local); return isNaN(v) ? "-" : v.toFixed(0) } },
+    { label: "Mom A",    render: c => { const v = parseFloat(c.momentum_visitante); return isNaN(v) ? "-" : v.toFixed(0) } },
+  ]},
+  { id: "extra", label: "Extra", cols: [
+    { label: "Saves H",   render: c => c.saves_local || "-" },
+    { label: "Saves A",   render: c => c.saves_visitante || "-" },
+    { label: "Offside H", render: c => c.offsides_local || "-" },
+    { label: "Offside A", render: c => c.offsides_visitante || "-" },
+    { label: "OptaPts H", render: c => c.opta_points_local || "-" },
+    { label: "OptaPts A", render: c => c.opta_points_visitante || "-" },
+  ]},
+  { id: "odds1x2", label: "Cuotas 1X2", cols: [
+    { label: "B.Home",   render: (_, o) => o?.back_home?.toFixed(2) ?? "-",   oddsCol: true },
+    { label: "L.Home",   render: (_, o) => o?.lay_home?.toFixed(2) ?? "-",    oddsCol: true },
+    { label: "B.Draw",   render: (_, o) => o?.back_draw?.toFixed(2) ?? "-",   oddsCol: true },
+    { label: "L.Draw",   render: (_, o) => o?.lay_draw?.toFixed(2) ?? "-",    oddsCol: true },
+    { label: "B.Away",   render: (_, o) => o?.back_away?.toFixed(2) ?? "-",   oddsCol: true },
+    { label: "L.Away",   render: (_, o) => o?.lay_away?.toFixed(2) ?? "-",    oddsCol: true },
+  ]},
+  { id: "oddsou", label: "Cuotas O/U", cols: [
+    { label: "B.O0.5",   render: (_, o) => o?.back_over05?.toFixed(2) ?? "-",  oddsCol: true },
+    { label: "B.O1.5",   render: (_, o) => o?.back_over15?.toFixed(2) ?? "-",  oddsCol: true },
+    { label: "B.O2.5",   render: (_, o) => o?.back_over25?.toFixed(2) ?? "-",  oddsCol: true },
+    { label: "B.O3.5",   render: (_, o) => o?.back_over35?.toFixed(2) ?? "-",  oddsCol: true },
+    { label: "B.U1.5",   render: (_, o) => o?.back_under15?.toFixed(2) ?? "-", oddsCol: true },
+    { label: "B.U2.5",   render: (_, o) => o?.back_under25?.toFixed(2) ?? "-", oddsCol: true },
+  ]},
+]
+
+// ── FinishedView ──────────────────────────────────────────────────────────────
+
 interface FinishedViewProps {
   matches: Match[]
   onRefresh: () => void
+  initialMatchId?: string
 }
 
 // Extract "YYYY-MM-DD" from a start_time string (local date)
@@ -27,8 +114,8 @@ function fmtDateChip(isoDate: string): string {
   return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" }) // "18 feb"
 }
 
-export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+export function FinishedView({ matches, onRefresh, initialMatchId }: FinishedViewProps) {
+  const [selectedId, setSelectedId] = useState<string | null>(initialMatchId ?? null)
   const [full, setFull] = useState<MatchFull | null>(null)
   const [momentum, setMomentum] = useState<MomentumData | null>(null)
   const [allCaptures, setAllCaptures] = useState<AllCaptures | null>(null)
@@ -36,15 +123,18 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [dateFilter, setDateFilter] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Unique dates sorted descending
   const availableDates = Array.from(
     new Set(matches.map(m => matchDate(m.start_time)).filter(Boolean))
   ).sort((a, b) => b.localeCompare(a))
 
-  const visibleMatches = dateFilter
-    ? matches.filter(m => matchDate(m.start_time) === dateFilter)
-    : matches
+  const visibleMatches = matches.filter(m => {
+    if (dateFilter && matchDate(m.start_time) !== dateFilter) return false
+    if (searchQuery && !m.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
+    return true
+  })
 
   useEffect(() => {
     if (!selectedId) { setFull(null); setMomentum(null); setAllCaptures(null); return }
@@ -59,6 +149,14 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
       setAllCaptures(a)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [selectedId])
+
+  // Navigate to initialMatchId when it changes (e.g. deep-link from Explorer)
+  useEffect(() => {
+    if (!initialMatchId) return
+    setDateFilter(null)      // show all dates so the match is visible
+    setSearchQuery("")        // clear search so the match is visible
+    setSelectedId(initialMatchId)
+  }, [initialMatchId])
 
   // Auto-select first visible match
   useEffect(() => {
@@ -103,6 +201,25 @@ export function FinishedView({ matches, onRefresh }: FinishedViewProps) {
                 <option key={d} value={d}>{fmtDateChip(d)} — {matches.filter(m => matchDate(m.start_time) === d).length} partidos</option>
               ))}
             </select>
+          </div>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar equipo…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-7 pr-7 py-1 rounded bg-zinc-800 border border-zinc-700 text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
+            />
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 text-xs pointer-events-none">🔍</span>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs leading-none"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
         {visibleMatches.length === 0 ? (
@@ -185,6 +302,26 @@ function MatchDetail({ match, full, momentum, allCaptures }: { match: Match; ful
   const s = full.final_stats ?? {}
   const golesH = String(s.goles_local ?? "?")
   const golesA = String(s.goles_visitante ?? "?")
+
+  // All Captures column visibility
+  const [visGroups, setVisGroups] = useState<Set<string>>(
+    () => new Set(["xg", "poss", "shots", "corners", "bigch", "attacks", "cards", "odds1x2"])
+  )
+  const toggleGroup = (id: string) => setVisGroups(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+  // Returns the most recent OddsTimeline entry at or before `min`
+  const getOddsAt = (min: number): OddsTimeline | undefined => {
+    let best: OddsTimeline | undefined
+    for (const ot of (full.odds_timeline ?? [])) {
+      if (ot.minute == null || ot.minute > min) continue
+      if (!best || ot.minute > best.minute!) best = ot
+    }
+    return best
+  }
+  const visibleCols = CAPTURE_GROUPS.filter(g => visGroups.has(g.id)).flatMap(g => g.cols)
 
   return (
     <div className="p-6 space-y-6 max-w-4xl">
@@ -337,76 +474,62 @@ function MatchDetail({ match, full, momentum, allCaptures }: { match: Match; ful
           <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             All Captures ({allCaptures.captures.length} rows)
           </h3>
+
+          {/* Column group toggles */}
+          <div className="flex flex-wrap gap-1.5 pb-1">
+            {CAPTURE_GROUPS.map(g => {
+              const on = visGroups.has(g.id)
+              const isOdds = g.id.startsWith("odds")
+              return (
+                <button key={g.id} type="button" onClick={() => toggleGroup(g.id)}
+                  className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors cursor-pointer border
+                    ${on
+                      ? isOdds
+                        ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                        : "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                      : "bg-zinc-800 text-zinc-600 border-zinc-700 hover:text-zinc-400"
+                    }`}
+                >
+                  {on ? "✓" : "+"} {g.label}
+                </button>
+              )
+            })}
+          </div>
+
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 overflow-hidden">
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-zinc-800 z-10">
                   <tr className="border-b border-zinc-700">
-                    <th className="px-3 py-2 text-left font-semibold text-zinc-300 sticky left-0 bg-zinc-800">Min</th>
+                    <th className="px-3 py-2 text-left font-semibold text-zinc-300 sticky left-0 bg-zinc-800 z-20">Min</th>
                     <th className="px-3 py-2 text-center font-semibold text-zinc-300">Score</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">xG H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">xG A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Poss H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Poss A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Shots H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Shots A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">On Tgt H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">On Tgt A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Corners H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Corners A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Big Ch H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Big Ch A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Passes H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Passes A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Attacks H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Attacks A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Dang Att H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Dang Att A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Fouls H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Fouls A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">YC H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">YC A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">RC H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">RC A</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Momentum H</th>
-                    <th className="px-3 py-2 text-center font-semibold text-zinc-300">Momentum A</th>
+                    {visibleCols.map((col, ci) => (
+                      <th key={ci} className={`px-2 py-2 text-center font-semibold whitespace-nowrap text-[10px]
+                        ${col.oddsCol ? "text-amber-400/80" : "text-zinc-400"}`}>
+                        {col.label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/50">
-                  {allCaptures.captures.map((cap, idx) => (
-                    <tr key={idx} className="hover:bg-zinc-800/30">
-                      <td className="px-3 py-2 font-mono text-zinc-100 sticky left-0 bg-zinc-900/95">{cap.minuto || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-100 whitespace-nowrap">
-                        {cap.goles_local || "0"} - {cap.goles_visitante || "0"}
-                      </td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.xg_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.xg_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.posesion_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.posesion_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_puerta_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tiros_puerta_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.corners_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.corners_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.big_chances_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.big_chances_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.total_passes_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.total_passes_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.attacks_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.attacks_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.dangerous_attacks_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.dangerous_attacks_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.fouls_conceded_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.fouls_conceded_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_amarillas_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_amarillas_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_rojas_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.tarjetas_rojas_visitante || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.momentum_local || "-"}</td>
-                      <td className="px-3 py-2 text-center font-mono text-zinc-300">{cap.momentum_visitante || "-"}</td>
-                    </tr>
-                  ))}
+                  {allCaptures.captures.map((cap, idx) => {
+                    const min = parseFloat(cap.minuto)
+                    const odds = isNaN(min) ? undefined : getOddsAt(min)
+                    return (
+                      <tr key={idx} className="hover:bg-zinc-800/30">
+                        <td className="px-3 py-1.5 font-mono text-zinc-100 sticky left-0 bg-zinc-900/95">{cap.minuto || "-"}</td>
+                        <td className="px-3 py-1.5 text-center font-mono text-zinc-100 whitespace-nowrap">
+                          {cap.goles_local || "0"} - {cap.goles_visitante || "0"}
+                        </td>
+                        {visibleCols.map((col, ci) => (
+                          <td key={ci} className={`px-2 py-1.5 text-center font-mono
+                            ${col.oddsCol ? "text-amber-300/80" : "text-zinc-300"}`}>
+                            {col.render(cap, odds)}
+                          </td>
+                        ))}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

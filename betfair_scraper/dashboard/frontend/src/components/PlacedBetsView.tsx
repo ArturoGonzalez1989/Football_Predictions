@@ -26,6 +26,8 @@ export function PlacedBetsView() {
 
   const bets = data?.bets ?? []
   const pending = bets.filter((b) => b.status === "pending")
+  const cashed = bets.filter((b) => b.status === "cashout")
+  const resolved = bets.filter((b) => b.status === "won" || b.status === "lost")
 
   return (
     <div className="p-6 space-y-6">
@@ -38,11 +40,12 @@ export function PlacedBetsView() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <StatCard label="Total" value={data?.total ?? 0} />
         <StatCard label="Pendientes" value={data?.pending ?? 0} color="text-amber-400" />
         <StatCard label="Ganadas" value={data?.won ?? 0} color="text-green-400" />
         <StatCard label="Perdidas" value={data?.lost ?? 0} color="text-red-400" />
+        <StatCard label="Cashout" value={data?.cashout ?? 0} color="text-orange-400" />
         <StatCard
           label="P/L Total"
           value={`${(data?.total_pl ?? 0) >= 0 ? "+" : ""}${(data?.total_pl ?? 0).toFixed(2)}`}
@@ -51,7 +54,7 @@ export function PlacedBetsView() {
       </div>
 
       {/* Pending bets (live) */}
-      {pending.length > 0 ? (
+      {pending.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-amber-400 mb-3 uppercase tracking-wide">
             En juego ({pending.length})
@@ -62,27 +65,46 @@ export function PlacedBetsView() {
             ))}
           </div>
         </section>
-      ) : (
+      )}
+
+      {/* Cashed-out bets */}
+      {cashed.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-orange-400 mb-3 uppercase tracking-wide">
+            Cashout automático ({cashed.length})
+          </h2>
+          <div className="space-y-2">
+            {cashed.map((b) => (
+              <CashedBetRow key={b.id} bet={b} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Resolved bets */}
+      {resolved.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
+            Finalizadas ({resolved.length})
+          </h2>
+          <div className="space-y-2">
+            {resolved.map((b) => (
+              <ResolvedBetRow key={b.id} bet={b} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Empty state */}
+      {bets.length === 0 && (
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-10 text-center">
           <div className="text-zinc-500 text-sm">
-            {bets.length === 0 ? (
-              <>
-                No hay apuestas registradas.
-                <br />
-                <span className="text-zinc-600">
-                  Ve a <span className="text-amber-400">Senales</span> y pulsa{" "}
-                  <span className="text-blue-400">Add Bet</span> en cualquier senal para empezar.
-                </span>
-              </>
-            ) : (
-              <>
-                No hay apuestas en juego.
-                <br />
-                <span className="text-zinc-600">
-                  Ve a <span className="text-blue-400">Analytics</span> para ver el historial completo.
-                </span>
-              </>
-            )}
+            No hay apuestas registradas.
+            <br />
+            <span className="text-zinc-600">
+              Ve a <span className="text-amber-400">Senales</span> y pulsa{" "}
+              <span className="text-blue-400">Add Bet</span> en cualquier senal para empezar.
+            </span>
           </div>
         </div>
       )}
@@ -158,6 +180,89 @@ function PendingBetRow({ bet }: { bet: PlacedBet }) {
               {(bet.potential_pl ?? 0) >= 0 ? "+" : ""}{(bet.potential_pl ?? 0).toFixed(2)}
             </div>
           </div>
+
+          {/* Cashout alert */}
+          {bet.suggest_cashout && (
+            <div
+              className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 min-w-[64px]"
+              title={`Lay actual ${bet.cashout_lay_current} ≥ umbral ${bet.cashout_threshold} (entrada ${odds.toFixed(2)} +20%) — considera hacer lay para limitar pérdidas`}
+            >
+              <span className="text-amber-400 font-bold text-xs animate-pulse">⚡ CO</span>
+              <span className="text-amber-300 font-mono text-[10px]">{bet.cashout_lay_current?.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CashedBetRow({ bet }: { bet: PlacedBet }) {
+  const pl = Number(bet.pl) || 0
+  const odds = Number(bet.back_odds) || 0
+
+  return (
+    <div className="border border-orange-500/25 bg-orange-900/5 rounded-lg p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-semibold text-zinc-300 truncate">{bet.match_name}</span>
+            <TypeBadge type={bet.bet_type} />
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-orange-500/15 text-orange-400">
+              CO AUTO
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-zinc-500">
+            <span>{bet.strategy_name}</span>
+            <span className="text-zinc-700">|</span>
+            <span>{bet.recommendation}</span>
+            <span className="text-zinc-700">|</span>
+            <span>Entrada @ {odds.toFixed(2)}</span>
+            {bet.cashout_lay_current != null && (
+              <>
+                <span className="text-zinc-700">|</span>
+                <span className="text-orange-400">Lay CO @ {bet.cashout_lay_current.toFixed(2)}</span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className={`text-lg font-bold font-mono ${pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+          {pl >= 0 ? "+" : ""}{pl.toFixed(2)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ResolvedBetRow({ bet }: { bet: PlacedBet }) {
+  const won = bet.status === "won"
+  const borderColor = won ? "border-green-500/20" : "border-red-500/20"
+  const bgColor = won ? "bg-green-900/5" : "bg-red-900/5"
+  const pl = Number(bet.pl) || 0
+
+  return (
+    <div className={`border rounded-lg p-4 ${borderColor} ${bgColor}`}>
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-semibold text-zinc-300 truncate">{bet.match_name}</span>
+            <TypeBadge type={bet.bet_type} />
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+              won ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
+            }`}>
+              {won ? "WON" : "LOST"}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-zinc-500">
+            <span>{bet.strategy_name}</span>
+            <span className="text-zinc-700">|</span>
+            <span>{bet.recommendation}</span>
+            <span className="text-zinc-700">|</span>
+            <span>Score: {bet.live_score ?? bet.score}</span>
+          </div>
+        </div>
+        <div className={`text-lg font-bold font-mono ${pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+          {pl >= 0 ? "+" : ""}{pl.toFixed(2)}
         </div>
       </div>
     </div>

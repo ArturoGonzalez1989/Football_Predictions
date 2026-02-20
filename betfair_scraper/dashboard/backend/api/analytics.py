@@ -1,4 +1,5 @@
 import csv
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from api.config import load_config
 
 # Path compartido con bets.py
 _PLACED_BETS_CSV = Path(__file__).resolve().parent.parent.parent.parent / "placed_bets.csv"
+_AUTO_PLACE_LOG = Path(__file__).resolve().parent.parent.parent.parent / "auto_place_errors.log"
 _PLACED_BETS_HEADERS = [
     'id', 'timestamp_utc', 'match_id', 'match_name', 'match_url',
     'strategy', 'strategy_name', 'minute', 'score', 'recommendation',
@@ -17,21 +19,37 @@ _PLACED_BETS_HEADERS = [
     'bet_type', 'stake', 'notes', 'status', 'result', 'pl'
 ]
 
+# Dedup en memoria: evita escribir el mismo signal dos veces en la misma sesión de backend
+_auto_placed_keys: set = set()
+
 
 def _auto_place_signal(sig: dict, stake: float) -> None:
     """Registra automáticamente una señal madura como apuesta paper en placed_bets.csv."""
+    match_id = sig.get("match_id", "")
+    strategy = sig.get("strategy", "")
+    key = (match_id, strategy)
+
+    # Dedup en sesión: ya fue colocado en este ciclo de vida del backend
+    if key in _auto_placed_keys:
+        return
+
     try:
         # Crear CSV si no existe
         if not _PLACED_BETS_CSV.exists():
             with open(_PLACED_BETS_CSV, 'w', newline='', encoding='utf-8') as f:
                 csv.writer(f).writerow(_PLACED_BETS_HEADERS)
 
-        # Obtener siguiente ID
+        # Obtener siguiente ID + dedup en CSV (por si backend reinició)
         next_id = 1
         if _PLACED_BETS_CSV.exists():
             with open(_PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
                 rows = list(csv.DictReader(f))
                 if rows:
+                    # Si ya existe en CSV, no duplicar
+                    for row in rows:
+                        if row.get("match_id") == match_id and row.get("strategy") == strategy:
+                            _auto_placed_keys.add(key)
+                            return
                     ids = [int(r['id']) for r in rows if r.get('id', '').isdigit()]
                     if ids:
                         next_id = max(ids) + 1
@@ -40,10 +58,10 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
         with open(_PLACED_BETS_CSV, 'a', newline='', encoding='utf-8') as f:
             csv.writer(f).writerow([
                 next_id, timestamp,
-                sig.get("match_id", ""),
+                match_id,
                 sig.get("match_name", ""),
                 sig.get("match_url", ""),
-                sig.get("strategy", ""),
+                strategy,
                 sig.get("strategy_name", ""),
                 sig.get("minute", ""),
                 sig.get("score", ""),
@@ -60,8 +78,17 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
                 "auto",   # notas: marca automático
                 "pending", "", "",
             ])
-    except Exception:
-        pass  # No interrumpir el endpoint si falla el auto-place
+        _auto_placed_keys.add(key)
+    except Exception as e:
+        # Loguear error en fichero para depuración (no interrumpir el endpoint)
+        try:
+            with open(_AUTO_PLACE_LOG, 'a', encoding='utf-8') as _f:
+                _f.write(
+                    f"{datetime.utcnow()} | {match_id} | {strategy} | "
+                    f"{type(e).__name__}: {e}\n{traceback.format_exc()}\n"
+                )
+        except Exception:
+            pass
 
 router = APIRouter()
 
@@ -164,14 +191,18 @@ async def get_strategy_odds_drift() -> Dict[str, Any]:
 
 @router.get("/strategies/cartera")
 async def get_strategy_cartera(
-    cashout_minute: Optional[int] = Query(None, ge=0, le=90),
+    cashout_minute: Optional[int] = Query(None, ge=-1, le=90),
+    cashout_lay_pct: Optional[float] = Query(None, ge=5, le=100),
 ) -> Dict[str, Any]:
     """Combined portfolio view of all strategies.
 
     cashout_minute: if provided, simulate cash-out for losing bets at this minute.
+    cashout_lay_pct: if provided, simulate cash-out when lay rises X% above entry price.
     """
     data = csv_reader.analyze_cartera()
-    if cashout_minute is not None:
+    if cashout_lay_pct is not None:
+        data = csv_reader.simulate_cashout_cartera(data, cashout_lay_pct=cashout_lay_pct)
+    elif cashout_minute is not None:
         data = csv_reader.simulate_cashout_cartera(data, cashout_minute)
     return data
 
@@ -250,6 +281,13 @@ async def get_betting_signals(
     # Momentum: usa strategies.momentum_xg.version explícitamente
     momentum_ver = momentum or s.get("momentum_xg", {}).get("version") or v.get("momentum_xg", "off")
 
+    # ── Extraer parámetros por estrategia desde config (single source of truth) ──
+    # Estos params fluyen al detector live para garantizar alineación con histórico.
+    drift_s       = s.get("drift", {})
+    clustering_s  = s.get("clustering", {})
+    xg_s          = s.get("xg", {})
+    draw_s        = s.get("draw", {})
+
     versions = {
         "draw":       _ver(draw,       "draw",       "draw",       "v2r"),
         "xg":         _ver(xg,         "xg",         "xg",         "base"),
@@ -263,6 +301,20 @@ async def get_betting_signals(
         "drift_min_dur":      str(drift_min_dur      if drift_min_dur      is not None else md.get("drift", 2)),
         "clustering_min_dur": str(clustering_min_dur if clustering_min_dur is not None else md.get("clustering", 4)),
         "pressure_min_dur":   str(pressure_min_dur   if pressure_min_dur   is not None else md.get("pressure", 2)),
+        # ── Strategy thresholds (from cartera_config.json strategies block) ──
+        # These make the live detector use the SAME params as the historical analysis.
+        "drift_threshold":      str(drift_s.get("driftMin", 30)),
+        "drift_odds_max":       str(drift_s.get("oddsMax", 999)),
+        "drift_goal_diff_min":  str(drift_s.get("goalDiffMin", 0)),
+        "drift_minute_min":     str(drift_s.get("minuteMin", 0)),
+        "drift_mom_gap_min":    str(drift_s.get("momGapMin", 0)),
+        "clustering_minute_max": str(clustering_s.get("minuteMax", 90)),
+        "clustering_xg_rem_min": str(clustering_s.get("xgRemMin", 0)),
+        "xg_minute_max":        str(xg_s.get("minuteMax", 90)),
+        "xg_sot_min":           str(xg_s.get("sotMin", 0)),
+        "draw_xg_max":          str(draw_s.get("xgMax", 1.0)),
+        "draw_poss_max":        str(draw_s.get("possMax", 100)),
+        "draw_shots_max":       str(draw_s.get("shotsMax", 20)),
     }
 
     result = csv_reader.detect_betting_signals(versions=versions)

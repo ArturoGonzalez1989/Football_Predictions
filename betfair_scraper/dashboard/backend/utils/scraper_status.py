@@ -3,6 +3,7 @@ Utilidades para verificar el estado del scraper.
 """
 
 import os
+import re as _re
 from pathlib import Path
 from datetime import datetime
 
@@ -81,5 +82,137 @@ def get_scraper_status() -> dict:
                 result["last_log_lines"] = [l.rstrip() for l in lines[-20:]]
             except Exception:
                 pass
+
+    return result
+
+
+# ── Per-match log health ──────────────────────────────────────────────────────
+
+# Extraer el market ID numérico del match_id (robusto a URL-encoding)
+_MARKET_ID_RE = _re.compile(r'apuestas-(\d+)')
+
+# Log line patterns
+_CAPTURE_OK_RE  = _re.compile(r'✓\s+\[([^\]]+)\]\s+Captura exitosa[^,]*,\s*min\s+(\d+)')
+_SCORE_RE        = _re.compile(r'(\d+-\d+)')
+_DRIVER_INIT_RE  = _re.compile(r'✓\s+Driver listo:\s+(.+)')
+_CREATING_RE     = _re.compile(r'(?:Creando|creando) driver para:\s+(.+)')
+# Error / warning patterns that contain a match_id bracket
+_ERROR_ID_RE     = _re.compile(r'\[(ERROR|WARNING)\].*?\[([^\]]+apuestas-\d+[^\]]*)\]\s*(.*)')
+# URL-related errors (no match_id bracket, but contain error keywords)
+_URL_ERROR_RE    = _re.compile(
+    r'(?:404|URL no encontrada|no encontr[oó]|intentos|timeout|Timeout|HTTPSConnectionPool|'
+    r'WebDriverException|connection.*refused|ERR_|unable to connect)',
+    _re.IGNORECASE,
+)
+
+
+def _market_id(match_id: str) -> str | None:
+    """Extrae el ID numérico del partido (ej. '35263813') del match_id slug."""
+    m = _MARKET_ID_RE.search(match_id)
+    return m.group(1) if m else None
+
+
+def parse_per_match_log(log_path: Path, match_ids: set) -> dict:
+    """
+    Escanea las últimas N líneas del log del scraper y devuelve un dict
+    con el estado de la última captura conocida por partido.
+
+    match_ids: set de match_id slugs (ej. {'annecy-red-star-apuestas-35263813', ...})
+
+    Devuelve: { match_id → { log_status, log_minute, log_score, log_ts, log_msg } }
+      log_status: "ok" | "error" | "init" | "creating"
+    """
+    result: dict = {}
+    if not log_path or not log_path.exists() or not match_ids:
+        return result
+
+    # Build fast lookup: market_id (numeric) → match_id_slug
+    id_map: dict[str, str] = {}
+    for mid in match_ids:
+        num = _market_id(mid)
+        if num:
+            id_map[num] = mid
+
+    try:
+        with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+    except Exception:
+        return result
+
+    # Scan newest first — stop early once all matches accounted for
+    pending = set(match_ids)
+    for raw in reversed(lines[-1500:]):
+        if not pending:
+            break
+        line = raw.rstrip()
+        ts = line[:8] if len(line) >= 8 else ""
+
+        # ── Successful capture ──
+        m = _CAPTURE_OK_RE.search(line)
+        if m:
+            log_slug = m.group(1)
+            num = _market_id(log_slug)
+            slug = id_map.get(num, "") if num else ""
+            if not slug:
+                # Try direct slug match
+                slug = log_slug if log_slug in pending else ""
+            if slug and slug in pending:
+                score_m = _SCORE_RE.search(line[m.end():])
+                result[slug] = {
+                    "log_status": "ok",
+                    "log_minute": int(m.group(2)),
+                    "log_score": score_m.group(1) if score_m else None,
+                    "log_ts": ts,
+                }
+                pending.discard(slug)
+            continue
+
+        # ── Error / Warning with match_id ──
+        m = _ERROR_ID_RE.search(line)
+        if m:
+            log_slug = m.group(2).strip()
+            num = _market_id(log_slug)
+            slug = id_map.get(num, "") if num else ""
+            if not slug:
+                slug = log_slug if log_slug in pending else ""
+            if slug and slug in pending:
+                result[slug] = {
+                    "log_status": "error",
+                    "log_ts": ts,
+                    "log_msg": m.group(3)[:100].strip(),
+                }
+                pending.discard(slug)
+            continue
+
+        # ── Driver listo: match_id (init finished, waiting for first capture) ──
+        m = _DRIVER_INIT_RE.search(line)
+        if m:
+            log_slug = m.group(1).strip()
+            num = _market_id(log_slug)
+            slug = id_map.get(num, "") if num else log_slug
+            if slug in pending:
+                result[slug] = {"log_status": "init", "log_ts": ts}
+                pending.discard(slug)
+            continue
+
+        # ── URL errors (not tagged with match_id but clearly problematic) ──
+        if _URL_ERROR_RE.search(line) and "[ERROR]" in line:
+            # Try to extract any match_id from the line
+            any_id = _re.search(r'([a-zA-Z0-9%-]+-apuestas-\d+)', line)
+            if any_id:
+                log_slug = any_id.group(1)
+                num = _market_id(log_slug)
+                slug = id_map.get(num, "") if num else log_slug
+                if slug in pending:
+                    result[slug] = {
+                        "log_status": "error",
+                        "log_ts": ts,
+                        "log_msg": line[20:][:100].strip() if len(line) > 20 else line,
+                    }
+                    pending.discard(slug)
+
+    # Remaining (not in log at all) → unknown
+    for slug in pending:
+        result[slug] = {"log_status": "unknown"}
 
     return result

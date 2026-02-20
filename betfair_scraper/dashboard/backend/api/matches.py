@@ -2,8 +2,9 @@
 Endpoints de la API para partidos.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from utils.csv_reader import load_games, load_match_detail, load_momentum_data, load_all_stats, load_match_full, delete_match, load_all_captures
+from utils.scraper_status import parse_per_match_log, LOGS_DIR
 
 router = APIRouter(prefix="/api/matches", tags=["matches"])
 
@@ -17,6 +18,23 @@ def get_matches():
     live = [g for g in all_games if g["status"] == "live"]
     upcoming = [g for g in all_games if g["status"] == "upcoming"]
     finished = [g for g in all_games if g["status"] == "finished"]
+
+    # Enriquecer live matches con estado del log por partido
+    if live:
+        try:
+            log_files = sorted(
+                LOGS_DIR.glob("scraper_*.log"),
+                key=lambda x: x.stat().st_mtime,
+                reverse=True,
+            )
+            if log_files:
+                match_ids = {g["match_id"] for g in live}
+                log_health = parse_per_match_log(log_files[0], match_ids)
+                for g in live:
+                    health = log_health.get(g["match_id"], {"log_status": "unknown"})
+                    g.update(health)
+        except Exception:
+            pass  # No bloqueamos la respuesta si el parsing falla
 
     return {
         "live": live,
@@ -58,4 +76,17 @@ def get_all_captures(match_id: str):
 @router.delete("/{match_id}")
 def remove_match(match_id: str):
     """Elimina un partido de games.csv y borra su CSV de datos."""
-    return delete_match(match_id)
+    result = delete_match(match_id)
+    # If CSV still exists after deletion attempt, it's locked by another process
+    if not result["deleted_data"] and not result["deleted_from_csv"]:
+        raise HTTPException(
+            status_code=409,
+            detail="No se pudo eliminar el archivo CSV. Puede estar bloqueado por el scraper o por OneDrive. Para a el scraper e inténtalo de nuevo."
+        )
+    if not result["deleted_data"]:
+        # Removed from games.csv but file is still locked
+        raise HTTPException(
+            status_code=409,
+            detail="Eliminado de games.csv pero el archivo CSV sigue en uso. Para el scraper e inténtalo de nuevo."
+        )
+    return result
