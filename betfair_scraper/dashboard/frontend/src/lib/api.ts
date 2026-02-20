@@ -812,6 +812,7 @@ export const api = {
   // Placed bets tracking
   placeBet: (bet: PlaceBetRequest) => post<PlacedBet>("/bets/place", bet),
   getPlacedBets: () => get<PlacedBetsResponse>("/bets/placed"),
+  clearBets: () => del<{ status: string; message: string }>("/bets/clear"),
 
   // Cartera configuration
   getConfig: () => get<CarteraConfig>("/config/cartera"),

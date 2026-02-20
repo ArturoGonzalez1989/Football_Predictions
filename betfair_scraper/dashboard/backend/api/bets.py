@@ -270,6 +270,18 @@ async def place_bet(bet: PlaceBetRequest):
         raise HTTPException(status_code=500, detail=f"Error al guardar apuesta: {str(e)}")
 
 
+@router.delete("/api/bets/clear")
+async def clear_placed_bets():
+    """Reset paper trading — elimina todas las apuestas y deja solo los headers."""
+    try:
+        with open(PLACED_BETS_CSV, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(CSV_HEADERS)
+        return {"status": "ok", "message": "Paper trading reseteado correctamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al limpiar apuestas: {str(e)}")
+
+
 @router.get("/api/bets/placed")
 async def get_placed_bets():
     """Obtiene todas las apuestas realizadas, enriquecidas con datos live."""

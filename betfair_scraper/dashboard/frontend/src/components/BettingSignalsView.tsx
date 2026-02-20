@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { api, type BettingSignals, type BettingSignal, type PlaceBetRequest, type WatchlistItem, type CarteraConfig } from "../lib/api"
+import { api, type BettingSignals, type BettingSignal, type WatchlistItem, type CarteraConfig } from "../lib/api"
 import { playSignalAlert } from "../lib/sounds"
 import { type VersionCombo, comboToSignalVersions } from "../lib/cartera"
 
@@ -93,7 +93,6 @@ export function BettingSignalsView() {
   comboRef.current = combo
   const minDurRef = useRef(minDur)
   minDurRef.current = minDur
-  const modalOpenRef = useRef(false)
   const configLoadedRef = useRef(false)
 
   // Load config from backend on mount (single source of truth)
@@ -137,8 +136,6 @@ export function BettingSignalsView() {
         api.getBettingSignals(versions, minDurRef.current),
         api.getWatchlist(versions),
       ])
-      // Don't update signals while user has Add Bet modal open
-      if (modalOpenRef.current) return
       setSignals(data)
       setWatchlist(wl)
       setError(null)
@@ -241,7 +238,7 @@ export function BettingSignalsView() {
                   const hasConflict = conflictMatchIds.has(signal.match_id) &&
                     (signal.strategy === "momentum_xg_v1" || signal.strategy === "momentum_xg_v2")
                   return (
-                    <SignalCard key={`${signal.match_id}-${signal.strategy}-${idx}`} signal={signal} modalOpenRef={modalOpenRef} hasConflict={hasConflict} />
+                    <SignalCard key={`${signal.match_id}-${signal.strategy}-${idx}`} signal={signal} hasConflict={hasConflict} />
                   )
                 })
               })()}
@@ -463,17 +460,9 @@ function ActiveCriteriaBlock({
   )
 }
 
-function SignalCard({ signal, modalOpenRef, hasConflict = false }: { signal: BettingSignal; modalOpenRef: React.RefObject<boolean>; hasConflict?: boolean }) {
-  const [showModal, setShowModalRaw] = useState(false)
-  const setShowModal = (v: boolean) => {
-    setShowModalRaw(v)
-    modalOpenRef.current = v
-  }
-  const [betType, setBetType] = useState<"paper" | "real">("paper")
-  const [stake, setStake] = useState(10)
-  const [notes, setNotes] = useState("")
-  const [saving, setSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
+function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; hasConflict?: boolean }) {
+
+  const isMature = signal.is_mature === true
 
   // Determine card colors based on risk level (overrides confidence)
   const riskLevel = signal.risk_info?.risk_level || "none"
@@ -499,115 +488,8 @@ function SignalCard({ signal, modalOpenRef, hasConflict = false }: { signal: Bet
     cardBgColor = colors.bg
   }
 
-  const handleAddBet = async () => {
-    try {
-      setSaving(true)
-
-      // Check for duplicate bets on the same match
-      const placedBetsResponse = await api.getPlacedBets()
-      const existingBets = placedBetsResponse.bets || []
-
-      const duplicatesOnMatch = existingBets.filter(
-        (bet) => bet.match_id === signal.match_id
-      )
-
-      if (duplicatesOnMatch.length > 0) {
-        // Parse bet type from recommendation
-        const parseBetType = (rec: string) => {
-          const r = rec.toUpperCase()
-          if (r.includes("DRAW")) return "DRAW"
-          if (r.includes("OVER")) {
-            const m = r.match(/OVER\s+(\d+\.?\d*)/)
-            return m ? `OVER_${m[1]}` : "OVER"
-          }
-          if (r.includes("UNDER")) {
-            const m = r.match(/UNDER\s+(\d+\.?\d*)/)
-            return m ? `UNDER_${m[1]}` : "UNDER"
-          }
-          if (r.includes("HOME")) return "HOME"
-          if (r.includes("AWAY")) return "AWAY"
-          return "OTHER"
-        }
-
-        const currentBetType = parseBetType(signal.recommendation)
-
-        // Check if same bet type exists
-        const sameBetType = duplicatesOnMatch.find((bet) => {
-          const existingBetType = parseBetType(bet.recommendation || "")
-          return existingBetType === currentBetType
-        })
-
-        if (sameBetType) {
-          // BLOCK: Same match + same bet type
-          alert(
-            `⚠️ APUESTA DUPLICADA BLOQUEADA\n\n` +
-              `Ya tienes una apuesta ${currentBetType} en este partido:\n` +
-              `• ${sameBetType.strategy_name}\n` +
-              `• ${sameBetType.recommendation}\n` +
-              `• Añadida: ${sameBetType.timestamp_utc?.slice(0, 16)}\n\n` +
-              `No se permite apostar dos veces al mismo mercado en el mismo partido.`
-          )
-          setSaving(false)
-          return
-        }
-
-        // WARN: Same match but different bet type
-        const confirmed = window.confirm(
-          `⚠️ ADVERTENCIA: Ya tienes ${duplicatesOnMatch.length} apuesta(s) en este partido:\n\n` +
-            duplicatesOnMatch
-              .map(
-                (bet) =>
-                  `• ${bet.strategy_name} - ${bet.recommendation} (${bet.timestamp_utc?.slice(0, 16)})`
-              )
-              .join("\n") +
-            `\n\n¿Seguro que quieres añadir otra apuesta en el mismo partido?`
-        )
-
-        if (!confirmed) {
-          setSaving(false)
-          return
-        }
-      }
-
-      const betRequest: PlaceBetRequest = {
-        match_id: signal.match_id,
-        match_name: signal.match_name,
-        match_url: signal.match_url,
-        strategy: signal.strategy,
-        strategy_name: signal.strategy_name,
-        minute: signal.minute,
-        score: signal.score,
-        recommendation: signal.recommendation,
-        back_odds: signal.back_odds,
-        min_odds: signal.min_odds,
-        expected_value: signal.expected_value,
-        confidence: signal.confidence,
-        win_rate_historical: signal.win_rate_historical,
-        roi_historical: signal.roi_historical,
-        sample_size: signal.sample_size,
-        bet_type: betType,
-        stake: stake,
-        notes: notes || undefined,
-      }
-
-      await api.placeBet(betRequest)
-      setSaveSuccess(true)
-      setTimeout(() => {
-        setShowModal(false)
-        setSaveSuccess(false)
-        setNotes("")
-      }, 1500)
-    } catch (error) {
-      console.error("Error guardando apuesta:", error)
-      alert("Error al guardar la apuesta")
-    } finally {
-      setSaving(false)
-    }
-  }
-
   return (
-    <>
-      <div className={`border rounded-lg p-4 ${cardBorderColor} ${cardBgColor}`}>
+    <div className={`border rounded-lg p-4 ${cardBorderColor} ${cardBgColor}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -747,21 +629,13 @@ function SignalCard({ signal, modalOpenRef, hasConflict = false }: { signal: Bet
               </div>
 
               {/* Action buttons */}
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(true)}
-                  className={`px-4 py-2 font-semibold rounded-lg transition-colors flex items-center gap-2 shrink-0 ${
-                    isUnfavorable
-                      ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-400'
-                      : 'bg-blue-600 hover:bg-blue-500 text-white'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>Add Bet</span>
-                </button>
+              <div className="flex flex-col items-end gap-1.5">
+                {isMature && (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    Paper auto
+                  </span>
+                )}
                 <a
                   href={signal.match_url}
                   target="_blank"
@@ -864,15 +738,14 @@ function SignalCard({ signal, modalOpenRef, hasConflict = false }: { signal: Bet
       </div>
     </div>
 
-      {/* Modal para añadir apuesta */}
-      {showModal && (
+      {/* Modal eliminado — paper trading automático */}
+      {false && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-zinc-100">Registrar Apuesta</h3>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
                 className="text-zinc-400 hover:text-zinc-200 transition-colors"
                 aria-label="Cerrar modal"
               >
@@ -1014,7 +887,6 @@ function SignalCard({ signal, modalOpenRef, hasConflict = false }: { signal: Bet
           </div>
         </div>
       )}
-    </>
   )
 }
 
