@@ -273,7 +273,7 @@ export function filterDriftBets(bets: CarteraBet[], p: DriftFilterParams): Carte
     if (p.goalDiffMin > 0 && b.goal_diff != null && b.goal_diff < p.goalDiffMin) return false
     if (p.driftMin > 30 && b.drift_pct != null && b.drift_pct < p.driftMin) return false
     if (isFinite(p.oddsMax) && b.back_odds != null && b.back_odds > p.oddsMax) return false
-    if (p.minuteMin > 0 && b.minuto != null && b.minuto <= p.minuteMin) return false
+    if (p.minuteMin > 0 && b.minuto != null && b.minuto < p.minuteMin) return false
     if (p.minuteMax < 90 && b.minuto != null && b.minuto >= p.minuteMax) return false
     if (p.momGapMin > 0 && b.synth_momentum_gap != null && b.synth_momentum_gap <= p.momGapMin) return false
     return true
@@ -506,14 +506,18 @@ export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: 
 
 // ── Combo evaluation & optimization ────────────────────────────────────
 
-export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number, riskFilter: RiskFilter = "all", adj?: RealisticAdjustments) {
+export function evaluateCombo(
+  bets: CarteraBet[], combo: VersionCombo, bankrollInit: number,
+  riskFilter: RiskFilter = "all", adj?: RealisticAdjustments,
+  minuteRanges?: { pressure?: { min: number; max: number }; tardeAsia?: { min: number; max: number }; momentum?: { min: number; max: number } },
+) {
   const drawBets = filterDrawBets(bets, drawVersionToParams(combo.draw))
   const xgBets = filterXGBets(bets, xgVersionToParams(combo.xg))
   const driftBets = filterDriftBets(bets, driftVersionToParams(combo.drift))
   const clusteringBets = filterClusteringBets(bets, clusteringVersionToParams(combo.clustering))
-  const pressureBets = filterPressureBets(bets, combo.pressure)
-  const tardeAsiaBets = filterTardeAsiaBets(bets, combo.tardeAsia)
-  const momentumXGBets = filterMomentumXGBets(bets, combo.momentumXG)
+  const pressureBets = filterPressureBets(bets, combo.pressure, minuteRanges?.pressure)
+  const tardeAsiaBets = filterTardeAsiaBets(bets, combo.tardeAsia, minuteRanges?.tardeAsia)
+  const momentumXGBets = filterMomentumXGBets(bets, combo.momentumXG, minuteRanges?.momentum)
   // Only include bets where odds >= strategy min_odds (EV positive)
   let filtered = [...drawBets, ...xgBets, ...driftBets, ...clusteringBets, ...pressureBets, ...tardeAsiaBets, ...momentumXGBets]
     .filter(meetsMinOdds)
@@ -697,11 +701,21 @@ export interface FullPresetResult {
   combo: VersionCombo
   riskFilter: RiskFilter
   adj: RealisticAdjustments
+  coLayPct: number
+  pressureMinuteRange: { min: number; max: number }
+  tardeAsiaMinuteRange: { min: number; max: number }
+  momentumMinuteRange: { min: number; max: number }
 }
 
 /** Generate all realistic-adjustment candidates for preset Phase 2 search. */
 function _presetAdjCandidates(): RealisticAdjustments[] {
   const result: RealisticAdjustments[] = []
+  // Global minute range options: null = no filter, or a clamping window
+  const globalOpts: Array<{ min: number | null; max: number | null }> = [
+    { min: null, max: null },
+    { min: 15, max: 85 },
+    { min: 20, max: 80 },
+  ]
   for (const dedup of [false, true])
   for (const minOdds of [1.0, 1.15, 1.21])
   for (const maxOdds of [6.0, 7.0, 10.0])
@@ -709,8 +723,8 @@ function _presetAdjCandidates(): RealisticAdjustments[] {
   for (const conflictFilter of [false, true])
   for (const allowContrarias of [true, false])
   for (const minStability of [1, 2, 3])
-  for (const conservativeOdds of [false, true])
-  for (const driftMinMinute of [null, 15, 30] as (number | null)[]) {
+  for (const driftMinMinute of [null, 15, 30] as (number | null)[])
+  for (const global of globalOpts) {
     result.push({
       dedup,
       minOdds: minOdds === 1.0 ? null : minOdds,
@@ -719,22 +733,25 @@ function _presetAdjCandidates(): RealisticAdjustments[] {
       conflictFilter,
       allowContrarias,
       minStability,
-      conservativeOdds,
       driftMinMinute,
-      globalMinuteMin: null,
-      globalMinuteMax: null,
+      globalMinuteMin: global.min,
+      globalMinuteMax: global.max,
     })
   }
   return result
 }
 
 export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>): FullPresetResult {
-  const NO_ADJ: RealisticAdjustments = { dedup: false, maxOdds: null, minOdds: null, driftMinMinute: null, slippagePct: 0, conflictFilter: false, allowContrarias: true, minStability: 1, conservativeOdds: false, globalMinuteMin: null, globalMinuteMax: null }
+  const NO_ADJ: RealisticAdjustments = { dedup: false, maxOdds: null, minOdds: null, driftMinMinute: null, slippagePct: 0, conflictFilter: false, allowContrarias: true, minStability: 1, globalMinuteMin: null, globalMinuteMax: null }
 
   if (criterion === "max_bets") return {
     combo: { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "v1", momentumXG: "v1", br: "fixed" },
     riskFilter: "all",
     adj: NO_ADJ,
+    coLayPct: 20,
+    pressureMinuteRange: { min: 0, max: 90 },
+    tardeAsiaMinuteRange: { min: 0, max: 90 },
+    momentumMinuteRange: { min: 0, max: 90 },
   }
 
   const scoreOf = (result: NonNullable<ReturnType<typeof evaluateCombo>>, br: BankrollMode): number => {
@@ -789,7 +806,41 @@ export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterio
     if (score > bestPhase2) { bestPhase2 = score; bestAdj = adj }
   }
 
-  return { combo: bestCombo, riskFilter: bestRisk, adj: bestAdj }
+  // ── Phase 3: momentum minute range (given fixed combo + risk + adj) ──
+  const momentumRangeOpts = [
+    { min: 0, max: 90 },
+    { min: 5, max: 85 },
+    { min: 10, max: 80 },
+    { min: 15, max: 75 },
+    { min: 20, max: 70 },
+  ]
+  let bestMomentumRange = { min: 0, max: 90 }
+  let bestPhase3 = -Infinity
+
+  for (const mRange of momentumRangeOpts) {
+    const result = evaluateCombo(bets, bestCombo, bankrollInit, bestRisk, bestAdj, { momentum: mRange })
+    if (!result || result.total < 3) continue
+    const score = scoreOf(result, bestCombo.br)
+    if (score > bestPhase3) { bestPhase3 = score; bestMomentumRange = mRange }
+  }
+
+  // CO heuristic: cannot be optimized inline (requires backend API calls).
+  // Assign a sensible default per criterion.
+  const coLayPct = criterion === "max_roi" ? 15
+    : criterion === "max_pl" ? 20
+    : criterion === "max_wr" ? 30
+    : criterion === "min_dd" ? 10
+    : 20
+
+  return {
+    combo: bestCombo,
+    riskFilter: bestRisk,
+    adj: bestAdj,
+    coLayPct,
+    pressureMinuteRange: { min: 0, max: 90 },
+    tardeAsiaMinuteRange: { min: 0, max: 90 },
+    momentumMinuteRange: bestMomentumRange,
+  }
 }
 
 // ── Realistic adjustments ────────────────────────────────────────────
@@ -803,7 +854,6 @@ export interface RealisticAdjustments {
   conflictFilter: boolean // Eliminar MomXG cuando xG Underperf activa en mismo partido (par tóxico)
   allowContrarias: boolean // Permitir apuestas contrarias (Draw + Home/Away en mismo partido)
   minStability: number    // Min capturas consecutivas con cuota estable antes de la señal (1 = sin filtro)
-  conservativeOdds: boolean // Usar cuota mínima del periodo (pl_conservative) en vez del trigger
   globalMinuteMin: number | null  // null = OFF — filtra todos los bets antes de este minuto
   globalMinuteMax: number | null  // null = OFF — filtra todos los bets desde este minuto en adelante
 }
@@ -817,7 +867,6 @@ export const DEFAULT_ADJUSTMENTS: RealisticAdjustments = {
   conflictFilter: false,
   allowContrarias: false,
   minStability: 1,
-  conservativeOdds: false,
   globalMinuteMin: null,
   globalMinuteMax: null,
 }
@@ -831,7 +880,6 @@ export const REALISTIC_ADJUSTMENTS: RealisticAdjustments = {
   conflictFilter: true,
   allowContrarias: false,
   minStability: 1,
-  conservativeOdds: false,
   globalMinuteMin: null,
   globalMinuteMax: null,
 }
@@ -943,18 +991,12 @@ export function applyRealisticAdjustments(
     result = result.filter(b => (b.stability_count ?? 1) >= adj.minStability)
   }
 
-  // 7+8. Conservative odds + Slippage (combined so slippage is applied to the correct base odds)
-  // Conservative uses conservative_odds (min in stability window); slippage reduces those odds further.
-  // Without combining, slippage would overwrite the conservative substitution done in step 7.
-  if (adj.conservativeOdds || adj.slippagePct > 0) {
-    const factor = adj.slippagePct > 0 ? (1 - adj.slippagePct / 100) : 1
+  // 7. Slippage: reduce trigger odds by slippage percentage
+  if (adj.slippagePct > 0) {
+    const factor = 1 - adj.slippagePct / 100
     result = result.map(b => {
       if (!b.won) return b // losses unaffected by odds adjustments
-      // Base odds: conservative (min in window) when toggle is on, otherwise trigger odds
-      const baseOdds = adj.conservativeOdds && b.conservative_odds !== undefined
-        ? b.conservative_odds
-        : getBetOdds(b)
-      const adjustedOdds = round2(baseOdds * factor)
+      const adjustedOdds = round2(getBetOdds(b) * factor)
       const newPl = round2((adjustedOdds - 1) * 10 * 0.95)
       return { ...b, pl: newPl }
     })

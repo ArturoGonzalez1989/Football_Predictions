@@ -589,7 +589,6 @@ function ActiveCriteriaBlock({
                 {adj.conflict_filter && <span className="text-[10px] text-zinc-500">· Anti-conflicto</span>}
                 {adj.allow_contrarias === false && <span className="text-[10px] text-zinc-500">· Sin contrarias</span>}
                 {(adj.stability ?? 1) > 1 && <span className="text-[10px] text-zinc-500">· Estab. ≥ {adj.stability}</span>}
-                {adj.conservative_odds && <span className="text-[10px] text-zinc-500">· P/L conservador</span>}
                 {adj.drift_min_minute != null && adj.drift_min_minute > 0 && <span className="text-[10px] text-zinc-500">· Drift mín min {adj.drift_min_minute}</span>}
                 {(adj.global_minute_min != null || adj.global_minute_max != null) && (
                   <span className="text-[10px] text-zinc-500">

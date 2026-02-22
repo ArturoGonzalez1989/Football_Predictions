@@ -1,6 +1,0 @@
-[   13453ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://graphs.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://graphs.betfair.es/1.253377453/2436/0:0
-[   13454ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
-[   35437ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://graphs.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://graphs.betfair.es/1.253377453/2436/0:0
-[   35437ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
-[   40554ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://graphs.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://graphs.betfair.es/1.253377453/2436/0:0
-[   40554ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0

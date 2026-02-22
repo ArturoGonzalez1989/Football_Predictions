@@ -545,10 +545,6 @@ export interface CarteraBet {
   deficit?: number
   // stability: consecutive captures where bet odds were in valid range at trigger time
   stability_count?: number
-  // conservative P/L: calculated with minimum odds seen in stability window
-  pl_conservative?: number
-  // raw conservative odds (minimum in stability window) — used by applyRealisticAdjustments
-  conservative_odds?: number
   // lay odds at trigger time (bet placement moment, not cashout)
   lay_trigger?: number | null
   // cash-out simulation fields (set by backend when adjCashout is on)
@@ -761,7 +757,6 @@ export interface CarteraConfig {
     conflict_filter: boolean
     allow_contrarias?: boolean
     stability?: number
-    conservative_odds?: boolean
     global_minute_min?: number | null
     global_minute_max?: number | null
     cashout_minute: number | null

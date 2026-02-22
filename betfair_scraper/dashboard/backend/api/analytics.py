@@ -100,6 +100,161 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
         except Exception:
             pass
 
+def _live_market_key(sig: dict) -> str:
+    """Derive a dedup key from a live signal: match_id + market type (strips odds).
+    Mirrors cartera.ts betMarketKey / getBetType logic.
+    """
+    match_id = sig.get("match_id", "")
+    rec = sig.get("recommendation", "").upper()
+    if "OVER" in rec:
+        parts = rec.split()
+        over_idx = next((i for i, p in enumerate(parts) if p == "OVER"), -1)
+        if over_idx >= 0 and over_idx + 1 < len(parts):
+            return f"{match_id}::over_{parts[over_idx + 1]}"
+    if "HOME" in rec:
+        return f"{match_id}::home"
+    if "AWAY" in rec:
+        return f"{match_id}::away"
+    if "DRAW" in rec:
+        return f"{match_id}::draw"
+    return f"{match_id}::{rec}"
+
+
+def _apply_realistic_adjustments(signals: list, adj: dict, risk_filter: str) -> tuple:
+    """Apply ALL realistic adjustments to live signals, mirroring applyRealisticAdjustments in cartera.ts.
+
+    Returns (filtered_signals, skip_reasons) where skip_reasons is a dict mapping
+    id(sig) → skip_reason string for audit logging.
+
+    Filters applied (same order as frontend):
+      0. Global minute range (global_minute_min/max)
+      1. Drift min minute (adjDriftMinMinute)
+      2. Odds filters with slippage (min_odds, max_odds, slippage_pct)
+      3. Risk filter
+      4. Stability global floor (stability)
+      5. Conflict filter (MomXG blocked when xGUnderperf on same match)
+      6. Anti-contrarias (first match-odds bet type per match wins)
+      7. Dedup (same match + same market, keep first)
+    """
+    adj_enabled      = adj.get("enabled", True)
+    min_odds_cfg     = float(adj.get("min_odds", 0))       if adj_enabled else 0
+    max_odds_cfg     = float(adj.get("max_odds", 999))     if adj_enabled else 999
+    slippage_pct     = float(adj.get("slippage_pct", 0))   if adj_enabled else 0
+    drift_min_min    = int(adj.get("drift_min_minute", 0)) if adj_enabled else 0
+    dedup_enabled    = bool(adj.get("dedup", False))        if adj_enabled else False
+    conflict_filter  = bool(adj.get("conflict_filter", False)) if adj_enabled else False
+    allow_contrarias = bool(adj.get("allow_contrarias", True)) if adj_enabled else True
+    stability_cfg    = int(adj.get("stability", 1))         if adj_enabled else 1
+    global_min       = adj.get("global_minute_min")         if adj_enabled else None
+    global_max       = adj.get("global_minute_max")         if adj_enabled else None
+
+    skip_reasons: dict = {}  # id(sig) → reason string
+
+    # Pass 1: per-signal filters (minute, odds, risk)
+    pass1: list = []
+    for sig in signals:
+        back_odds  = sig.get("back_odds")
+        minute     = sig.get("minute") or 0
+        strategy   = sig.get("strategy", "")
+        risk_level = (sig.get("risk_info") or {}).get("risk_level", "none")
+        sid        = id(sig)
+
+        if global_min is not None and minute < global_min:
+            skip_reasons[sid] = f"global_min_minute({minute}<{global_min})"
+            continue
+        if global_max is not None and minute >= global_max:
+            skip_reasons[sid] = f"global_max_minute({minute}>={global_max})"
+            continue
+
+        if drift_min_min > 0 and strategy.startswith("odds_drift"):
+            if minute < drift_min_min:
+                skip_reasons[sid] = f"drift_too_early(min{minute}<{drift_min_min})"
+                continue
+
+        if back_odds is not None:
+            effective_odds = back_odds * (1 - slippage_pct / 100) if slippage_pct > 0 else back_odds
+            if min_odds_cfg > 0 and effective_odds < min_odds_cfg:
+                skip_reasons[sid] = f"odds_low({effective_odds:.2f}<{min_odds_cfg})"
+                continue
+            if max_odds_cfg < 999 and back_odds > max_odds_cfg:
+                skip_reasons[sid] = f"odds_high({back_odds:.2f}>{max_odds_cfg})"
+                continue
+
+        if risk_filter == "no_risk" and risk_level not in ("none", ""):
+            skip_reasons[sid] = f"risk_filter_no_risk(level={risk_level})"
+            continue
+        if risk_filter == "medium" and risk_level != "medium":
+            skip_reasons[sid] = f"risk_filter_medium(level={risk_level})"
+            continue
+        if risk_filter == "high" and risk_level != "high":
+            skip_reasons[sid] = f"risk_filter_high(level={risk_level})"
+            continue
+        if risk_filter == "with_risk" and risk_level not in ("medium", "high"):
+            skip_reasons[sid] = f"risk_filter_with_risk(level={risk_level})"
+            continue
+
+        pass1.append(sig)
+
+    # Pass 2: stability global floor (1 capture ≈ 0.5 min)
+    if stability_cfg > 1:
+        stable = []
+        for sig in pass1:
+            if sig.get("signal_age_minutes", 0) < stability_cfg * 0.5:
+                skip_reasons[id(sig)] = f"stability({sig.get('signal_age_minutes', 0):.1f}min<{stability_cfg * 0.5:.1f}min)"
+            else:
+                stable.append(sig)
+        pass1 = stable
+
+    # Pass 3: conflict filter (MomXG blocked when xGUnderperf present on same match)
+    if conflict_filter:
+        xg_match_ids = {s["match_id"] for s in pass1 if s.get("strategy", "").startswith("xg_underperformance")}
+        filtered3 = []
+        for sig in pass1:
+            if sig.get("strategy", "").startswith("momentum_xg") and sig.get("match_id") in xg_match_ids:
+                skip_reasons[id(sig)] = "conflict_filter(mom_xg+xg_underperf)"
+            else:
+                filtered3.append(sig)
+        pass1 = filtered3
+
+    # Pass 4: anti-contrarias (first match-odds bet type per match wins)
+    if not allow_contrarias:
+        seen_match_odds: dict = {}  # match_id → first bet type seen
+        filtered4 = []
+        for sig in pass1:
+            strat = sig.get("strategy", "")
+            is_match_odds = (strat == "back_draw_00" or strat.startswith("odds_drift")
+                             or strat.startswith("momentum_xg"))
+            if not is_match_odds:
+                filtered4.append(sig)
+                continue
+            rec = sig.get("recommendation", "").upper()
+            bet_type = "home" if "HOME" in rec else ("away" if "AWAY" in rec else "draw")
+            mid = sig.get("match_id", "")
+            if mid not in seen_match_odds:
+                seen_match_odds[mid] = bet_type
+                filtered4.append(sig)
+            elif seen_match_odds[mid] == bet_type:
+                filtered4.append(sig)
+            else:
+                skip_reasons[id(sig)] = f"contraria({bet_type}!={seen_match_odds[mid]})"
+        pass1 = filtered4
+
+    # Pass 5: dedup (same match + same market, keep first)
+    if dedup_enabled:
+        seen_markets: set = set()
+        filtered5 = []
+        for sig in pass1:
+            key = _live_market_key(sig)
+            if key not in seen_markets:
+                seen_markets.add(key)
+                filtered5.append(sig)
+            else:
+                skip_reasons[id(sig)] = f"dedup({key})"
+        pass1 = filtered5
+
+    return pass1, skip_reasons
+
+
 def run_paper_auto_place() -> dict:
     """Detecta señales live y auto-coloca bets paper maduras.
     Llamado por el background scheduler cada 60s.
@@ -151,6 +306,7 @@ def run_paper_auto_place() -> dict:
             "drift_odds_max":        str(drift_s.get("oddsMax", 999)),
             "drift_goal_diff_min":   str(drift_s.get("goalDiffMin", 0)),
             "drift_minute_min":      str(drift_s.get("minuteMin", 0)),
+            "drift_minute_max":      str(drift_s.get("minuteMax", 90)),
             "drift_mom_gap_min":     str(drift_s.get("momGapMin", 0)),
             "clustering_minute_max": str(clustering_s.get("minuteMax", 90)),
             "clustering_xg_rem_min": str(clustering_s.get("xgRemMin", 0)),
@@ -195,53 +351,32 @@ def run_paper_auto_place() -> dict:
         except Exception:
             _watchlist = []
 
-        adj_enabled   = adj.get("enabled", True)
-        min_odds_cfg  = float(adj.get("min_odds", 0))   if adj_enabled else 0
-        max_odds_cfg  = float(adj.get("max_odds", 999)) if adj_enabled else 999
-        drift_min_min = int(adj.get("drift_min_minute", 0)) if adj_enabled else 0
+        raw_signals = result.get("signals", [])
 
-        placed = 0
-        checked = 0
-        _n_filtered_audit = 0
-        for sig in result.get("signals", []):
-            # ── Audit: loguear señal activa ──
+        # ── Audit: loguear todas las señales activas antes de filtrar ──
+        for sig in raw_signals:
             try:
                 _audit.log_signal_active(sig)
             except Exception:
                 pass
 
-            back_odds  = sig.get("back_odds")
-            risk_level = (sig.get("risk_info") or {}).get("risk_level", "none")
+        # ── Aplicar TODOS los filtros realistas (mirrors frontend applyRealisticAdjustments) ──
+        filtered_signals, skip_reasons = _apply_realistic_adjustments(raw_signals, adj, risk_filter)
 
-            _skip_reason = ""
-            if back_odds is not None:
-                if min_odds_cfg > 0 and back_odds < min_odds_cfg:
-                    _skip_reason = f"odds_low({back_odds:.2f}<{min_odds_cfg})"
-                elif max_odds_cfg < 999 and back_odds > max_odds_cfg:
-                    _skip_reason = f"odds_high({back_odds:.2f}>{max_odds_cfg})"
-
-            if not _skip_reason and drift_min_min > 0 and sig.get("strategy", "").startswith("odds_drift"):
-                if (sig.get("minute") or 0) < drift_min_min:
-                    _skip_reason = f"drift_too_early(min{sig.get('minute')}<{drift_min_min})"
-
-            if not _skip_reason:
-                if risk_filter == "no_risk" and risk_level not in ("none", ""):
-                    _skip_reason = f"risk_filter_no_risk(level={risk_level})"
-                elif risk_filter == "medium" and risk_level != "medium":
-                    _skip_reason = f"risk_filter_medium(level={risk_level})"
-                elif risk_filter == "high" and risk_level != "high":
-                    _skip_reason = f"risk_filter_high(level={risk_level})"
-                elif risk_filter == "with_risk" and risk_level not in ("medium", "high"):
-                    _skip_reason = f"risk_filter_with_risk(level={risk_level})"
-
-            if _skip_reason:
+        # ── Audit: loguear señales filtradas con su motivo ──
+        for sig in raw_signals:
+            reason = skip_reasons.get(id(sig))
+            if reason:
                 try:
-                    _audit.log_signal_filtered(sig, _skip_reason)
+                    _audit.log_signal_filtered(sig, reason)
                 except Exception:
                     pass
-                _n_filtered_audit += 1
-                continue
 
+        placed = 0
+        checked = 0
+        _n_filtered_audit = len(raw_signals) - len(filtered_signals)
+
+        for sig in filtered_signals:
             checked += 1
             sig_age     = sig.get("signal_age_minutes", 0)
             sig_min_dur = sig.get("min_duration_caps", 1)
@@ -532,6 +667,7 @@ async def get_betting_signals(
         "drift_odds_max":       str(drift_s.get("oddsMax", 999)),
         "drift_goal_diff_min":  str(drift_s.get("goalDiffMin", 0)),
         "drift_minute_min":     str(drift_s.get("minuteMin", 0)),
+        "drift_minute_max":     str(drift_s.get("minuteMax", 90)),
         "drift_mom_gap_min":    str(drift_s.get("momGapMin", 0)),
         "clustering_minute_max": str(clustering_s.get("minuteMax", 90)),
         "clustering_xg_rem_min": str(clustering_s.get("xgRemMin", 0)),
@@ -554,40 +690,8 @@ async def get_betting_signals(
 
     result = csv_reader.detect_betting_signals(versions=versions)
 
-    # ── Filtros post-detección (ajustes del modo realista + risk_filter) ──
-    adj_enabled = adj.get("enabled", True)
-    min_odds_cfg = float(adj.get("min_odds", 0)) if adj_enabled else 0
-    max_odds_cfg = float(adj.get("max_odds", 999)) if adj_enabled else 999
-    drift_min_min = int(adj.get("drift_min_minute", 0)) if adj_enabled else 0
-
-    filtered: list = []
-    for sig in result.get("signals", []):
-        back_odds = sig.get("back_odds")
-        risk_level = (sig.get("risk_info") or {}).get("risk_level", "none")
-
-        # min_odds / max_odds — solo si hay cuota disponible
-        if back_odds is not None:
-            if min_odds_cfg > 0 and back_odds < min_odds_cfg:
-                continue
-            if max_odds_cfg < 999 and back_odds > max_odds_cfg:
-                continue
-
-        # drift_min_minute — excluir señales Drift antes del minuto configurado
-        if drift_min_min > 0 and sig.get("strategy", "").startswith("odds_drift"):
-            if (sig.get("minute") or 0) < drift_min_min:
-                continue
-
-        # risk_filter
-        if risk_filter == "no_risk" and risk_level not in ("none", ""):
-            continue
-        if risk_filter == "medium" and risk_level != "medium":
-            continue
-        if risk_filter == "high" and risk_level != "high":
-            continue
-        if risk_filter == "with_risk" and risk_level not in ("medium", "high"):
-            continue
-
-        filtered.append(sig)
+    # ── Filtros post-detección: aplica TODOS los filtros realistas (mirrors frontend) ──
+    filtered, _ = _apply_realistic_adjustments(result.get("signals", []), adj, risk_filter)
 
     result["signals"] = filtered
     result["total_signals"] = len(filtered)

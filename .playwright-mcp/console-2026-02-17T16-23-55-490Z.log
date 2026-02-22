@@ -1,2 +1,0 @@
-[      11ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://www.betfair.es/sport/:50
-[    5293ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://service.maxymiser.net/api/eu/new_betfair.com/7bb08d/mmapi.js:0

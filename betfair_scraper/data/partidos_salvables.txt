@@ -1,5 +1,0 @@
-# Partidos salvables para análisis (2 de 73)
-# Generado: 2026-02-12 09:17:03
-
-partido_hertha-berl%C3%ADn-friburgo-apuestas-35060079.csv	9 capturas	56.6% cobertura
-partido_tottenham-newcastle-apuestas-35212115.csv	6 capturas	72.7% cobertura

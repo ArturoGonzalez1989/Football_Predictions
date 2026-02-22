@@ -156,7 +156,6 @@ function configToState(cfg: CarteraConfig) {
     adjConflictFilter: cfg.adjustments.conflict_filter ?? true,
     adjAllowContrarias: cfg.adjustments.allow_contrarias ?? false,
     adjStability: cfg.adjustments.stability ?? 1,
-    adjConservativeOdds: cfg.adjustments.conservative_odds ?? false,
     adjGlobalMinMin: cfg.adjustments.global_minute_min ?? null,
     adjGlobalMinMax: cfg.adjustments.global_minute_max ?? null,
     adjGlobalMinEnabled: cfg.adjustments.global_minute_min != null || cfg.adjustments.global_minute_max != null,
@@ -329,7 +328,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const [adjConflictFilter, setAdjConflictFilter] = useState(savedState?.adjConflictFilter !== undefined ? savedState.adjConflictFilter : true)
   const [adjAllowContrarias, setAdjAllowContrarias] = useState<boolean>(savedState?.adjAllowContrarias ?? false)
   const [adjStability, setAdjStability] = useState<number>(savedState?.adjStability ?? 1)
-  const [adjConservativeOdds, setAdjConservativeOdds] = useState<boolean>(savedState?.adjConservativeOdds ?? false)
   const [riskFilter, setRiskFilter] = useState<RiskFilter>(savedState?.riskFilter || "all")
   const [minDur, setMinDur] = useState<MinDurConfig>(savedState?.minDur || DEFAULT_MIN_DUR)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
@@ -374,7 +372,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
         setAdjConflictFilter(s.adjConflictFilter)
         setAdjAllowContrarias(s.adjAllowContrarias)
         setAdjStability(s.adjStability)
-        setAdjConservativeOdds(s.adjConservativeOdds)
         setAdjGlobalMinMin(s.adjGlobalMinMin)
         setAdjGlobalMinMax(s.adjGlobalMinMax)
         setAdjGlobalMinEnabled(s.adjGlobalMinEnabled)
@@ -500,7 +497,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
       conflict_filter: adjConflictFilter,
       allow_contrarias: adjAllowContrarias,
       stability: adjStability,
-      conservative_odds: adjConservativeOdds,
       global_minute_min: adjGlobalMinEnabled ? (adjGlobalMinMin ?? null) : null,
       global_minute_max: adjGlobalMinEnabled ? (adjGlobalMinMax ?? null) : null,
       cashout_minute: null,
@@ -519,7 +515,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
           drawParams, xgParams, driftParams, clusteringParams,
           pressureVer, tardeAsiaVer, momentumXGVer,
           brMode, flatStake, bankrollInit, activePreset, adjDedup, adjMaxOdds, adjMinOdds, adjDriftMinMin,
-          adjSlippage, adjConflictFilter, adjAllowContrarias, adjStability, adjConservativeOdds, riskFilter, minDur,
+          adjSlippage, adjConflictFilter, adjAllowContrarias, adjStability, riskFilter, minDur,
           pressureMinuteMin, pressureMinuteMax, tardeAsiaMinuteMin, tardeAsiaMinuteMax, momentumMinuteMin, momentumMinuteMax,
           adjGlobalMinEnabled, adjGlobalMinMin, adjGlobalMinMax, coLayPct,
         }))
@@ -559,7 +555,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const { bets } = data
 
   const applyPreset = (key: Exclude<PresetKey, null>) => {
-    const { combo, riskFilter: bestRisk, adj }: FullPresetResult = findBestCombo(bets, bankrollInit, key)
+    const result: FullPresetResult = findBestCombo(bets, bankrollInit, key)
+    const { combo, riskFilter: bestRisk, adj } = result
     // Strategy versions
     setDrawParams(drawVersionToParams(combo.draw))
     setXGParams(xgVersionToParams(combo.xg))
@@ -579,8 +576,21 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
     setAdjConflictFilter(adj.conflictFilter)
     setAdjAllowContrarias(adj.allowContrarias)
     setAdjStability(adj.minStability)
-    setAdjConservativeOdds(adj.conservativeOdds)
-    if (adj.driftMinMinute != null) setAdjDriftMinMin(adj.driftMinMinute)
+    setAdjDriftMinMin(adj.driftMinMinute ?? 0)
+    // Global minute range
+    const hasGlobal = adj.globalMinuteMin != null || adj.globalMinuteMax != null
+    setAdjGlobalMinEnabled(hasGlobal)
+    setAdjGlobalMinMin(adj.globalMinuteMin)
+    setAdjGlobalMinMax(adj.globalMinuteMax)
+    // CO percentage
+    setCoLayPct(result.coLayPct)
+    // Per-strategy minute ranges
+    setPressureMinuteMin(result.pressureMinuteRange.min)
+    setPressureMinuteMax(result.pressureMinuteRange.max)
+    setTardeAsiaMinuteMin(result.tardeAsiaMinuteRange.min)
+    setTardeAsiaMinuteMax(result.tardeAsiaMinuteRange.max)
+    setMomentumMinuteMin(result.momentumMinuteRange.min)
+    setMomentumMinuteMax(result.momentumMinuteRange.max)
     setActivePreset(key)
   }
 
@@ -616,7 +626,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   )
 
   // Apply realistic adjustments (always active — each filter controlled independently)
-  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin > 0 ? adjDriftMinMin : null, slippagePct: adjSlippage, conflictFilter: adjConflictFilter, allowContrarias: adjAllowContrarias, minStability: adjStability, conservativeOdds: adjConservativeOdds, globalMinuteMin: adjGlobalMinEnabled ? adjGlobalMinMin : null, globalMinuteMax: adjGlobalMinEnabled ? adjGlobalMinMax : null }
+  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin > 0 ? adjDriftMinMin : null, slippagePct: adjSlippage, conflictFilter: adjConflictFilter, allowContrarias: adjAllowContrarias, minStability: adjStability, globalMinuteMin: adjGlobalMinEnabled ? adjGlobalMinMin : null, globalMinuteMax: adjGlobalMinEnabled ? adjGlobalMinMax : null }
   let filteredBets = applyRealisticAdjustments(rawBets, currentAdj)
   const removedCount = rawBets.length - filteredBets.length
 
@@ -874,7 +884,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
               {adjConflictFilter && <span className="text-[10px] text-zinc-500">· Anti-conflicto</span>}
               {!adjAllowContrarias && <span className="text-[10px] text-zinc-500">· Sin contrarias</span>}
               {adjStability > 1 && <span className="text-[10px] text-zinc-500">· Estab. ≥ {adjStability}</span>}
-              {adjConservativeOdds && <span className="text-[10px] text-zinc-500">· P/L conservador</span>}
               {adjDriftMinMin > 0 && <span className="text-[10px] text-zinc-500">· Drift mín min {adjDriftMinMin}</span>}
               {adjGlobalMinEnabled && (adjGlobalMinMin != null || adjGlobalMinMax != null) && (
                 <span className="text-[10px] text-zinc-500">· Rango min {adjGlobalMinMin ?? 0}–{adjGlobalMinMax ?? 90}</span>
@@ -1190,20 +1199,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 />
               </div>
               <p className="text-[9px] text-zinc-600 leading-tight">Mín capturas consecutivas con cuota estable antes de señal (filtra picos puntuales)</p>
-            </div>
-            <div className="bg-zinc-800/40 rounded-lg p-2.5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-zinc-400 font-medium">P/L cons.</span>
-                <button
-                  type="button"
-                  onClick={() => setAdjConservativeOdds(!adjConservativeOdds)}
-                  title="Usar cuota mínima del periodo de estabilidad (más conservador)"
-                  className={`relative w-8 h-4 rounded-full transition-colors ${adjConservativeOdds ? "bg-yellow-500" : "bg-zinc-700"}`}
-                >
-                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adjConservativeOdds ? "translate-x-4" : ""}`} />
-                </button>
-              </div>
-              <p className="text-[9px] text-zinc-600 leading-tight">Calcula P/L con la cuota más baja del periodo estable (resultado más conservador)</p>
             </div>
             {/* Rango Min' global */}
             <div className="bg-zinc-800/40 rounded-lg p-2.5">

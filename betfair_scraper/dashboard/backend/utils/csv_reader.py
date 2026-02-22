@@ -2220,13 +2220,14 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
         return {"total_matches": 0, "with_trigger": 0, "bets": [], "summary": {}}
 
     DRIFT_MIN = 0.30
-    WINDOW_MIN = 10
+    LOOKBACK_MIN = 10        # Fixed lookback in minutes — matches live detect_betting_signals
     MIN_MINUTE = 5
     MAX_MINUTE = 80
     MIN_ODDS = 1.50
     MAX_ODDS = 30.0
     COMMISSION = 0.05
     STAKE = 10
+    SCORE_CONFIRM_MIN = 3    # Min captures with same score in last 6 rows — matches live
 
     bets = []
     total_matches = 0
@@ -2258,6 +2259,9 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
         triggered = {"home": False, "away": False}
 
         for idx in range(1, len(data_points)):
+            if triggered["home"] and triggered["away"]:
+                break
+
             curr_min, curr_row, curr_bh, curr_ba, curr_ri = data_points[idx]
             if curr_min < MIN_MINUTE or curr_min > MAX_MINUTE:
                 continue
@@ -2268,130 +2272,156 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
                 continue
             gl_i, gv_i = int(gl), int(gv)
 
-            # Look back within window
+            # Need someone to be winning
+            if gl_i == gv_i:
+                continue
+
+            # Score confirmation: last 6 rows up to curr_ri must have >= SCORE_CONFIRM_MIN same score
+            # Mirrors live: `for check_row in rows[-6:]` with score_confirm_count >= 3
+            check_rows = rows[max(0, curr_ri - 5):curr_ri + 1]
+            score_confirm_count = sum(
+                1 for r in check_rows
+                if int(_to_float(r.get("goles_local", "")) or 0) == gl_i
+                and int(_to_float(r.get("goles_visitante", "")) or 0) == gv_i
+            )
+            if score_confirm_count < SCORE_CONFIRM_MIN:
+                continue  # Score too recent, odds may not reflect it yet
+
+            # Fixed LOOKBACK_MIN lookback: find historical row at ~LOOKBACK_MIN min ago WITH same score
+            # Mirrors live: target_minute = minuto - 10; require same score in historical_row
+            target_minute = curr_min - LOOKBACK_MIN
+            historical_row = None
             for prev_idx in range(idx - 1, -1, -1):
                 prev_min, prev_row, prev_bh, prev_ba, _ = data_points[prev_idx]
-                if curr_min - prev_min > WINDOW_MIN:
-                    break
-                if curr_min - prev_min < 2:
+                if prev_min <= target_minute:
+                    hgl = int(_to_float(prev_row.get("goles_local", "")) or 0)
+                    hgv = int(_to_float(prev_row.get("goles_visitante", "")) or 0)
+                    if hgl == gl_i and hgv == gv_i:
+                        historical_row = (prev_row, prev_bh, prev_ba)
+                    break  # Stop at first row at/before target_minute (same as live)
+
+            if historical_row is None:
+                continue  # No historical row with same score >= LOOKBACK_MIN minutes ago
+
+            hist_row, hist_bh, hist_ba = historical_row
+
+            # Determine winning team and get respective odds
+            if gl_i > gv_i:
+                team = "home"
+                odds_before = hist_bh
+                odds_now = curr_bh
+                team_goals = gl_i
+                opp_goals = gv_i
+            else:
+                team = "away"
+                odds_before = hist_ba
+                odds_now = curr_ba
+                team_goals = gv_i
+                opp_goals = gl_i
+
+            if triggered[team]:
+                continue
+
+            if odds_before is None or odds_now is None or odds_before <= 0:
+                continue
+
+            drift = (odds_now - odds_before) / odds_before
+            if drift < DRIFT_MIN or odds_now < MIN_ODDS or odds_now > MAX_ODDS:
+                continue
+
+            # Min duration persistence: team must stay winning for min_dur rows
+            if min_dur > 1:
+                persist_ok = True
+                for pi in range(idx + 1, min(idx + min_dur, len(data_points))):
+                    pr = data_points[pi][1]  # row
+                    pg = _to_float(pr.get("goles_local" if team == "home" else "goles_visitante", ""))
+                    po = _to_float(pr.get("goles_visitante" if team == "home" else "goles_local", ""))
+                    if pg is None or po is None or int(pg) <= int(po):
+                        persist_ok = False
+                        break
+                if not persist_ok:
                     continue
 
-                for team, prev_odds, curr_odds, team_goals, opp_goals in [
-                    ("home", prev_bh, curr_bh, gl_i, gv_i),
-                    ("away", prev_ba, curr_ba, gv_i, gl_i),
-                ]:
-                    if triggered[team]:
-                        continue
-                    if prev_odds is None or curr_odds is None or prev_odds <= 0:
-                        continue
+            triggered[team] = True
+            goal_diff = team_goals - opp_goals
+            score_at = f"{gl_i}-{gv_i}"
 
-                    drift = (curr_odds - prev_odds) / prev_odds
-                    if drift < DRIFT_MIN or curr_odds < MIN_ODDS or curr_odds > MAX_ODDS:
-                        continue
+            # Check if team wins the match
+            if team == "home":
+                won = ft_gl > ft_gv
+            else:
+                won = ft_gv > ft_gl
 
-                    # KEY: team must be WINNING
-                    if team_goals <= opp_goals:
-                        continue
+            _drift_odds_col = "back_home" if team == "home" else "back_away"
+            _stab_drift, _cons_drift = _count_odds_stability(rows, curr_ri, _drift_odds_col, odds_now or 0)
+            if won:
+                pl = round((odds_now - 1) * STAKE * (1 - COMMISSION), 2)
+                pl_conservative = round((_cons_drift - 1) * STAKE * (1 - COMMISSION), 2)
+            else:
+                pl = -STAKE
+                pl_conservative = -STAKE
 
-                    # Min duration persistence: team must stay winning for min_dur rows
-                    if min_dur > 1:
-                        persist_ok = True
-                        for pi in range(idx + 1, min(idx + min_dur, len(data_points))):
-                            pr = data_points[pi][1]  # row
-                            pg = _to_float(pr.get("goles_local" if team == "home" else "goles_visitante", ""))
-                            po = _to_float(pr.get("goles_visitante" if team == "home" else "goles_local", ""))
-                            if pg is None or po is None or int(pg) <= int(po):
-                                persist_ok = False
-                                break
-                        if not persist_ok:
-                            continue
+            # Stats at trigger
+            sfx = "_local" if team == "home" else "_visitante"
+            sot_t = _to_float(curr_row.get(f"tiros_puerta{sfx}", ""))
+            poss_t = _to_float(curr_row.get(f"posesion{sfx}", ""))
+            shots_t = _to_float(curr_row.get(f"tiros{sfx}", ""))
 
-                    triggered[team] = True
-                    goal_diff = team_goals - opp_goals
-                    score_at = f"{gl_i}-{gv_i}"
+            # Version filters (pre-computed flags; filterDriftBets also applies these via raw values)
+            passes_v2 = goal_diff >= 2
+            passes_v3 = drift >= 1.0  # drift >= 100%
+            passes_v4 = odds_now <= 5.0 and curr_min > 45
+            passes_v5 = odds_now <= 5.0
 
-                    # Check if team wins the match
-                    if team == "home":
-                        won = ft_gl > ft_gv
-                    else:
-                        won = ft_gv > ft_gl
+            # V6: V5 + momentum gap > 200
+            synth = _compute_synthetic_at_trigger(rows, curr_ri)
+            mom_gap = synth.get("momentum_gap")
+            passes_v6 = passes_v5 and mom_gap is not None and mom_gap > 200
 
-                    _drift_odds_col = "back_home" if team == "home" else "back_away"
-                    _stab_drift, _cons_drift = _count_odds_stability(rows, curr_ri, _drift_odds_col, curr_odds or 0)
-                    if won:
-                        pl = round((curr_odds - 1) * STAKE * (1 - COMMISSION), 2)
-                        pl_conservative = round((_cons_drift - 1) * STAKE * (1 - COMMISSION), 2)
-                    else:
-                        pl = -STAKE
-                        pl_conservative = -STAKE
+            # Risk calculation
+            risk_info = calculate_time_score_risk(
+                strategy="odds_drift",
+                minute=curr_min,
+                home_score=gl_i,
+                away_score=gv_i,
+                dominant_team=team
+            )
 
-                    # Stats at trigger
-                    sfx = "_local" if team == "home" else "_visitante"
-                    osfx = "_visitante" if team == "home" else "_local"
-                    sot_t = _to_float(curr_row.get(f"tiros_puerta{sfx}", ""))
-                    poss_t = _to_float(curr_row.get(f"posesion{sfx}", ""))
-                    shots_t = _to_float(curr_row.get(f"tiros{sfx}", ""))
-
-                    # Version filters
-                    passes_v2 = goal_diff >= 2
-                    passes_v3 = drift >= 1.0  # drift >= 100%
-                    passes_v4 = curr_odds <= 5.0 and curr_min > 45
-                    passes_v5 = curr_odds <= 5.0  # V5: cap cuotas (sin filtro minuto)
-
-                    # V6: V5 + momentum gap > 200 (100% WR in backtest)
-                    synth = _compute_synthetic_at_trigger(rows, curr_ri)
-                    mom_gap = synth.get("momentum_gap")
-                    passes_v6 = passes_v5 and mom_gap is not None and mom_gap > 200
-
-                    # Calcular riesgo por tiempo + marcador
-                    risk_info = calculate_time_score_risk(
-                        strategy="odds_drift",
-                        minute=curr_min,
-                        home_score=gl_i,
-                        away_score=gv_i,
-                        dominant_team=team
-                    )
-
-                    _drift_odds_col = "back_home" if team == "home" else "back_away"
-                    _drift_lay_col = "lay_home" if team == "home" else "lay_away"
-                    bets.append({
-                        "match": match["name"],
-                        "match_id": match["match_id"],
-                        "minuto": curr_min,
-                        "score_at_trigger": score_at,
-                        "team": team,
-                        "goal_diff": goal_diff,
-                        "odds_before": round(prev_odds, 2),
-                        "back_odds": round(curr_odds, 2),
-                        "lay_trigger": _to_float(curr_row.get(_drift_lay_col, "")) or None,
-                        "drift_pct": round(drift * 100, 1),
-                        "sot_team": int(sot_t) if sot_t is not None else None,
-                        "poss_team": round(poss_t, 1) if poss_t is not None else None,
-                        "shots_team": int(shots_t) if shots_t is not None else None,
-                        "ft_score": ft_score,
-                        "won": won,
-                        "pl": pl,
-                        "pl_conservative": pl_conservative,
-                        "conservative_odds": round(_cons_drift, 2),
-                        "passes_v2": passes_v2,
-                        "passes_v3": passes_v3,
-                        "passes_v4": passes_v4,
-                        "passes_v5": passes_v5,
-                        "passes_v6": passes_v6,
-                        "synth_momentum_gap": mom_gap,
-                        "stability_count": _stab_drift,
-                        "timestamp_utc": curr_row.get("timestamp_utc", ""),
-                        "risk_level": risk_info["risk_level"],
-                        "risk_reason": risk_info["risk_reason"],
-                        "time_remaining": risk_info["time_remaining"],
-                        "deficit": risk_info["deficit"],
-                        "País": curr_row.get("País", "Desconocido"),
-                        "Liga": curr_row.get("Liga", "Desconocida"),
-                    })
-                    break  # found trigger for this team at this row
-
-            if triggered["home"] and triggered["away"]:
-                break
+            _drift_lay_col = "lay_home" if team == "home" else "lay_away"
+            bets.append({
+                "match": match["name"],
+                "match_id": match["match_id"],
+                "minuto": curr_min,
+                "score_at_trigger": score_at,
+                "team": team,
+                "goal_diff": goal_diff,
+                "odds_before": round(odds_before, 2),
+                "back_odds": round(odds_now, 2),
+                "lay_trigger": _to_float(curr_row.get(_drift_lay_col, "")) or None,
+                "drift_pct": round(drift * 100, 1),
+                "sot_team": int(sot_t) if sot_t is not None else None,
+                "poss_team": round(poss_t, 1) if poss_t is not None else None,
+                "shots_team": int(shots_t) if shots_t is not None else None,
+                "ft_score": ft_score,
+                "won": won,
+                "pl": pl,
+                "pl_conservative": pl_conservative,
+                "conservative_odds": round(_cons_drift, 2),
+                "passes_v2": passes_v2,
+                "passes_v3": passes_v3,
+                "passes_v4": passes_v4,
+                "passes_v5": passes_v5,
+                "passes_v6": passes_v6,
+                "synth_momentum_gap": mom_gap,
+                "stability_count": _stab_drift,
+                "timestamp_utc": curr_row.get("timestamp_utc", ""),
+                "risk_level": risk_info["risk_level"],
+                "risk_reason": risk_info["risk_reason"],
+                "time_remaining": risk_info["time_remaining"],
+                "deficit": risk_info["deficit"],
+                "País": curr_row.get("País", "Desconocido"),
+                "Liga": curr_row.get("Liga", "Desconocida"),
+            })
 
     def _make_summary(subset):
         n = len(subset)
@@ -3276,7 +3306,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     _drift_odds_max     = float(versions.get("drift_odds_max", 999))        # cartera.ts v1 default: Infinity
     _drift_goal_diff_min = int(versions.get("drift_goal_diff_min", 0))      # cartera.ts v1 default: 0
     _drift_minute_min   = int(versions.get("drift_minute_min", 0))          # cartera.ts v1 default: 0
-    _drift_mom_gap_min  = float(versions.get("drift_mom_gap_min", 0))       # cartera.ts v1 default: 0
+    _drift_minute_max   = int(versions.get("drift_minute_max", 90))         # cartera.ts v1 default: 90 (no filter)
+    _drift_mom_gap_min  = float(versions.get("drift_mom_gap_min", 0))       # cartera.ts v6 default: 200
     _clustering_min_max = int(versions.get("clustering_minute_max", 90))    # cartera.ts v3 default: 60
     _clustering_xg_rem  = float(versions.get("clustering_xg_rem_min", 0))  # cartera.ts default: 0
     _clustering_sot     = int(versions.get("clustering_sot_min", 3))        # cartera.ts default: 3
@@ -3691,7 +3722,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
         # === STRATEGY 3: Odds Drift Contrarian (version-specific) ===
         goal_diff = abs(int(goles_local) - int(goles_visitante))
-        if drift_ver != "off" and minuto >= 30 and goal_diff >= 1 and goles_local != goles_visitante:
+        if drift_ver != "off" and minuto >= _drift_minute_min and (_drift_minute_max >= 90 or minuto < _drift_minute_max) and goal_diff >= 1 and goles_local != goles_visitante:
             # Require current score confirmed in at least 3 captures (avoid post-goal transitional odds)
             score_confirm_count = 0
             for check_row in rows[-6:]:
@@ -3759,6 +3790,15 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                                 # V5: odds <= 5
                                 drift_passes = odds_now <= 5.0
                                 drift_thresholds["odds"] = "<= 5.0"
+                            elif drift_ver == "v6":
+                                # V6: odds <= 5 + momentum gap >= momGapMin (default 200)
+                                drift_passes = odds_now <= 5.0
+                                drift_thresholds["odds"] = "<= 5.0"
+                                if drift_passes and _drift_mom_gap_min > 0:
+                                    _synth_v6 = _compute_synthetic_at_trigger(rows, len(rows) - 1)
+                                    _mom_gap_v6 = _synth_v6.get("momentum_gap")
+                                    drift_passes = _mom_gap_v6 is not None and _mom_gap_v6 >= _drift_mom_gap_min
+                                    drift_thresholds["mom_gap"] = f">= {_drift_mom_gap_min:.0f}"
 
                             if drift_passes:
                                 meta = STRATEGY_META["odds_drift_contrarian"]
@@ -3853,57 +3893,67 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     if _clustering_min_max < 90 and minuto >= _clustering_min_max:
                         pass  # skip - past minuteMax from config
                     else:
-                        total_actual = int(goles_local) + int(goles_visitante)
-                        over_line = total_actual + 0.5
+                        # V4: xG remaining filter (aligned with cartera.ts ClusteringV4 xgRemMin)
+                        _xg_rem_ok = True
+                        if _clustering_xg_rem > 0:
+                            _synth_cl = _compute_synthetic_at_trigger(rows, len(rows) - 1)
+                            _xg_rem_cl = _synth_cl.get("xg_remaining")
+                            _xg_rem_ok = _xg_rem_cl is not None and _xg_rem_cl >= _clustering_xg_rem
+                        if not _xg_rem_ok:
+                            pass  # skip - insufficient xG remaining
+                        else:
+                            total_actual = int(goles_local) + int(goles_visitante)
+                            over_line = total_actual + 0.5
 
-                        meta = STRATEGY_META["goal_clustering"]
-                        min_odds = calculate_min_odds(meta["win_rate"])
-                        cl_thresholds = {"minute_range": f"{_cluster_min}-80"}
-                        if _clustering_sot > 0:
-                            cl_thresholds["sot_max"] = f">= {_clustering_sot}"
-                        if _clustering_min_max < 90:
-                            cl_thresholds["minute"] = f"< {_clustering_min_max}"
+                            meta = STRATEGY_META["goal_clustering"]
+                            min_odds = calculate_min_odds(meta["win_rate"])
+                            cl_thresholds = {"minute_range": f"{_cluster_min}-80"}
+                            if _clustering_sot > 0:
+                                cl_thresholds["sot_max"] = f">= {_clustering_sot}"
+                            if _clustering_min_max < 90:
+                                cl_thresholds["minute"] = f"< {_clustering_min_max}"
 
-                        cl_over_field = _get_over_odds_field(total_actual)
-                        cl_over_odds = _to_float(latest.get(cl_over_field, "")) if cl_over_field else None
-                        if cl_over_odds is None:
-                            continue  # No signal without odds data
-                        cl_ev = calculate_ev(cl_over_odds, meta["win_rate"])
-                        cl_odds_ok = is_odds_favorable(cl_over_odds, min_odds)
-
-                        signal = {
-                            "match_id": match_id,
-                            "match_name": match["name"],
-                            "match_url": match["url"],
-                            "strategy": f"goal_clustering_{clustering_ver}",
-                            "strategy_name": f"Goal Clustering ({clustering_ver.upper()})",
-                            "minute": int(minuto),
-                            "score": f"{int(goles_local)}-{int(goles_visitante)}",
-                            "recommendation": f"BACK Over {over_line}",
-                            "back_odds": round(cl_over_odds, 2) if cl_over_odds else None,
-                            "min_odds": round(min_odds, 2),
-                            "expected_value": round(cl_ev, 2) if cl_ev is not None else None,
-                            "odds_favorable": cl_odds_ok,
-                            "confidence": "high" if cl_odds_ok else ("medium" if cl_odds_ok is None else "low"),
-                            "win_rate_historical": round(meta["win_rate"] * 100, 1),
-                            "roi_historical": round(meta["roi"] * 100, 1),
-                            "sample_size": meta["sample_size"],
-                            "description": meta["description"],
-                            "entry_conditions": {
-                                "goal_minute": goal_minute,
-                                "sot_max": int(sot_max),
-                                "total_goals": total_actual
-                            },
-                            "thresholds": cl_thresholds
-                        }
-                        if (match_id, signal["strategy"]) not in placed_bets_keys:
-                            conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
-                            if conflict:
-                                signal["blocked"] = conflict
+                            cl_over_field = _get_over_odds_field(total_actual)
+                            cl_over_odds = _to_float(latest.get(cl_over_field, "")) if cl_over_field else None
+                            if cl_over_odds is None:
+                                pass  # No signal without odds data
                             else:
-                                signals.append(signal)
-                                _log_signal_to_csv(signal)
-                                _register_outcome(match_id, signal["recommendation"], match_outcomes)
+                                cl_ev = calculate_ev(cl_over_odds, meta["win_rate"])
+                                cl_odds_ok = is_odds_favorable(cl_over_odds, min_odds)
+
+                                signal = {
+                                    "match_id": match_id,
+                                    "match_name": match["name"],
+                                    "match_url": match["url"],
+                                    "strategy": f"goal_clustering_{clustering_ver}",
+                                    "strategy_name": f"Goal Clustering ({clustering_ver.upper()})",
+                                    "minute": int(minuto),
+                                    "score": f"{int(goles_local)}-{int(goles_visitante)}",
+                                    "recommendation": f"BACK Over {over_line}",
+                                    "back_odds": round(cl_over_odds, 2) if cl_over_odds else None,
+                                    "min_odds": round(min_odds, 2),
+                                    "expected_value": round(cl_ev, 2) if cl_ev is not None else None,
+                                    "odds_favorable": cl_odds_ok,
+                                    "confidence": "high" if cl_odds_ok else ("medium" if cl_odds_ok is None else "low"),
+                                    "win_rate_historical": round(meta["win_rate"] * 100, 1),
+                                    "roi_historical": round(meta["roi"] * 100, 1),
+                                    "sample_size": meta["sample_size"],
+                                    "description": meta["description"],
+                                    "entry_conditions": {
+                                        "goal_minute": goal_minute,
+                                        "sot_max": int(sot_max),
+                                        "total_goals": total_actual
+                                    },
+                                    "thresholds": cl_thresholds
+                                }
+                                if (match_id, signal["strategy"]) not in placed_bets_keys:
+                                    conflict = _has_conflict(match_id, signal["recommendation"], match_outcomes)
+                                    if conflict:
+                                        signal["blocked"] = conflict
+                                    else:
+                                        signals.append(signal)
+                                        _log_signal_to_csv(signal)
+                                        _register_outcome(match_id, signal["recommendation"], match_outcomes)
 
         # === STRATEGY 5: Pressure Cooker (version-specific) ===
         total_goals = int(goles_local) + int(goles_visitante)
@@ -3911,8 +3961,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         has_goals = total_goals >= 2  # at least 1-1
 
         # Skip if match has corrupted Over/Under odds
-        _press_min = max(65, _pressure_minute_min)
-        _press_max = min(75, _pressure_minute_max) if _pressure_minute_max < 90 else 75
+        _press_min = _pressure_minute_min if _pressure_minute_min > 0 else 65
+        _press_max = _pressure_minute_max if _pressure_minute_max < 90 else 75
         if match_id not in CORRUPTED_OVER_MATCHES and pressure_ver != "off" and (_press_min <= minuto <= _press_max and is_draw and has_goals):
             # Score confirmation: check last few rows have same score
             score_confirmed = False
@@ -3979,9 +4029,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             else:  # v1
                 mom_cfg = {"sot_min": 1, "ratio": 1.1, "xg": 0.15, "min_m": 10, "max_m": 80, "odds_min": 1.4, "odds_max": 6.0}
 
-            # Check minute range (version-specific floor/ceiling + user config)
-            mom_actual_min = max(mom_cfg["min_m"], _momentum_minute_min) if _momentum_minute_min > 0 else mom_cfg["min_m"]
-            mom_actual_max = min(mom_cfg["max_m"], _momentum_minute_max) if _momentum_minute_max < 90 else mom_cfg["max_m"]
+            # Check minute range: use config if set, else version default (soft default, no hard clamp)
+            mom_actual_min = _momentum_minute_min if _momentum_minute_min > 0 else mom_cfg["min_m"]
+            mom_actual_max = _momentum_minute_max if _momentum_minute_max < 90 else mom_cfg["max_m"]
             if not (mom_actual_min <= minuto <= mom_actual_max):
                 pass  # Skip
             else:

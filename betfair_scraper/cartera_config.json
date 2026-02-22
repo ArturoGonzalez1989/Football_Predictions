@@ -70,7 +70,6 @@
     "conflict_filter": false,
     "allow_contrarias": false,
     "stability": 3,
-    "conservative_odds": false,
     "global_minute_min": null,
     "global_minute_max": null,
     "cashout_minute": null,

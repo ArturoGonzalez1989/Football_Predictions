@@ -1,6 +1,0 @@
-[     919ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie2eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
-[    4386ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/inplay/all:0
-[    4387ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
-[    9497ms] [WARNING] document.domain mutation is ignored because the surrounding agent cluster is origin-keyed. @ https://ie1eds.cdnppb.net/resources/eds/bundle/app.d7d788e33.js:0
-[   10086ms] [ERROR] Access to XMLHttpRequest at 'https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg' from origin 'https://www.betfair.es' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.betfair.es/exchange/plus/inplay/all:0
-[   10086ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://rum-ingest.eu0.signalfx.com/v1/rum?auth=daeNmSPycTtkXf7hcZUQXg:0
