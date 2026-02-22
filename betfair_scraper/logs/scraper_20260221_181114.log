@@ -1,0 +1,1842 @@
+18:11:14 [INFO] 📝 Log guardándose en: logs/scraper_20260221_181114.log
+18:11:14 [INFO] Cargados 53 partidos desde games.csv
+18:11:14 [INFO] 📅 MODO SCHEDULING ACTIVADO
+18:11:14 [INFO]    Ventana tracking: 10 min antes → 120 min después
+18:11:14 [INFO]    Total en CSV: 53 partidos
+18:11:14 [INFO]    ✓ Partidos activos ahora: 26
+18:11:14 [INFO]    ⏰ Partidos futuros: 27
+18:11:14 [INFO]    ✅ Partidos finalizados: 0
+18:11:14 [INFO] 
+📋 Próximos partidos a trackear:
+18:11:14 [INFO]       Almería - Cordoba (en 18 min)
+18:11:14 [INFO]       Osasuna - Real Madrid (en 18 min)
+18:11:14 [INFO]       RB Leipzig - Borussia Dortmund (en 18 min)
+18:11:14 [INFO]       West Ham - Bournemouth (en 18 min)
+18:11:14 [INFO]       PSV - Heerenveen (en 33 min)
+18:11:14 [INFO] 🚀 Sistema multi-driver: Creando 26 drivers independientes (sin límite de tabs)
+18:11:14 [INFO] 
+Iniciando observador con 26 partidos.
+18:11:14 [INFO] Ciclo: 30s | Output: data/
+18:11:14 [INFO] 🔄 Recarga dinámica: Revisando games.csv cada 5 ciclos (scheduling)
+18:11:14 [INFO] 🧹 Limpiando ventanas Betfair antiguas...
+18:11:14 [WARNING] Script de limpieza no encontrado: C:\Users\agonz\OneDrive\Documents\Proyectos\Furbo\betfair_scraper\close_betfair_windows.ps1
+18:11:14 [INFO] Cargados 53 partidos desde games.csv
+18:11:14 [INFO] 
+🚀 Iniciando 26 drivers Chrome (partidos en vivo o próximos)...
+18:11:14 [INFO] 🔧 Creando driver de login: Mansfield - Lincoln
+18:11:14 [INFO] 🔧 Creando driver para: Mansfield - Lincoln
+18:11:24 [INFO] ✓ Cookies aceptadas automáticamente
+18:11:25 [INFO] ✓ Driver listo: mansfield-lincoln-apuestas-35270215
+18:11:25 [INFO] ============================================================
+18:11:25 [INFO] HAZ LOGIN MANUAL en Betfair.es ahora.
+18:11:25 [INFO] Tienes 0 segundos...
+18:11:25 [INFO] El scraper comenzará automáticamente después.
+18:11:25 [INFO] ============================================================
+18:11:25 [INFO] 🔧 Creando 25 drivers adicionales en paralelo...
+18:11:25 [INFO] 🔧 Creando driver para: Millwall - Portsmouth
+18:11:25 [INFO] 🔧 Creando driver para: Olympiacos - Panaitolikos
+18:11:25 [INFO] 🔧 Creando driver para: Newport County - Cambridge United
+18:11:25 [INFO] 🔧 Creando driver para: Stockport - Wigan
+18:11:25 [INFO] 🔧 Creando driver para: Notts County - Tranmere
+18:11:25 [INFO] 🔧 Creando driver para: Norwich - Birmingham
+18:11:25 [INFO] 🔧 Creando driver para: Wrexham - Ipswich
+18:11:25 [INFO] 🔧 Creando driver para: Northampton - Leyton Orient
+18:11:25 [INFO] 🔧 Creando driver para: Watford - Derby
+18:11:25 [INFO] 🔧 Creando driver para: Port Vale - Reading
+18:11:25 [INFO] 🔧 Creando driver para: Southampton - Charlton
+18:11:25 [INFO] 🔧 Creando driver para: Peterborough - Exeter
+18:11:25 [INFO] 🔧 Creando driver para: Queens Park - Morton
+18:11:25 [INFO] 🔧 Creando driver para: Montrose - Queen of South
+18:11:25 [INFO] 🔧 Creando driver para: Peterhead - East Fife
+18:11:25 [INFO] 🔧 Creando driver para: Rapid Vienna - RZ Pellets WAC
+18:11:25 [INFO] ⏳ Timeout de inicialización: 208s para 26 drivers
+18:11:40 [INFO] ✓ Cookies aceptadas automáticamente
+18:11:41 [INFO] ✓ Driver listo: port-vale-reading-apuestas-35270238
+18:11:41 [INFO] 🔧 Creando driver para: Hartberg - Grazer AK
+18:11:44 [INFO] ✓ Cookies aceptadas automáticamente
+18:11:45 [INFO] ✓ Driver listo: notts-county-tranmere-apuestas-35277648
+18:11:45 [INFO] 🔧 Creando driver para: Lens - Mónaco
+18:11:46 [INFO] ✓ Cookies aceptadas automáticamente
+18:11:47 [INFO] ✓ Driver listo: wrexham-ipswich-apuestas-35263864
+18:11:47 [INFO] 🔧 Creando driver para: SCR Altach - Austria Wien
+18:11:54 [INFO] ✓ Cookies aceptadas automáticamente
+18:11:55 [INFO] ✓ Driver listo: millwall-portsmouth-apuestas-35263867
+18:11:55 [INFO] 🔧 Creando driver para: CFR Cluj - ACS Petrolul 52
+18:11:55 [INFO] ✓ Cookies aceptadas automáticamente
+18:11:56 [INFO] ✓ Cookies aceptadas automáticamente
+18:11:56 [INFO] ✓ Driver listo: watford-derby-apuestas-35263925
+18:11:56 [INFO] 🔧 Creando driver para: Huesca - Mirandés
+18:11:57 [INFO] ✓ Driver listo: montrose-queen-of-south-apuestas-35268005
+18:11:57 [INFO] 🔧 Creando driver para: Deportivo La Coruña - Eibar
+18:12:07 [INFO] ✓ Cookies aceptadas automáticamente
+18:12:08 [INFO] ✓ Driver listo: peterborough-exeter-apuestas-35270226
+18:12:08 [INFO] 🔧 Creando driver para: Betis - Rayo Vallecano
+18:12:10 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:10 [INFO] ✓ Driver listo: northampton-leyton-orient-apuestas-35270218
+18:12:10 [INFO] 🔧 Creando driver para: Cesena - Spezia
+18:12:18 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:18 [INFO] ✓ Driver listo: southampton-charlton-apuestas-35265380
+18:12:18 [INFO] 🔧 Creando driver para: Club Brugge - OH Leuven
+18:12:19 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:19 [INFO] ✓ Driver listo: newport-county-cambridge-united-apuestas-35273748
+18:12:20 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:20 [INFO] ✓ Driver listo: peterhead-east-fife-apuestas-35268008
+18:12:22 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:22 [INFO] ✓ Driver listo: norwich-birmingham-apuestas-35263866
+18:12:41 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:41 [INFO] ✓ Driver listo: rapid-vienna-rz-pellets-wac-apuestas-35243320
+18:12:43 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:43 [INFO] ✓ Driver listo: olympiacos-panaitolikos-apuestas-35243453
+18:12:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:12:44 [INFO] ✓ Driver listo: queens-park-morton-apuestas-35266347
+18:12:47 [INFO] ✓ Cookies aceptadas automáticamente
+18:12:48 [INFO] ✓ Driver listo: stockport-wigan-apuestas-35270210
+18:13:00 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:00 [INFO] ✓ Driver listo: scr-altach-austria-wien-apuestas-35243318
+18:13:11 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:11 [INFO] ✓ Driver listo: hartberg-grazer-ak-apuestas-35243319
+18:13:21 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:21 [INFO] ✓ Driver listo: cfr-cluj-acs-petrolul-52-apuestas-35267396
+18:13:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:33 [INFO] ✓ Driver listo: lens-m%C3%B3naco-apuestas-35243057
+18:13:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:33 [INFO] ✓ Driver listo: deportivo-la-coru%C3%B1a-eibar-apuestas-35272358
+18:13:35 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:35 [INFO] ✓ Driver listo: huesca-mirand%C3%A9s-apuestas-35271205
+18:13:40 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:40 [INFO] ✓ Driver listo: betis-rayo-vallecano-apuestas-35245242
+18:13:43 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:43 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:13:43 [INFO] ✓ Driver listo: cesena-spezia-apuestas-35270928
+18:13:43 [INFO] ✓ Driver listo: club-brugge-oh-leuven-apuestas-35270656
+18:13:43 [INFO] ✓ 26 drivers creados exitosamente
+18:13:43 [INFO] ============================================================
+18:13:43 [INFO] CAPTURA INICIADA - Presiona Ctrl+C para detener
+18:13:43 [INFO] ============================================================
+18:13:43 [INFO] 
+--- Ciclo #1 ---
+18:13:43 [INFO] 📸 Capturando 26 partidos en paralelo...
+18:13:44 [DEBUG] Actualizar omitido para rapid-vienna-rz-pellets-wac-apuestas-35243320: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1354, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:13:44 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo información del partido...
+18:13:51 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo información del partido...
+18:13:51 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo información del partido...
+18:13:51 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo información del partido...
+18:13:51 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo información del partido...
+18:13:51 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo información del partido...
+18:13:51 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo información del partido...
+18:13:51 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo información del partido...
+18:13:51 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo información del partido...
+18:13:51 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo información del partido...
+18:13:51 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo información del partido...
+18:13:51 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo información del partido...
+18:13:51 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo información del partido...
+18:13:51 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo información del partido...
+18:13:51 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo información del partido...
+18:13:51 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo información del partido...
+18:13:53 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo cuotas Match Odds...
+18:13:55 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo cuotas Over/Under...
+18:13:58 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo cuotas Resultado Correcto...
+18:14:02 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo estadísticas del partido...
+18:14:02 [DEBUG]   → Extrayendo eventId del HTML...
+18:14:02 [DEBUG] Betfair event ID extraído del HTML: 35243320
+18:14:02 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243320&contentType=viz&contentView=mstats
+18:14:08 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo cuotas Match Odds...
+18:14:08 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo cuotas Match Odds...
+18:14:09 [INFO] EventId de Opta extraído: 7sm0wa3nuy3fpeai8dy0ljxn8
+18:14:09 [DEBUG]   ✓ EventId extraído: 7sm0wa3nuy3fpeai8dy0ljxn8
+18:14:09 [DEBUG]   → Obteniendo estadísticas de la API...
+18:14:09 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 7sm0wa3nuy3fpeai8dy0ljxn8
+18:14:09 [WARNING] ⟳ [northampton-leyton-orient-apuestas-35270218] Match Odds incompletos (0/3), refrescando...
+18:14:09 [WARNING] ⟳ [peterborough-exeter-apuestas-35270226] Match Odds incompletos (0/3), refrescando...
+18:14:09 [WARNING] ⟳ [southampton-charlton-apuestas-35265380] Match Odds incompletos (0/3), refrescando...
+18:14:09 [WARNING] ⟳ [montrose-queen-of-south-apuestas-35268005] Match Odds incompletos (0/3), refrescando...
+18:14:09 [WARNING] ⟳ [peterhead-east-fife-apuestas-35268008] Match Odds incompletos (0/3), refrescando...
+18:14:09 [WARNING] ⟳ [mansfield-lincoln-apuestas-35270215] Match Odds incompletos (0/3), refrescando...
+18:14:09 [WARNING] ⟳ [norwich-birmingham-apuestas-35263866] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [newport-county-cambridge-united-apuestas-35273748] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [watford-derby-apuestas-35263925] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [olympiacos-panaitolikos-apuestas-35243453] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [wrexham-ipswich-apuestas-35263864] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [queens-park-morton-apuestas-35266347] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [port-vale-reading-apuestas-35270238] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [millwall-portsmouth-apuestas-35263867] Match Odds incompletos (0/3), refrescando...
+18:14:10 [WARNING] ⟳ [notts-county-tranmere-apuestas-35277648] Match Odds incompletos (0/3), refrescando...
+18:14:14 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=7sm0wa3nuy3fpeai8dy0ljxn8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94e5d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:14:14 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=7sm0wa3nuy3fpeai8dy0ljxn8&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98d090>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:14:14 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=7sm0wa3nuy3fpeai8dy0ljxn8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94ca50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:14:14 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=7sm0wa3nuy3fpeai8dy0ljxn8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94c050>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:14:14 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=7sm0wa3nuy3fpeai8dy0ljxn8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94fed0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:14:14 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:14:14 [WARNING]   × No hay estadísticas disponibles en la API
+18:14:14 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo volumen matched...
+18:14:20 [INFO] ✓ Cookies aceptadas automáticamente
+18:14:21 [INFO] ✓ Cookies aceptadas automáticamente
+18:14:24 [INFO] ✓ Cookies aceptadas automáticamente
+18:14:27 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo momentum (fallback visual)...
+18:14:27 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:14:27 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/watch/pitchView?&eventId=7sm0wa3nuy3fpeai8d
+18:14:27 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=7sm0wa3n
+18:14:31 [INFO] ✓ Cookies aceptadas automáticamente
+18:14:40 [INFO] ✓ Cookies aceptadas automáticamente
+18:14:40 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:14:41 [INFO] ✓ Cookies aceptadas automáticamente
+18:14:41 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo cuotas Over/Under...
+18:14:41 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo cuotas Over/Under...
+18:14:42 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] O/U escasos (0), intentando via mercado individual...
+18:14:42 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] O/U escasos (0), intentando via mercado individual...
+18:14:43 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:14:43 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:14:44 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo cuotas Resultado Correcto...
+18:14:44 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo cuotas Over/Under...
+18:14:45 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo estadísticas del partido...
+18:14:45 [DEBUG]   → Extrayendo eventId del HTML...
+18:14:45 [DEBUG] Betfair event ID extraído de la URL: 35243453
+18:14:45 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243453&contentType=viz&contentView=mstats
+18:14:45 [DEBUG] [northampton-leyton-orient-apuestas-35270218] O/U escasos (0), intentando via mercado individual...
+18:14:45 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:14:47 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo cuotas Resultado Correcto...
+18:14:48 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo estadísticas del partido...
+18:14:48 [DEBUG]   → Extrayendo eventId del HTML...
+18:14:48 [DEBUG] Betfair event ID extraído de la URL: 35270218
+18:14:48 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270218&contentType=viz&contentView=mstats
+18:14:52 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo cuotas Over/Under...
+18:14:53 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo cuotas Resultado Correcto...
+18:14:53 [DEBUG] [southampton-charlton-apuestas-35265380] O/U escasos (0), intentando via mercado individual...
+18:14:53 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:14:54 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo estadísticas del partido...
+18:14:54 [DEBUG]   → Extrayendo eventId del HTML...
+18:14:54 [DEBUG] Betfair event ID extraído de la URL: 35273748
+18:14:54 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35273748&contentType=viz&contentView=mstats
+18:14:54 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo cuotas Resultado Correcto...
+18:14:55 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo estadísticas del partido...
+18:14:55 [DEBUG]   → Extrayendo eventId del HTML...
+18:14:55 [DEBUG] Betfair event ID extraído de la URL: 35265380
+18:14:55 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35265380&contentType=viz&contentView=mstats
+18:14:56 [INFO] EventId de Opta extraído: d4d25uwm7s5v3pqoemvjtusr8
+18:14:56 [DEBUG]   ✓ EventId extraído: d4d25uwm7s5v3pqoemvjtusr8
+18:14:56 [DEBUG]   → Obteniendo estadísticas de la API...
+18:14:56 [INFO] 📊 Obteniendo todas las estadísticas para eventId: d4d25uwm7s5v3pqoemvjtusr8
+18:14:57 [INFO] EventId de Opta extraído: 95fp0o5znfaqmp0ylbocoavis
+18:14:57 [DEBUG]   ✓ EventId extraído: 95fp0o5znfaqmp0ylbocoavis
+18:14:57 [DEBUG]   → Obteniendo estadísticas de la API...
+18:14:57 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 95fp0o5znfaqmp0ylbocoavis
+18:14:58 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:15:01 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo cuotas Over/Under...
+18:15:01 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo cuotas Over/Under...
+18:15:01 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo cuotas Over/Under...
+18:15:02 [DEBUG] [montrose-queen-of-south-apuestas-35268005] O/U escasos (0), intentando via mercado individual...
+18:15:02 [DEBUG] [norwich-birmingham-apuestas-35263866] O/U escasos (0), intentando via mercado individual...
+18:15:02 [DEBUG] [queens-park-morton-apuestas-35266347] O/U escasos (0), intentando via mercado individual...
+18:15:02 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:02 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:03 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:03 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:15:04 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo cuotas Resultado Correcto...
+18:15:04 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo cuotas Resultado Correcto...
+18:15:04 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:15:05 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:15:05 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo estadísticas del partido...
+18:15:05 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:05 [DEBUG] Betfair event ID extraído de la URL: 35266347
+18:15:05 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35266347&contentType=viz&contentView=mstats
+18:15:05 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo estadísticas del partido...
+18:15:05 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:05 [DEBUG] Betfair event ID extraído de la URL: 35268005
+18:15:05 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35268005&contentType=viz&contentView=mstats
+18:15:06 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35243453&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94d090>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:15:06 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270218&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98e710>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:15:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:15:06 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:15:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35243453
+18:15:06 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270218
+18:15:08 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=d4d25uwm7s5v3pqoemvjtusr8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c910>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=95fp0o5znfaqmp0ylbocoavis&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98cb90>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=d4d25uwm7s5v3pqoemvjtusr8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ead0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=95fp0o5znfaqmp0ylbocoavis&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ccd0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=95fp0o5znfaqmp0ylbocoavis&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98cf50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=95fp0o5znfaqmp0ylbocoavis&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e490>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=d4d25uwm7s5v3pqoemvjtusr8&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e5d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=95fp0o5znfaqmp0ylbocoavis&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ca50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=d4d25uwm7s5v3pqoemvjtusr8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e350>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=d4d25uwm7s5v3pqoemvjtusr8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c7d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:08 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:08 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:08 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo volumen matched...
+18:15:08 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:08 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:08 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo volumen matched...
+18:15:09 [INFO] ✓ Cookies aceptadas automáticamente
+18:15:12 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:15:14 [DEBUG]   → Divs: 369, Local: 29, Visit: 30
+18:15:14 [DEBUG]   ✓ Momentum Local: 783.24 (29 barras)
+18:15:14 [DEBUG]   ✓ Momentum Visitante: 815.75 (30 barras)
+18:15:14 [INFO] ✓ [rapid-vienna-rz-pellets-wac-apuestas-35243320] Captura exitosa: en_juego, min 55, 0-0
+18:15:17 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo cuotas Over/Under...
+18:15:18 [DEBUG] [notts-county-tranmere-apuestas-35277648] O/U escasos (0), intentando via mercado individual...
+18:15:19 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:20 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo momentum (fallback visual)...
+18:15:20 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo momentum (fallback visual)...
+18:15:20 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:15:20 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:15:21 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:15:22 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo cuotas Resultado Correcto...
+18:15:22 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo cuotas Resultado Correcto...
+18:15:22 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:15:22 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo información del partido...
+18:15:23 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo cuotas Over/Under...
+18:15:23 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo estadísticas del partido...
+18:15:23 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:23 [DEBUG] Betfair event ID extraído de la URL: 35277648
+18:15:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35277648&contentType=viz&contentView=mstats
+18:15:23 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo estadísticas del partido...
+18:15:23 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:23 [DEBUG] Betfair event ID extraído de la URL: 35263866
+18:15:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263866&contentType=viz&contentView=mstats
+18:15:23 [INFO] EventId de Opta extraído: 62hacqcnns12r7cs6tm4fbg9g
+18:15:23 [DEBUG]   ✓ EventId extraído: 62hacqcnns12r7cs6tm4fbg9g
+18:15:23 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:23 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 62hacqcnns12r7cs6tm4fbg9g
+18:15:24 [DEBUG] [peterborough-exeter-apuestas-35270226] O/U escasos (0), intentando via mercado individual...
+18:15:24 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo cuotas Over/Under...
+18:15:24 [DEBUG] [watford-derby-apuestas-35263925] O/U escasos (0), intentando via mercado individual...
+18:15:24 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:24 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo cuotas Over/Under...
+18:15:25 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:25 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+18:15:25 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:15:25 [INFO]   → Extrayendo stats del iframe (fallback): eID=35266347
+18:15:25 [DEBUG] [wrexham-ipswich-apuestas-35263864] O/U escasos (0), intentando via mercado individual...
+18:15:26 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:26 [DEBUG]   × No se encontró URL del iframe de stats
+18:15:26 [DEBUG]   × No se encontró URL del iframe de stats
+18:15:26 [INFO] ✓ [newport-county-cambridge-united-apuestas-35273748] Captura exitosa: pre_partido, min , -
+18:15:26 [INFO] ✓ [southampton-charlton-apuestas-35265380] Captura exitosa: pre_partido, min , -
+18:15:26 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35268005&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98c050>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:15:26 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:15:26 [INFO]   → Extrayendo stats del iframe (fallback): eID=35268005
+18:15:27 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo cuotas Resultado Correcto...
+18:15:27 [INFO] EventId de Opta extraído: 94i6wmdf89v5f8iwiiblrv47o
+18:15:27 [DEBUG]   ✓ EventId extraído: 94i6wmdf89v5f8iwiiblrv47o
+18:15:27 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:27 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 94i6wmdf89v5f8iwiiblrv47o
+18:15:27 [DEBUG] Actualizar omitido para hartberg-grazer-ak-apuestas-35243319: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1369, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:15:27 [DEBUG] Actualizar omitido para scr-altach-austria-wien-apuestas-35243318: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1354, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:15:27 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo información del partido...
+18:15:27 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo información del partido...
+18:15:28 [DEBUG] No se encontró teamStatsDefenceLv
+18:15:28 [DEBUG] No se encontró datos de momentum (predictions vacío)
+18:15:28 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo estadísticas del partido...
+18:15:28 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:28 [DEBUG] Betfair event ID extraído de la URL: 35263864
+18:15:28 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263864&contentType=viz&contentView=mstats
+18:15:28 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98efd0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:28 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f390>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:28 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ed50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:28 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:28 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:28 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo volumen matched...
+18:15:30 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo cuotas Over/Under...
+18:15:31 [DEBUG] [peterhead-east-fife-apuestas-35268008] O/U escasos (0), intentando via mercado individual...
+18:15:31 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:32 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=94i6wmdf89v5f8iwiiblrv47o&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fc50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:32 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=94i6wmdf89v5f8iwiiblrv47o&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c690>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:32 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=94i6wmdf89v5f8iwiiblrv47o&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ee90>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:32 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=94i6wmdf89v5f8iwiiblrv47o&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fb10>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:32 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=94i6wmdf89v5f8iwiiblrv47o&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f9d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:32 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:32 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:32 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo volumen matched...
+18:15:32 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo cuotas Over/Under...
+18:15:33 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo cuotas Resultado Correcto...
+18:15:33 [DEBUG] [mansfield-lincoln-apuestas-35270215] O/U escasos (0), intentando via mercado individual...
+18:15:33 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo cuotas Resultado Correcto...
+18:15:34 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:34 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo estadísticas del partido...
+18:15:34 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:34 [DEBUG] Betfair event ID extraído de la URL: 35268008
+18:15:34 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35268008&contentType=viz&contentView=mstats
+18:15:35 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo estadísticas del partido...
+18:15:35 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:35 [DEBUG] Betfair event ID extraído de la URL: 35263925
+18:15:35 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263925&contentType=viz&contentView=mstats
+18:15:35 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo cuotas Resultado Correcto...
+18:15:36 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo cuotas Match Odds...
+18:15:36 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo cuotas Match Odds...
+18:15:36 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo estadísticas del partido...
+18:15:36 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:36 [DEBUG] Betfair event ID extraído de la URL: 35270215
+18:15:36 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270215&contentType=viz&contentView=mstats
+18:15:38 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo cuotas Over/Under...
+18:15:38 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo cuotas Over/Under...
+18:15:39 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo cuotas Resultado Correcto...
+18:15:40 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo cuotas Match Odds...
+18:15:40 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo estadísticas del partido...
+18:15:40 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:40 [DEBUG] Betfair event ID extraído de la URL: 35270226
+18:15:40 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270226&contentType=viz&contentView=mstats
+18:15:40 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo cuotas Resultado Correcto...
+18:15:41 [WARNING] ⟳ [stockport-wigan-apuestas-35270210] Match Odds incompletos (0/3), refrescando...
+18:15:41 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo cuotas Over/Under...
+18:15:41 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo cuotas Resultado Correcto...
+18:15:41 [INFO] EventId de Opta extraído: 96s7ey8k9jdf83zdqt7h4ou1g
+18:15:41 [DEBUG]   ✓ EventId extraído: 96s7ey8k9jdf83zdqt7h4ou1g
+18:15:41 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:41 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 96s7ey8k9jdf83zdqt7h4ou1g
+18:15:41 [INFO] EventId de Opta extraído: 97o3x7l039e3j9b2n2wp79mok
+18:15:41 [DEBUG]   ✓ EventId extraído: 97o3x7l039e3j9b2n2wp79mok
+18:15:41 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:41 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 97o3x7l039e3j9b2n2wp79mok
+18:15:41 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo momentum (fallback visual)...
+18:15:41 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:15:41 [WARNING] No se encontró eventId de Opta en la respuesta del videoplayer
+18:15:41 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:15:41 [INFO]   → Extrayendo stats del iframe (fallback): eID=35268008
+18:15:42 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo cuotas Over/Under...
+18:15:42 [DEBUG] [port-vale-reading-apuestas-35270238] O/U escasos (0), intentando via mercado individual...
+18:15:43 [DEBUG] [millwall-portsmouth-apuestas-35263867] O/U escasos (0), intentando via mercado individual...
+18:15:43 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo estadísticas del partido...
+18:15:43 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:43 [DEBUG] Betfair event ID extraído del HTML: 35243319
+18:15:43 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243319&contentType=viz&contentView=mstats
+18:15:43 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:43 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:15:44 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo cuotas Resultado Correcto...
+18:15:45 [INFO] EventId de Opta extraído: 7szmdq706d2o5id2hiowr8u8k
+18:15:45 [DEBUG]   ✓ EventId extraído: 7szmdq706d2o5id2hiowr8u8k
+18:15:45 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:45 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 7szmdq706d2o5id2hiowr8u8k
+18:15:45 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo estadísticas del partido...
+18:15:45 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:45 [DEBUG] Betfair event ID extraído del HTML: 35243318
+18:15:45 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243318&contentType=viz&contentView=mstats
+18:15:45 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo momentum (fallback visual)...
+18:15:45 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:15:46 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo estadísticas del partido...
+18:15:46 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:46 [INFO] EventId de Opta extraído: bg7joel2dbcd65lkssd3bzac4
+18:15:46 [DEBUG]   ✓ EventId extraído: bg7joel2dbcd65lkssd3bzac4
+18:15:46 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:46 [INFO] 📊 Obteniendo todas las estadísticas para eventId: bg7joel2dbcd65lkssd3bzac4
+18:15:46 [DEBUG] Betfair event ID extraído de la URL: 35263867
+18:15:46 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263867&contentType=viz&contentView=mstats
+18:15:46 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270215&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98f4d0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:15:46 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:15:46 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270215
+18:15:48 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo cuotas Resultado Correcto...
+18:15:48 [INFO] EventId de Opta extraído: 7td61orozj96xn87u6x301t78
+18:15:48 [DEBUG]   ✓ EventId extraído: 7td61orozj96xn87u6x301t78
+18:15:48 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:48 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 7td61orozj96xn87u6x301t78
+18:15:49 [INFO] EventId de Opta extraído: 941mdah5a3n2ij19syprsayok
+18:15:49 [DEBUG]   ✓ EventId extraído: 941mdah5a3n2ij19syprsayok
+18:15:49 [DEBUG]   → Obteniendo estadísticas de la API...
+18:15:49 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 941mdah5a3n2ij19syprsayok
+18:15:49 [DEBUG]   × No se encontró URL del iframe de stats
+18:15:49 [INFO] ✓ [notts-county-tranmere-apuestas-35277648] Captura exitosa: pre_partido, min , -
+18:15:49 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo estadísticas del partido...
+18:15:49 [DEBUG]   → Extrayendo eventId del HTML...
+18:15:49 [DEBUG] Betfair event ID extraído de la URL: 35270238
+18:15:49 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270238&contentType=viz&contentView=mstats
+18:15:49 [DEBUG] No se encontró teamStatsAttackingLv
+18:15:49 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=97o3x7l039e3j9b2n2wp79mok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c550>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=97o3x7l039e3j9b2n2wp79mok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c050>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f250>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=97o3x7l039e3j9b2n2wp79mok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e850>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98d090>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f110>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=97o3x7l039e3j9b2n2wp79mok&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94e5d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c7d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f610>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=97o3x7l039e3j9b2n2wp79mok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e350>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:49 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:49 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:49 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo volumen matched...
+18:15:49 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:49 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:49 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo volumen matched...
+18:15:50 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=7szmdq706d2o5id2hiowr8u8k&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94f4d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:50 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=7szmdq706d2o5id2hiowr8u8k&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94f890>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:50 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=7szmdq706d2o5id2hiowr8u8k&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94d090>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:50 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=7szmdq706d2o5id2hiowr8u8k&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94fed0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:50 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:50 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:50 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo volumen matched...
+18:15:50 [DEBUG] No se encontró teamStatsXgLv ni xgData
+18:15:50 [DEBUG] No se encontró teamStatsAttackingLv
+18:15:50 [DEBUG] Actualizar omitido para cfr-cluj-acs-petrolul-52-apuestas-35267396: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1354, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:15:50 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo información del partido...
+18:15:51 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=bg7joel2dbcd65lkssd3bzac4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f750>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:51 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=bg7joel2dbcd65lkssd3bzac4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f9d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:51 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=bg7joel2dbcd65lkssd3bzac4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94c910>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:51 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=bg7joel2dbcd65lkssd3bzac4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94ca50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:51 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=bg7joel2dbcd65lkssd3bzac4&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94d6d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:51 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:51 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:51 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo volumen matched...
+18:15:51 [DEBUG]   × No se encontró URL del iframe de stats
+18:15:51 [INFO] ✓ [norwich-birmingham-apuestas-35263866] Captura exitosa: pre_partido, min , -
+18:15:53 [DEBUG] Actualizar omitido para lens-m%C3%B3naco-apuestas-35243057: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1369, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:15:53 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo información del partido...
+18:15:54 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=7td61orozj96xn87u6x301t78&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94d810>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=7td61orozj96xn87u6x301t78&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ee90>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=7td61orozj96xn87u6x301t78&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ed50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:54 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:54 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo volumen matched...
+18:15:54 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=941mdah5a3n2ij19syprsayok&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c690>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=941mdah5a3n2ij19syprsayok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fb10>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=941mdah5a3n2ij19syprsayok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f390>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=941mdah5a3n2ij19syprsayok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98efd0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=941mdah5a3n2ij19syprsayok&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f4d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:15:54 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:15:54 [WARNING]   × No hay estadísticas disponibles en la API
+18:15:54 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo volumen matched...
+18:15:58 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo cuotas Match Odds...
+18:15:59 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270238&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98e490>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:15:59 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:15:59 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270238
+18:16:01 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo cuotas Over/Under...
+18:16:01 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo cuotas Match Odds...
+18:16:02 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo momentum (fallback visual)...
+18:16:02 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:02 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo momentum (fallback visual)...
+18:16:02 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:02 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo momentum (fallback visual)...
+18:16:02 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:02 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/watch/pitchView?&eventId=7szmdq706d2o5id2hi
+18:16:02 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=7szmdq70
+18:16:03 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo cuotas Over/Under...
+18:16:03 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo momentum (fallback visual)...
+18:16:03 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:04 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:16:04 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo cuotas Resultado Correcto...
+18:16:04 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:04 [INFO] ✓ [wrexham-ipswich-apuestas-35263864] Captura exitosa: pre_partido, min , -
+18:16:05 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:16:06 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:16:06 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo cuotas Resultado Correcto...
+18:16:06 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo momentum (fallback visual)...
+18:16:06 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo momentum (fallback visual)...
+18:16:06 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:06 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:07 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:16:07 [DEBUG]     ✓ 'Corner kicks': 3-4
+18:16:07 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo estadísticas del partido...
+18:16:07 [DEBUG]   → Extrayendo eventId del HTML...
+18:16:07 [DEBUG] Betfair event ID extraído del HTML: 35267396
+18:16:07 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35267396&contentType=viz&contentView=mstats
+18:16:08 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo estadísticas del partido...
+18:16:08 [DEBUG]   → Extrayendo eventId del HTML...
+18:16:08 [DEBUG] Betfair event ID extraído del HTML: 35243057
+18:16:08 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243057&contentType=viz&contentView=mstats
+18:16:09 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:09 [INFO] ✓ [watford-derby-apuestas-35263925] Captura exitosa: pre_partido, min , -
+18:16:09 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:09 [INFO] ✓ [scr-altach-austria-wien-apuestas-35243318] Captura exitosa: en_juego, min 55, 2-1
+18:16:09 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x72c51a
+	0x72c7bb
+	0x721ca1
+	0x74ee64
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:16:10 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x72c51a
+	0x72c7bb
+	0x721ca1
+	0x74ee64
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:16:10 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+18:16:10 [DEBUG]     × 'Free kicks' - valores vacíos
+18:16:10 [DEBUG]     × 'Offsides' - valores vacíos
+18:16:10 [DEBUG]     × 'Goal kicks' - valores vacíos
+18:16:10 [DEBUG]     × 'Saves' - valores vacíos
+18:16:10 [DEBUG]     × 'Throw-ins' - valores vacíos
+18:16:10 [DEBUG]     × 'Substitutions' - valores vacíos
+18:16:11 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:11 [INFO] ✓ [peterborough-exeter-apuestas-35270226] Captura exitosa: pre_partido, min , -
+18:16:11 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:16:11 [DEBUG]     × 'Fouls' - valores vacíos
+18:16:11 [INFO]   ✓ Fallback iframe exitoso: 4 campos capturados
+18:16:11 [INFO] EventId de Opta extraído: 9680w5grhbij53uk7u1zdkiz8
+18:16:11 [DEBUG]   ✓ EventId extraído: 9680w5grhbij53uk7u1zdkiz8
+18:16:11 [DEBUG]   → Obteniendo estadísticas de la API...
+18:16:11 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 9680w5grhbij53uk7u1zdkiz8
+18:16:12 [INFO] EventId de Opta extraído: d9fihrv7u2k0xrcqzuvha4fmc
+18:16:12 [DEBUG]   ✓ EventId extraído: d9fihrv7u2k0xrcqzuvha4fmc
+18:16:12 [DEBUG]   → Obteniendo estadísticas de la API...
+18:16:12 [INFO] 📊 Obteniendo todas las estadísticas para eventId: d9fihrv7u2k0xrcqzuvha4fmc
+18:16:12 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo información del partido...
+18:16:13 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:13 [INFO] ✓ [millwall-portsmouth-apuestas-35263867] Captura exitosa: pre_partido, min , -
+18:16:14 [DEBUG] ✅ Summary stats obtenidas para d9fihrv7u2k0xrcqzuvha4fmc
+18:16:14 [DEBUG] ✓ Actualizar clickeado: huesca-mirand%C3%A9s-apuestas-35271205
+18:16:15 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] → Extrayendo información del partido...
+18:16:16 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=9680w5grhbij53uk7u1zdkiz8&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0bf25590>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:16 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=9680w5grhbij53uk7u1zdkiz8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0bf25950>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:16 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=9680w5grhbij53uk7u1zdkiz8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0bf25a90>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:16 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=9680w5grhbij53uk7u1zdkiz8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0bf25310>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:16 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=9680w5grhbij53uk7u1zdkiz8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0bf25810>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:16 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:16:16 [WARNING]   × No hay estadísticas disponibles en la API
+18:16:16 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo volumen matched...
+18:16:17 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] → Extrayendo información del partido...
+18:16:17 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94ca50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:17 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94d810>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:17 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0bf25d10>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:17 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94d6d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:16:17 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+18:16:17 [DEBUG]   → Mapeando estadísticas...
+18:16:17 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+18:16:17 [DEBUG]     → xG: 0.418-0.2379, Corners: 4-1
+18:16:17 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo volumen matched...
+18:16:18 [DEBUG]   → Iframe stats capturados: {'corners_local': '3', 'corners_visitante': '4', 'time_in_dangerous_attack_pct_local': '61', 'time_in_dangerous_attack_pct_visitante': '39'}
+18:16:18 [DEBUG]   → Total stats en dict tras merge: 4
+18:16:18 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo volumen matched...
+18:16:18 [WARNING]   × Timeout esperando estadísticas básicas
+18:16:18 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:16:19 [DEBUG] [cesena-spezia-apuestas-35270928] → Extrayendo información del partido...
+18:16:19 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:16:20 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:16:20 [DEBUG]   → Divs: 389, Local: 20, Visit: 42
+18:16:20 [DEBUG]   ✓ Momentum Local: 465.15 (20 barras)
+18:16:20 [DEBUG]   ✓ Momentum Visitante: 709.37 (42 barras)
+18:16:20 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:16:20 [INFO] ✓ [hartberg-grazer-ak-apuestas-35243319] Captura exitosa: en_juego, min 54, 0-0
+18:16:20 [WARNING]   × Timeout esperando estadísticas básicas
+18:16:20 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:16:21 [DEBUG]   ✓ Estado detectado: FINALIZADO (XPATH: texto 'BETSLIP.XSELL_MULTIPLES_AFTER_LINK')
+18:16:21 [DEBUG] [club-brugge-oh-leuven-apuestas-35270656] → Extrayendo información del partido...
+18:16:21 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:16:21 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:16:22 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] → Extrayendo cuotas Match Odds...
+18:16:22 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:16:22 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:16:23 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:16:24 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] → Extrayendo cuotas Over/Under...
+18:16:25 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:16:25 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:16:26 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:16:27 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] O/U escasos (1), intentando via mercado individual...
+18:16:27 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:16:27 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:16:28 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:16:28 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:16:28 [DEBUG] Navegando a mercado O/U: https://www.betfair.es/exchange/plus/football/market/1.254105792
+18:16:28 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:16:29 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:16:29 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:16:29 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo momentum (fallback visual)...
+18:16:29 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:29 [DEBUG]   ✓ URL stats encontrada en iframe #1: https://betfair.cpp.statsperform.com/watch/pitchView?&eventId=9680w5grhbij53uk7u
+18:16:29 [DEBUG]   → URL momentum construida: https://betfair.cpp.statsperform.com/stats/live-stats/momentum?&eventId=9680w5gr
+18:16:29 [DEBUG]     × 'Saves' no encontrado en DOM
+18:16:30 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:16:30 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo cuotas Match Odds...
+18:16:30 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:16:30 [DEBUG]     × 'Corner kicks' - valores no numéricos: '-' - '-'
+18:16:30 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo momentum (fallback visual)...
+18:16:30 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:30 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:16:31 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:16:31 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo momentum (fallback visual)...
+18:16:31 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:31 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:16:32 [DEBUG]     × 'Saves' no encontrado en DOM
+18:16:32 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:32 [INFO] ✓ [cfr-cluj-acs-petrolul-52-apuestas-35267396] Captura exitosa: en_juego, min 48, 0-0
+18:16:32 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:16:33 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:16:33 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:16:33 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:16:33 [WARNING]   × Fallback iframe no encontró estadísticas
+18:16:34 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:16:34 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo volumen matched...
+18:16:34 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:16:34 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] → Extrayendo cuotas Match Odds...
+18:16:34 [WARNING]   × Timeout esperando estadísticas básicas
+18:16:34 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:16:35 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:16:35 [DEBUG]   → Divs: 385, Local: 35, Visit: 25
+18:16:35 [DEBUG]   ✓ Momentum Local: 874.97 (35 barras)
+18:16:35 [DEBUG]   ✓ Momentum Visitante: 764.32 (25 barras)
+18:16:35 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:16:35 [INFO] ✓ [lens-m%C3%B3naco-apuestas-35243057] Captura exitosa: en_juego, min 52, 1-0
+18:16:35 [WARNING] ⟳ [betis-rayo-vallecano-apuestas-35245242] Match Odds incompletos (0/3), refrescando...
+18:16:35 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:16:36 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:16:36 [WARNING]   × Fallback iframe no encontró estadísticas
+18:16:36 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:16:36 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:16:36 [DEBUG] [cesena-spezia-apuestas-35270928] → Extrayendo cuotas Match Odds...
+18:16:36 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo volumen matched...
+18:16:37 [DEBUG]     × 'Saves' no encontrado en DOM
+18:16:37 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:16:37 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:37 [INFO] ✓ [queens-park-morton-apuestas-35266347] Captura exitosa: pre_partido, min , -
+18:16:37 [WARNING] ⟳ [cesena-spezia-apuestas-35270928] Match Odds incompletos (0/3), refrescando...
+18:16:38 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:16:38 [DEBUG] [club-brugge-oh-leuven-apuestas-35270656] → Extrayendo cuotas Match Odds...
+18:16:38 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:16:39 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo cuotas Over/Under...
+18:16:39 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:16:39 [WARNING] ⟳ [club-brugge-oh-leuven-apuestas-35270656] Match Odds incompletos (0/3), refrescando...
+18:16:40 [DEBUG] [stockport-wigan-apuestas-35270210] O/U escasos (0), intentando via mercado individual...
+18:16:40 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:16:40 [WARNING]   × Timeout esperando estadísticas básicas
+18:16:40 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:16:41 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:16:41 [WARNING] ⟳ [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] Match Odds incompletos (0/3), refrescando...
+18:16:41 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:16:41 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:16:41 [WARNING]   × Fallback iframe no encontró estadísticas
+18:16:41 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:16:42 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo cuotas Resultado Correcto...
+18:16:42 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:16:42 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:16:43 [INFO] ✓ Cookies aceptadas automáticamente
+18:16:43 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:16:43 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:16:44 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo estadísticas del partido...
+18:16:44 [DEBUG]   → Extrayendo eventId del HTML...
+18:16:44 [DEBUG] Betfair event ID extraído de la URL: 35270210
+18:16:44 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270210&contentType=viz&contentView=mstats
+18:16:44 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:16:44 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:16:45 [DEBUG]     × 'Saves' no encontrado en DOM
+18:16:46 [WARNING]   × Timeout esperando estadísticas básicas
+18:16:46 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:16:46 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:16:47 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo momentum (fallback visual)...
+18:16:47 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:47 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:16:47 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:16:47 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:16:48 [INFO] ✓ Cookies aceptadas automáticamente
+18:16:48 [INFO] ✓ O/U via mercado: 2 valores capturados
+18:16:48 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] → Extrayendo cuotas Resultado Correcto...
+18:16:48 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo volumen matched...
+18:16:48 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:16:48 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:16:49 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:16:49 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo momentum (fallback visual)...
+18:16:49 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:16:49 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:16:49 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:16:50 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:16:50 [WARNING]   × Fallback iframe no encontró estadísticas
+18:16:50 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] → Extrayendo estadísticas del partido...
+18:16:50 [DEBUG]   → Extrayendo eventId del HTML...
+18:16:50 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo volumen matched...
+18:16:50 [WARNING] No se pudo extraer el Betfair event ID del HTML ni de la URL
+18:16:50 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:16:50 [WARNING]   × No se pudo extraer Betfair event ID para fallback
+18:16:50 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] → Extrayendo volumen matched...
+18:16:50 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:16:50 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:16:51 [DEBUG]     × 'Saves' no encontrado en DOM
+18:16:53 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:16:54 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:16:54 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:16:54 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270210&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98efd0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:16:54 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:16:54 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270210
+18:16:54 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:54 [INFO] ✓ [mansfield-lincoln-apuestas-35270215] Captura exitosa: pre_partido, min , -
+18:16:55 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:16:55 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:16:55 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] → Extrayendo cuotas Over/Under...
+18:16:56 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:16:56 [WARNING]   × Fallback iframe no encontró estadísticas
+18:16:56 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:16:56 [DEBUG]   × No se encontró URL del iframe de stats
+18:16:56 [INFO] ✓ [northampton-leyton-orient-apuestas-35270218] Captura exitosa: pre_partido, min , -
+18:16:56 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo volumen matched...
+18:16:57 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:16:57 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] O/U escasos (0), intentando via mercado individual...
+18:16:58 [DEBUG]     × 'Saves' no encontrado en DOM
+18:16:58 [DEBUG] Navegando a mercado O/U: https://www.betfair.es/exchange/plus/football/market/1.253822678
+18:16:58 [INFO] ✓ Cookies aceptadas automáticamente
+18:16:59 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:17:00 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:17:01 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:17:01 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo momentum (fallback visual)...
+18:17:01 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:02 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:17:02 [WARNING]   × Fallback iframe no encontró estadísticas
+18:17:02 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo volumen matched...
+18:17:03 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo momentum (fallback visual)...
+18:17:03 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:03 [DEBUG] [huesca-mirand%C3%A9s-apuestas-35271205] → Extrayendo momentum (fallback visual)...
+18:17:03 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:03 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:03 [INFO] ✓ [huesca-mirand%C3%A9s-apuestas-35271205] Captura exitosa: finalizado, min , 1-2
+18:17:07 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:07 [INFO] ✓ [montrose-queen-of-south-apuestas-35268005] Captura exitosa: pre_partido, min , -
+18:17:08 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:08 [INFO] ✓ [olympiacos-panaitolikos-apuestas-35243453] Captura exitosa: pre_partido, min , -
+18:17:09 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo momentum (fallback visual)...
+18:17:09 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:09 [DEBUG] [club-brugge-oh-leuven-apuestas-35270656] → Extrayendo cuotas Over/Under...
+18:17:12 [DEBUG] [club-brugge-oh-leuven-apuestas-35270656] → Extrayendo cuotas Resultado Correcto...
+18:17:13 [INFO] ✓ O/U via mercado: 9 valores capturados
+18:17:13 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] → Extrayendo cuotas Resultado Correcto...
+18:17:15 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo momentum (fallback visual)...
+18:17:15 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:15 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:15 [INFO] ✓ [peterhead-east-fife-apuestas-35268008] Captura exitosa: pre_partido, min , -
+18:17:16 [DEBUG] [club-brugge-oh-leuven-apuestas-35270656] → Extrayendo estadísticas del partido...
+18:17:16 [DEBUG]   → Extrayendo eventId del HTML...
+18:17:16 [DEBUG] Betfair event ID extraído de la URL: 35270656
+18:17:16 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270656&contentType=viz&contentView=mstats
+18:17:17 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] → Extrayendo estadísticas del partido...
+18:17:17 [DEBUG]   → Extrayendo eventId del HTML...
+18:17:17 [DEBUG] Betfair event ID extraído del HTML: 35245242
+18:17:17 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35245242&contentType=viz&contentView=mstats
+18:17:18 [INFO] ✓ Cookies aceptadas automáticamente
+18:17:19 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo cuotas Over/Under...
+18:17:20 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] O/U escasos (0), intentando via mercado individual...
+18:17:21 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:17:22 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo cuotas Resultado Correcto...
+18:17:22 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:22 [INFO] ✓ [port-vale-reading-apuestas-35270238] Captura exitosa: pre_partido, min , -
+18:17:23 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo estadísticas del partido...
+18:17:23 [DEBUG]   → Extrayendo eventId del HTML...
+18:17:23 [DEBUG] Betfair event ID extraído de la URL: 35272358
+18:17:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35272358&contentType=viz&contentView=mstats
+18:17:28 [INFO] EventId de Opta extraído: 2kn874mea28rs8m0s333xmp78
+18:17:28 [DEBUG]   ✓ EventId extraído: 2kn874mea28rs8m0s333xmp78
+18:17:28 [DEBUG]   → Obteniendo estadísticas de la API...
+18:17:28 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 2kn874mea28rs8m0s333xmp78
+18:17:30 [DEBUG] ✅ Summary stats obtenidas para 2kn874mea28rs8m0s333xmp78
+18:17:30 [DEBUG] No se encontró teamStatsDefenceLv
+18:17:30 [DEBUG] No se encontró teamStatsAttackingLv
+18:17:31 [INFO] EventId de Opta extraído: exzov7o3p9v5vqr86qipfm1w4
+18:17:31 [DEBUG]   ✓ EventId extraído: exzov7o3p9v5vqr86qipfm1w4
+18:17:31 [DEBUG]   → Obteniendo estadísticas de la API...
+18:17:31 [INFO] 📊 Obteniendo todas las estadísticas para eventId: exzov7o3p9v5vqr86qipfm1w4
+18:17:31 [INFO] EventId de Opta extraído: 6pwmfbr3j6vjoivkfogkpv8k4
+18:17:31 [DEBUG]   ✓ EventId extraído: 6pwmfbr3j6vjoivkfogkpv8k4
+18:17:31 [DEBUG]   → Obteniendo estadísticas de la API...
+18:17:31 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 6pwmfbr3j6vjoivkfogkpv8k4
+18:17:33 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=2kn874mea28rs8m0s333xmp78&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fc50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:33 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=2kn874mea28rs8m0s333xmp78&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e5d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:33 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+18:17:33 [DEBUG]   → Mapeando estadísticas...
+18:17:33 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+18:17:33 [DEBUG]     → xG: 1.8332-0.8395, Corners: 3-5
+18:17:33 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] → Extrayendo volumen matched...
+18:17:33 [DEBUG] [cesena-spezia-apuestas-35270928] → Extrayendo cuotas Over/Under...
+18:17:36 [DEBUG] [cesena-spezia-apuestas-35270928] → Extrayendo cuotas Resultado Correcto...
+18:17:36 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=exzov7o3p9v5vqr86qipfm1w4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ed50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=exzov7o3p9v5vqr86qipfm1w4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f9d0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=exzov7o3p9v5vqr86qipfm1w4&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f390>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=exzov7o3p9v5vqr86qipfm1w4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fb10>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=exzov7o3p9v5vqr86qipfm1w4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f750>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:17:36 [WARNING]   × No hay estadísticas disponibles en la API
+18:17:36 [DEBUG] [club-brugge-oh-leuven-apuestas-35270656] → Extrayendo volumen matched...
+18:17:36 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=6pwmfbr3j6vjoivkfogkpv8k4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fd90>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=6pwmfbr3j6vjoivkfogkpv8k4&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ee90>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=6pwmfbr3j6vjoivkfogkpv8k4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fed0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=6pwmfbr3j6vjoivkfogkpv8k4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e350>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=6pwmfbr3j6vjoivkfogkpv8k4&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f610>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:17:36 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:17:36 [WARNING]   × No hay estadísticas disponibles en la API
+18:17:36 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo volumen matched...
+18:17:39 [DEBUG] [cesena-spezia-apuestas-35270928] → Extrayendo estadísticas del partido...
+18:17:39 [DEBUG]   → Extrayendo eventId del HTML...
+18:17:39 [DEBUG] Betfair event ID extraído del HTML: 35270928
+18:17:39 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270928&contentType=viz&contentView=mstats
+18:17:42 [INFO] EventId de Opta extraído: cy9dmcoudl049ywy1f2wb93pw
+18:17:42 [DEBUG]   ✓ EventId extraído: cy9dmcoudl049ywy1f2wb93pw
+18:17:42 [DEBUG]   → Obteniendo estadísticas de la API...
+18:17:42 [INFO] 📊 Obteniendo todas las estadísticas para eventId: cy9dmcoudl049ywy1f2wb93pw
+18:17:46 [DEBUG] [betis-rayo-vallecano-apuestas-35245242] → Extrayendo momentum (fallback visual)...
+18:17:46 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:47 [DEBUG] No se encontró teamStatsDefenceLv
+18:17:47 [DEBUG] No se encontró teamStatsXgLv ni xgData
+18:17:47 [DEBUG] ✅ Summary stats obtenidas para cy9dmcoudl049ywy1f2wb93pw
+18:17:47 [DEBUG] ✅ Momentum calculado: Home=1118.43, Away=607.29 (48 puntos)
+18:17:47 [DEBUG] ✅ Momentum data obtenida para cy9dmcoudl049ywy1f2wb93pw
+18:17:47 [DEBUG] No se encontró teamStatsAttackingLv
+18:17:47 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+18:17:47 [DEBUG]   → Mapeando estadísticas...
+18:17:47 [DEBUG]     → Momentum vía API: 1118.43-607.29
+18:17:47 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+18:17:47 [DEBUG]     → xG: 1.2773-0.1341, Corners: 4-0
+18:17:47 [DEBUG] [cesena-spezia-apuestas-35270928] → Extrayendo volumen matched...
+18:17:49 [DEBUG] [club-brugge-oh-leuven-apuestas-35270656] → Extrayendo momentum (fallback visual)...
+18:17:49 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:49 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo momentum (fallback visual)...
+18:17:49 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:17:52 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:52 [INFO] ✓ [betis-rayo-vallecano-apuestas-35245242] Captura exitosa: en_juego, min 99, 2-1
+18:17:54 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:54 [INFO] ✓ [club-brugge-oh-leuven-apuestas-35270656] Captura exitosa: pre_partido, min , -
+18:17:55 [DEBUG]   × No se encontró URL del iframe de stats
+18:17:55 [INFO] ✓ [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] Captura exitosa: pre_partido, min , -
+18:18:00 [DEBUG] [cesena-spezia-apuestas-35270928] ✓ Momentum obtenido de API: 1118.43-607.29
+18:18:00 [INFO] ✓ [cesena-spezia-apuestas-35270928] Captura exitosa: en_juego, min , 1-1
+18:18:02 [WARNING]   × Timeout esperando estadísticas básicas
+18:18:02 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:18:03 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:18:04 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:18:05 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:18:06 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:18:09 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:18:10 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:18:11 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:18:12 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:18:13 [DEBUG]     × 'Saves' no encontrado en DOM
+18:18:14 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:18:15 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:18:16 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:18:17 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:18:17 [WARNING]   × Fallback iframe no encontró estadísticas
+18:18:18 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo volumen matched...
+18:18:31 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo momentum (fallback visual)...
+18:18:31 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:18:37 [DEBUG]   × No se encontró URL del iframe de stats
+18:18:37 [INFO] ✓ [stockport-wigan-apuestas-35270210] Captura exitosa: pre_partido, min , -
+18:18:37 [INFO] ✓ Captura paralela completada en 294.1s (26/26 exitosos)
+18:18:37 [WARNING] Ciclo tardó 294.1s (> 30s). Iniciando siguiente ciclo inmediatamente.
+18:18:37 [INFO] 
+--- Ciclo #2 ---
+18:18:37 [INFO] 📸 Capturando 26 partidos en paralelo...
+18:18:38 [DEBUG] Actualizar omitido para rapid-vienna-rz-pellets-wac-apuestas-35243320: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1354, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:18:38 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo información del partido...
+18:18:45 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo información del partido...
+18:18:45 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo información del partido...
+18:18:45 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo información del partido...
+18:18:45 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo información del partido...
+18:18:45 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo información del partido...
+18:18:45 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo información del partido...
+18:18:45 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo información del partido...
+18:18:45 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo información del partido...
+18:18:45 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo información del partido...
+18:18:45 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo información del partido...
+18:18:45 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo información del partido...
+18:18:45 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo información del partido...
+18:18:45 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo información del partido...
+18:18:45 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo información del partido...
+18:18:45 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo información del partido...
+18:18:47 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo cuotas Match Odds...
+18:18:49 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo cuotas Over/Under...
+18:18:53 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo cuotas Resultado Correcto...
+18:18:56 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo estadísticas del partido...
+18:18:56 [DEBUG]   → Extrayendo eventId del HTML...
+18:18:56 [DEBUG] Betfair event ID extraído del HTML: 35243320
+18:18:56 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243320&contentType=viz&contentView=mstats
+18:18:56 [INFO] EventId de Opta extraído: 7sm0wa3nuy3fpeai8dy0ljxn8
+18:18:56 [DEBUG]   ✓ EventId extraído: 7sm0wa3nuy3fpeai8dy0ljxn8
+18:18:56 [DEBUG]   → Obteniendo estadísticas de la API...
+18:18:56 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 7sm0wa3nuy3fpeai8dy0ljxn8
+18:18:58 [DEBUG] No se encontró teamStatsAttackingLv
+18:18:58 [DEBUG] No se encontró teamStatsDefenceLv
+18:18:58 [DEBUG] No se encontró teamStatsXgLv ni xgData
+18:18:58 [DEBUG] ✅ Summary stats obtenidas para 7sm0wa3nuy3fpeai8dy0ljxn8
+18:18:58 [DEBUG] ✅ Momentum calculado: Home=1141.91, Away=1124.85 (62 puntos)
+18:18:58 [DEBUG] ✅ Momentum data obtenida para 7sm0wa3nuy3fpeai8dy0ljxn8
+18:18:58 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+18:18:58 [DEBUG]   → Mapeando estadísticas...
+18:18:58 [DEBUG]     → Momentum vía API: 1141.91-1124.85
+18:18:58 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+18:18:58 [DEBUG]     → xG: 0.1169-0.3778, Corners: 2-1
+18:18:58 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] → Extrayendo volumen matched...
+18:19:02 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo cuotas Match Odds...
+18:19:02 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo cuotas Match Odds...
+18:19:03 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo cuotas Match Odds...
+18:19:03 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo cuotas Match Odds...
+18:19:03 [WARNING] ⟳ [queens-park-morton-apuestas-35266347] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [newport-county-cambridge-united-apuestas-35273748] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [watford-derby-apuestas-35263925] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [notts-county-tranmere-apuestas-35277648] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [norwich-birmingham-apuestas-35263866] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [peterborough-exeter-apuestas-35270226] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [mansfield-lincoln-apuestas-35270215] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [port-vale-reading-apuestas-35270238] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [peterhead-east-fife-apuestas-35268008] Match Odds incompletos (0/3), refrescando...
+18:19:03 [WARNING] ⟳ [millwall-portsmouth-apuestas-35263867] Match Odds incompletos (0/3), refrescando...
+18:19:04 [WARNING] ⟳ [northampton-leyton-orient-apuestas-35270218] Match Odds incompletos (0/3), refrescando...
+18:19:04 [WARNING] ⟳ [olympiacos-panaitolikos-apuestas-35243453] Match Odds incompletos (0/3), refrescando...
+18:19:04 [WARNING] ⟳ [southampton-charlton-apuestas-35265380] Match Odds incompletos (0/3), refrescando...
+18:19:04 [WARNING] ⟳ [montrose-queen-of-south-apuestas-35268005] Match Odds incompletos (0/3), refrescando...
+18:19:04 [WARNING] ⟳ [wrexham-ipswich-apuestas-35263864] Match Odds incompletos (0/3), refrescando...
+18:19:11 [DEBUG] [rapid-vienna-rz-pellets-wac-apuestas-35243320] ✓ Momentum obtenido de API: 1141.91-1124.85
+18:19:11 [INFO] ✓ [rapid-vienna-rz-pellets-wac-apuestas-35243320] Captura exitosa: en_juego, min 60, 0-0
+18:19:19 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo información del partido...
+18:19:32 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:32 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:33 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:34 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:36 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo cuotas Match Odds...
+18:19:37 [WARNING] ⟳ [stockport-wigan-apuestas-35270210] Match Odds incompletos (0/3), refrescando...
+18:19:40 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:44 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:48 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:50 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:50 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:19:52 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo cuotas Over/Under...
+18:19:52 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo cuotas Over/Under...
+18:19:52 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo cuotas Over/Under...
+18:19:52 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo cuotas Over/Under...
+18:19:52 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo cuotas Over/Under...
+18:19:52 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo cuotas Over/Under...
+18:19:53 [DEBUG] [queens-park-morton-apuestas-35266347] O/U escasos (0), intentando via mercado individual...
+18:19:53 [DEBUG] [millwall-portsmouth-apuestas-35263867] O/U escasos (0), intentando via mercado individual...
+18:19:53 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo cuotas Over/Under...
+18:19:53 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] O/U escasos (0), intentando via mercado individual...
+18:19:53 [DEBUG] [peterhead-east-fife-apuestas-35268008] O/U escasos (0), intentando via mercado individual...
+18:19:53 [DEBUG] [wrexham-ipswich-apuestas-35263864] O/U escasos (0), intentando via mercado individual...
+18:19:53 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:19:54 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] O/U escasos (0), intentando via mercado individual...
+18:19:54 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:19:54 [DEBUG] [mansfield-lincoln-apuestas-35270215] O/U escasos (0), intentando via mercado individual...
+18:19:54 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:19:54 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:19:54 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:19:55 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo cuotas Resultado Correcto...
+18:19:55 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:19:55 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:19:55 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo cuotas Resultado Correcto...
+18:19:56 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo cuotas Resultado Correcto...
+18:19:56 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo estadísticas del partido...
+18:19:56 [DEBUG]   → Extrayendo eventId del HTML...
+18:19:56 [DEBUG] Betfair event ID extraído de la URL: 35266347
+18:19:56 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35266347&contentType=viz&contentView=mstats
+18:19:56 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo cuotas Resultado Correcto...
+18:19:56 [DEBUG] [millwall-portsmouth-apuestas-35263867] → Extrayendo estadísticas del partido...
+18:19:56 [DEBUG]   → Extrayendo eventId del HTML...
+18:19:56 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo estadísticas del partido...
+18:19:56 [DEBUG]   → Extrayendo eventId del HTML...
+18:19:56 [DEBUG] Betfair event ID extraído de la URL: 35263867
+18:19:56 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263867&contentType=viz&contentView=mstats
+18:19:56 [DEBUG] Betfair event ID extraído de la URL: 35268008
+18:19:56 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35268008&contentType=viz&contentView=mstats
+18:19:56 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo cuotas Resultado Correcto...
+18:19:57 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo estadísticas del partido...
+18:19:57 [DEBUG]   → Extrayendo eventId del HTML...
+18:19:57 [DEBUG] Betfair event ID extraído de la URL: 35270215
+18:19:57 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270215&contentType=viz&contentView=mstats
+18:19:58 [DEBUG] [newport-county-cambridge-united-apuestas-35273748] → Extrayendo estadísticas del partido...
+18:19:58 [DEBUG]   → Extrayendo eventId del HTML...
+18:19:58 [DEBUG] Betfair event ID extraído de la URL: 35273748
+18:19:58 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35273748&contentType=viz&contentView=mstats
+18:19:59 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo cuotas Over/Under...
+18:20:00 [DEBUG] [notts-county-tranmere-apuestas-35277648] O/U escasos (0), intentando via mercado individual...
+18:20:01 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:02 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo cuotas Resultado Correcto...
+18:20:03 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:20:03 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo cuotas Over/Under...
+18:20:03 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo estadísticas del partido...
+18:20:03 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:04 [DEBUG] Betfair event ID extraído de la URL: 35277648
+18:20:04 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35277648&contentType=viz&contentView=mstats
+18:20:05 [DEBUG] [montrose-queen-of-south-apuestas-35268005] O/U escasos (0), intentando via mercado individual...
+18:20:05 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:07 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo cuotas Resultado Correcto...
+18:20:07 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo cuotas Over/Under...
+18:20:08 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo estadísticas del partido...
+18:20:08 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:08 [DEBUG] Betfair event ID extraído de la URL: 35268005
+18:20:08 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35268005&contentType=viz&contentView=mstats
+18:20:08 [DEBUG] [northampton-leyton-orient-apuestas-35270218] O/U escasos (0), intentando via mercado individual...
+18:20:09 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:09 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo cuotas Over/Under...
+18:20:09 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo cuotas Resultado Correcto...
+18:20:09 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:20:10 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo cuotas Over/Under...
+18:20:10 [DEBUG] [port-vale-reading-apuestas-35270238] O/U escasos (0), intentando via mercado individual...
+18:20:10 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo cuotas Resultado Correcto...
+18:20:10 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo estadísticas del partido...
+18:20:10 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:10 [DEBUG] Betfair event ID extraído de la URL: 35243453
+18:20:10 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243453&contentType=viz&contentView=mstats
+18:20:10 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:11 [DEBUG] [peterborough-exeter-apuestas-35270226] O/U escasos (0), intentando via mercado individual...
+18:20:11 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo estadísticas del partido...
+18:20:11 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:11 [DEBUG] Betfair event ID extraído de la URL: 35270218
+18:20:11 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270218&contentType=viz&contentView=mstats
+18:20:11 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:12 [INFO] EventId de Opta extraído: bfsj5do0jxtdz1ez6rojb20ic
+18:20:12 [DEBUG]   ✓ EventId extraído: bfsj5do0jxtdz1ez6rojb20ic
+18:20:12 [DEBUG]   → Obteniendo estadísticas de la API...
+18:20:12 [INFO] 📊 Obteniendo todas las estadísticas para eventId: bfsj5do0jxtdz1ez6rojb20ic
+18:20:12 [INFO] EventId de Opta extraído: 62hacqcnns12r7cs6tm4fbg9g
+18:20:12 [DEBUG]   ✓ EventId extraído: 62hacqcnns12r7cs6tm4fbg9g
+18:20:12 [DEBUG]   → Obteniendo estadísticas de la API...
+18:20:12 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 62hacqcnns12r7cs6tm4fbg9g
+18:20:12 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:20:13 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35273748&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94f4d0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:13 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270215&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94c050>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:13 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35268008&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94e5d0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:13 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35263867&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94ca50>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:13 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35266347&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94d810>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35273748
+18:20:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270215
+18:20:13 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35268008
+18:20:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35263867
+18:20:13 [INFO]   → Extrayendo stats del iframe (fallback): eID=35266347
+18:20:13 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo cuotas Resultado Correcto...
+18:20:14 [DEBUG] [port-vale-reading-apuestas-35270238] → Extrayendo estadísticas del partido...
+18:20:14 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:14 [DEBUG] Betfair event ID extraído de la URL: 35270238
+18:20:14 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270238&contentType=viz&contentView=mstats
+18:20:17 [INFO] EventId de Opta extraído: 7slldzs5veqyciku9cbmnbz84
+18:20:17 [DEBUG]   ✓ EventId extraído: 7slldzs5veqyciku9cbmnbz84
+18:20:17 [DEBUG]   → Obteniendo estadísticas de la API...
+18:20:17 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 7slldzs5veqyciku9cbmnbz84
+18:20:17 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=bfsj5do0jxtdz1ez6rojb20ic&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ca50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=bfsj5do0jxtdz1ez6rojb20ic&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94fed0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=bfsj5do0jxtdz1ez6rojb20ic&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ce10>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=bfsj5do0jxtdz1ez6rojb20ic&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f610>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=bfsj5do0jxtdz1ez6rojb20ic&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c050>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:20:17 [WARNING]   × No hay estadísticas disponibles en la API
+18:20:17 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo volumen matched...
+18:20:17 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo cuotas Resultado Correcto...
+18:20:17 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f250>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e350>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98cf50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98fed0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=62hacqcnns12r7cs6tm4fbg9g&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94d090>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:17 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:20:17 [WARNING]   × No hay estadísticas disponibles en la API
+18:20:17 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo volumen matched...
+18:20:18 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35268005&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94d6d0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:18 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:18 [INFO]   → Extrayendo stats del iframe (fallback): eID=35268005
+18:20:18 [DEBUG] [peterborough-exeter-apuestas-35270226] → Extrayendo estadísticas del partido...
+18:20:18 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:18 [DEBUG] Betfair event ID extraído de la URL: 35270226
+18:20:18 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270226&contentType=viz&contentView=mstats
+18:20:19 [DEBUG] No se encontró teamStatsAttackingLv
+18:20:22 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=7slldzs5veqyciku9cbmnbz84&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a94fb10>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:22 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=7slldzs5veqyciku9cbmnbz84&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ccd0>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:22 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=7slldzs5veqyciku9cbmnbz84&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f390>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:22 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=7slldzs5veqyciku9cbmnbz84&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98d090>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:22 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:20:22 [WARNING]   × No hay estadísticas disponibles en la API
+18:20:22 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo volumen matched...
+18:20:22 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo cuotas Over/Under...
+18:20:23 [DEBUG] [watford-derby-apuestas-35263925] O/U escasos (0), intentando via mercado individual...
+18:20:24 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:24 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo cuotas Resultado Correcto...
+18:20:24 [DEBUG] No se pudo extraer Resultado Correcto: Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x6e8cc1
+	0x6eafaf
+	0x6eb048
+	0x72bf90
+	0x72c7bb
+	0x722081
+	0x74ee64
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:20:24 [DEBUG] [wrexham-ipswich-apuestas-35263864] → Extrayendo estadísticas del partido...
+18:20:24 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:24 [DEBUG] Betfair event ID extraído de la URL: 35263864
+18:20:24 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263864&contentType=viz&contentView=mstats
+18:20:29 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo cuotas Over/Under...
+18:20:29 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo cuotas Resultado Correcto...
+18:20:30 [DEBUG] [northampton-leyton-orient-apuestas-35270218] → Extrayendo momentum (fallback visual)...
+18:20:30 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:20:30 [DEBUG] [stockport-wigan-apuestas-35270210] O/U escasos (0), intentando via mercado individual...
+18:20:30 [DEBUG] [notts-county-tranmere-apuestas-35277648] → Extrayendo momentum (fallback visual)...
+18:20:30 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:20:30 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:30 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo estadísticas del partido...
+18:20:30 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:30 [DEBUG] Betfair event ID extraído de la URL: 35263925
+18:20:30 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263925&contentType=viz&contentView=mstats
+18:20:32 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo cuotas Over/Under...
+18:20:32 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo cuotas Resultado Correcto...
+18:20:33 [DEBUG] [southampton-charlton-apuestas-35265380] O/U escasos (0), intentando via mercado individual...
+18:20:33 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo estadísticas del partido...
+18:20:33 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:33 [DEBUG] Betfair event ID extraído de la URL: 35270210
+18:20:33 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35270210&contentType=viz&contentView=mstats
+18:20:34 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:20:34 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270238&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a94f890>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:34 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270226&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98c690>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:34 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:34 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:34 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270238
+18:20:34 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270226
+18:20:35 [DEBUG] [olympiacos-panaitolikos-apuestas-35243453] → Extrayendo momentum (fallback visual)...
+18:20:35 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:20:36 [DEBUG]   × No se encontró URL del iframe de stats
+18:20:36 [INFO] ✓ [northampton-leyton-orient-apuestas-35270218] Captura exitosa: pre_partido, min , -
+18:20:36 [DEBUG]   × No se encontró URL del iframe de stats
+18:20:36 [INFO] ✓ [notts-county-tranmere-apuestas-35277648] Captura exitosa: pre_partido, min , -
+18:20:37 [DEBUG] Actualizar omitido para scr-altach-austria-wien-apuestas-35243318: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1354, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:20:37 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo información del partido...
+18:20:38 [DEBUG] Actualizar omitido para hartberg-grazer-ak-apuestas-35243319: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1369, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:20:38 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo información del partido...
+18:20:40 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo cuotas Resultado Correcto...
+18:20:41 [DEBUG] [southampton-charlton-apuestas-35265380] → Extrayendo estadísticas del partido...
+18:20:41 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:41 [DEBUG] Betfair event ID extraído de la URL: 35265380
+18:20:41 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35265380&contentType=viz&contentView=mstats
+18:20:41 [DEBUG]   × No se encontró URL del iframe de stats
+18:20:41 [INFO] ✓ [olympiacos-panaitolikos-apuestas-35243453] Captura exitosa: pre_partido, min , -
+18:20:42 [INFO] EventId de Opta extraído: 96s7ey8k9jdf83zdqt7h4ou1g
+18:20:42 [DEBUG]   ✓ EventId extraído: 96s7ey8k9jdf83zdqt7h4ou1g
+18:20:42 [DEBUG]   → Obteniendo estadísticas de la API...
+18:20:42 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 96s7ey8k9jdf83zdqt7h4ou1g
+18:20:43 [DEBUG] Actualizar omitido para cfr-cluj-acs-petrolul-52-apuestas-35267396: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1354, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:20:43 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo información del partido...
+18:20:45 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35263864&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0bf5c050>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:45 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:45 [INFO]   → Extrayendo stats del iframe (fallback): eID=35263864
+18:20:46 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo cuotas Match Odds...
+18:20:46 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo cuotas Match Odds...
+18:20:47 [ERROR] ❌ Error obteniendo summary stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/summary?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv&hideHeader=false&noredirect=true&stage=halfTime (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c690>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:47 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c550>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:47 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98e490>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:47 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f390>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:47 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=96s7ey8k9jdf83zdqt7h4ou1g&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98d090>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:20:47 [INFO] ✅ Estadísticas obtenidas: 0/5 endpoints
+18:20:47 [WARNING]   × No hay estadísticas disponibles en la API
+18:20:47 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo volumen matched...
+18:20:48 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo cuotas Over/Under...
+18:20:48 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo cuotas Over/Under...
+18:20:50 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35270210&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0bf5c410>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:50 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:50 [INFO]   → Extrayendo stats del iframe (fallback): eID=35270210
+18:20:51 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo cuotas Resultado Correcto...
+18:20:51 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo cuotas Resultado Correcto...
+18:20:51 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35265380&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0bf5c2d0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:20:51 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:20:51 [INFO]   → Extrayendo stats del iframe (fallback): eID=35265380
+18:20:51 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo cuotas Match Odds...
+18:20:53 [DEBUG] [hartberg-grazer-ak-apuestas-35243319] → Extrayendo estadísticas del partido...
+18:20:53 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:53 [DEBUG] Betfair event ID extraído del HTML: 35243319
+18:20:53 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243319&contentType=viz&contentView=mstats
+18:20:53 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo cuotas Over/Under...
+18:20:54 [DEBUG] [scr-altach-austria-wien-apuestas-35243318] → Extrayendo estadísticas del partido...
+18:20:54 [DEBUG]   → Extrayendo eventId del HTML...
+18:20:54 [DEBUG] Betfair event ID extraído del HTML: 35243318
+18:20:54 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243318&contentType=viz&contentView=mstats
+18:20:56 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo cuotas Resultado Correcto...
+18:21:00 [DEBUG] [watford-derby-apuestas-35263925] → Extrayendo momentum (fallback visual)...
+18:21:00 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:21:00 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo estadísticas del partido...
+18:21:00 [DEBUG]   → Usando eventId cacheado: d9fihrv7u2k0xrcqzuvha4fmc
+18:21:00 [DEBUG]   ✓ EventId extraído: d9fihrv7u2k0xrcqzuvha4fmc
+18:21:00 [DEBUG]   → Obteniendo estadísticas de la API...
+18:21:00 [INFO] 📊 Obteniendo todas las estadísticas para eventId: d9fihrv7u2k0xrcqzuvha4fmc
+18:21:01 [DEBUG] ✅ Summary stats obtenidas para d9fihrv7u2k0xrcqzuvha4fmc
+18:21:03 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35243319&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98fed0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:21:03 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:21:03 [INFO]   → Extrayendo stats del iframe (fallback): eID=35243319
+18:21:04 [ERROR] Error consultando videoplayer endpoint: HTTPSConnectionPool(host='videoplayer.betfair.es', port=443): Max retries exceeded with url: /GetPlayer.do?eID=35243318&contentType=viz&contentView=mstats (Caused by ConnectTimeoutError(<HTTPSConnection(host='videoplayer.betfair.es', port=443) at 0x23a0a98c7d0>, 'Connection to videoplayer.betfair.es timed out. (connect timeout=5)'))
+18:21:04 [WARNING]   × No se pudo extraer eventId - partido sin estadísticas Opta
+18:21:04 [INFO]   → Extrayendo stats del iframe (fallback): eID=35243318
+18:21:05 [ERROR] ❌ Error obteniendo defence stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/defence?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c050>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:21:05 [ERROR] ❌ Error obteniendo attacking stats: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/attacking?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98ed50>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:21:05 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c910>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:21:05 [ERROR] ❌ Error obteniendo momentum: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/momentum?eventId=d9fihrv7u2k0xrcqzuvha4fmc&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98f250>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:21:05 [INFO] ✅ Estadísticas obtenidas: 1/5 endpoints
+18:21:05 [DEBUG]   → Mapeando estadísticas...
+18:21:05 [INFO]   ✓ Estadísticas capturadas vía API: 28/66 campos
+18:21:05 [DEBUG]     → xG: 0.6008-0.257, Corners: 4-1
+18:21:05 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo volumen matched...
+18:21:06 [DEBUG]   × No se encontró URL del iframe de stats
+18:21:06 [INFO] ✓ [watford-derby-apuestas-35263925] Captura exitosa: pre_partido, min , -
+18:21:08 [DEBUG] Actualizar omitido para lens-m%C3%B3naco-apuestas-35243057: Message: element click intercepted: Element <button class="refresh-btn marketview-resize" ng-if="ctrl.data.refreshMarket.visible &amp;&amp; ctrl.data.marketHeaderTheme === 'marketview'" ng-click="ctrl.data.refreshMarket.onClick()" ng-bind="::ctrl.data.refreshMarket.label">...</button> is not clickable at point (1369, 247). Other element would receive the click: <div class="onetrust-pc-dark-filter ot-fade-in" style="z-index:2147483645;"></div>
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x732c08
+	0x730e19
+	0x72e7d2
+	0x72d9e4
+	0x722158
+	0x74ee1c
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:21:08 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo información del partido...
+18:21:16 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo cuotas Match Odds...
+18:21:18 [DEBUG] [cfr-cluj-acs-petrolul-52-apuestas-35267396] → Extrayendo momentum (fallback visual)...
+18:21:18 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:21:18 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo cuotas Over/Under...
+18:21:20 [WARNING]   × Timeout esperando estadísticas básicas
+18:21:20 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:21:20 [WARNING]   × Timeout esperando estadísticas básicas
+18:21:20 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:21:20 [DEBUG]   × No se encontró URL del iframe de stats
+18:21:20 [INFO] ✓ [cfr-cluj-acs-petrolul-52-apuestas-35267396] Captura exitosa: en_juego, min 53, 0-0
+18:21:21 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo cuotas Resultado Correcto...
+18:21:21 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:21:21 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:21:22 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:21:22 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:21:23 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo estadísticas del partido...
+18:21:23 [DEBUG]   → Extrayendo eventId del HTML...
+18:21:23 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:21:23 [DEBUG] Betfair event ID extraído del HTML: 35243057
+18:21:23 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35243057&contentType=viz&contentView=mstats
+18:21:23 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:21:24 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:21:24 [DEBUG] No se encontró banner de cookies (puede que ya esté aceptado)
+18:21:24 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:21:27 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:21:27 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:21:28 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:21:28 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo información del partido...
+18:21:28 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:21:29 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:21:29 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:21:29 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:21:30 [WARNING]   × Timeout esperando estadísticas básicas
+18:21:30 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:21:30 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:21:30 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:21:30 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:21:31 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:21:31 [DEBUG]     × 'Saves' no encontrado en DOM
+18:21:31 [DEBUG]     × 'Saves' no encontrado en DOM
+18:21:31 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:21:32 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:21:32 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:21:32 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:21:32 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:21:33 [DEBUG]     ✓ 'Corner kicks': 3-4
+18:21:33 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:21:33 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:21:33 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:21:33 [WARNING]   × Timeout esperando estadísticas básicas
+18:21:33 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:21:34 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:21:34 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:21:34 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:21:34 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:21:35 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener home value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./preceding-sibling::*[1]"}
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x72c51a
+	0x72c7bb
+	0x721ca1
+	0x74ee64
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:21:35 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:21:35 [WARNING]   × Fallback iframe no encontró estadísticas
+18:21:35 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:21:35 [WARNING]   × Fallback iframe no encontró estadísticas
+18:21:35 [DEBUG]     × 'Shots off target' no encontrado en DOM
+18:21:35 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo volumen matched...
+18:21:35 [INFO] EventId de Opta extraído: 9680w5grhbij53uk7u1zdkiz8
+18:21:35 [DEBUG]   ✓ EventId extraído: 9680w5grhbij53uk7u1zdkiz8
+18:21:35 [DEBUG]   → Obteniendo estadísticas de la API...
+18:21:35 [INFO] 📊 Obteniendo todas las estadísticas para eventId: 9680w5grhbij53uk7u1zdkiz8
+18:21:36 [DEBUG]     × 'Dangerous Attack' - no se pudo obtener away value: Message: no such element: Unable to locate element: {"method":"xpath","selector":"./following-sibling::*[1]"}
+  (Session info: chrome=145.0.7632.109); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x8ef3e3
+	0x8ef424
+	0x6e2090
+	0x72c51a
+	0x72c7bb
+	0x721ca1
+	0x74ee64
+	0x721b94
+	0x74efe4
+	0x76bb23
+	0x74ebb6
+	0x720319
+	0x7210d4
+	0xb446a4
+	0xb3f9a9
+	0xb5c940
+	0x9080f8
+	0x90fe4d
+	0x8f7c18
+	0x8f7de2
+	0x8e18ea
+	0x761b5d49
+	0x77a8d83b
+	0x77a8d7c1
+
+18:21:36 [DEBUG]     × 'Dangerous Attack' - valores vacíos
+18:21:36 [DEBUG]     × 'Free kicks' - valores vacíos
+18:21:36 [DEBUG]     × 'Offsides' - valores vacíos
+18:21:36 [DEBUG]     × 'Goal kicks' - valores vacíos
+18:21:36 [DEBUG]     × 'Saves' - valores vacíos
+18:21:36 [DEBUG]     × 'Throw-ins' - valores vacíos
+18:21:36 [DEBUG]     × 'Substitutions' - valores vacíos
+18:21:36 [DEBUG]     × 'Shots blocked' no encontrado en DOM
+18:21:37 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:21:37 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:21:37 [DEBUG]     × 'Fouls' - valores vacíos
+18:21:37 [INFO]   ✓ Fallback iframe exitoso: 4 campos capturados
+18:21:37 [DEBUG]     × 'Corner kicks' no encontrado en DOM
+18:21:38 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo volumen matched...
+18:21:38 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:21:39 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:21:39 [DEBUG]   → Iframe stats capturados: {'corners_local': '3', 'corners_visitante': '4', 'time_in_dangerous_attack_pct_local': '61', 'time_in_dangerous_attack_pct_visitante': '39'}
+18:21:39 [DEBUG]   → Total stats en dict tras merge: 4
+18:21:39 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo volumen matched...
+18:21:40 [DEBUG] ✅ Summary stats obtenidas para 9680w5grhbij53uk7u1zdkiz8
+18:21:40 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:21:40 [DEBUG]     × 'Dangerous Attack' no encontrado en DOM
+18:21:41 [DEBUG] No se encontró teamStatsAttackingLv
+18:21:41 [DEBUG]     × 'Saves' no encontrado en DOM
+18:21:41 [DEBUG] ✅ Momentum calculado: Home=1443.67, Away=1015.00 (65 puntos)
+18:21:41 [DEBUG] ✅ Momentum data obtenida para 9680w5grhbij53uk7u1zdkiz8
+18:21:41 [DEBUG]     × 'Free kicks' no encontrado en DOM
+18:21:42 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:21:42 [DEBUG]     × 'Offsides' no encontrado en DOM
+18:21:43 [DEBUG] No se encontró teamStatsDefenceLv
+18:21:43 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:21:43 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo cuotas Over/Under...
+18:21:44 [DEBUG]     × 'Goal kicks' no encontrado en DOM
+18:21:44 [ERROR] ❌ Error obteniendo xG details: HTTPSConnectionPool(host='betfair.cpp.statsperform.com', port=443): Max retries exceeded with url: /stats/live-stats/xg?eventId=9680w5grhbij53uk7u1zdkiz8&outletkey=1hegv772yrv901291e00xzm9rv (Caused by ConnectTimeoutError(<HTTPSConnection(host='betfair.cpp.statsperform.com', port=443) at 0x23a0a98c910>, 'Connection to betfair.cpp.statsperform.com timed out. (connect timeout=5)'))
+18:21:44 [INFO] ✅ Estadísticas obtenidas: 2/5 endpoints
+18:21:44 [DEBUG]   → Mapeando estadísticas...
+18:21:44 [DEBUG]     → Momentum vía API: 1443.67-1015.00
+18:21:44 [INFO]   ✓ Estadísticas capturadas vía API: 30/68 campos
+18:21:44 [DEBUG]     → xG: 1.0033-1.0001, Corners: 4-2
+18:21:44 [DEBUG] [lens-m%C3%B3naco-apuestas-35243057] → Extrayendo volumen matched...
+18:21:44 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:21:44 [DEBUG] [norwich-birmingham-apuestas-35263866] O/U escasos (0), intentando via mercado individual...
+18:21:45 [DEBUG]     × 'Saves' no encontrado en DOM
+18:21:45 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:21:45 [WARNING]   × Fallback iframe no encontró estadísticas
+18:21:45 [DEBUG] No se encontraron links de mercados O/U en sidebar
+18:21:45 [DEBUG] [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] → Extrayendo cuotas Match Odds...
+18:21:46 [DEBUG]     × 'Throw-ins' no encontrado en DOM
+18:21:46 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo cuotas Resultado Correcto...
+18:21:47 [WARNING] ⟳ [deportivo-la-coru%C3%B1a-eibar-apuestas-35272358] Match Odds incompletos (0/3), refrescando...
+18:21:47 [DEBUG]     × 'Substitutions' no encontrado en DOM
+18:21:47 [DEBUG] [peterhead-east-fife-apuestas-35268008] → Extrayendo volumen matched...
+18:21:48 [DEBUG]     × 'Injuries' no encontrado en DOM
+18:21:48 [DEBUG] [norwich-birmingham-apuestas-35263866] → Extrayendo estadísticas del partido...
+18:21:48 [DEBUG]   → Extrayendo eventId del HTML...
+18:21:48 [DEBUG] Betfair event ID extraído de la URL: 35263866
+18:21:48 [DEBUG] Consultando videoplayer: https://videoplayer.betfair.es/GetPlayer.do?eID=35263866&contentType=viz&contentView=mstats
+18:21:48 [DEBUG] [mansfield-lincoln-apuestas-35270215] → Extrayendo momentum (fallback visual)...
+18:21:48 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:21:49 [DEBUG]     × 'Fouls' no encontrado en DOM
+18:21:49 [WARNING]   × Fallback iframe no encontró estadísticas
+18:21:51 [DEBUG] [montrose-queen-of-south-apuestas-35268005] → Extrayendo momentum (fallback visual)...
+18:21:51 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:21:52 [DEBUG] [queens-park-morton-apuestas-35266347] → Extrayendo momentum (fallback visual)...
+18:21:52 [DEBUG]   → Buscando URL del iframe de stats para Momentum...
+18:21:53 [WARNING]   × Timeout esperando estadísticas básicas
+18:21:53 [DEBUG]   → Extrayendo todas las estadísticas del iframe...
+18:21:53 [DEBUG] [stockport-wigan-apuestas-35270210] → Extrayendo volumen matched...
+18:21:54 [DEBUG]     × 'Shots on target' no encontrado en DOM
+18:21:55 [DEBUG]     × 'Shots off target' no encontrado en DOM
