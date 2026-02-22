@@ -1,13 +1,30 @@
 @import "tailwindcss";
 
+/* ── Charcoal Pro theme ────────────────────────────────────────────────── */
+/* Remaps the entire zinc scale to high-contrast charcoal neutrals.        */
+/* All components using zinc-* classes pick this up automatically.         */
+@theme {
+  --color-zinc-950: #080808;
+  --color-zinc-900: #3f3f3f;
+  --color-zinc-800: #4c4c4c;
+  --color-zinc-700: #5e5e5e;
+  --color-zinc-600: #707070;
+  --color-zinc-500: #828282;
+  --color-zinc-400: #a4a4a4;
+  --color-zinc-300: #cccccc;
+  --color-zinc-200: #e2e2e2;
+  --color-zinc-100: #efefef;
+  --color-zinc-50:  #f8f8f8;
+}
+
 :root {
-  --bg: #09090b;
-  --bg-card: #18181b;
-  --bg-card-hover: #27272a;
-  --border: #27272a;
-  --border-hover: #3f3f46;
-  --text: #fafafa;
-  --text-muted: #a1a1aa;
+  --bg: #111111;
+  --bg-card: #3f3f3f;
+  --bg-card-hover: #4c4c4c;
+  --border: #5e5e5e;
+  --border-hover: #707070;
+  --text: #f0f0f0;
+  --text-muted: #a4a4a4;
   --accent: #3b82f6;
   --accent-green: #22c55e;
   --accent-yellow: #eab308;

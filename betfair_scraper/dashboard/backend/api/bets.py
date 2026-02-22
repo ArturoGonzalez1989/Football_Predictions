@@ -11,6 +11,7 @@ import re
 from typing import Optional, Literal
 
 from utils.csv_reader import _resolve_csv_path, _read_csv_rows, _to_float
+from utils import signals_audit_logger as _audit
 
 router = APIRouter()
 
@@ -217,11 +218,10 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct:
                     # Negativo cuando B < L (recortamos pérdida), positivo cuando B > L (bloqueamos ganancia)
                     bet["cashout_pl"] = round(stake * (odds / lay_now - 1), 2)
 
-        # Auto-settle: if match is no longer in games.csv AND we have late-game data
-        # Only auto-settle if minuto >= 85 or estado indicates match ended
+        # Auto-settle: match ended if explicitly finalizado OR not in games.csv (removed = finished)
         finished_states = ("finalizado", "finished", "ft", "full_time", "ended")
-        has_final_data = (minuto is not None and minuto >= 85) or estado in finished_states
-        if not is_match_active and has_final_data:
+        is_explicitly_finished = estado in finished_states
+        if is_explicitly_finished or not is_match_active:
             if would_win:
                 bet["status"] = "won"
                 bet["result"] = "won"
@@ -274,10 +274,11 @@ def _market_key_from_recommendation(recommendation: str) -> str:
     return recommendation  # fallback: clave literal
 
 
-def _has_pending_bet(match_id: str, recommendation: str) -> bool:
-    """Devuelve True si ya existe una apuesta pendiente para este match+mercado.
-    Usa clave de mercado (draw/home/away/over_X.5) en lugar de estrategia,
-    igual que el dedup de cartera.ts.
+def _has_existing_bet(match_id: str, recommendation: str) -> bool:
+    """Devuelve True si ya existe cualquier apuesta para este match+mercado (cualquier estado).
+    Usa clave de mercado (draw/home/away/over_X.5) — dedup cross-estrategia.
+    Bloquea re-entrada aunque el bet previo esté cashedout/won/lost,
+    ya que ambas versiones de la misma estrategia (V1/V2) apuestan al mismo mercado.
     """
     if not PLACED_BETS_CSV.exists():
         return False
@@ -286,10 +287,112 @@ def _has_pending_bet(match_id: str, recommendation: str) -> bool:
         reader = csv.DictReader(f)
         for row in reader:
             if (row.get("match_id") == match_id
-                    and _market_key_from_recommendation(row.get("recommendation", "")) == market_key
-                    and row.get("status") == "pending"):
+                    and _market_key_from_recommendation(row.get("recommendation", "")) == market_key):
                 return True
     return False
+
+
+def _is_contraria(match_id: str, recommendation: str) -> bool:
+    """Devuelve True si ya existe una apuesta en mercado OPUESTO (HOME↔AWAY) en el mismo partido.
+    Bloquea contrarias cross-estrategia: momentum V1 HOME después de momentum V2 AWAY (o viceversa).
+    Solo aplica a mercados home/away — draw y over/X.5 no son contrarias entre sí.
+    """
+    if not PLACED_BETS_CSV.exists():
+        return False
+    market_key = _market_key_from_recommendation(recommendation)
+    if market_key not in ("home", "away"):
+        return False
+    opposite = "away" if market_key == "home" else "home"
+    with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if (row.get("match_id") == match_id
+                    and _market_key_from_recommendation(row.get("recommendation", "")) == opposite):
+                return True
+    return False
+
+
+def run_auto_cashout() -> dict:
+    """Check pending paper bets and auto-cashout/settle those that meet the criteria.
+    Llamado por el background scheduler cada 60s (sin necesidad de abrir el dashboard).
+    - Cashout: lay actual >= back_entry * (1 + cashout_pct/100)
+    - Settle: partido finalizado (not active + min >= 85 o estado finalizado)
+    """
+    if not PLACED_BETS_CSV.exists():
+        return {"cashed_out": 0, "settled": 0, "checked": 0}
+
+    bets = []
+    with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            bets.append(dict(row))
+
+    pending = [b for b in bets if b.get("status") == "pending"]
+    if not pending:
+        return {"cashed_out": 0, "settled": 0, "checked": 0}
+
+    active_match_ids = _get_active_match_ids()
+
+    try:
+        from api.config import load_config as _load_cfg
+        _cfg = _load_cfg()
+        cashout_pct = float(_cfg.get("adjustments", {}).get("cashout_pct", 20))
+    except Exception:
+        cashout_pct = 20.0
+
+    csv_updates: dict[str, dict] = {}
+    cashed_out = 0
+    settled = 0
+
+    for bet in pending:
+        match_id = bet.get("match_id", "")
+        is_active = match_id in active_match_ids
+        _enrich_with_live_data(bet, is_match_active=is_active, cashout_pct=cashout_pct)
+
+        bid = str(bet.get("id", ""))
+        if not bid:
+            continue
+
+        if (bet.get("bet_type") == "paper"
+                and bet.get("suggest_cashout")
+                and "cashout_pl" in bet):
+            _co_pl = round(bet["cashout_pl"], 2)
+            csv_updates[bid] = {
+                "status": "cashout",
+                "result": "cashout",
+                "pl": str(_co_pl),
+            }
+            # ── Audit log: cashout ──
+            try:
+                _audit.log_cashout(
+                    bet,
+                    pl=_co_pl,
+                    lay_now=float(bet.get("cashout_lay_current") or 0),
+                    threshold=float(bet.get("cashout_threshold") or 0),
+                )
+            except Exception:
+                pass
+            cashed_out += 1
+
+        elif bet.pop("_needs_csv_update", False):
+            _settle_pl = float(bet.get("pl") or 0)
+            _settle_result = bet.get("result", "")
+            csv_updates[bid] = {
+                "status": bet["status"],
+                "result": _settle_result,
+                "pl": str(bet.get("pl", "")),
+            }
+            # ── Audit log: liquidación ──
+            try:
+                _audit.log_settlement(bet, result=_settle_result, pl=_settle_pl)
+            except Exception:
+                pass
+            settled += 1
+
+    if csv_updates:
+        _update_csv_rows(csv_updates)
+
+    return {"cashed_out": cashed_out, "settled": settled, "checked": len(pending)}
 
 
 @router.post("/api/bets/place", response_model=PlacedBet)
@@ -298,10 +401,21 @@ async def place_bet(bet: PlaceBetRequest):
     try:
         _ensure_csv_exists()
 
-        # Deduplication: don't register if there's already a pending bet for same match+market
-        if _has_pending_bet(bet.match_id, bet.recommendation):
-            # Return a dummy response (409 would break the frontend gracefully)
-            raise HTTPException(status_code=409, detail="Ya existe una apuesta pendiente para este partido y estrategia")
+        # Validate odds meet minimum threshold before any other check
+        if bet.back_odds is not None and bet.min_odds is not None and bet.back_odds < bet.min_odds:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Cuota {bet.back_odds:.2f} por debajo del mínimo requerido {bet.min_odds:.2f}"
+            )
+
+        # Deduplication: don't register if there's already any bet for same match+market
+        # (checks all statuses: pending, cashout, won, lost — blocks cross-strategy V1/V2 duplicates)
+        if _has_existing_bet(bet.match_id, bet.recommendation):
+            raise HTTPException(status_code=409, detail="Ya existe una apuesta para este partido y mercado (dedup cross-estrategia)")
+
+        # Anti-contrarias: block HOME if AWAY already placed on same match (or vice versa)
+        if _is_contraria(bet.match_id, bet.recommendation):
+            raise HTTPException(status_code=409, detail="Apuesta contraria bloqueada: ya existe HOME o AWAY opuesto en este partido")
 
         bet_id = _get_next_id()
         timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -348,6 +462,44 @@ async def place_bet(bet: PlaceBetRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al guardar apuesta: {str(e)}")
+
+
+@router.post("/api/bets/{bet_id}/resolve")
+async def resolve_bet(bet_id: int, result: str):
+    """Liquida manualmente una apuesta (result: 'won' o 'lost')."""
+    if result not in ("won", "lost"):
+        raise HTTPException(status_code=422, detail="result debe ser 'won' o 'lost'")
+
+    if not PLACED_BETS_CSV.exists():
+        raise HTTPException(status_code=404, detail="No hay apuestas registradas")
+
+    rows = []
+    found = False
+    with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if str(row.get("id", "")) == str(bet_id):
+                found = True
+                stake = _to_float(row.get("stake")) or 0
+                odds = _to_float(row.get("back_odds")) or 0
+                if result == "won":
+                    pl = round((odds - 1) * stake * 0.95, 2) if odds > 1 else round(stake * 0.95, 2)
+                else:
+                    pl = round(-stake, 2)
+                row["status"] = result
+                row["result"] = result
+                row["pl"] = str(pl)
+            rows.append(row)
+
+    if not found:
+        raise HTTPException(status_code=404, detail=f"Apuesta {bet_id} no encontrada")
+
+    with open(PLACED_BETS_CSV, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    return {"ok": True, "bet_id": bet_id, "result": result}
 
 
 @router.delete("/api/bets/clear")

@@ -16,6 +16,7 @@ import re
 import json
 import logging
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Optional, Any
 
 log = logging.getLogger("betfair_scraper.stats_api")
@@ -28,7 +29,7 @@ _REPORTED_UNKNOWN_FIELDS = set()
 OUTLET_KEY = "1hegv772yrv901291e00xzm9rv"
 
 # Timeout para peticiones HTTP (segundos)
-API_TIMEOUT = 10
+API_TIMEOUT = 5
 
 
 def extract_event_id(html_source: str, current_url: str = None) -> Optional[str]:
@@ -820,15 +821,28 @@ def get_all_stats(event_id: str) -> Dict[str, Any]:
         'xg': None
     }
 
-    # Obtener cada tipo de estadística
-    all_stats['summary'] = get_summary_stats(event_id)
-    all_stats['momentum'] = get_momentum_data(event_id)
-    all_stats['attacking'] = get_attacking_stats(event_id)
-    all_stats['defence'] = get_defence_stats(event_id)
-    all_stats['xg'] = get_xg_details(event_id)
+    # Lanzar los 5 endpoints EN PARALELO (antes secuenciales → 5×5s=25s si todos fallaban)
+    _fetchers = {
+        'summary':   get_summary_stats,
+        'momentum':  get_momentum_data,
+        'attacking': get_attacking_stats,
+        'defence':   get_defence_stats,
+        'xg':        get_xg_details,
+    }
+    with ThreadPoolExecutor(max_workers=5) as _exec:
+        fut_to_key = {_exec.submit(fn, event_id): key for key, fn in _fetchers.items()}
+        try:
+            for future in as_completed(fut_to_key, timeout=API_TIMEOUT + 2):
+                key = fut_to_key[future]
+                try:
+                    all_stats[key] = future.result(timeout=1)
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     # Contar cuántas se obtuvieron exitosamente
-    success_count = sum(1 for v in all_stats.values() if v is not None and v != event_id)
+    success_count = sum(1 for k, v in all_stats.items() if k != 'event_id' and v is not None)
     log.info(f"✅ Estadísticas obtenidas: {success_count}/5 endpoints")
 
     return all_stats

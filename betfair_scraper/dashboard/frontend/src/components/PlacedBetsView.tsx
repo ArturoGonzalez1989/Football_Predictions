@@ -1,9 +1,72 @@
 import { useState, useEffect } from "react"
 import { api, type PlacedBetsResponse, type PlacedBet } from "../lib/api"
 
+function exportBetsToCSV(bets: PlacedBet[]) {
+  const headers = [
+    "id", "fecha_utc", "partido", "estrategia", "tipo_apuesta",
+    "minuto_entrada", "score_entrada", "recomendacion",
+    "cuota_entrada", "cuota_minima", "cuota_valida",
+    "stake", "estado", "resultado", "pl",
+    "ev_esperado", "confianza", "wr_historico", "roi_historico", "muestra",
+  ]
+
+  const rows = bets.map(b => {
+    const backOdds = Number(b.back_odds) || 0
+    const minOdds = Number(b.min_odds) || 0
+    const oddsValid = backOdds > 0 && minOdds > 0 && backOdds >= minOdds ? "SI" : (backOdds === 0 ? "?" : "NO")
+    return [
+      b.id,
+      b.timestamp_utc,
+      `"${b.match_name}"`,
+      `"${b.strategy_name}"`,
+      b.bet_type,
+      b.minute,
+      b.score,
+      `"${b.recommendation}"`,
+      backOdds > 0 ? backOdds.toFixed(2) : "",
+      minOdds > 0 ? minOdds.toFixed(2) : "",
+      oddsValid,
+      Number(b.stake).toFixed(2),
+      b.status,
+      b.result ?? "",
+      b.pl != null ? Number(b.pl).toFixed(2) : "",
+      b.expected_value != null ? Number(b.expected_value).toFixed(2) : "",
+      b.confidence ?? "",
+      b.win_rate_historical != null ? `${b.win_rate_historical}%` : "",
+      b.roi_historical != null ? `${b.roi_historical}%` : "",
+      b.sample_size ?? "",
+    ].join(",")
+  })
+
+  const csv = [headers.join(","), ...rows].join("\n")
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  const ts = new Date().toISOString().slice(0, 16).replace("T", "_").replace(":", "")
+  a.href = url
+  a.download = `apuestas_paper_${ts}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export function PlacedBetsView() {
   const [data, setData] = useState<PlacedBetsResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [resolving, setResolving] = useState<number | null>(null)
+
+  const reload = async () => {
+    try { setData(await api.getPlacedBets()) } catch { /* ignore */ }
+  }
+
+  const handleResolve = async (id: number, result: "won" | "lost") => {
+    setResolving(id)
+    try {
+      await api.resolveBet(id, result)
+      await reload()
+    } catch { /* ignore */ } finally {
+      setResolving(null)
+    }
+  }
 
   useEffect(() => {
     const fetch = async () => {
@@ -32,11 +95,26 @@ export function PlacedBetsView() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-zinc-100">Mis Apuestas</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          Seguimiento de apuestas registradas desde Senales
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-100">Mis Apuestas</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Seguimiento de apuestas registradas desde Senales
+          </p>
+        </div>
+        {bets.length > 0 && (
+          <button
+            type="button"
+            onClick={() => exportBetsToCSV(bets)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-sm transition-colors"
+            title="Exportar todas las apuestas a CSV para análisis"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Exportar CSV
+          </button>
+        )}
       </div>
 
       {/* Summary cards */}
@@ -61,7 +139,7 @@ export function PlacedBetsView() {
           </h2>
           <div className="space-y-2">
             {pending.map((b) => (
-              <PendingBetRow key={b.id} bet={b} />
+              <PendingBetRow key={b.id} bet={b} resolving={resolving} onResolve={handleResolve} />
             ))}
           </div>
         </section>
@@ -121,11 +199,15 @@ function StatCard({ label, value, color }: { label: string; value: number | stri
   )
 }
 
-function PendingBetRow({ bet }: { bet: PlacedBet }) {
+function PendingBetRow({ bet, resolving, onResolve }: {
+  bet: PlacedBet
+  resolving: number | null
+  onResolve: (id: number, result: "won" | "lost") => Promise<void>
+}) {
   const favorable = bet.would_win_now === true
   const borderColor = favorable ? "border-green-500/30" : "border-red-500/30"
   const bgColor = favorable ? "bg-green-900/10" : "bg-red-900/10"
-
+  const isResolving = resolving === bet.id
   const odds = Number(bet.back_odds) || 0
 
   return (
@@ -191,6 +273,26 @@ function PendingBetRow({ bet }: { bet: PlacedBet }) {
               <span className="text-amber-300 font-mono text-[10px]">{bet.cashout_lay_current?.toFixed(2)}</span>
             </div>
           )}
+
+          {/* Manual resolve buttons */}
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              disabled={isResolving}
+              onClick={() => onResolve(bet.id, "won")}
+              className="px-2 py-1 text-[10px] font-bold rounded bg-green-500/15 border border-green-500/30 text-green-400 hover:bg-green-500/25 transition-colors cursor-pointer disabled:opacity-40"
+            >
+              {isResolving ? "…" : "WON"}
+            </button>
+            <button
+              type="button"
+              disabled={isResolving}
+              onClick={() => onResolve(bet.id, "lost")}
+              className="px-2 py-1 text-[10px] font-bold rounded bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 transition-colors cursor-pointer disabled:opacity-40"
+            >
+              {isResolving ? "…" : "LOST"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

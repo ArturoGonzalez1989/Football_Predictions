@@ -25,8 +25,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "drift": "v1",
         "clustering": "v2",
         "pressure": "v1",
-        "tarde_asia": "off",
-        "momentum_xg": "off",
+        # tarde_asia and momentum_xg are intentionally absent:
+        # they are always resolved from strategies block at runtime.
     },
     "bankroll_mode": "fixed",
     "active_preset": None,

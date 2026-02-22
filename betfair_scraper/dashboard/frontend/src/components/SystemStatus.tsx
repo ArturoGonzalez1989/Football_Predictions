@@ -1,6 +1,28 @@
 import { useState } from "react"
-import { api, type SystemStatus as SystemStatusType } from "../lib/api"
+import { api, type SystemStatus as SystemStatusType, type DriverProgress } from "../lib/api"
 import { cn } from "../lib/utils"
+
+const STAGE_LABEL: Record<DriverProgress["stage"], string> = {
+  pending:           "Pendiente",
+  chrome_init:       "Iniciando Chrome",
+  loading_url:       "Cargando URL",
+  accepting_cookies: "Cookies",
+  ready:             "Driver listo",
+  capturing:         "Primera captura",
+  live:              "En vivo",
+  error:             "Error",
+}
+
+const STAGE_COLOR: Record<DriverProgress["stage"], string> = {
+  pending:           "bg-zinc-600",
+  chrome_init:       "bg-blue-500",
+  loading_url:       "bg-blue-400",
+  accepting_cookies: "bg-violet-400",
+  ready:             "bg-amber-400",
+  capturing:         "bg-orange-400",
+  live:              "bg-green-500",
+  error:             "bg-red-500",
+}
 
 interface SystemStatusProps {
   status: SystemStatusType | null
@@ -139,6 +161,14 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
   const uptime = status.uptime_seconds
     ? `${Math.floor(status.uptime_seconds / 3600)}h ${Math.floor((status.uptime_seconds % 3600) / 60)}m`
     : "N/A"
+
+  // Progreso por partido: solo mostrar si hay drivers que aún no están en "live"
+  const progress = status.drivers_progress ?? {}
+  const progressEntries = Object.entries(progress)
+  const initializingDrivers = progressEntries.filter(([, d]) => d.stage !== "live")
+  const liveCount = progressEntries.filter(([, d]) => d.stage === "live").length
+  const totalCount = progressEntries.length
+  const showProgress = totalCount > 0
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 space-y-3">
@@ -315,6 +345,69 @@ export function SystemStatus({ status, onRefresh }: SystemStatusProps) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Driver init progress ── */}
+      {showProgress && (
+        <div className="border-t border-zinc-800 pt-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wider">
+              Init progreso
+            </div>
+            <span className={cn(
+              "text-[11px] font-mono font-medium",
+              liveCount === totalCount ? "text-green-400" : "text-amber-400"
+            )}>
+              {liveCount}/{totalCount} live
+            </span>
+          </div>
+
+          {/* Barra global */}
+          <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-green-500 transition-all duration-500"
+              style={{ width: `${totalCount > 0 ? (liveCount / totalCount) * 100 : 0}%` }}
+            />
+          </div>
+
+          {/* Lista de drivers aún inicializando */}
+          {initializingDrivers.length > 0 && (
+            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-0.5">
+              {initializingDrivers.map(([matchId, d]) => (
+                <div key={matchId} className="space-y-0.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-zinc-400 truncate flex-1" title={d.game}>
+                      {d.game}
+                    </span>
+                    <span className={cn(
+                      "text-[10px] font-medium shrink-0 px-1.5 py-0.5 rounded",
+                      d.stage === "error"
+                        ? "text-red-400 bg-red-500/10"
+                        : "text-zinc-400 bg-zinc-800"
+                    )}>
+                      {STAGE_LABEL[d.stage] ?? d.stage}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-500 w-8 text-right shrink-0">
+                      {d.pct}%
+                    </span>
+                  </div>
+                  <div className="w-full h-1 rounded-full bg-zinc-800 overflow-hidden">
+                    <div
+                      className={cn("h-full rounded-full transition-all duration-500", STAGE_COLOR[d.stage] ?? "bg-zinc-500")}
+                      style={{ width: `${d.pct}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {initializingDrivers.length === 0 && totalCount > 0 && (
+            <div className="text-[11px] text-green-400 font-medium text-center py-1">
+              ✓ Todos los partidos capturando
+            </div>
+          )}
         </div>
       )}
     </div>

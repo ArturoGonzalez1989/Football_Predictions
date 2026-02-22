@@ -121,7 +121,8 @@
       "Bash(/tmp/inspect_csv.ps1:*)",
       "Bash(/c/tmp/inspect_csv.ps1:*)",
       "Bash(Out-File -FilePath \"c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\exit_signals_output.txt\" -Encoding utf8)",
-      "Bash(Get-Content \"c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\exit_signals_output.txt\")"
+      "Bash(Get-Content \"c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\exit_signals_output.txt\")",
+      "Bash(\"C:/Users/agonz/miniconda3/python.exe\" -c:*)"
     ]
   }
 }

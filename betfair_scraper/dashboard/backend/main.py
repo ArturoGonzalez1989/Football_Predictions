@@ -23,8 +23,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.matches import router as matches_router
 from api.system import router as system_router
-from api.analytics import router as analytics_router
-from api.bets import router as bets_router
+from api.analytics import router as analytics_router, run_paper_auto_place
+from api.bets import router as bets_router, run_auto_cashout
 from api.config import router as config_router
 from api.explorer import router as explorer_router
 
@@ -194,6 +194,78 @@ async def _scheduler_watchdog():
             _scheduler_task = asyncio.create_task(auto_refresh_matches())
 
 
+# ==================== PAPER TRADING AUTO-POLLER ====================
+
+PAPER_TRADING_INTERVAL_SECONDS = 60  # Pollea señales cada minuto
+_paper_trading_task = None
+_paper_trading_cycle_count = 0
+_paper_trading_last_run = None
+_paper_trading_errors = 0
+
+
+async def auto_paper_trading():
+    """Background task: detecta señales, auto-coloca bets y gestiona cashout/settle cada 60s.
+    ÚNICA fuente de auto-colocación de apuestas — no depende de que la UI esté abierta.
+      1. Detecta señales maduras (age >= min_dur + 1min de reacción) y las coloca
+      2. Revisa bets pendientes: cashout si lay >= threshold, settle si partido terminado
+    """
+    global _paper_trading_cycle_count, _paper_trading_last_run, _paper_trading_errors
+    print(f"[{datetime.now()}] Paper auto-poller: esperando 90s antes del primer ciclo...")
+    await asyncio.sleep(90)
+
+    while True:
+        loop = asyncio.get_event_loop()
+        _paper_trading_cycle_count += 1
+        _paper_trading_last_run = datetime.now().isoformat()
+        cycle = _paper_trading_cycle_count
+        print(f"[{datetime.now()}] [PAPER] Ciclo #{cycle} — detectando señales...")
+
+        try:
+            # 1. Detectar y colocar nuevas bets
+            place_result = await loop.run_in_executor(None, run_paper_auto_place)
+            if place_result.get("error"):
+                _paper_trading_errors += 1
+                print(f"[{datetime.now()}] [PAPER] #{cycle} Error en place: {place_result['error']}")
+            else:
+                placed = place_result.get("placed", 0)
+                checked = place_result.get("signals_checked", 0)
+                print(f"[{datetime.now()}] [PAPER] #{cycle} Place OK — "
+                      f"señales_activas={checked} | colocadas={placed}")
+        except Exception as e:
+            _paper_trading_errors += 1
+            print(f"[{datetime.now()}] [PAPER] #{cycle} Place excepción: {e}")
+
+        try:
+            # 2. Cashout/settle de bets pendientes
+            co_result = await loop.run_in_executor(None, run_auto_cashout)
+            if co_result.get("cashed_out", 0) > 0:
+                print(f"[{datetime.now()}] [PAPER] #{cycle} Cashout {co_result['cashed_out']} bet(s)")
+            if co_result.get("settled", 0) > 0:
+                print(f"[{datetime.now()}] [PAPER] #{cycle} Settled {co_result['settled']} bet(s)")
+        except Exception as e:
+            _paper_trading_errors += 1
+            print(f"[{datetime.now()}] [PAPER] #{cycle} Cashout excepción: {e}")
+
+        await asyncio.sleep(PAPER_TRADING_INTERVAL_SECONDS)
+
+
+async def _paper_trading_watchdog():
+    """Watchdog: reinicia el paper trading task si se cae inesperadamente."""
+    global _paper_trading_task
+    await asyncio.sleep(120)  # Dar tiempo al primer ciclo antes de empezar a vigilar
+    while True:
+        await asyncio.sleep(90)
+        if _paper_trading_task is None or _paper_trading_task.done():
+            if _paper_trading_task and _paper_trading_task.done():
+                try:
+                    exc = _paper_trading_task.exception()
+                    print(f"[{datetime.now()}] [PAPER WATCHDOG] Task muerta! Excepción: {exc}")
+                except (asyncio.CancelledError, asyncio.InvalidStateError):
+                    pass
+            print(f"[{datetime.now()}] [PAPER WATCHDOG] Reiniciando paper trading task...")
+            _paper_trading_task = asyncio.create_task(auto_paper_trading())
+
+
 # ==================== SCRAPER WATCHDOG ====================
 
 HEARTBEAT_PATH = SCRAPER_DIR / "data" / ".heartbeat"
@@ -271,7 +343,7 @@ async def _scraper_watchdog():
 @app.on_event("startup")
 async def start_scheduler():
     """Start the auto-refresh scheduler and scraper watchdog on app startup."""
-    global _scheduler_task, _scraper_watchdog_task
+    global _scheduler_task, _scraper_watchdog_task, _paper_trading_task
     print(f"\n{'='*60}")
     print(f"[{datetime.now()}] STARTING AUTO-REFRESH SCHEDULER")
     print(f"  Interval: {REFRESH_INTERVAL_SECONDS // 60} minutes")
@@ -287,6 +359,12 @@ async def start_scheduler():
     # Scraper watchdog: auto-restart if scraper dies
     _scraper_watchdog_task = asyncio.create_task(_scraper_watchdog())
     print(f"[{datetime.now()}] Scraper watchdog started (checks every {SCRAPER_WATCHDOG_INTERVAL}s)")
+    # Paper trading auto-poller: detecta señales y coloca bets sin necesidad de abrir el dashboard
+    _paper_trading_task = asyncio.create_task(auto_paper_trading())
+    print(f"[{datetime.now()}] Paper auto-poller started (cada {PAPER_TRADING_INTERVAL_SECONDS}s, delay reacción +1min)")
+    # Watchdog para el paper trading task — lo reinicia si muere inesperadamente
+    asyncio.create_task(_paper_trading_watchdog())
+    print(f"[{datetime.now()}] Paper trading watchdog started")
 
 
 @app.on_event("shutdown")
@@ -329,4 +407,10 @@ def health_check():
         "scraper_watchdog_alive": _scraper_watchdog_task is not None and not _scraper_watchdog_task.done() if _scraper_watchdog_task else False,
         "scraper_auto_restarts": _scraper_auto_restarts,
         "scraper_heartbeat": scraper_heartbeat,
+        # ── Paper trading auto-poller state ──
+        "paper_trading_alive": _paper_trading_task is not None and not _paper_trading_task.done() if _paper_trading_task else False,
+        "paper_trading_cycle_count": _paper_trading_cycle_count,
+        "paper_trading_last_run": _paper_trading_last_run,
+        "paper_trading_errors": _paper_trading_errors,
+        "paper_trading_interval_seconds": PAPER_TRADING_INTERVAL_SECONDS,
     }

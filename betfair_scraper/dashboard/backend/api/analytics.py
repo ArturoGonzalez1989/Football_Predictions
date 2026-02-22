@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import APIRouter, Query
 from typing import Dict, List, Any, Optional
 from utils import csv_reader
+from utils import signals_audit_logger as _audit
 from api.config import load_config
 
 # Path compartido con bets.py
@@ -21,6 +22,10 @@ _PLACED_BETS_HEADERS = [
 
 # Dedup en memoria: evita escribir el mismo signal dos veces en la misma sesión de backend
 _auto_placed_keys: set = set()
+
+# Minutos de retraso de reacción simulado: la bet se coloca 1 minuto después de madurar
+# (simula el tiempo que tarda un operador humano en confirmar y colocar la apuesta real)
+PAPER_REACTION_DELAY_MINS = 1
 
 
 def _auto_place_signal(sig: dict, stake: float) -> None:
@@ -78,6 +83,11 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
                 "auto",   # notas: marca automático
                 "pending", "", "",
             ])
+        # ── Audit log: apuesta colocada ──
+        try:
+            _audit.log_bet_placed(next_id, sig, stake)
+        except Exception:
+            pass
         _auto_placed_keys.add(key)
     except Exception as e:
         # Loguear error en fichero para depuración (no interrumpir el endpoint)
@@ -89,6 +99,183 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
                 )
         except Exception:
             pass
+
+def run_paper_auto_place() -> dict:
+    """Detecta señales live y auto-coloca bets paper maduras.
+    Llamado por el background scheduler cada 60s.
+    Usa PAPER_REACTION_DELAY_MINS: solo coloca señales con age >= min_dur + 1 min.
+    """
+    try:
+        cfg = load_config()
+        v   = cfg.get("versions", {})
+        s   = cfg.get("strategies", {})
+        md  = cfg.get("min_duration", {})
+        adj = cfg.get("adjustments", {})
+        risk_filter = cfg.get("risk_filter", "all")
+        flat_stake  = float(cfg.get("flat_stake", 10.0))
+
+        tarde_asia_ver = v.get("tarde_asia") or ("v1" if s.get("tarde_asia", {}).get("enabled") else "off")
+        momentum_ver   = s.get("momentum_xg", {}).get("version") or v.get("momentum_xg", "off")
+
+        drift_s      = s.get("drift", {})
+        clustering_s = s.get("clustering", {})
+        xg_s         = s.get("xg", {})
+        draw_s       = s.get("draw", {})
+        pressure_s   = s.get("pressure", {})
+        momentum_s   = s.get("momentum_xg", {})
+
+        def _ver(v_key, s_key, default):
+            if v.get(v_key):
+                return v.get(v_key)
+            strat = s.get(s_key, {})
+            if strat.get("enabled") is False:
+                return "off"
+            if strat.get("version"):
+                return strat.get("version")
+            return default
+
+        versions = {
+            "draw":       _ver("draw",       "draw",       "v2r"),
+            "xg":         _ver("xg",         "xg",         "base"),
+            "drift":      _ver("drift",      "drift",      "v1"),
+            "clustering": _ver("clustering", "clustering", "v2"),
+            "pressure":   _ver("pressure",   "pressure",   "v1"),
+            "momentum":   momentum_ver,
+            "tarde_asia": tarde_asia_ver,
+            "draw_min_dur":          str(md.get("draw", 1)),
+            "xg_min_dur":            str(md.get("xg", 2)),
+            "drift_min_dur":         str(md.get("drift", 2)),
+            "clustering_min_dur":    str(md.get("clustering", 4)),
+            "pressure_min_dur":      str(md.get("pressure", 2)),
+            "drift_threshold":       str(drift_s.get("driftMin", 30)),
+            "drift_odds_max":        str(drift_s.get("oddsMax", 999)),
+            "drift_goal_diff_min":   str(drift_s.get("goalDiffMin", 0)),
+            "drift_minute_min":      str(drift_s.get("minuteMin", 0)),
+            "drift_mom_gap_min":     str(drift_s.get("momGapMin", 0)),
+            "clustering_minute_max": str(clustering_s.get("minuteMax", 90)),
+            "clustering_xg_rem_min": str(clustering_s.get("xgRemMin", 0)),
+            "clustering_sot_min":    str(clustering_s.get("sotMin", 3)),
+            "xg_minute_max":         str(xg_s.get("minuteMax", 90)),
+            "xg_sot_min":            str(xg_s.get("sotMin", 0)),
+            "xg_xg_excess_min":      str(xg_s.get("xgExcessMin", 0.5)),
+            "draw_xg_max":           str(draw_s.get("xgMax", 1.0)),
+            "draw_poss_max":         str(draw_s.get("possMax", 100)),
+            "draw_shots_max":        str(draw_s.get("shotsMax", 20)),
+            "draw_minute_min":       str(draw_s.get("minuteMin", 30)),
+            "draw_minute_max":       str(draw_s.get("minuteMax", 90)),
+            "xg_minute_min":         str(xg_s.get("minuteMin", 0)),
+            "clustering_minute_min": str(clustering_s.get("minuteMin", 0)),
+            "pressure_minute_min":   str(pressure_s.get("minuteMin", 0)),
+            "pressure_minute_max":   str(pressure_s.get("minuteMax", 90)),
+            "momentum_minute_min":   str(momentum_s.get("minuteMin", 0)),
+            "momentum_minute_max":   str(momentum_s.get("minuteMax", 90)),
+        }
+
+        # ── Audit: contar partidos live para log de ciclo ──
+        try:
+            _all_games = csv_reader.load_games()
+            _n_live = sum(1 for g in _all_games if g.get("status") == "live")
+        except Exception:
+            _n_live = 0
+        try:
+            _audit.log_cycle_start(_n_live, source="auto_poller")
+        except Exception:
+            pass
+
+        result = csv_reader.detect_betting_signals(versions=versions)
+
+        # ── Audit: loguear radar (condiciones parciales) ──
+        try:
+            _watchlist = csv_reader.detect_watchlist(versions=versions)
+            for _item in _watchlist:
+                try:
+                    _audit.log_radar_item(_item)
+                except Exception:
+                    pass
+        except Exception:
+            _watchlist = []
+
+        adj_enabled   = adj.get("enabled", True)
+        min_odds_cfg  = float(adj.get("min_odds", 0))   if adj_enabled else 0
+        max_odds_cfg  = float(adj.get("max_odds", 999)) if adj_enabled else 999
+        drift_min_min = int(adj.get("drift_min_minute", 0)) if adj_enabled else 0
+
+        placed = 0
+        checked = 0
+        _n_filtered_audit = 0
+        for sig in result.get("signals", []):
+            # ── Audit: loguear señal activa ──
+            try:
+                _audit.log_signal_active(sig)
+            except Exception:
+                pass
+
+            back_odds  = sig.get("back_odds")
+            risk_level = (sig.get("risk_info") or {}).get("risk_level", "none")
+
+            _skip_reason = ""
+            if back_odds is not None:
+                if min_odds_cfg > 0 and back_odds < min_odds_cfg:
+                    _skip_reason = f"odds_low({back_odds:.2f}<{min_odds_cfg})"
+                elif max_odds_cfg < 999 and back_odds > max_odds_cfg:
+                    _skip_reason = f"odds_high({back_odds:.2f}>{max_odds_cfg})"
+
+            if not _skip_reason and drift_min_min > 0 and sig.get("strategy", "").startswith("odds_drift"):
+                if (sig.get("minute") or 0) < drift_min_min:
+                    _skip_reason = f"drift_too_early(min{sig.get('minute')}<{drift_min_min})"
+
+            if not _skip_reason:
+                if risk_filter == "no_risk" and risk_level not in ("none", ""):
+                    _skip_reason = f"risk_filter_no_risk(level={risk_level})"
+                elif risk_filter == "medium" and risk_level != "medium":
+                    _skip_reason = f"risk_filter_medium(level={risk_level})"
+                elif risk_filter == "high" and risk_level != "high":
+                    _skip_reason = f"risk_filter_high(level={risk_level})"
+                elif risk_filter == "with_risk" and risk_level not in ("medium", "high"):
+                    _skip_reason = f"risk_filter_with_risk(level={risk_level})"
+
+            if _skip_reason:
+                try:
+                    _audit.log_signal_filtered(sig, _skip_reason)
+                except Exception:
+                    pass
+                _n_filtered_audit += 1
+                continue
+
+            checked += 1
+            sig_age     = sig.get("signal_age_minutes", 0)
+            sig_min_dur = sig.get("min_duration_caps", 1)
+            if sig.get("odds_favorable", True) and sig_age >= sig_min_dur + PAPER_REACTION_DELAY_MINS:
+                _auto_place_signal(sig, flat_stake)
+                placed += 1
+            else:
+                _not_mature = (
+                    "odds_not_favorable" if not sig.get("odds_favorable", True)
+                    else f"not_mature_yet(age={sig_age:.1f}min,need={sig_min_dur + PAPER_REACTION_DELAY_MINS})"
+                )
+                try:
+                    _audit.log_signal_filtered(sig, _not_mature)
+                except Exception:
+                    pass
+                _n_filtered_audit += 1
+
+        # ── Audit: fin de ciclo ──
+        try:
+            _audit.log_cycle_end(
+                n_signals=result.get("total_signals", 0),
+                n_radar=len(_watchlist),
+                n_placed=placed,
+                n_filtered=_n_filtered_audit,
+            )
+        except Exception:
+            pass
+
+        return {"placed": placed, "signals_checked": checked}
+
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
+
 
 router = APIRouter()
 
@@ -193,18 +380,54 @@ async def get_strategy_odds_drift() -> Dict[str, Any]:
 async def get_strategy_cartera(
     cashout_minute: Optional[int] = Query(None, ge=-1, le=90),
     cashout_lay_pct: Optional[float] = Query(None, ge=5, le=100),
+    adaptive_early_pct: Optional[float] = Query(None, ge=1, le=100),
+    adaptive_late_pct: Optional[float] = Query(None, ge=1, le=100),
+    adaptive_split_min: Optional[int] = Query(70, ge=30, le=90),
+    adverse_goal_stop: Optional[bool] = Query(False),
+    trailing_stop_pct: Optional[float] = Query(None, ge=1, le=100),
 ) -> Dict[str, Any]:
     """Combined portfolio view of all strategies.
 
     cashout_minute: if provided, simulate cash-out for losing bets at this minute.
     cashout_lay_pct: if provided, simulate cash-out when lay rises X% above entry price.
+    adaptive_early_pct / adaptive_late_pct: adaptive threshold — loose before adaptive_split_min, tight after.
+    adverse_goal_stop: cash out on first adverse goal (back_draw_00, odds_drift, momentum_xg only).
+    trailing_stop_pct: trailing stop — fires when lay rises X% above the minimum lay seen since entry.
+    Multiple modes can be active simultaneously; the first to trigger wins.
     """
     data = csv_reader.analyze_cartera()
-    if cashout_lay_pct is not None:
-        data = csv_reader.simulate_cashout_cartera(data, cashout_lay_pct=cashout_lay_pct)
+    new_modes = (
+        cashout_lay_pct is not None
+        or (adaptive_early_pct is not None and adaptive_late_pct is not None)
+        or adverse_goal_stop
+        or trailing_stop_pct is not None
+    )
+    if new_modes:
+        data = csv_reader.simulate_cashout_cartera(
+            data,
+            cashout_lay_pct=cashout_lay_pct,
+            adaptive_early_pct=adaptive_early_pct,
+            adaptive_late_pct=adaptive_late_pct,
+            adaptive_split_min=adaptive_split_min or 70,
+            adverse_goal_stop=adverse_goal_stop or False,
+            trailing_stop_pct=trailing_stop_pct,
+        )
     elif cashout_minute is not None:
         data = csv_reader.simulate_cashout_cartera(data, cashout_minute)
     return data
+
+
+@router.get("/strategies/cartera/optimize")
+async def optimize_strategy_cartera(
+    top_n: Optional[int] = Query(10, ge=1, le=20),
+) -> Dict[str, Any]:
+    """Grid search over all CO modes and parameter combinations.
+    Reads each match CSV only once for efficiency (~80 configs tested).
+    Returns top_n configs ranked by P/L net, plus rescued/penalized metrics.
+    """
+    data = csv_reader.analyze_cartera()
+    return csv_reader.optimize_cashout_cartera(data, top_n=top_n or 10)
+
 
 @router.get("/strategies/goal-clustering")
 async def get_strategy_goal_clustering() -> Dict[str, Any]:
@@ -287,6 +510,8 @@ async def get_betting_signals(
     clustering_s  = s.get("clustering", {})
     xg_s          = s.get("xg", {})
     draw_s        = s.get("draw", {})
+    pressure_s    = s.get("pressure", {})
+    momentum_s    = s.get("momentum_xg", {})
 
     versions = {
         "draw":       _ver(draw,       "draw",       "draw",       "v2r"),
@@ -310,11 +535,21 @@ async def get_betting_signals(
         "drift_mom_gap_min":    str(drift_s.get("momGapMin", 0)),
         "clustering_minute_max": str(clustering_s.get("minuteMax", 90)),
         "clustering_xg_rem_min": str(clustering_s.get("xgRemMin", 0)),
+        "clustering_sot_min":   str(clustering_s.get("sotMin", 3)),
         "xg_minute_max":        str(xg_s.get("minuteMax", 90)),
         "xg_sot_min":           str(xg_s.get("sotMin", 0)),
+        "xg_xg_excess_min":     str(xg_s.get("xgExcessMin", 0.5)),
         "draw_xg_max":          str(draw_s.get("xgMax", 1.0)),
         "draw_poss_max":        str(draw_s.get("possMax", 100)),
         "draw_shots_max":       str(draw_s.get("shotsMax", 20)),
+        "draw_minute_min":      str(draw_s.get("minuteMin", 30)),
+        "draw_minute_max":      str(draw_s.get("minuteMax", 90)),
+        "xg_minute_min":        str(xg_s.get("minuteMin", 0)),
+        "clustering_minute_min": str(clustering_s.get("minuteMin", 0)),
+        "pressure_minute_min":  str(pressure_s.get("minuteMin", 0)),
+        "pressure_minute_max":  str(pressure_s.get("minuteMax", 90)),
+        "momentum_minute_min":  str(momentum_s.get("minuteMin", 0)),
+        "momentum_minute_max":  str(momentum_s.get("minuteMax", 90)),
     }
 
     result = csv_reader.detect_betting_signals(versions=versions)
@@ -357,10 +592,14 @@ async def get_betting_signals(
     result["signals"] = filtered
     result["total_signals"] = len(filtered)
 
-    # ── Auto-place señales maduras como paper bets ──
-    for sig in filtered:
-        if sig.get("is_mature"):
-            _auto_place_signal(sig, flat_stake)
+    # ── Audit log: señales visibles desde la API (solo lectura, NO coloca bets) ──
+    # Las apuestas se colocan EXCLUSIVAMENTE por el background auto-poller (run_paper_auto_place)
+    # que corre cada 60s. Esto garantiza que el sistema funciona 24/7 sin necesidad de abrir la UI.
+    try:
+        for sig in filtered:
+            _audit.log_signal_active(sig)
+    except Exception:
+        pass
 
     return result
 

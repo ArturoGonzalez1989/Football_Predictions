@@ -2,8 +2,15 @@
 echo Starting Furbo Monitor Dashboard...
 echo.
 
+echo Killing old backend process on port 8000 (if any)...
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":8000 " ^| findstr "LISTENING"') do (
+    taskkill /PID %%a /F >nul 2>&1
+    echo Killed PID %%a
+)
+timeout /t 1 /nobreak >nul
+
 echo [1/2] Starting Backend (FastAPI) on port 8000...
-start "Furbo Backend" cmd /k "cd /d %~dp0backend && python -m uvicorn main:app --host 0.0.0.0 --port 8000"
+start "Furbo Backend" cmd /k "cd /d %~dp0backend && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000"
 
 timeout /t 2 /nobreak >nul
 

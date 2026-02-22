@@ -2,6 +2,7 @@
 Utilidades para verificar el estado del scraper.
 """
 
+import json
 import os
 import re as _re
 from pathlib import Path
@@ -15,6 +16,7 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 LOGS_DIR = BASE_DIR / "logs"
+HEARTBEAT_PATH = BASE_DIR / "data" / ".heartbeat"
 
 
 def get_scraper_status() -> dict:
@@ -42,6 +44,7 @@ def get_scraper_status() -> dict:
         "chrome_processes": 0,
         "last_log": None,
         "last_log_lines": [],
+        "drivers_progress": {},
         **auto_refresh_info,
     }
 
@@ -69,6 +72,15 @@ def get_scraper_status() -> dict:
                     result["chrome_processes"] += 1
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
+
+    # Heartbeat: progreso de inicialización por partido
+    try:
+        if HEARTBEAT_PATH.exists():
+            with open(HEARTBEAT_PATH, "r", encoding="utf-8") as f:
+                hb = json.load(f)
+            result["drivers_progress"] = hb.get("drivers_progress", {})
+    except Exception:
+        pass
 
     # Último log
     if LOGS_DIR.exists():

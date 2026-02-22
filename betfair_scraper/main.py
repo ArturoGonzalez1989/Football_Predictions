@@ -958,7 +958,7 @@ def extraer_over_under_via_mercado(driver) -> dict:
         market_url = ou_market_urls[0]
         log.debug(f"Navegando a mercado O/U: {market_url}")
         driver.get(market_url)
-        time.sleep(4)
+        time.sleep(2)
 
         # 3. Extraer runners O/U de la página del mercado individual
         tables = driver.find_elements(By.CSS_SELECTOR, "table tbody")
@@ -1003,7 +1003,7 @@ def extraer_over_under_via_mercado(driver) -> dict:
         # 4. SIEMPRE volver a la página del evento
         try:
             driver.get(original_url)
-            time.sleep(3)
+            time.sleep(1)
         except WebDriverException:
             log.warning(f"No se pudo volver a URL original: {original_url}")
 
@@ -1176,7 +1176,7 @@ def extraer_resultado_correcto(driver) -> dict:
     return resultado
 
 
-def extraer_estadisticas(driver) -> dict:
+def extraer_estadisticas(driver, cached_event_id: str = None) -> dict:
     """
     Extrae estadísticas del partido en vivo usando la API REST de Stats Perform.
 
@@ -1184,6 +1184,9 @@ def extraer_estadisticas(driver) -> dict:
     - Usa API REST en lugar de CSS selectors (10x más rápido, 100% confiable)
     - Captura xG, momentum, corners, tarjetas, y todas las estadísticas críticas
     - Ver STATS_API_README.md para más detalles
+
+    cached_event_id: Si se proporciona, evita la llamada HTTP a videoplayer.betfair.es
+                     (el Opta event_id no cambia durante el partido).
     """
     # Inicializar dict vacío (mismo formato que versión anterior)
     stats = {
@@ -1259,12 +1262,18 @@ def extraer_estadisticas(driver) -> dict:
         "throw_ins_visitante": "",
     }
 
+    event_id = None  # Inicializar para que sea accesible fuera del try
+
     try:
-        # PASO 1: Extraer eventId del HTML
-        log.debug("  → Extrayendo eventId del HTML...")
-        html_source = driver.page_source
-        current_url = driver.current_url
-        event_id = extract_event_id(html_source, current_url)
+        # PASO 1: Extraer eventId del HTML (con caché: el Opta event_id no cambia en el partido)
+        if cached_event_id:
+            event_id = cached_event_id
+            log.debug(f"  → Usando eventId cacheado: {event_id}")
+        else:
+            log.debug("  → Extrayendo eventId del HTML...")
+            html_source = driver.page_source
+            current_url = driver.current_url
+            event_id = extract_event_id(html_source, current_url)
 
         if not event_id:
             log.warning("  × No se pudo extraer eventId - partido sin estadísticas Opta")
@@ -1416,6 +1425,10 @@ def extraer_estadisticas(driver) -> dict:
     except Exception as e:
         log.error(f"  × Error capturando estadísticas vía API: {e}")
 
+    # Propagar el event_id al caller para que pueda cachearlo en MatchDriver
+    if event_id:
+        stats["_opta_event_id"] = event_id
+
     return stats
 
 
@@ -1514,7 +1527,7 @@ def extraer_momentum(driver) -> dict:
             return momentum
 
         driver.switch_to.window(new_handles[-1])
-        time.sleep(3)  # Esperar a que cargue el gráfico completamente
+        time.sleep(1.5)  # Esperar a que cargue el gráfico completamente
 
         # Verificar que no hubo redirect (si momentum no está disponible, redirige a otra página)
         current_url = driver.current_url
@@ -1706,6 +1719,46 @@ class CSVWriter:
 # Retry tracking: {url: failure_count}
 _driver_creation_failures: dict = {}
 MAX_DRIVER_RETRIES = 5  # Stop retrying after this many consecutive failures per match
+
+# ── Init progress heartbeat ───────────────────────────────────────────────────
+# Dict compartido: match_id → MatchDriver (se rellena en __init__, se borra en cerrar())
+# Lo lee el hilo _heartbeat_background_writer para escribir .heartbeat en tiempo real
+_md_progress_refs: dict = {}
+_md_progress_hb_path: str = None   # Se asigna en main() antes de crear drivers
+_md_progress_hb_stop = threading.Event()
+
+
+def _write_progress_heartbeat_now(path: str, cycle: int = 0, captures: int = 0, fail_count: int = 0):
+    """Escribe el heartbeat con progreso por partido. Llamable desde cualquier hilo."""
+    try:
+        import json as _j
+        data = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "cycle": cycle,
+            "pid": os.getpid(),
+            "active_drivers": len(_md_progress_refs),
+            "alive_drivers": sum(
+                1 for d in _md_progress_refs.values()
+                if d._stage not in ("error", "pending")
+            ),
+            "successful_captures": captures,
+            "consecutive_all_fail": fail_count,
+            "drivers_progress": {
+                mid: {"game": d.game[:50], "stage": d._stage, "pct": d._stage_pct}
+                for mid, d in _md_progress_refs.items()
+            },
+        }
+        with open(path, "w", encoding="utf-8") as f:
+            _j.dump(data, f)
+    except Exception:
+        pass
+
+
+def _heartbeat_background_writer():
+    """Hilo demonio: actualiza el heartbeat cada 4s durante la inicialización."""
+    while not _md_progress_hb_stop.wait(4):
+        if _md_progress_hb_path:
+            _write_progress_heartbeat_now(_md_progress_hb_path)
 
 
 def _get_active_chromedriver_pids(match_drivers: dict) -> set:
@@ -1912,18 +1965,28 @@ class MatchDriver:
         self.last_capture = None
         self._lock = threading.Lock()
         self._consecutive_failures = 0
+        self._opta_event_id: str = None  # Cache: el Opta event_id no cambia durante el partido
+        # ── Init progress tracking ──────────────────────────────────────────
+        self._stage: str = "pending"   # Etapa actual de inicialización
+        self._stage_pct: int = 0       # Porcentaje 0-100
+        _md_progress_refs[self.match_id] = self  # Registrar para heartbeat en tiempo real
 
     def iniciar(self):
         """Crea el driver Chrome y abre el partido."""
         try:
+            self._stage, self._stage_pct = "chrome_init", 10
             log.info(f"🔧 Creando driver para: {self.game[:50]}")
             self.driver = crear_driver()
+            self._stage, self._stage_pct = "loading_url", 40
             self.driver.get(self.url)
+            self._stage, self._stage_pct = "accepting_cookies", 70
             aceptar_cookies(self.driver)
+            self._stage, self._stage_pct = "ready", 85
             log.info(f"✓ Driver listo: {self.match_id}")
             self._consecutive_failures = 0
             return True
         except Exception as e:
+            self._stage, self._stage_pct = "error", 0
             log.error(f"✗ Error creando driver para {self.match_id}: {e}")
             return False
 
@@ -1946,6 +2009,7 @@ class MatchDriver:
 
     def cerrar(self):
         """Cierra el driver de forma segura, matando procesos zombie en Windows."""
+        _md_progress_refs.pop(self.match_id, None)  # Desregistrar del tracking
         service_pid = None
         try:
             if self.driver:
@@ -1979,6 +2043,9 @@ class MatchDriver:
             if not self.driver:
                 log.error(f"Driver no disponible para {self.match_id}")
                 return None
+            # Marcar como "capturando" si aún no ha llegado a live
+            if self._stage_pct < 100:
+                self._stage, self._stage_pct = "capturing", 95
 
             try:
                 # Mismo código que capturar_pestaña pero sin switch_to.window
@@ -2055,7 +2122,11 @@ class MatchDriver:
                 odds_rc = extraer_resultado_correcto(self.driver)
 
                 log.debug(f"[{self.match_id}] → Extrayendo estadísticas del partido...")
-                stats = extraer_estadisticas(self.driver)
+                stats = extraer_estadisticas(self.driver, cached_event_id=self._opta_event_id)
+                # Actualizar caché del event_id si se capturó uno nuevo
+                _new_opta_id = stats.pop("_opta_event_id", None)
+                if _new_opta_id:
+                    self._opta_event_id = _new_opta_id
 
                 log.debug(f"[{self.match_id}] → Extrayendo volumen matched...")
                 volumen = extraer_volumen(self.driver)
@@ -2120,6 +2191,7 @@ class MatchDriver:
 
                 self.last_capture = time.time()
                 self._consecutive_failures = 0
+                self._stage, self._stage_pct = "live", 100  # Primera (o siguiente) captura exitosa
                 log.info(f"✓ [{self.match_id}] Captura exitosa: {estado_partido}, min {info['minuto']}, {info['goles_local']}-{info['goles_visitante']}")
                 return datos
 
@@ -2186,8 +2258,12 @@ def captura_paralela_multidriver(match_drivers: list, writer: CSVWriter) -> int:
     log.info(f"📸 Capturando {len(match_drivers)} partidos en paralelo...")
     inicio = time.time()
 
-    with ThreadPoolExecutor(max_workers=len(match_drivers)) as executor:
-        # Lanzar todas las capturas en paralelo
+    # Cap parallelism to avoid resource contention (RAM/CPU/network) when tracking many matches.
+    # Too many simultaneous Chrome navigations cause system thrashing and slow EVERY browser down.
+    # 16 workers: with ~12s per capture → 46 matches in ~35s (3 batches vs 6 with MAX=8).
+    MAX_CONCURRENT = min(16, len(match_drivers))
+    with ThreadPoolExecutor(max_workers=MAX_CONCURRENT) as executor:
+        # Lanzar capturas en paralelo (limitadas a MAX_CONCURRENT simultáneas)
         futures = {
             executor.submit(capturar_match_driver, md): md
             for md in match_drivers
@@ -2881,6 +2957,17 @@ def main():
     match_drivers = {}
     driver_login = None  # Driver para login manual
 
+    # Heartbeat path (definido aquí para que el hilo de progreso lo use durante la init)
+    heartbeat_path = os.path.join(args.output, ".heartbeat")
+    global _md_progress_hb_path
+    _md_progress_hb_path = heartbeat_path
+    _md_progress_hb_stop.clear()
+    _hb_writer_thread = threading.Thread(
+        target=_heartbeat_background_writer, daemon=True, name="hb-writer"
+    )
+    _hb_writer_thread.start()
+    log.info("📡 Heartbeat writer iniciado (actualiza progreso cada 4s)")
+
     try:
         # Crear primer driver para login manual
         if partidos_para_drivers:
@@ -2924,14 +3011,17 @@ def main():
                 md = crear_match_driver(partido)
                 return (partido["url"], md) if md else (partido["url"], None)
 
-            executor = ThreadPoolExecutor(max_workers=min(8, len(partidos_para_drivers) - 1))
+            executor = ThreadPoolExecutor(max_workers=min(16, len(partidos_para_drivers) - 1))
             futures = [
                 executor.submit(crear_driver_worker, p)
                 for p in partidos_para_drivers[1:]
             ]
 
+            # Timeout proporcional al número de partidos (8s/partido, mínimo 180s)
+            _init_timeout = max(180, len(partidos_para_drivers) * 8)
+            log.info(f"⏳ Timeout de inicialización: {_init_timeout}s para {len(partidos_para_drivers)} drivers")
             try:
-                for future in as_completed(futures, timeout=180):
+                for future in as_completed(futures, timeout=_init_timeout):
                     try:
                         url, md = future.result(timeout=10)
                         if md:
@@ -2953,8 +3043,6 @@ def main():
         log.info("CAPTURA INICIADA - Presiona Ctrl+C para detener")
         log.info("=" * 60)
 
-        # Heartbeat file for external monitoring
-        heartbeat_path = os.path.join(args.output, ".heartbeat")
         consecutive_all_fail = 0  # Track cycles where ALL drivers fail
 
         # Loop principal
@@ -3071,7 +3159,7 @@ def main():
 
                             log.info(f"➕ Abriendo {len(partidos_nuevos)} nuevos partidos...")
 
-                            with ThreadPoolExecutor(max_workers=min(2, len(partidos_nuevos))) as executor:
+                            with ThreadPoolExecutor(max_workers=min(8, len(partidos_nuevos))) as executor:
                                 futures = {
                                     executor.submit(crear_match_driver, p): p
                                     for p in partidos_nuevos
@@ -3096,22 +3184,12 @@ def main():
                             log.info(f"✓ Drivers actualizados: {len(match_drivers)} partidos activos")
 
                 # ── P2: Write heartbeat file ──
-                try:
-                    import json
-                    drivers_vivos = sum(1 for md in match_drivers.values() if md.driver is not None)
-                    heartbeat = {
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "cycle": ciclo_num,
-                        "pid": os.getpid(),
-                        "active_drivers": len(match_drivers),
-                        "alive_drivers": drivers_vivos,
-                        "successful_captures": capturas_exitosas if match_drivers else -1,
-                        "consecutive_all_fail": consecutive_all_fail,
-                    }
-                    with open(heartbeat_path, "w") as f:
-                        json.dump(heartbeat, f)
-                except Exception:
-                    pass
+                _write_progress_heartbeat_now(
+                    heartbeat_path,
+                    cycle=ciclo_num,
+                    captures=capturas_exitosas if match_drivers else -1,
+                    fail_count=consecutive_all_fail,
+                )
 
             except Exception as e:
                 # P0: Single cycle failure should NOT kill the scraper

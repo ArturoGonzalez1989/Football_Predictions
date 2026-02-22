@@ -110,6 +110,12 @@ export interface MomentumData {
   possession: { home: (number | null)[]; away: (number | null)[] }
 }
 
+export interface DriverProgress {
+  game: string
+  stage: "pending" | "chrome_init" | "loading_url" | "accepting_cookies" | "ready" | "capturing" | "live" | "error"
+  pct: number
+}
+
 export interface SystemStatus {
   running: boolean
   pid: number | null
@@ -121,6 +127,7 @@ export interface SystemStatus {
   auto_refresh_enabled?: boolean
   refresh_interval_minutes?: number
   is_refreshing?: boolean
+  drivers_progress?: Record<string, DriverProgress>
 }
 
 async function post<T>(path: string, body?: any): Promise<T> {
@@ -230,6 +237,8 @@ export interface LowQualityMatch {
 export interface OddsCoverageMatch {
   match_id: string
   name: string
+  start_time: string | null
+  kickoff_time: string | null
   coverage_pct: number
   rows_with_odds: number
   total_rows: number
@@ -540,6 +549,8 @@ export interface CarteraBet {
   pl_conservative?: number
   // raw conservative odds (minimum in stability window) — used by applyRealisticAdjustments
   conservative_odds?: number
+  // lay odds at trigger time (bet placement moment, not cashout)
+  lay_trigger?: number | null
   // cash-out simulation fields (set by backend when adjCashout is on)
   cashout_applied?: boolean
   cashout_minute_actual?: number
@@ -776,6 +787,7 @@ export const api = {
   getAllCaptures: (id: string) => get<AllCaptures>(`/matches/${id}/all-captures`),
   getSystemStatus: () => get<SystemStatus>("/system/status"),
   deleteMatch: (id: string) => del<{ match_id: string; deleted_from_csv: boolean; deleted_data: boolean }>(`/matches/${id}`),
+  bulkDeleteMatches: (ids: string[]) => post<{ results: { match_id: string; ok: boolean; error: string | null }[]; deleted: number; failed: number }>("/matches/bulk-delete", { match_ids: ids }),
   refreshMatches: () => post<{ clean: { ok: boolean; output: string } | null; find: { ok: boolean; output: string } | null }>("/system/refresh-matches"),
   startScraper: () => post<{ ok: boolean; message: string; pid: number | null }>("/system/scraper/start"),
   stopScraper: () => post<{ ok: boolean; message: string }>("/system/scraper/stop"),
@@ -808,12 +820,32 @@ export const api = {
   getStrategyTardeAsia: () => get<StrategyTardeAsia>("/analytics/strategies/tarde-asia"),
   getStrategyMomentumXGV1: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v1"),
   getStrategyMomentumXGV2: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v2"),
-  getCartera: (cashoutMinute?: number, cashoutLayPct?: number) => {
+  getCartera: (
+    cashoutMinute?: number,
+    cashoutLayPct?: number,
+    adaptiveEarlyPct?: number,
+    adaptiveLatePct?: number,
+    adaptiveSplitMin?: number,
+    adverseGoalStop?: boolean,
+    trailingStopPct?: number,
+  ) => {
     const params = new URLSearchParams()
     if (cashoutMinute !== undefined) params.set("cashout_minute", String(cashoutMinute))
     if (cashoutLayPct !== undefined) params.set("cashout_lay_pct", String(cashoutLayPct))
+    if (adaptiveEarlyPct !== undefined) params.set("adaptive_early_pct", String(adaptiveEarlyPct))
+    if (adaptiveLatePct !== undefined) params.set("adaptive_late_pct", String(adaptiveLatePct))
+    if (adaptiveSplitMin !== undefined) params.set("adaptive_split_min", String(adaptiveSplitMin))
+    if (adverseGoalStop) params.set("adverse_goal_stop", "true")
+    if (trailingStopPct !== undefined) params.set("trailing_stop_pct", String(trailingStopPct))
     const q = params.toString()
     return get<Cartera>(q ? `/analytics/strategies/cartera?${q}` : "/analytics/strategies/cartera")
+  },
+
+  optimizeCartera: (topN?: number) => {
+    const params = new URLSearchParams()
+    if (topN !== undefined) params.set("top_n", String(topN))
+    const q = params.toString()
+    return get<any>(q ? `/analytics/strategies/cartera/optimize?${q}` : "/analytics/strategies/cartera/optimize")
   },
 
   // Betting signals
@@ -835,6 +867,7 @@ export const api = {
   placeBet: (bet: PlaceBetRequest) => post<PlacedBet>("/bets/place", bet),
   getPlacedBets: () => get<PlacedBetsResponse>("/bets/placed"),
   clearBets: () => del<{ status: string; message: string }>("/bets/clear"),
+  resolveBet: (id: number, result: "won" | "lost") => post<{ ok: boolean; bet_id: number; result: string }>(`/bets/${id}/resolve?result=${result}`, {}),
 
   // Cartera configuration
   getConfig: () => get<CarteraConfig>("/config/cartera"),

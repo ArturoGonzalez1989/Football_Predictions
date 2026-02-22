@@ -168,9 +168,10 @@ export interface DrawFilterParams {
 
 export interface XGFilterParams {
   enabled: boolean
-  sotMin: number    // 0 = no filter (base), 2 = V2+
-  minuteMin: number // 0 = no filter
-  minuteMax: number // 90 = no filter, 70 = V3
+  sotMin: number       // 0 = no filter (base), 2 = V2+
+  xgExcessMin: number  // 0.5 = default threshold (xG - goals >= X); 0 = no filter
+  minuteMin: number    // 0 = no filter
+  minuteMax: number    // 90 = no filter, 70 = V3
 }
 
 export interface DriftFilterParams {
@@ -185,33 +186,34 @@ export interface DriftFilterParams {
 
 export interface ClusteringFilterParams {
   enabled: boolean
+  sotMin: number     // 3 = default (SoT max >= X); 0 = no filter
   minuteMin: number  // 0 = no filter
   minuteMax: number  // 80 = base, 60 = V3
   xgRemMin: number   // 0 = no filter, 0.8 = V4
 }
 
-export const DEFAULT_DRAW_PARAMS: DrawFilterParams = { enabled: true, xgMax: 1.0, possMax: 100, shotsMax: 20, xgDomAsym: false, minuteMin: 0, minuteMax: 90 }
-export const DEFAULT_XG_PARAMS: XGFilterParams = { enabled: true, sotMin: 0, minuteMin: 0, minuteMax: 90 }
+export const DEFAULT_DRAW_PARAMS: DrawFilterParams = { enabled: true, xgMax: 1.0, possMax: 100, shotsMax: 20, xgDomAsym: false, minuteMin: 30, minuteMax: 90 }
+export const DEFAULT_XG_PARAMS: XGFilterParams = { enabled: true, sotMin: 0, xgExcessMin: 0.5, minuteMin: 0, minuteMax: 90 }
 export const DEFAULT_DRIFT_PARAMS: DriftFilterParams = { enabled: true, goalDiffMin: 0, driftMin: 30, oddsMax: Infinity, minuteMin: 0, minuteMax: 90, momGapMin: 0 }
-export const DEFAULT_CLUSTERING_PARAMS: ClusteringFilterParams = { enabled: true, minuteMin: 0, minuteMax: 90, xgRemMin: 0 }
+export const DEFAULT_CLUSTERING_PARAMS: ClusteringFilterParams = { enabled: true, sotMin: 3, minuteMin: 0, minuteMax: 90, xgRemMin: 0 }
 
 // ── Version → Params adapters (for preset system compatibility) ──────────
 
 export function drawVersionToParams(v: DrawVersion): DrawFilterParams {
   if (v === "off")  return { ...DEFAULT_DRAW_PARAMS, enabled: false }
   if (v === "v1")   return { ...DEFAULT_DRAW_PARAMS, enabled: true }
-  if (v === "v15")  return { enabled: true, xgMax: 0.6, possMax: 25, shotsMax: 20, xgDomAsym: false, minuteMin: 0, minuteMax: 90 }
-  if (v === "v2r")  return { enabled: true, xgMax: 0.6, possMax: 20, shotsMax: 8, xgDomAsym: false, minuteMin: 0, minuteMax: 90 }
-  if (v === "v2")   return { enabled: true, xgMax: 0.5, possMax: 20, shotsMax: 8, xgDomAsym: false, minuteMin: 0, minuteMax: 90 }
-  if (v === "v3")   return { enabled: true, xgMax: 0.6, possMax: 25, shotsMax: 20, xgDomAsym: true, minuteMin: 0, minuteMax: 90 }
+  if (v === "v15")  return { enabled: true, xgMax: 0.6, possMax: 25, shotsMax: 20, xgDomAsym: false, minuteMin: 30, minuteMax: 90 }
+  if (v === "v2r")  return { enabled: true, xgMax: 0.6, possMax: 20, shotsMax: 8, xgDomAsym: false, minuteMin: 30, minuteMax: 90 }
+  if (v === "v2")   return { enabled: true, xgMax: 0.5, possMax: 20, shotsMax: 8, xgDomAsym: false, minuteMin: 30, minuteMax: 90 }
+  if (v === "v3")   return { enabled: true, xgMax: 0.6, possMax: 25, shotsMax: 20, xgDomAsym: true, minuteMin: 30, minuteMax: 90 }
   return DEFAULT_DRAW_PARAMS
 }
 
 export function xgVersionToParams(v: XGCarteraVersion): XGFilterParams {
   if (v === "off")   return { ...DEFAULT_XG_PARAMS, enabled: false }
   if (v === "base")  return { ...DEFAULT_XG_PARAMS, enabled: true }
-  if (v === "v2")    return { enabled: true, sotMin: 2, minuteMin: 0, minuteMax: 90 }
-  if (v === "v3")    return { enabled: true, sotMin: 2, minuteMin: 0, minuteMax: 70 }
+  if (v === "v2")    return { enabled: true, sotMin: 2, xgExcessMin: 0.5, minuteMin: 0, minuteMax: 90 }
+  if (v === "v3")    return { enabled: true, sotMin: 2, xgExcessMin: 0.5, minuteMin: 0, minuteMax: 70 }
   return DEFAULT_XG_PARAMS
 }
 
@@ -229,8 +231,8 @@ export function driftVersionToParams(v: DriftCarteraVersion): DriftFilterParams 
 export function clusteringVersionToParams(v: ClusteringCarteraVersion): ClusteringFilterParams {
   if (v === "off")  return { ...DEFAULT_CLUSTERING_PARAMS, enabled: false }
   if (v === "v2")   return { ...DEFAULT_CLUSTERING_PARAMS, enabled: true }  // minuteMax=90 (no filter)
-  if (v === "v3")   return { enabled: true, minuteMin: 0, minuteMax: 60, xgRemMin: 0 }
-  if (v === "v4")   return { enabled: true, minuteMin: 0, minuteMax: 80, xgRemMin: 0.8 }
+  if (v === "v3")   return { enabled: true, sotMin: 3, minuteMin: 0, minuteMax: 60, xgRemMin: 0 }
+  if (v === "v4")   return { enabled: true, sotMin: 3, minuteMin: 0, minuteMax: 80, xgRemMin: 0.8 }
   return DEFAULT_CLUSTERING_PARAMS
 }
 
@@ -256,6 +258,7 @@ export function filterXGBets(bets: CarteraBet[], p: XGFilterParams): CarteraBet[
   if (!p.enabled) return []
   return bets.filter(b => {
     if (b.strategy !== "xg_underperformance") return false
+    if (p.xgExcessMin > 0 && (b as any).xg_excess != null && (b as any).xg_excess < p.xgExcessMin) return false
     if (p.sotMin > 0 && b.sot_team != null && b.sot_team < p.sotMin) return false
     if (p.minuteMin > 0 && b.minuto != null && b.minuto < p.minuteMin) return false
     if (p.minuteMax < 90 && b.minuto != null && b.minuto >= p.minuteMax) return false
@@ -281,6 +284,7 @@ export function filterClusteringBets(bets: CarteraBet[], p: ClusteringFilterPara
   if (!p.enabled) return []
   return bets.filter(b => {
     if (b.strategy !== "goal_clustering") return false
+    if (p.sotMin > 0 && (b as any).sot_max != null && (b as any).sot_max < p.sotMin) return false
     if (p.minuteMin > 0 && b.minuto != null && b.minuto < p.minuteMin) return false
     if (p.minuteMax < 90 && b.minuto != null && b.minuto >= p.minuteMax) return false
     if (p.xgRemMin > 0 && b.synth_xg_remaining != null && b.synth_xg_remaining < p.xgRemMin) return false
@@ -502,7 +506,7 @@ export function simulateCartera(bets: CarteraBet[], bankrollInit: number, mode: 
 
 // ── Combo evaluation & optimization ────────────────────────────────────
 
-export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number, riskFilter: RiskFilter = "all") {
+export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollInit: number, riskFilter: RiskFilter = "all", adj?: RealisticAdjustments) {
   const drawBets = filterDrawBets(bets, drawVersionToParams(combo.draw))
   const xgBets = filterXGBets(bets, xgVersionToParams(combo.xg))
   const driftBets = filterDriftBets(bets, driftVersionToParams(combo.drift))
@@ -515,6 +519,9 @@ export function evaluateCombo(bets: CarteraBet[], combo: VersionCombo, bankrollI
     .filter(meetsMinOdds)
     .sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")
   )
+
+  // Apply realistic adjustments before risk filter
+  if (adj) filtered = applyRealisticAdjustments(filtered, adj)
 
   // Apply risk filter
   filtered = filterByRisk(filtered, riskFilter)
@@ -584,7 +591,7 @@ export function optimizeDrawParams(
   for (const xgMax of xgMaxOpts) {
     for (const possMax of possMaxOpts) {
       for (const shotsMax of shotsMaxOpts) {
-        const p: DrawFilterParams = { enabled: true, xgMax, possMax, shotsMax, xgDomAsym: false, minuteMin: 0, minuteMax: 90 }
+        const p: DrawFilterParams = { enabled: true, xgMax, possMax, shotsMax, xgDomAsym: false, minuteMin: 30, minuteMax: 90 }
         const bets = buildCarteraBets(allBets, p, currentXG, currentDrift, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
         if (bets.length < minBets) continue
         const sim = simulateCartera(bets, bankrollInit, "fixed")
@@ -613,7 +620,7 @@ export function optimizeXGParams(
 
   for (const sotMin of sotMinOpts) {
     for (const minuteMax of minuteMaxOpts) {
-      const p: XGFilterParams = { enabled: true, sotMin, minuteMin: 0, minuteMax }
+      const p: XGFilterParams = { enabled: true, sotMin, xgExcessMin: 0.5, minuteMin: 0, minuteMax }
       const bets = buildCarteraBets(allBets, currentDraw, p, currentDrift, currentClustering, currentPressure, currentTardeAsia, currentMomentumXG)
       if (bets.length < minBets) continue
       const sim = simulateCartera(bets, bankrollInit, "fixed")
@@ -675,7 +682,7 @@ export function optimizeClusteringParams(
 
   for (const minuteMax of minuteMaxOpts) {
     for (const xgRemMin of xgRemMinOpts) {
-      const p: ClusteringFilterParams = { enabled: true, minuteMin: 0, minuteMax, xgRemMin }
+      const p: ClusteringFilterParams = { enabled: true, sotMin: 3, minuteMin: 0, minuteMax, xgRemMin }
       const bets = buildCarteraBets(allBets, currentDraw, currentXG, currentDrift, p, currentPressure, currentTardeAsia, currentMomentumXG)
       if (bets.length < minBets) continue
       const sim = simulateCartera(bets, bankrollInit, "fixed")
@@ -686,55 +693,103 @@ export function optimizeClusteringParams(
   return results.sort((a, b) => b.pl - a.pl).slice(0, 15)
 }
 
-export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>, riskFilter: RiskFilter = "all"): VersionCombo {
-  if (criterion === "max_bets") return { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "v1", momentumXG: "v1", br: "fixed" }
+export interface FullPresetResult {
+  combo: VersionCombo
+  riskFilter: RiskFilter
+  adj: RealisticAdjustments
+}
 
-  const drawOpts: DrawVersion[] = ["v1", "v15", "v2r", "v2", "v3"]
-  const xgOpts: XGCarteraVersion[] = ["base", "v2", "v3"]
-  const driftOpts: DriftCarteraVersion[] = ["v1", "v2", "v3", "v4", "v5", "v6"]
-  const clusteringOpts: ClusteringCarteraVersion[] = ["v2", "v3", "v4", "off"]
-  const pressureOpts: PressureCarteraVersion[] = ["v1", "off"]
-  const tardeAsiaOpts: TardeAsiaVersion[] = ["v1", "off"]
-  const momentumXGOpts: MomentumXGVersion[] = ["v1", "v2", "off"]
-  const brOpts: BankrollMode[] = criterion === "min_dd" ? ["dd_protection", "fixed", "half_kelly", "anti_racha"] : ["fixed"]
+/** Generate all realistic-adjustment candidates for preset Phase 2 search. */
+function _presetAdjCandidates(): RealisticAdjustments[] {
+  const result: RealisticAdjustments[] = []
+  for (const dedup of [false, true])
+  for (const minOdds of [1.0, 1.15, 1.21])
+  for (const maxOdds of [6.0, 7.0, 10.0])
+  for (const slippagePct of [0, 2, 3.5])
+  for (const conflictFilter of [false, true])
+  for (const allowContrarias of [true, false])
+  for (const minStability of [1, 2, 3])
+  for (const conservativeOdds of [false, true])
+  for (const driftMinMinute of [null, 15, 30] as (number | null)[]) {
+    result.push({
+      dedup,
+      minOdds: minOdds === 1.0 ? null : minOdds,
+      maxOdds,
+      slippagePct,
+      conflictFilter,
+      allowContrarias,
+      minStability,
+      conservativeOdds,
+      driftMinMinute,
+      globalMinuteMin: null,
+      globalMinuteMax: null,
+    })
+  }
+  return result
+}
 
-  let best: VersionCombo = { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed" }
-  let bestScore = -Infinity
+export function findBestCombo(bets: CarteraBet[], bankrollInit: number, criterion: Exclude<PresetKey, null>): FullPresetResult {
+  const NO_ADJ: RealisticAdjustments = { dedup: false, maxOdds: null, minOdds: null, driftMinMinute: null, slippagePct: 0, conflictFilter: false, allowContrarias: true, minStability: 1, conservativeOdds: false, globalMinuteMin: null, globalMinuteMax: null }
 
-  for (const draw of drawOpts) {
-    for (const xg of xgOpts) {
-      for (const drift of driftOpts) {
-        for (const clustering of clusteringOpts) {
-          for (const pressure of pressureOpts) {
-            for (const tardeAsia of tardeAsiaOpts) {
-              for (const momentumXG of momentumXGOpts) {
-                for (const br of brOpts) {
-                  const combo = { draw, xg, drift, clustering, pressure, tardeAsia, momentumXG, br }
-                  const result = evaluateCombo(bets, combo, bankrollInit, riskFilter)
-                  if (!result || result.total < 3) continue
+  if (criterion === "max_bets") return {
+    combo: { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "v1", momentumXG: "v1", br: "fixed" },
+    riskFilter: "all",
+    adj: NO_ADJ,
+  }
 
-                  let score: number
-                  switch (criterion) {
-                    case "max_roi": score = result.flatRoi; break
-                    case "max_pl": score = result.flatPl; break
-                    case "max_wr": score = result.winPct + result.total * 0.01; break
-                    case "min_dd": {
-                      const ddPenalty = result.managedMaxDd.maxDd
-                      score = result.managedPl - ddPenalty * 2 + result.winPct * 0.5
-                      break
-                    }
-                    default: score = result.flatPl; break
-                  }
-                  if (score > bestScore) { bestScore = score; best = combo }
-                }
-              }
-            }
-          }
-        }
-      }
+  const scoreOf = (result: NonNullable<ReturnType<typeof evaluateCombo>>, br: BankrollMode): number => {
+    switch (criterion) {
+      case "max_roi": return result.flatRoi
+      case "max_pl":  return result.flatPl
+      case "max_wr":  return result.winPct + result.total * 0.01
+      case "min_dd":  return result.managedPl - result.managedMaxDd.maxDd * 2 + result.winPct * 0.5
+      default:        return result.flatPl
     }
   }
-  return best
+
+  const drawOpts: DrawVersion[]             = ["v1", "v15", "v2r", "v2", "v3"]
+  const xgOpts: XGCarteraVersion[]          = ["base", "v2", "v3"]
+  const driftOpts: DriftCarteraVersion[]    = ["v1", "v2", "v3", "v4", "v5", "v6"]
+  const clusteringOpts: ClusteringCarteraVersion[] = ["v2", "v3", "v4", "off"]
+  const pressureOpts: PressureCarteraVersion[]     = ["v1", "off"]
+  const tardeAsiaOpts: TardeAsiaVersion[]          = ["v1", "off"]
+  const momentumXGOpts: MomentumXGVersion[]        = ["v1", "v2", "off"]
+  const brOpts: BankrollMode[]   = ["fixed", "half_kelly", "dd_protection", "anti_racha"]
+  const riskOpts: RiskFilter[]   = ["all", "sin_riesgo", "con_riesgo", "riesgo_medio"]
+
+  // ── Phase 1: strategy versions × bankroll mode × risk filter (no realistic adjustments) ──
+  let bestCombo: VersionCombo = { draw: "v1", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed" }
+  let bestRisk: RiskFilter = "all"
+  let bestPhase1 = -Infinity
+
+  for (const draw of drawOpts)
+  for (const xg of xgOpts)
+  for (const drift of driftOpts)
+  for (const clustering of clusteringOpts)
+  for (const pressure of pressureOpts)
+  for (const tardeAsia of tardeAsiaOpts)
+  for (const momentumXG of momentumXGOpts)
+  for (const br of brOpts)
+  for (const risk of riskOpts) {
+    const combo = { draw, xg, drift, clustering, pressure, tardeAsia, momentumXG, br }
+    const result = evaluateCombo(bets, combo, bankrollInit, risk)
+    if (!result || result.total < 3) continue
+    const score = scoreOf(result, br)
+    if (score > bestPhase1) { bestPhase1 = score; bestCombo = combo; bestRisk = risk }
+  }
+
+  // ── Phase 2: best realistic adjustments given the fixed Phase 1 combo ──
+  let bestAdj: RealisticAdjustments = NO_ADJ
+  let bestPhase2 = -Infinity
+
+  for (const adj of _presetAdjCandidates()) {
+    const result = evaluateCombo(bets, bestCombo, bankrollInit, bestRisk, adj)
+    if (!result || result.total < 3) continue
+    const score = scoreOf(result, bestCombo.br)
+    if (score > bestPhase2) { bestPhase2 = score; bestAdj = adj }
+  }
+
+  return { combo: bestCombo, riskFilter: bestRisk, adj: bestAdj }
 }
 
 // ── Realistic adjustments ────────────────────────────────────────────
@@ -784,8 +839,10 @@ export const REALISTIC_ADJUSTMENTS: RealisticAdjustments = {
 /** Get the market key for deduplication (same match + same bet type = same bet) */
 function betMarketKey(b: CarteraBet): string {
   if (b.strategy === "back_draw_00") return `${b.match_id}:draw`
-  if (b.strategy === "odds_drift") return `${b.match_id}:back:${b.team ?? "unknown"}`
-  // xG, Clustering, Pressure all bet Over — same over_line = same market
+  if (b.strategy === "odds_drift" || b.strategy === "momentum_xg_v1" || b.strategy === "momentum_xg_v2") {
+    return `${b.match_id}:back:${b.team ?? "unknown"}`
+  }
+  // xG, Clustering, Pressure, TardeAsia all bet Over — same over_line = same market
   return `${b.match_id}:over:${b.over_line ?? "unknown"}`
 }
 
@@ -860,12 +917,14 @@ export function applyRealisticAdjustments(
   }
 
   // 5b. Anti-contrarias: remove later conflicting match_odds bets (Draw vs Home/Away) on same match
-  //     A "contraria" = same match has both a DRAW bet and a HOME/AWAY bet (same market, opposite sides)
+  //     A "contraria" = same match has both a HOME bet and an AWAY bet (or DRAW vs either)
+  //     Applies to back_draw_00, odds_drift AND momentum_xg (all bet on match odds market).
   //     OVER/UNDER bets are a different market and are never considered contrarias.
   if (!adj.allowContrarias) {
     const seenMatchOddsType = new Map<string, string>()  // match_id → first bet type seen
     result = result.filter(b => {
       const isMatchOdds = b.strategy === "back_draw_00" || b.strategy === "odds_drift"
+        || b.strategy === "momentum_xg_v1" || b.strategy === "momentum_xg_v2"
       if (!isMatchOdds) return true
       const betType = b.strategy === "back_draw_00" ? "draw" : (b.team ?? "home")
       const firstType = seenMatchOddsType.get(b.match_id)

@@ -10,7 +10,7 @@ import {
   DEFAULT_DRAW_PARAMS, DEFAULT_XG_PARAMS, DEFAULT_DRIFT_PARAMS, DEFAULT_CLUSTERING_PARAMS,
   drawVersionToParams, xgVersionToParams, driftVersionToParams, clusteringVersionToParams,
   filterDrawBets, filterXGBets, filterDriftBets, filterClusteringBets, filterPressureBets, filterTardeAsiaBets, filterMomentumXGBets,
-  simulateCartera, findBestCombo, getBetOdds,
+  simulateCartera, findBestCombo, type FullPresetResult, getBetOdds,
   type OptimizeResult,
   optimizeDrawParams, optimizeXGParams, optimizeDriftParams, optimizeClusteringParams,
   type RealisticAdjustments,
@@ -120,11 +120,11 @@ function configToState(cfg: CarteraConfig) {
   const v = cfg.versions
 
   const drawParams: DrawFilterParams = s?.draw
-    ? { enabled: s.draw.enabled, xgMax: s.draw.xgMax, possMax: s.draw.possMax, shotsMax: s.draw.shotsMax, xgDomAsym: s.draw.xgDomAsym, minuteMin: s.draw.minuteMin ?? 0, minuteMax: s.draw.minuteMax ?? 90 }
+    ? { enabled: s.draw.enabled, xgMax: s.draw.xgMax, possMax: s.draw.possMax, shotsMax: s.draw.shotsMax, xgDomAsym: s.draw.xgDomAsym, minuteMin: s.draw.minuteMin ?? 30, minuteMax: s.draw.minuteMax ?? 90 }
     : drawVersionToParams((v?.draw || "v1") as DrawVersion)
 
   const xgParams: XGFilterParams = s?.xg
-    ? { enabled: s.xg.enabled, sotMin: s.xg.sotMin, minuteMin: s.xg.minuteMin ?? 0, minuteMax: s.xg.minuteMax ?? 90 }
+    ? { enabled: s.xg.enabled, sotMin: s.xg.sotMin, xgExcessMin: (s.xg as any).xgExcessMin ?? 0.5, minuteMin: s.xg.minuteMin ?? 0, minuteMax: s.xg.minuteMax ?? 90 }
     : xgVersionToParams((v?.xg || "base") as XGCarteraVersion)
 
   const driftParams: DriftFilterParams = s?.drift
@@ -132,7 +132,7 @@ function configToState(cfg: CarteraConfig) {
     : driftVersionToParams((v?.drift || "v1") as DriftCarteraVersion)
 
   const clusteringParams: ClusteringFilterParams = s?.clustering
-    ? { enabled: s.clustering.enabled, minuteMin: s.clustering.minuteMin ?? 0, minuteMax: s.clustering.minuteMax ?? 90, xgRemMin: s.clustering.xgRemMin }
+    ? { enabled: s.clustering.enabled, sotMin: (s.clustering as any).sotMin ?? 3, minuteMin: s.clustering.minuteMin ?? 0, minuteMax: s.clustering.minuteMax ?? 90, xgRemMin: s.clustering.xgRemMin }
     : clusteringVersionToParams((v?.clustering || "v2") as ClusteringCarteraVersion)
 
   return {
@@ -192,29 +192,69 @@ function downloadCSV(filename: string, csvContent: string) {
   document.body.removeChild(link)
 }
 
-function generateCarteraCSV(bets: CarteraBet[]): string {
+interface SimDetails { stake: number; plManaged: number; bankrollAfter: number }
+
+function generateCarteraCSV(
+  filteredBets: CarteraBet[],
+  sortedIdxs: number[],
+  flatStake: number,
+  flatCumulative: number[],
+  managedCumulative: number[],
+  betDetails: SimDetails[],
+  coLayBetMap: Map<string, CarteraBet> | null,
+): string {
+  const hasCO = coLayBetMap !== null
   const headers = [
-    'match', 'match_id', 'csv_file', 'timestamp_utc', 'strategy', 'minuto', 'score', 'ft_score', 'won', 'pl',
-    // Odds
-    'back_draw', 'back_over_odds', 'over_line', 'back_odds', 'drift_pct',
-    // Stats
-    'xg_total', 'xg_excess', 'poss_diff', 'shots_total', 'sot_total', 'sot_max',
-    // Validation columns
-    'passes_v15', 'passes_v2r', 'passes_v2', 'passes_v3', 'passes_v4',
-    'team', 'goal_diff'
+    'num', 'fecha', 'estrategia', 'tipo', 'partido', 'match_id', 'minuto', 'score', 'ft_score', 'won',
+    'odds', 'lay_trigger',
+    'pl_flat', 'acum_flat',
+    'stake', 'pl_gestion', 'acum_gestion', 'bankroll',
+    ...(hasCO ? ['co', 'lay_co', 'min_co', 'pl_co'] : []),
   ].join(',')
 
-  const rows = bets.map(b => {
-    const csvFile = `${b.match_id}.csv`
-    const strategy = (b as any).strategy_label || (b as any).strategy || ''
+  const rows = sortedIdxs.map((origIdx, rowNum) => {
+    const b = filteredBets[origIdx]
+    const det = betDetails[origIdx]
+    const odds = getBetOdds(b)
+    const coB = coLayBetMap?.get(`${b.match_id}|${b.strategy}|${b.timestamp_utc}`)
+
+    const fecha = b.timestamp_utc ? (() => {
+      const d = new Date(b.timestamp_utc)
+      return isNaN(d.getTime()) ? b.timestamp_utc : `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`
+    })() : ''
+
+    const plFlat = (b.pl * flatStake / 10).toFixed(2)
+    const acumFlat = (flatCumulative[origIdx] ?? 0).toFixed(2)
+    const stakeVal = det?.stake.toFixed(2) ?? ''
+    const plGestion = det ? det.plManaged.toFixed(2) : ''
+    const acumGestion = (managedCumulative[origIdx] ?? 0).toFixed(2)
+    const bankroll = det?.bankrollAfter.toFixed(0) ?? ''
+
+    const coApplied = coB?.cashout_applied ? 1 : 0
+    const layCO = coB?.cashout_lay_odds?.toFixed(2) ?? ''
+    const minCO = coB?.cashout_minute_actual != null ? Math.round(coB.cashout_minute_actual) : ''
+    const plCO = coB ? (coB.pl * flatStake / 10).toFixed(2) : ''
 
     return [
-      `"${b.match}"`, b.match_id, csvFile, (b as any).timestamp_utc || '', strategy,
-      (b as any).minuto ?? '', (b as any).score_at_trigger || '', (b as any).ft_score, b.won ? 1 : 0, b.pl,
-      (b as any).back_draw ?? '', (b as any).back_over_odds ?? (b as any).over_odds ?? '', (b as any).over_line || '', (b as any).back_odds ?? '', (b as any).drift_pct ?? '',
-      (b as any).xg_total ?? '', (b as any).xg_excess ?? '', (b as any).poss_diff ?? '', (b as any).shots_total ?? '', (b as any).sot_total ?? '', (b as any).sot_max ?? '',
-      (b as any).passes_v15 ? 1 : 0, (b as any).passes_v2r ? 1 : 0, (b as any).passes_v2 ? 1 : 0, (b as any).passes_v3 ? 1 : 0, (b as any).passes_v4 ? 1 : 0,
-      (b as any).team || '', (b as any).goal_diff ?? ''
+      rowNum + 1,
+      `"${fecha}"`,
+      `"${b.strategy_label}"`,
+      `"${getBetType(b)}"`,
+      `"${b.match}"`,
+      b.match_id,
+      (b as any).minuto ?? '',
+      (b as any).score_at_trigger || '',
+      b.ft_score,
+      b.won ? 1 : 0,
+      odds.toFixed(2),
+      b.lay_trigger ?? '',
+      plFlat,
+      acumFlat,
+      stakeVal,
+      plGestion,
+      acumGestion,
+      bankroll,
+      ...(hasCO ? [coApplied, layCO, minCO, plCO] : []),
     ].join(',')
   })
 
@@ -355,10 +395,66 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const [coLayData, setCoLayData] = useState<Cartera | null>(null)
   const [coLayLoading, setCoLayLoading] = useState(false)
 
-  const fetchCashoutAnalysis = async (pct: number) => {
+  // Stop loss modes (combinables)
+  const [coFixedEnabled, setCoFixedEnabled] = useState(true)
+  const [coAdaptiveEnabled, setCoAdaptiveEnabled] = useState(false)
+  const [coAdaptiveEarlyPct, setCoAdaptiveEarlyPct] = useState(25)
+  const [coAdaptiveLatePct, setCoAdaptiveLatePct] = useState(8)
+  const [coAdaptiveSplitMin, setCoAdaptiveSplitMin] = useState(70)
+  const [coAdverseGoalEnabled, setCoAdverseGoalEnabled] = useState(false)
+  const [coTrailingEnabled, setCoTrailingEnabled] = useState(false)
+  const [coTrailingPct, setCoTrailingPct] = useState(15)
+
+  // CO optimizer
+  const [coOptimizing, setCoOptimizing] = useState(false)
+  const [coOptimizeResults, setCoOptimizeResults] = useState<any>(null)
+  const [showOptimizeResults, setShowOptimizeResults] = useState(false)
+
+  const runCOOptimizer = async () => {
+    setCoOptimizing(true)
+    setShowOptimizeResults(true)
+    try {
+      const result = await api.optimizeCartera(10)
+      setCoOptimizeResults(result)
+    } catch (e) {
+      console.error("Error running CO optimizer:", e)
+    } finally {
+      setCoOptimizing(false)
+    }
+  }
+
+  const applyOptimizeConfig = (cfg: any) => {
+    // Reset all modes first
+    setCoFixedEnabled(false)
+    setCoAdaptiveEnabled(false)
+    setCoAdverseGoalEnabled(false)
+    setCoTrailingEnabled(false)
+    // Apply config
+    if (cfg.cashout_lay_pct != null) { setCoFixedEnabled(true); setCoLayPct(cfg.cashout_lay_pct) }
+    if (cfg.adaptive_early_pct != null) {
+      setCoAdaptiveEnabled(true)
+      setCoAdaptiveEarlyPct(cfg.adaptive_early_pct)
+      setCoAdaptiveLatePct(cfg.adaptive_late_pct ?? 8)
+      setCoAdaptiveSplitMin(cfg.adaptive_split_min ?? 70)
+    }
+    if (cfg.adverse_goal_stop) setCoAdverseGoalEnabled(true)
+    if (cfg.trailing_stop_pct != null) { setCoTrailingEnabled(true); setCoTrailingPct(cfg.trailing_stop_pct) }
+  }
+
+  const fetchCashoutAnalysis = async () => {
+    const anyActive = coFixedEnabled || coAdaptiveEnabled || coAdverseGoalEnabled || coTrailingEnabled
+    if (!anyActive) { setCoLayData(null); return }
     setCoLayLoading(true)
     try {
-      const d = await api.getCartera(undefined, pct)
+      const d = await api.getCartera(
+        undefined,
+        coFixedEnabled ? coLayPct : undefined,
+        coAdaptiveEnabled ? coAdaptiveEarlyPct : undefined,
+        coAdaptiveEnabled ? coAdaptiveLatePct : undefined,
+        coAdaptiveEnabled ? coAdaptiveSplitMin : undefined,
+        coAdverseGoalEnabled || undefined,
+        coTrailingEnabled ? coTrailingPct : undefined,
+      )
       setCoLayData(d)
     } catch (e) {
       console.error("Error fetching cashout analysis:", e)
@@ -381,9 +477,9 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const buildConfig = (): CarteraConfig => ({
     strategies: {
       draw: { enabled: drawParams.enabled, xgMax: drawParams.xgMax, possMax: drawParams.possMax, shotsMax: drawParams.shotsMax, xgDomAsym: drawParams.xgDomAsym, minuteMin: drawParams.minuteMin, minuteMax: drawParams.minuteMax },
-      xg: { enabled: xgParams.enabled, sotMin: xgParams.sotMin, minuteMin: xgParams.minuteMin, minuteMax: xgParams.minuteMax },
+      xg: { enabled: xgParams.enabled, sotMin: xgParams.sotMin, xgExcessMin: xgParams.xgExcessMin, minuteMin: xgParams.minuteMin, minuteMax: xgParams.minuteMax },
       drift: { enabled: driftParams.enabled, goalDiffMin: driftParams.goalDiffMin, driftMin: driftParams.driftMin, oddsMax: isFinite(driftParams.oddsMax) ? driftParams.oddsMax : 999, minuteMin: driftParams.minuteMin, minuteMax: driftParams.minuteMax, momGapMin: driftParams.momGapMin },
-      clustering: { enabled: clusteringParams.enabled, minuteMin: clusteringParams.minuteMin, minuteMax: clusteringParams.minuteMax, xgRemMin: clusteringParams.xgRemMin },
+      clustering: { enabled: clusteringParams.enabled, sotMin: clusteringParams.sotMin, minuteMin: clusteringParams.minuteMin, minuteMax: clusteringParams.minuteMax, xgRemMin: clusteringParams.xgRemMin },
       pressure: { enabled: pressureVer !== "off", minuteMin: pressureMinuteMin, minuteMax: pressureMinuteMax },
       tarde_asia: { enabled: tardeAsiaVer !== "off", minuteMin: tardeAsiaMinuteMin, minuteMax: tardeAsiaMinuteMax },
       momentum_xg: { version: momentumXGVer, minuteMin: momentumMinuteMin, minuteMax: momentumMinuteMax },
@@ -433,7 +529,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
       .catch(() => setSaveStatus("error"))
   }
 
-  // Reset filters to defaults and save to backend
+  // Reset filters to defaults
   const resetFilters = () => {
     setDrawParams({ ...DEFAULT_DRAW_PARAMS })
     setXGParams({ ...DEFAULT_XG_PARAMS })
@@ -463,7 +559,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const { bets } = data
 
   const applyPreset = (key: Exclude<PresetKey, null>) => {
-    const combo = findBestCombo(bets, bankrollInit, key, riskFilter)
+    const { combo, riskFilter: bestRisk, adj }: FullPresetResult = findBestCombo(bets, bankrollInit, key)
+    // Strategy versions
     setDrawParams(drawVersionToParams(combo.draw))
     setXGParams(xgVersionToParams(combo.xg))
     setDriftParams(driftVersionToParams(combo.drift))
@@ -472,6 +569,18 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
     setTardeAsiaVer(combo.tardeAsia)
     setMomentumXGVer(combo.momentumXG)
     setBrMode(combo.br)
+    // Risk filter
+    setRiskFilter(bestRisk)
+    // Realistic adjustments
+    setAdjDedup(adj.dedup)
+    setAdjMinOdds(adj.minOdds ?? 1.0)
+    setAdjMaxOdds(adj.maxOdds ?? 10.0)
+    setAdjSlippage(adj.slippagePct)
+    setAdjConflictFilter(adj.conflictFilter)
+    setAdjAllowContrarias(adj.allowContrarias)
+    setAdjStability(adj.minStability)
+    setAdjConservativeOdds(adj.conservativeOdds)
+    if (adj.driftMinMinute != null) setAdjDriftMinMin(adj.driftMinMinute)
     setActivePreset(key)
   }
 
@@ -507,7 +616,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   )
 
   // Apply realistic adjustments (always active — each filter controlled independently)
-  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: null, slippagePct: adjSlippage, conflictFilter: adjConflictFilter, allowContrarias: adjAllowContrarias, minStability: adjStability, conservativeOdds: adjConservativeOdds, globalMinuteMin: adjGlobalMinEnabled ? adjGlobalMinMin : null, globalMinuteMax: adjGlobalMinEnabled ? adjGlobalMinMax : null }
+  const currentAdj: RealisticAdjustments = { dedup: adjDedup, maxOdds: adjMaxOdds, minOdds: adjMinOdds, driftMinMinute: adjDriftMinMin > 0 ? adjDriftMinMin : null, slippagePct: adjSlippage, conflictFilter: adjConflictFilter, allowContrarias: adjAllowContrarias, minStability: adjStability, conservativeOdds: adjConservativeOdds, globalMinuteMin: adjGlobalMinEnabled ? adjGlobalMinMin : null, globalMinuteMax: adjGlobalMinEnabled ? adjGlobalMinMax : null }
   let filteredBets = applyRealisticAdjustments(rawBets, currentAdj)
   const removedCount = rawBets.length - filteredBets.length
 
@@ -525,17 +634,48 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   ].sort((a, b) => (a.timestamp_utc || "").localeCompare(b.timestamp_utc || "")) : []
   const coFilteredBets = filterByRisk(applyRealisticAdjustments(coRawBets, currentAdj), riskFilter)
 
-  const handleDownloadCSV = () => {
-    const csv = generateCarteraCSV(filteredBets)
-    const timestamp = new Date().toISOString().split('T')[0]
-    const presetLabel = activePreset ? `_${activePreset}` : ''
-    downloadCSV(`cartera${presetLabel}_${timestamp}.csv`, csv)
-  }
+  // CO lookup map — built at component level so handleDownloadCSV can use it
+  const coLayBetMap = coLayData ? new Map(
+    coFilteredBets.map(b => [`${b.match_id}|${b.strategy}|${b.timestamp_utc}`, b])
+  ) : null
 
   // Recalculate simulations
   const sim = simulateCartera(filteredBets, bankrollInit, brMode, flatStake)
   // CO simulation — only when CO data is loaded
   const simCO = coLayData ? simulateCartera(coFilteredBets, bankrollInit, brMode, flatStake) : null
+  const coModeLabel = [
+    coFixedEnabled && `fijo ${coLayPct}%`,
+    coAdaptiveEnabled && `adapt. ${coAdaptiveEarlyPct}%→${coAdaptiveLatePct}% @${coAdaptiveSplitMin}m`,
+    coAdverseGoalEnabled && "gol adv.",
+    coTrailingEnabled && `trailing ${coTrailingPct}%`,
+  ].filter(Boolean).join(" + ") || "CO"
+
+  const handleDownloadCSV = () => {
+    // Build sorted indexes using same sort state as the table
+    const idxs = filteredBets.map((_, i) => i)
+    const mult = histSort.dir === "asc" ? 1 : -1
+    idxs.sort((a, b) => {
+      const ba = filteredBets[a], bb = filteredBets[b]
+      const da = sim.betDetails[a], db = sim.betDetails[b]
+      switch (histSort.col) {
+        case "date": return mult * ((ba.timestamp_utc ?? "") < (bb.timestamp_utc ?? "") ? -1 : 1)
+        case "strategy": return mult * (ba.strategy_label ?? "").localeCompare(bb.strategy_label ?? "")
+        case "type": return mult * getBetType(ba).localeCompare(getBetType(bb))
+        case "match": return mult * (ba.match ?? "").localeCompare(bb.match ?? "")
+        case "min": return mult * ((ba.minuto ?? 0) - (bb.minuto ?? 0))
+        case "odds": return mult * (getBetOdds(ba) - getBetOdds(bb))
+        case "pl": return mult * (ba.pl - bb.pl)
+        case "acum": return mult * ((sim.flatCumulative[a] ?? 0) - (sim.flatCumulative[b] ?? 0))
+        case "stake": return mult * ((da?.stake ?? 0) - (db?.stake ?? 0))
+        case "plm": return mult * ((da?.plManaged ?? 0) - (db?.plManaged ?? 0))
+        default: return 0
+      }
+    })
+    const csv = generateCarteraCSV(filteredBets, idxs, flatStake, sim.flatCumulative, sim.managedCumulative, sim.betDetails, coLayBetMap)
+    const timestamp = new Date().toISOString().split('T')[0]
+    const presetLabel = activePreset ? `_${activePreset}` : ''
+    downloadCSV(`cartera${presetLabel}_${timestamp}.csv`, csv)
+  }
 
   // Derived portfolio stats
   const activeDays = filteredBets.length > 0
@@ -608,8 +748,143 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
   const activeLabels = stratConfigs.filter(s => s.active).map(s => s.label)
   const selLabel = activeLabels.length === 7 ? "Todas las estrategias" : activeLabels.length >= 3 ? `${activeLabels.length} estrategias` : activeLabels.length === 2 ? "2 estrategias" : activeLabels[0] || "Ninguna"
 
+  // ── Resumen de la configuración activa (se muestra al inicio de la página) ──
+  const summaryRows = (() => {
+    type SummaryRow = { label: string; color: string; items: string[]; dur: number | null; active: boolean }
+    const rows: SummaryRow[] = []
+
+    // Back Empate
+    const drawItems: string[] = ["Score 0-0", `Min ≥ ${drawParams.minuteMin}`]
+    if (drawParams.xgMax < 1.0)   drawItems.push(`xG total < ${drawParams.xgMax}`)
+    if (drawParams.possMax < 100)  drawItems.push(`Pos. diff < ${drawParams.possMax}%`)
+    if (drawParams.shotsMax < 20)  drawItems.push(`Tiros totales < ${drawParams.shotsMax}`)
+    if (drawParams.xgDomAsym)      drawItems.push("Dom. xG asimétrica")
+    if (drawParams.minuteMax < 90) drawItems.push(`Min < ${drawParams.minuteMax}`)
+    rows.push({ label: "Back Empate", color: "text-cyan-400", items: drawItems, dur: minDur.draw, active: drawParams.enabled })
+
+    // xG Underperf
+    const xgEffectiveMin = Math.max(15, xgParams.minuteMin)
+    const xgItems: string[] = ["Equipo perdiendo", `xG equipo − goles ≥ ${xgParams.xgExcessMin}`, `Min ≥ ${xgEffectiveMin}`]
+    if (xgParams.sotMin > 0)      xgItems.push(`SoT equipo ≥ ${xgParams.sotMin}`)
+    if (xgParams.minuteMax < 90)  xgItems.push(`Min < ${xgParams.minuteMax}`)
+    rows.push({ label: "xG Underperf.", color: "text-amber-400", items: xgItems, dur: minDur.xg, active: xgParams.enabled })
+
+    // Odds Drift
+    const driftItems: string[] = [driftParams.goalDiffMin > 0 ? `Ventaja ≥ ${driftParams.goalDiffMin} gol` : "Ganando (cualquier marcador)"]
+    if (driftParams.driftMin > 0)   driftItems.push(`Drift odds ≥ ${driftParams.driftMin}%`)
+    if (driftParams.oddsMax < 999)  driftItems.push(`Odds ≤ ${driftParams.oddsMax}`)
+    if (driftParams.momGapMin > 0)  driftItems.push(`Momentum gap > ${driftParams.momGapMin}`)
+    if (driftParams.minuteMin > 0)  driftItems.push(`Min ≥ ${driftParams.minuteMin}`)
+    if (driftParams.minuteMax < 90) driftItems.push(`Min < ${driftParams.minuteMax}`)
+    rows.push({ label: "Odds Drift", color: "text-green-400", items: driftItems, dur: minDur.drift, active: driftParams.enabled })
+
+    // Goal Clustering
+    const clMin = clusteringParams.minuteMin > 15 ? clusteringParams.minuteMin : 15
+    const clMax = clusteringParams.minuteMax < 90 ? clusteringParams.minuteMax : 80
+    const clItems: string[] = [`Gol reciente · min ${clMin}-${clMax}`]
+    if (clusteringParams.sotMin > 0) clItems.push(`SoT máx equipo ≥ ${clusteringParams.sotMin}`)
+    if (clusteringParams.xgRemMin > 0) clItems.push(`xG restante > ${clusteringParams.xgRemMin}`)
+    rows.push({ label: "Goal Clustering", color: "text-red-400", items: clItems, dur: minDur.clustering, active: clusteringParams.enabled })
+
+    // Pressure Cooker
+    const pMin = Math.max(65, pressureMinuteMin)
+    const pMax = pressureMinuteMax < 90 ? Math.min(75, pressureMinuteMax) : 75
+    const pLabel = (pMin === 65 && pMax === 75) ? "min 65-75" : `min ${pMin}-${pMax}`
+    rows.push({ label: "Pressure Cooker", color: "text-orange-400", items: [`Empate 1-1+ entre ${pLabel}`], dur: minDur.pressure, active: pressureVer !== "off" })
+
+    // Momentum × xG
+    const momV2 = momentumXGVer === "v2"
+    const momIMin = momV2 ? 5 : 10
+    const momIMax = momV2 ? 85 : 80
+    const momEffMin = Math.max(momIMin, momentumMinuteMin > 0 ? momentumMinuteMin : momIMin)
+    const momEffMax = momentumMinuteMax < 90 ? Math.min(momIMax, momentumMinuteMax) : momIMax
+    const momItems: string[] = [
+      `Equipo dominante (SoT ratio ≥ ${momV2 ? "1.05×" : "1.1×"})`,
+      `xG underperf > ${momV2 ? "0.1" : "0.15"}`,
+      `Min ${momEffMin}-${momEffMax}`,
+      `Odds ${momV2 ? "1.3–8.0" : "1.4–6.0"}`,
+    ]
+    rows.push({ label: "Momentum × xG", color: "text-purple-400", items: momItems, dur: null, active: momentumXGVer !== "off" })
+
+    // Tarde Asia
+    const taItems: string[] = ["Hora local 14-20h", "Liga Asia / Alemania / Francia"]
+    if (tardeAsiaMinuteMin > 0)  taItems.push(`Min ≥ ${tardeAsiaMinuteMin}`)
+    if (tardeAsiaMinuteMax < 90) taItems.push(`Min < ${tardeAsiaMinuteMax}`)
+    rows.push({ label: "Tarde Asia", color: "text-sky-400", items: taItems, dur: null, active: tardeAsiaVer !== "off" })
+
+    return rows
+  })()
+
   return (
     <div className="space-y-6">
+      {/* ── Resumen de configuración activa ── */}
+      <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-zinc-300 mb-3">Configuración activa</h3>
+        <div className="space-y-2">
+          {summaryRows.filter(r => r.active).map(row => (
+            <div key={row.label} className="flex items-start gap-2">
+              <span className={`text-[11px] font-semibold min-w-[130px] shrink-0 ${row.color}`}>{row.label}</span>
+              <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                {row.items.map((item, i) => (
+                  <span key={i} className="text-[11px] text-zinc-400">
+                    {i > 0 && <span className="text-zinc-700 mr-2">·</span>}
+                    {item}
+                  </span>
+                ))}
+                {row.dur !== null && (
+                  <span className="text-[11px] text-amber-600/80 ml-1">· min activa: {row.dur}</span>
+                )}
+              </div>
+            </div>
+          ))}
+          {summaryRows.filter(r => !r.active).length > 0 && (
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-[10px] text-zinc-600">OFF:</span>
+              <span className="text-[10px] text-zinc-700">
+                {summaryRows.filter(r => !r.active).map(r => r.label).join(" · ")}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Risk filter + Realistic mode */}
+        <div className="mt-3 pt-2.5 border-t border-zinc-800/60 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 font-medium min-w-[110px]">Filtro de riesgo:</span>
+            {(() => {
+              const labels: Record<string, { label: string; color: string }> = {
+                all:       { label: "Todas las apuestas", color: "text-zinc-400" },
+                no_risk:   { label: "Sin riesgo",         color: "text-emerald-400" },
+                with_risk: { label: "Con riesgo",         color: "text-amber-400" },
+                medium:    { label: "Riesgo medio",       color: "text-amber-400" },
+                high:      { label: "Alto riesgo",        color: "text-red-400" },
+              }
+              const { label, color } = labels[riskFilter] ?? { label: riskFilter, color: "text-zinc-400" }
+              return <span className={`text-[10px] font-medium ${color}`}>{label}</span>
+            })()}
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-[10px] text-zinc-500 font-medium min-w-[110px] pt-px">Modo realista:</span>
+            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+              <span className="text-[10px] text-blue-400 font-medium">ON</span>
+              {adjMinOdds > 0 && <span className="text-[10px] text-zinc-500">· Odds mín {adjMinOdds}</span>}
+              {adjMaxOdds < 999 && <span className="text-[10px] text-zinc-500">· Odds máx {adjMaxOdds}</span>}
+              {adjSlippage > 0 && <span className="text-[10px] text-zinc-500">· Slippage {adjSlippage}%</span>}
+              {adjDedup && <span className="text-[10px] text-zinc-500">· Dedup</span>}
+              {adjConflictFilter && <span className="text-[10px] text-zinc-500">· Anti-conflicto</span>}
+              {!adjAllowContrarias && <span className="text-[10px] text-zinc-500">· Sin contrarias</span>}
+              {adjStability > 1 && <span className="text-[10px] text-zinc-500">· Estab. ≥ {adjStability}</span>}
+              {adjConservativeOdds && <span className="text-[10px] text-zinc-500">· P/L conservador</span>}
+              {adjDriftMinMin > 0 && <span className="text-[10px] text-zinc-500">· Drift mín min {adjDriftMinMin}</span>}
+              {adjGlobalMinEnabled && (adjGlobalMinMin != null || adjGlobalMinMax != null) && (
+                <span className="text-[10px] text-zinc-500">· Rango min {adjGlobalMinMin ?? 0}–{adjGlobalMinMax ?? 90}</span>
+              )}
+              <span className="text-[10px] text-cyan-600">· CO: {coModeLabel}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ============ PANEL DE CONTROL ============ */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
         <div className="flex items-center justify-between mb-5">
@@ -1017,10 +1292,10 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   />
                   <span className={`text-[10px] text-zinc-600 shrink-0 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>Min'</span>
                   <input type="number" min={0} max={89} step={5}
-                    value={drawParams.minuteMin === 0 ? "" : drawParams.minuteMin}
-                    placeholder="0"
+                    value={drawParams.minuteMin === 30 ? "" : drawParams.minuteMin}
+                    placeholder="30"
                     disabled={adjGlobalMinEnabled}
-                    onChange={e => { setDrawParams(p => ({ ...p, minuteMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    onChange={e => { setDrawParams(p => ({ ...p, minuteMin: e.target.value === "" ? 30 : parseInt(e.target.value) })); setActivePreset(null) }}
                     className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
                   />
                   <span className={`text-[9px] text-zinc-600 transition-opacity${adjGlobalMinEnabled ? " opacity-30" : ""}`}>–</span>
@@ -1075,6 +1350,14 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                 <span className="text-xs text-zinc-400 w-24 shrink-0">xG Underperf</span>
                 {xgParams.enabled && (<>
+                  <span className="text-[10px] text-zinc-600 shrink-0">xGEx≥</span>
+                  <input type="number" min={0} max={2} step={0.1}
+                    title="Exceso xG mínimo (xG - goles del equipo perdedor)"
+                    placeholder="0.5"
+                    value={xgParams.xgExcessMin}
+                    onChange={e => { setXGParams(p => ({ ...p, xgExcessMin: parseFloat(e.target.value) || 0 })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
+                  />
                   <span className="text-[10px] text-zinc-600 shrink-0">SoT≥</span>
                   <input type="number" min={0} max={5} step={1}
                     title="SoT mínimo"
@@ -1239,6 +1522,14 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     disabled={adjGlobalMinEnabled}
                     onChange={e => { setClusteringParams(p => ({ ...p, minuteMax: e.target.value === "" ? 90 : parseInt(e.target.value) })); setActivePreset(null) }}
                     className={`w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center transition-opacity${adjGlobalMinEnabled ? " opacity-30 cursor-not-allowed" : ""}`}
+                  />
+                  <span className="text-[10px] text-zinc-600 shrink-0">SoT≥</span>
+                  <input type="number" min={0} max={8} step={1}
+                    title="SoT máximo mínimo del partido (max(SoT_local, SoT_visitante))"
+                    value={clusteringParams.sotMin === 0 ? "" : clusteringParams.sotMin}
+                    placeholder="0"
+                    onChange={e => { setClusteringParams(p => ({ ...p, sotMin: e.target.value === "" ? 0 : parseInt(e.target.value) })); setActivePreset(null) }}
+                    className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 text-center"
                   />
                   <span className="text-[10px] text-zinc-600 shrink-0">xGrem≥</span>
                   <input type="number" min={0} max={2} step={0.1}
@@ -1687,7 +1978,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
             {simCO && (
               <span className="flex items-center gap-1.5 text-[10px] text-cyan-500/70">
                 <span className="inline-block w-6 border-t-2 border-dashed border-cyan-500/70" />
-                CO {coLayPct}% activo
+                CO activo
               </span>
             )}
             {!simCO && (
@@ -1695,7 +1986,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
             )}
           </div>
           <p className="text-xs text-zinc-500 mb-4">
-            Flat ({flatStake} EUR) vs {BANKROLL_MODES.find(m => m.key === brMode)!.label} ({bankrollInit} EUR bankroll){simCO ? ` · líneas discontinuas = con CO (lay +${coLayPct}%)` : ""}.
+            Flat ({flatStake} EUR) vs {BANKROLL_MODES.find(m => m.key === brMode)!.label} ({bankrollInit} EUR bankroll){simCO ? ` · líneas discontinuas = con CO (${coModeLabel})` : ""}.
           </p>
           <ResponsiveContainer width="100%" height={280}>
             <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
@@ -1723,8 +2014,8 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                   if (value == null) return ["—", name ?? ""]
                   if (name === "managedPeak") return [`${value.toFixed(2)} EUR`, "Pico gestion"]
                   if (name === "flat") return [`${value.toFixed(2)} EUR`, "Flat (10 EUR)"]
-                  if (name === "flatCO") return [`${value.toFixed(2)} EUR`, `Flat CO (lay +${coLayPct}%)`]
-                  if (name === "managedCO") return [`${value.toFixed(2)} EUR`, `Gestion CO (lay +${coLayPct}%)`]
+                  if (name === "flatCO") return [`${value.toFixed(2)} EUR`, `Flat CO (${coModeLabel})`]
+                  if (name === "managedCO") return [`${value.toFixed(2)} EUR`, `Gestion CO (${coModeLabel})`]
                   if (name === "managed") {
                     const point = chartData.find(d => Math.abs(d.managed - value) < 0.01)
                     const dd = point ? round2(point.managedPeak - point.managed) : 0
@@ -1740,9 +2031,9 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                 height={28}
                 formatter={(value) => {
                   if (value === "flat") return "Flat (10 EUR)"
-                  if (value === "flatCO") return `Flat CO (lay +${coLayPct}%)`
+                  if (value === "flatCO") return `Flat CO (${coModeLabel})`
                   if (value === "managed") return BANKROLL_MODES.find(m => m.key === brMode)!.label
-                  if (value === "managedCO") return `Gestion CO (lay +${coLayPct}%)`
+                  if (value === "managedCO") return `Gestion CO (${coModeLabel})`
                   if (value === "managedPeak") return "Pico gestion (DD)"
                   return value
                 }}
@@ -1804,7 +2095,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
               </div>
               {copl != null && (
                 <div className="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between">
-                  <span className="text-[10px] text-cyan-600">CO lay +{coLayPct}%</span>
+                  <span className="text-[10px] text-cyan-600">CO: {coModeLabel}</span>
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-bold ${copl >= 0 ? "text-cyan-400" : "text-amber-400"}`}>
                       {copl >= 0 ? "+" : ""}{copl}
@@ -1866,7 +2157,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-sm font-semibold text-zinc-300">Rendimiento Diario</h2>
-              {simCO && <span className="text-[10px] text-cyan-600">barras cyan = P/L con CO lay +{coLayPct}%</span>}
+              {simCO && <span className="text-[10px] text-cyan-600">barras cyan = P/L con CO ({coModeLabel})</span>}
             </div>
             <p className="text-xs text-zinc-500 mb-4">
               P/L agregado por día{simCO ? " · barras transparentes = sin CO, barras cyan = con CO" : ""}
@@ -1913,7 +2204,7 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                             </div>
                             {d.plCO != null && d.plCO !== d.pl && (
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-xs text-cyan-600">P/L CO ({coLayPct}%):</span>
+                                <span className="text-xs text-cyan-600">P/L CO ({coModeLabel}):</span>
                                 <span className={`text-sm font-semibold ${d.plCO >= 0 ? "text-cyan-400" : "text-amber-400"}`}>{d.plCO >= 0 ? "+" : ""}{d.plCO.toFixed(2)} EUR</span>
                               </div>
                             )}
@@ -2219,11 +2510,6 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
           )
         }
 
-        // CO lookup map — match CO bets to original bets by composite key
-        const coLayBetMap = coLayData ? new Map(
-          coFilteredBets.map(b => [`${b.match_id}|${b.strategy}|${b.timestamp_utc}`, b])
-        ) : null
-
         // CO stats on ALL bets (winners + losers)
         const coRescued = coLayData ? coFilteredBets.filter(b => !b.won && b.cashout_applied).length : 0
         const coPenalized = coLayData ? coFilteredBets.filter(b => b.won && b.cashout_applied).length : 0
@@ -2233,29 +2519,97 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
         return (
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
             {/* Header with CO controls */}
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+            <div className="flex items-start justify-between mb-3 flex-wrap gap-3">
               <h2 className="text-sm font-semibold text-zinc-300">Historial de apuestas</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">CO umbral</span>
-                <input
-                  type="number"
-                  min={5} max={100} step={5}
-                  value={coLayPct}
-                  title="Porcentaje de subida de cuota lay sobre el precio de entrada"
-                  placeholder="20"
-                  onChange={e => setCoLayPct(Math.max(5, Math.min(100, parseInt(e.target.value) || 20)))}
-                  className="w-14 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs text-cyan-400 text-center focus:outline-none focus:border-zinc-500"
-                />
-                <span className="text-xs text-zinc-500">%</span>
-                <button
-                  type="button"
-                  onClick={() => fetchCashoutAnalysis(coLayPct)}
-                  disabled={coLayLoading}
-                  className="px-3 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
-                >
-                  {coLayLoading ? "Analizando..." : coLayData ? "Actualizar CO" : "Simular CO"}
-                </button>
-                {coLayLoading && <span className="text-cyan-400 animate-pulse text-[10px]">●</span>}
+              {/* Stop loss panel */}
+              <div className="flex flex-col gap-0.5 min-w-[400px] bg-zinc-900/40 border border-zinc-800 rounded-lg p-2">
+                {/* Fijo % */}
+                <div className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors ${coFixedEnabled ? "bg-zinc-800/50" : "opacity-60"}`}>
+                  <input type="checkbox" title="Activar modo Fijo %" checked={coFixedEnabled} onChange={e => setCoFixedEnabled(e.target.checked)} className="accent-cyan-500 w-3.5 h-3.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-medium ${coFixedEnabled ? "text-zinc-200" : "text-zinc-500"}`}>Fijo %</span>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">Sale si lay ≥ cuota entrada × (1 + X%). Umbral fijo durante todo el partido.</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <input type="number" title="lay >= back_entry × (1 + X%)" min={5} max={100} step={5} value={coLayPct} disabled={!coFixedEnabled}
+                      onChange={e => setCoLayPct(Math.max(5, Math.min(100, parseInt(e.target.value) || 20)))}
+                      className="w-12 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs text-cyan-400 text-center focus:outline-none disabled:opacity-30" />
+                    <span className="text-[10px] text-zinc-500">%</span>
+                  </div>
+                </div>
+
+                {/* Adaptativo */}
+                <div className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors ${coAdaptiveEnabled ? "bg-zinc-800/50" : "opacity-60"}`}>
+                  <input type="checkbox" title="Activar modo Adaptativo" checked={coAdaptiveEnabled} onChange={e => setCoAdaptiveEnabled(e.target.checked)} className="accent-cyan-500 w-3.5 h-3.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-medium ${coAdaptiveEnabled ? "text-zinc-200" : "text-zinc-500"}`}>Adaptativo</span>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">Umbral amplio al inicio del partido, se estrecha a partir del minuto split.</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <input type="number" min={1} max={100} step={1} value={coAdaptiveEarlyPct} disabled={!coAdaptiveEnabled}
+                      title="Umbral antes del minuto split"
+                      onChange={e => setCoAdaptiveEarlyPct(Math.max(1, Math.min(100, parseInt(e.target.value) || 25)))}
+                      className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs text-cyan-400 text-center focus:outline-none disabled:opacity-30" />
+                    <span className="text-[10px] text-zinc-500">% &rarr; min</span>
+                    <input type="number" min={30} max={88} step={5} value={coAdaptiveSplitMin} disabled={!coAdaptiveEnabled}
+                      title="Minuto de cambio de umbral"
+                      onChange={e => setCoAdaptiveSplitMin(Math.max(30, Math.min(88, parseInt(e.target.value) || 70)))}
+                      className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs text-cyan-400 text-center focus:outline-none disabled:opacity-30" />
+                    <span className="text-[10px] text-zinc-500">&rarr;</span>
+                    <input type="number" min={1} max={100} step={1} value={coAdaptiveLatePct} disabled={!coAdaptiveEnabled}
+                      title="Umbral después del minuto split"
+                      onChange={e => setCoAdaptiveLatePct(Math.max(1, Math.min(100, parseInt(e.target.value) || 8)))}
+                      className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs text-cyan-400 text-center focus:outline-none disabled:opacity-30" />
+                    <span className="text-[10px] text-zinc-500">%</span>
+                  </div>
+                </div>
+
+                {/* Gol adverso */}
+                <div className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors ${coAdverseGoalEnabled ? "bg-zinc-800/50" : "opacity-60"}`}>
+                  <input type="checkbox" title="Activar Gol adverso" checked={coAdverseGoalEnabled} onChange={e => setCoAdverseGoalEnabled(e.target.checked)} className="accent-cyan-500 w-3.5 h-3.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-medium ${coAdverseGoalEnabled ? "text-zinc-200" : "text-zinc-500"}`}>Gol adverso</span>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">Sale al primer gol que perjudica la apuesta. Draw: cualquier gol. Home/Away: gol del rival. Over: no aplica.</p>
+                  </div>
+                  <span className="text-[10px] text-zinc-600 shrink-0 italic">sin params</span>
+                </div>
+
+                {/* Trailing */}
+                <div className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors ${coTrailingEnabled ? "bg-zinc-800/50" : "opacity-60"}`}>
+                  <input type="checkbox" title="Activar Trailing stop" checked={coTrailingEnabled} onChange={e => setCoTrailingEnabled(e.target.checked)} className="accent-cyan-500 w-3.5 h-3.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-medium ${coTrailingEnabled ? "text-zinc-200" : "text-zinc-500"}`}>Trailing</span>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">Registra el lay mínimo visto. Sale si lay sube X% sobre ese mínimo. Protege ganancias.</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <input type="number" title="Stop cuando lay sube X% sobre el mínimo lay visto" min={1} max={100} step={1} value={coTrailingPct} disabled={!coTrailingEnabled}
+                      onChange={e => setCoTrailingPct(Math.max(1, Math.min(100, parseInt(e.target.value) || 15)))}
+                      className="w-10 px-1 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs text-cyan-400 text-center focus:outline-none disabled:opacity-30" />
+                    <span className="text-[10px] text-zinc-500">%</span>
+                  </div>
+                </div>
+
+                {/* Botones */}
+                <div className="flex items-center justify-end gap-2 mt-1 pt-1 border-t border-zinc-800">
+                  {(coLayLoading || coOptimizing) && <span className="text-cyan-400 animate-pulse text-[10px]">●</span>}
+                  <button
+                    type="button"
+                    onClick={() => runCOOptimizer()}
+                    disabled={coOptimizing || coLayLoading}
+                    title="Prueba ~80 configuraciones de CO y muestra las 10 mejores por P/L"
+                    className="px-3 py-1 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 text-violet-400 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                  >
+                    {coOptimizing ? "Optimizando..." : "Optimizar CO"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fetchCashoutAnalysis()}
+                    disabled={coLayLoading || coOptimizing}
+                    className="px-3 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                  >
+                    {coLayLoading ? "Analizando..." : coLayData ? "Actualizar CO" : "Simular CO"}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2289,7 +2643,96 @@ function CarteraTab({ data, onRefresh }: { data: Cartera; onRefresh: () => Promi
                     <span className="text-zinc-600">(ganadoras cerradas antes)</span>
                   </div>
                 )}
-                <span className="text-[10px] text-zinc-600 ml-auto">lay +{coLayPct}% sobre odds entrada</span>
+                <span className="text-[10px] text-zinc-600 ml-auto">
+                  {[
+                    coFixedEnabled && `fijo ${coLayPct}%`,
+                    coAdaptiveEnabled && `adapt. ${coAdaptiveEarlyPct}%→${coAdaptiveLatePct}% @min${coAdaptiveSplitMin}`,
+                    coAdverseGoalEnabled && "gol adverso",
+                    coTrailingEnabled && `trailing ${coTrailingPct}%`,
+                  ].filter(Boolean).join(" · ")}
+                </span>
+              </div>
+            )}
+
+            {/* CO Optimizer results panel */}
+            {showOptimizeResults && (
+              <div className="mb-4 border border-violet-900/40 rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 bg-violet-950/30 border-b border-violet-900/30">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-violet-300">Optimizador CO</span>
+                    {coOptimizing && <span className="text-[10px] text-violet-400 animate-pulse">Probando configuraciones...</span>}
+                    {!coOptimizing && coOptimizeResults && (
+                      <span className="text-[10px] text-zinc-500">
+                        {coOptimizeResults.total_configs_tested} configs probadas · P/L base: {coOptimizeResults.base_pl >= 0 ? "+" : ""}{coOptimizeResults.base_pl?.toFixed(2)}€
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    title="Cerrar"
+                    onClick={() => setShowOptimizeResults(false)}
+                    className="text-zinc-500 hover:text-zinc-300 text-xs leading-none"
+                  >✕</button>
+                </div>
+                {!coOptimizing && coOptimizeResults?.results?.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-zinc-800 text-zinc-500">
+                          <th className="py-1.5 px-2 text-left font-medium">#</th>
+                          <th className="py-1.5 px-2 text-left font-medium">Configuración</th>
+                          <th className="py-1.5 px-2 text-right font-medium">P/L neto</th>
+                          <th className="py-1.5 px-2 text-right font-medium">Mejora</th>
+                          <th className="py-1.5 px-2 text-right font-medium">Rescatadas</th>
+                          <th className="py-1.5 px-2 text-right font-medium">Penalizadas</th>
+                          <th className="py-1.5 px-2 text-right font-medium">Ratio</th>
+                          <th className="py-1.5 px-2 text-center font-medium">Aplicar</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {coOptimizeResults.results.map((r: any, i: number) => {
+                          const improvement = r.pl_net - coOptimizeResults.base_pl
+                          const ratio = (r.rescued + r.penalized) > 0
+                            ? r.rescued / (r.rescued + r.penalized)
+                            : null
+                          return (
+                            <tr key={i} className={`border-b border-zinc-800/50 hover:bg-zinc-800/20 ${i === 0 ? "bg-violet-950/20" : ""}`}>
+                              <td className="py-1.5 px-2 text-zinc-500">{i === 0 ? "🥇" : i + 1}</td>
+                              <td className="py-1.5 px-2 text-zinc-300 font-medium max-w-[260px] truncate" title={r.label}>{r.label}</td>
+                              <td className={`py-1.5 px-2 text-right font-semibold tabular-nums ${r.pl_net >= 0 ? "text-green-400" : "text-red-400"}`}>
+                                {r.pl_net >= 0 ? "+" : ""}{r.pl_net.toFixed(2)}€
+                              </td>
+                              <td className={`py-1.5 px-2 text-right tabular-nums ${improvement >= 0 ? "text-green-400" : "text-red-400"}`}>
+                                {improvement >= 0 ? "+" : ""}{improvement.toFixed(2)}€
+                              </td>
+                              <td className="py-1.5 px-2 text-right text-cyan-400 tabular-nums">{r.rescued}</td>
+                              <td className="py-1.5 px-2 text-right text-amber-400 tabular-nums">{r.penalized}</td>
+                              <td className="py-1.5 px-2 text-right text-zinc-400 tabular-nums">
+                                {ratio != null ? `${(ratio * 100).toFixed(0)}%` : "—"}
+                              </td>
+                              <td className="py-1.5 px-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => applyOptimizeConfig(r.config)}
+                                  title="Cargar esta configuración en el panel CO"
+                                  className="px-2 py-0.5 bg-violet-500/15 hover:bg-violet-500/30 border border-violet-500/30 text-violet-300 rounded text-[10px] font-medium transition-colors"
+                                >
+                                  Aplicar
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {!coOptimizing && coOptimizeResults?.results?.length === 0 && (
+                  <div className="py-4 text-center text-xs text-zinc-500">No se encontraron configuraciones.</div>
+                )}
+                {coOptimizing && (
+                  <div className="py-6 text-center text-xs text-zinc-500 animate-pulse">Calculando...</div>
+                )}
               </div>
             )}
 

@@ -33,30 +33,31 @@ function buildCriteria(
       const d = s.draw
       const xgMax    = d?.xgMax    ?? (ver === "v2" ? 0.5 : 0.6)
       const possMax  = d?.possMax  ?? (ver === "v15" || ver === "v3" ? 25 : 20)
-      const shots    = d?.shotsMax ?? 8
-      const minMin   = d?.minuteMin ?? 0
+      const shots    = d?.shotsMax ?? 20
+      const minMin   = d?.minuteMin ?? 30  // default 30 = strategy intrinsic minimum
       const minMax   = d?.minuteMax ?? 90
-      const criteria = ["Score 0-0", "Min ≥ 30"]
+      const criteria = ["Score 0-0", `Min ≥ ${minMin}`]
       if (ver !== "v1") {
-        criteria.push(`xG total < ${xgMax}`)
-        criteria.push(`Pos. diff < ${possMax}%`)
-        if (ver === "v2r" || ver === "v2") criteria.push(`Tiros totales < ${shots}`)
+        if (xgMax < 1.0)   criteria.push(`xG total < ${xgMax}`)
+        if (possMax < 100) criteria.push(`Pos. diff < ${possMax}%`)
+        if ((ver === "v2r" || ver === "v2") && shots < 20) criteria.push(`Tiros totales < ${shots}`)
         if (ver === "v3" || d?.xgDomAsym)  criteria.push("Dominancia xG asimétrica")
         if (ver === "v4") criteria.push("Gap Opta ≤ 10")
       }
-      if (minMin > 0)   criteria.push(`Min ≥ ${minMin}`)
       if (minMax < 90)  criteria.push(`Min < ${minMax}`)
       return criteria
     }
 
     case "xg": {
       const x = s.xg
+      const xgExcessMin = (x as any)?.xgExcessMin ?? 0.5
       const sotMin    = x?.sotMin    ?? 0
       const minuteMin = x?.minuteMin ?? 0
       const minuteMax = x?.minuteMax ?? 90
-      const criteria = ["Equipo perdiendo", "xG equipo − goles ≥ 0.5", "Min ≥ 15"]
+      // Effective minuteMin: strategy has intrinsic min 15, user can only increase it
+      const effectiveMinMin = Math.max(15, minuteMin)
+      const criteria = ["Equipo perdiendo", `xG equipo − goles ≥ ${xgExcessMin}`, `Min ≥ ${effectiveMinMin}`]
       if (sotMin > 0)     criteria.push(`SoT equipo ≥ ${sotMin}`)
-      if (minuteMin > 0)  criteria.push(`Min ≥ ${minuteMin}`)
       if (minuteMax < 90) criteria.push(`Min < ${minuteMax}`)
       return criteria
     }
@@ -91,12 +92,14 @@ function buildCriteria(
 
     case "clustering": {
       const c = s.clustering
+      const sotMin    = (c as any)?.sotMin ?? 3
       const minuteMin = c?.minuteMin ?? 0
       const minuteMax = c?.minuteMax ?? 90
       const xgRemMin  = c?.xgRemMin  ?? 0
       // The entry window is min 15 to effectiveMax; goal must be recent within that window
       const effectiveMax = minuteMax < 90 ? minuteMax : 80
-      const criteria = [`Gol reciente · min ${minuteMin > 15 ? minuteMin : 15}-${effectiveMax}`, "SoT máx equipo ≥ 3"]
+      const criteria = [`Gol reciente · min ${minuteMin > 15 ? minuteMin : 15}-${effectiveMax}`]
+      if (sotMin > 0) criteria.push(`SoT máx equipo ≥ ${sotMin}`)
       if (xgRemMin > 0) criteria.push(`xG restante > ${xgRemMin}`)
       return criteria
     }
@@ -105,10 +108,10 @@ function buildCriteria(
       const p = s.pressure
       const minMin = p?.minuteMin ?? 0
       const minMax = p?.minuteMax ?? 90
-      const criteria = ["Empate 1-1+ entre min 65-75"]
-      if (minMin > 0)  criteria.push(`Min ≥ ${minMin}`)
-      if (minMax < 90) criteria.push(`Min < ${minMax}`)
-      return criteria
+      // Intrinsic window 65-75; user config narrows it further
+      const pMin = Math.max(65, minMin)
+      const pMax = minMax < 90 ? Math.min(75, minMax) : 75
+      return [`Empate 1-1+ entre min ${pMin}-${pMax}`]
     }
 
     case "tardeAsia": {
@@ -125,12 +128,18 @@ function buildCriteria(
       const m = s.momentum_xg
       const minMin = m?.minuteMin ?? 0
       const minMax = m?.minuteMax ?? 90
-      const base = ver === "v2"
-        ? ["Equipo dominante (SoT ratio ≥ 1.05×)", "xG underperf > 0.1", "Min 5-85", "Odds 1.5–3.5"]
-        : ["Equipo dominante (SoT ratio)", "xG underperf > 0.1", "Min 5-85", "Odds 1.3–4.5"]
-      if (minMin > 0)  base.push(`Min ≥ ${minMin}`)
-      if (minMax < 90) base.push(`Min < ${minMax}`)
-      return base
+      const momV2 = ver === "v2"
+      // Intrinsic min/max per version; user config narrows further
+      const iMin = momV2 ? 5 : 10
+      const iMax = momV2 ? 85 : 80
+      const effectiveMin = Math.max(iMin, minMin > 0 ? minMin : iMin)
+      const effectiveMax = minMax < 90 ? Math.min(iMax, minMax) : iMax
+      return [
+        `Equipo dominante (SoT ratio ≥ ${momV2 ? "1.05×" : "1.1×"})`,
+        `xG underperf > ${momV2 ? "0.1" : "0.15"}`,
+        `Min ${effectiveMin}-${effectiveMax}`,
+        `Odds ${momV2 ? "1.3–8.0" : "1.4–6.0"}`,
+      ]
     }
 
     default:

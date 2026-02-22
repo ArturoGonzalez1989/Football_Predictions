@@ -401,6 +401,49 @@ def _read_csv_rows(csv_path: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
+def _normalize_halftime_minutes(rows: list[dict]) -> list[dict]:
+    """Cap first-half injury-time minutes at 45.
+
+    Betfair's match clock runs continuously past 45 during first-half stoppage
+    time (e.g. shows 46, 47 … 64) instead of the UEFA "45+N" format, then
+    resets to 45 at second-half kick-off.  This creates duplicate minute values
+    (e.g. minute 50 appears once in first-half added time and once in the
+    second half), which confuses strategy filters like Drift V4 (> minute 45).
+
+    Fix: any `en_juego` row recorded *before* the first `descanso` row whose
+    minute exceeds 45 is capped at 45.
+
+    Only applied when at least one `descanso` row exists — for matches where
+    the half-time interval was never captured we leave minutes unchanged to
+    avoid incorrectly capping second-half data.
+    """
+    has_descanso = any(
+        r.get("estado_partido", "").strip().lower() == "descanso" for r in rows
+    )
+    if not has_descanso:
+        return rows  # Cannot detect boundary safely — leave as-is
+
+    result = []
+    first_half = True
+    for row in rows:
+        estado = row.get("estado_partido", "").strip().lower()
+        if estado == "descanso":
+            first_half = False
+            result.append(row)
+            continue
+        if first_half:
+            m_raw = row.get("minuto", "")
+            if m_raw:
+                try:
+                    if float(str(m_raw).replace("'", "").strip()) > 45:
+                        row = dict(row)  # don't mutate the original dict
+                        row["minuto"] = "45"
+                except (ValueError, AttributeError):
+                    pass
+        result.append(row)
+    return result
+
+
 def _read_csv_summary(csv_path: Path) -> dict:
     """Read only header + first + last row of a CSV for fast metadata.
     Returns {count, first_row, last_row} without parsing the entire file."""
@@ -942,10 +985,15 @@ def _get_cached_finished_data() -> list[dict]:
                 rows = _read_csv_rows(csv_path)
                 # Outlier stats on RAW rows (for Data Quality reporting)
                 bh_vals = []
+                kickoff_time = None
                 for r in rows:
                     v = _to_float(r.get("back_home", ""))
                     if v is not None and v > 0:
                         bh_vals.append(v)
+                    if kickoff_time is None and r.get("estado_partido", "").strip().lower() == "en_juego":
+                        ts = r.get("timestamp_utc", "").strip()
+                        if ts:
+                            kickoff_time = ts
                 raw_with_odds = len(bh_vals)
                 raw_total_rows = len(rows)
                 bh_outliers = 0
@@ -956,6 +1004,8 @@ def _get_cached_finished_data() -> list[dict]:
                     med = _median(bh_vals)
                     if med > 0:
                         bh_outliers = sum(1 for v in bh_vals if v > med * 5 or v < med / 5)
+                # Normalize first-half injury-time minutes (cap at 45 when descanso present)
+                rows = _normalize_halftime_minutes(rows)
                 # Clean rows for strategy analysis (removes outlier odds)
                 rows = _clean_odds_outliers(rows)
                 # Try to get URL from games.csv mapping by match name
@@ -964,6 +1014,8 @@ def _get_cached_finished_data() -> list[dict]:
                     "match_id": game["match_id"],
                     "name": game["name"],
                     "url": game_url,  # URL from matches.json or games.csv
+                    "start_time": game.get("start_time"),
+                    "kickoff_time": kickoff_time,
                     "csv_path": csv_path,
                     "rows": rows,
                     "raw_total_rows": raw_total_rows,
@@ -1044,29 +1096,43 @@ def _calculate_match_gaps(rows: list[dict]) -> int:
 
 def _calculate_gap_segments(rows: list[dict]) -> tuple[int, float]:
     """Return (total_missing_minutes, avg_segment_size).
+    Counts absences between minutes 1-90 only.
+    - pre_partido rows (null/empty minuto) are ignored.
+    - descanso rows are excluded from both captured AND expected sets
+      (halftime is not a gap).
     A segment is a consecutive block of missing minutes.
     E.g. missing=[4,8,9] → segments=[1,2] → avg=1.5
     """
     minutes_captured = set()
+    descanso_minutes = set()
+
     for row in rows:
         m = row.get("minuto", "")
-        if m:
-            try:
-                minutes_captured.add(int(float(m.replace("'", "").strip())))
-            except (ValueError, AttributeError):
-                pass
+        if not m:
+            continue  # pre_partido or rows without minute — skip
+        try:
+            minute = int(float(str(m).replace("'", "").strip()))
+        except (ValueError, AttributeError):
+            continue
 
-    if not minutes_captured:
-        return 0, 0.0
+        if minute < 1 or minute > 90:
+            continue  # extra time etc. — outside scope
 
-    max_min = max(minutes_captured)
-    missing = sorted(set(range(1, max_min + 1)) - minutes_captured)
+        estado = row.get("estado_partido", "").strip().lower()
+        if estado == "descanso":
+            descanso_minutes.add(minute)
+        else:
+            minutes_captured.add(minute)
+
+    # Expected minutes: 1-90 minus halftime minutes
+    expected = set(range(1, 91)) - descanso_minutes
+    missing = sorted(expected - minutes_captured)
+
     if not missing:
         return 0, 0.0
 
     # Group consecutive minutes into segments
     segments = []
-    seg_start = missing[0]
     seg_len = 1
     for i in range(1, len(missing)):
         if missing[i] == missing[i - 1] + 1:
@@ -1184,14 +1250,39 @@ def analyze_gaps_distribution() -> dict:
 
 @_cached_result("stats_coverage")
 def analyze_stats_coverage() -> dict:
-    """Calculate coverage percentage for each stat field across all matches."""
+    """Calculate coverage percentage for each stat field actually used by active strategies."""
+    # Stats and odds that gate or feed into signal detection across all active strategies:
+    # Back Empate V2R:    xg + posesion + tiros     → back_draw
+    # xG Underperf BASE: xg + tiros_puerta          → back_over*
+    # Goal Clustering V2: tiros_puerta              → back_over*
+    # Pressure Cooker V1: (score-based)             → back_over*
+    # Tarde Asia V1:      (time/league)             → back_over25
+    # Odds Drift V1:      (odds-only)               → back_home / back_away
+    # Momentum × xG V1:  xg + tiros_puerta          → back_home / back_away
+    # Synthetic attrs (pressure_index, momentum_gap, opta_gap): corners, momentum, opta_points
+    STRATEGY_STAT_COLUMNS = [
+        # --- Stats ---
+        "xg_local", "xg_visitante",
+        "posesion_local", "posesion_visitante",
+        "tiros_local", "tiros_visitante",
+        "tiros_puerta_local", "tiros_puerta_visitante",
+        "corners_local", "corners_visitante",
+        "momentum_local", "momentum_visitante",
+        "opta_points_local", "opta_points_visitante",
+        # --- Cuotas (mercados en los que se apuesta) ---
+        "back_draw",                                          # Back Empate
+        "back_home", "back_away",                            # Odds Drift, Momentum xG
+        "back_over05", "back_over15", "back_over25",         # Over markets
+        "back_over35", "back_over45",                        # Over markets (alta goleada)
+    ]
+
     finished_matches = _get_all_finished_matches()
 
     if not finished_matches:
         return {"fields": []}
 
     # Count non-null values for each stat column
-    field_counts = {col: {"filled": 0, "total": 0} for col in STAT_COLUMNS}
+    field_counts = {col: {"filled": 0, "total": 0} for col in STRATEGY_STAT_COLUMNS}
 
     for match in finished_matches:
         rows = match.get("rows") or _read_csv_rows(match["csv_path"])
@@ -1200,7 +1291,7 @@ def analyze_stats_coverage() -> dict:
             estado = row.get("estado_partido", "").strip()
             if estado in ("pre_partido", ""):
                 continue
-            for col in STAT_COLUMNS:
+            for col in STRATEGY_STAT_COLUMNS:
                 field_counts[col]["total"] += 1
                 val = row.get(col, "")
                 if val and val.strip() not in ("", "N/A", "None"):
@@ -1267,10 +1358,20 @@ def analyze_odds_coverage() -> dict:
     coverages = []
 
     for match in finished_matches:
+        # Only include matches with at least one 'finalizado' row.
+        # Many matches revert to 'pre_partido' or 'en_juego' as their last row
+        # after Betfair closes the market, so we can't rely on the last row alone.
+        _rows = match.get("rows", [])
+        if not any(r.get("estado_partido", "").strip() == "finalizado" for r in _rows):
+            continue
+
         # Use precomputed stats from cache (raw rows before outlier cleaning)
         total         = match.get("raw_total_rows", len(match.get("rows") or []))
         with_odds     = match.get("raw_with_odds", 0)
-        pct           = round(with_odds / total * 100, 1) if total > 0 else 0.0
+        # Coverage = rows_with_odds out of 90 expected match minutes (capped at 100%).
+        # Using total_rows as denominator was misleading: 1 row with odds / 1 total = 100%
+        # even when 90 minutes of data are missing.
+        pct           = round(min(with_odds / 90 * 100, 100.0), 1)
         outlier_count = match.get("back_home_outliers", 0)
 
         raw_min_bh = match.get("min_back_home")
@@ -1279,6 +1380,8 @@ def analyze_odds_coverage() -> dict:
         match_list.append({
             "match_id":       match["match_id"],
             "name":           match["name"],
+            "start_time":     match.get("start_time"),
+            "kickoff_time":   match.get("kickoff_time"),
             "coverage_pct":   pct,
             "rows_with_odds": with_odds,
             "total_rows":     total,
@@ -1763,6 +1866,7 @@ def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
             "match_id": match["match_id"],
             "minuto": minuto_trigger,
             "back_draw": round(back_draw, 2) if back_draw else None,
+            "lay_trigger": _to_float(trigger_row.get("lay_draw", "")) or None,
             "xg_total": round(xg_total, 2) if xg_total is not None else None,
             "xg_max": round(xg_max, 2) if xg_max is not None else None,
             "sot_total": sot_total,
@@ -2057,6 +2161,7 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                     "team_goals": team_goals,
                     "xg_excess": round(xg_excess, 2),
                     "back_over_odds": round(back_over, 2) if back_over else None,
+                    "lay_trigger": _to_float(row.get(over_field.replace("back_", "lay_"), "")) or None if over_field else None,
                     "over_line": f"Over {total_at_trigger + 0.5}",
                     "sot_team": sot_int,
                     "poss_team": round(poss_t, 1) if poss_t is not None else None,
@@ -2248,6 +2353,7 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
                     )
 
                     _drift_odds_col = "back_home" if team == "home" else "back_away"
+                    _drift_lay_col = "lay_home" if team == "home" else "lay_away"
                     bets.append({
                         "match": match["name"],
                         "match_id": match["match_id"],
@@ -2257,6 +2363,7 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
                         "goal_diff": goal_diff,
                         "odds_before": round(prev_odds, 2),
                         "back_odds": round(curr_odds, 2),
+                        "lay_trigger": _to_float(curr_row.get(_drift_lay_col, "")) or None,
                         "drift_pct": round(drift * 100, 1),
                         "sot_team": int(sot_t) if sot_t is not None else None,
                         "poss_team": round(poss_t, 1) if poss_t is not None else None,
@@ -2459,6 +2566,39 @@ def _co_market_cols(bet: dict, strategy: str) -> tuple[str, str, float]:
     return "", "", 0.0
 
 
+def _get_trigger_score(rows: list, trigger_min: float) -> tuple:
+    """Devuelve (goles_local, goles_visitante) en el CSV justo en trigger_min."""
+    gl = gv = 0
+    for row in rows:
+        m = _to_float(row.get("minuto", ""))
+        if m is not None and m <= trigger_min:
+            g1 = _to_float(row.get("goles_local", ""))
+            g2 = _to_float(row.get("goles_visitante", ""))
+            if g1 is not None: gl = g1
+            if g2 is not None: gv = g2
+        else:
+            break
+    return gl, gv
+
+
+def _is_adverse_goal(row: dict, strategy: str, team: str, gl_trigger: float, gv_trigger: float) -> bool:
+    """True si en este row se ha producido un gol adverso para la apuesta.
+    Solo aplica a apuestas de match odds (draw, home, away).
+    Over bets: ningún gol es adverso (más goles = mejor para Over).
+    """
+    gl = _to_float(row.get("goles_local", "")) or 0
+    gv = _to_float(row.get("goles_visitante", "")) or 0
+    if strategy == "back_draw_00":
+        return (gl + gv) > (gl_trigger + gv_trigger)  # cualquier gol perjudica el empate
+    if strategy in ("momentum_xg_v1", "momentum_xg_v2"):
+        if team == "Local": return gv > gv_trigger    # rival (visitante) marcó
+        if team == "Away":  return gl > gl_trigger    # rival (local) marcó
+    if strategy == "odds_drift":
+        if team == "home":  return gv > gv_trigger    # visitante marcó
+        if team == "away":  return gl > gl_trigger    # local marcó
+    return False  # Over bets: nunca adverso
+
+
 def _co_is_corrupted(row: dict, back_col: str, lay_col: str) -> bool:
     """True if row shows market suspension artifacts (inverted or extreme spread)."""
     bk = _to_float(row.get(back_col, ""))
@@ -2476,15 +2616,231 @@ def _co_calc_pl(back_odds: float, lay_odds: float, stake: float = 10.0) -> float
     return round(gross * 0.95, 2) if gross > 0 else round(gross, 2)
 
 
-def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int = None, *, cashout_lay_pct: float = None) -> dict:
+def _config_label(config: dict) -> str:
+    parts = []
+    if config.get("cashout_lay_pct") is not None:
+        parts.append(f"Fijo {config['cashout_lay_pct']}%")
+    if config.get("adaptive_early_pct") is not None:
+        parts.append(
+            f"Adapt. {config['adaptive_early_pct']}%→{config['adaptive_late_pct']}% @{config['adaptive_split_min']}m"
+        )
+    if config.get("adverse_goal_stop"):
+        parts.append("Gol adverso")
+    if config.get("trailing_stop_pct") is not None:
+        parts.append(f"Trailing {config['trailing_stop_pct']}%")
+    return " + ".join(parts) if parts else "Sin CO"
+
+
+def _simulate_config(
+    bets: list,
+    match_csv_cache: dict,
+    *,
+    cashout_lay_pct: float = None,
+    adaptive_early_pct: float = None,
+    adaptive_late_pct: float = None,
+    adaptive_split_min: int = 70,
+    adverse_goal_stop: bool = False,
+    trailing_stop_pct: float = None,
+) -> tuple:
+    """Fast inner simulation loop for grid search. Uses pre-loaded CSV cache.
+    Returns (pl_net, rescued_count, penalized_count, co_applied_count).
+    """
+    pl_total = 0.0
+    rescued = penalized = co_applied = 0
+
+    for bet in bets:
+        strategy = bet.get("strategy", "")
+        match_id = bet.get("match_id", "")
+        trigger_min = bet.get("minuto") or 0
+        original_pl = bet.get("pl", 0) or 0
+        stake = bet.get("stake", 1.0) or 1.0
+
+        back_col, lay_col, back_odds = _co_market_cols(bet, strategy)
+        if not back_col or not lay_col or not back_odds:
+            pl_total += original_pl
+            continue
+
+        rows = match_csv_cache.get(match_id, [])
+        if not rows:
+            pl_total += original_pl
+            continue
+
+        gl_trigger = gv_trigger = 0
+        if adverse_goal_stop:
+            gl_trigger, gv_trigger = _get_trigger_score(rows, trigger_min)
+        team = bet.get("team") or bet.get("dominant_team")
+        trail_min_lay = None
+        best_row = None
+
+        for row in rows:
+            m = _to_float(row.get("minuto", ""))
+            if m is None or m <= trigger_min:
+                continue
+            if _co_is_corrupted(row, back_col, lay_col):
+                continue
+
+            lay_val = _to_float(row.get(lay_col, ""))
+            triggered = False
+
+            if cashout_lay_pct is not None and lay_val:
+                if lay_val >= back_odds * (1.0 + cashout_lay_pct / 100.0):
+                    triggered = True
+
+            if not triggered and adaptive_early_pct is not None and adaptive_late_pct is not None and lay_val:
+                pct = adaptive_early_pct if m < adaptive_split_min else adaptive_late_pct
+                if lay_val >= back_odds * (1.0 + pct / 100.0):
+                    triggered = True
+
+            if not triggered and adverse_goal_stop:
+                if _is_adverse_goal(row, strategy, team, gl_trigger, gv_trigger):
+                    triggered = True
+
+            if trailing_stop_pct is not None and lay_val:
+                if trail_min_lay is None or lay_val < trail_min_lay:
+                    trail_min_lay = lay_val
+                if not triggered:
+                    if lay_val >= trail_min_lay * (1.0 + trailing_stop_pct / 100.0):
+                        triggered = True
+
+            if triggered:
+                best_row = row
+                break
+
+        if best_row is None:
+            pl_total += original_pl
+            continue
+
+        lay_odds = _to_float(best_row.get(lay_col, ""))
+        if not lay_odds or lay_odds <= 1.0:
+            pl_total += original_pl
+            continue
+
+        co_pl = _co_calc_pl(back_odds, lay_odds, stake)
+        pl_total += co_pl
+        co_applied += 1
+
+        if original_pl < 0 and co_pl > original_pl:
+            rescued += 1
+        elif original_pl > 0 and co_pl < original_pl:
+            penalized += 1
+
+    return round(pl_total, 2), rescued, penalized, co_applied
+
+
+def optimize_cashout_cartera(cartera_data: dict, top_n: int = 10) -> dict:
+    """Grid search over CO modes to find best configuration.
+    Reads each match CSV only once for efficiency.
+    Returns top_n configs ranked by P/L net, plus other sorting options.
+    """
+    bets = cartera_data.get("bets", [])
+    if not bets:
+        return {"base_pl": 0.0, "results": []}
+
+    # Build config grid
+    configs: list[dict] = []
+
+    # 1. Solo Fijo
+    for pct in [5, 10, 15, 20, 25, 30, 40, 50]:
+        configs.append({"cashout_lay_pct": pct})
+
+    # 2. Solo Adaptativo
+    for early in [15, 20, 25, 30]:
+        for late in [5, 8, 12]:
+            for split in [60, 70, 80]:
+                configs.append({
+                    "adaptive_early_pct": early,
+                    "adaptive_late_pct": late,
+                    "adaptive_split_min": split,
+                })
+
+    # 3. Solo Gol adverso
+    configs.append({"adverse_goal_stop": True})
+
+    # 4. Solo Trailing
+    for trail in [5, 10, 15, 20, 25, 30]:
+        configs.append({"trailing_stop_pct": trail})
+
+    # 5. Gol adverso + Trailing
+    for trail in [5, 10, 15, 20]:
+        configs.append({"adverse_goal_stop": True, "trailing_stop_pct": trail})
+
+    # 6. Fijo + Gol adverso
+    for pct in [10, 15, 20, 25, 30]:
+        configs.append({"cashout_lay_pct": pct, "adverse_goal_stop": True})
+
+    # 7. Trailing + Fijo
+    for pct in [15, 20, 25]:
+        for trail in [10, 15, 20]:
+            configs.append({"cashout_lay_pct": pct, "trailing_stop_pct": trail})
+
+    # 8. Trailing + Gol adverso + Fijo
+    for pct in [15, 20]:
+        for trail in [10, 15]:
+            configs.append({"cashout_lay_pct": pct, "adverse_goal_stop": True, "trailing_stop_pct": trail})
+
+    # Pre-load all match CSVs (each read only once)
+    match_csv_cache: dict = {}
+    for bet in bets:
+        match_id = bet.get("match_id", "")
+        if match_id and match_id not in match_csv_cache:
+            try:
+                csv_path = _resolve_csv_path(match_id)
+                match_csv_cache[match_id] = _read_csv_rows(csv_path)
+            except Exception:
+                match_csv_cache[match_id] = []
+
+    base_pl = round(sum(b.get("pl", 0) or 0 for b in bets), 2)
+
+    results = []
+    for config in configs:
+        pl_net, rescued, penalized, co_applied = _simulate_config(bets, match_csv_cache, **config)
+        total_co = rescued + penalized
+        rescue_ratio = round(rescued / total_co, 2) if total_co > 0 else 0.0
+        results.append({
+            "config": config,
+            "label": _config_label(config),
+            "pl_net": pl_net,
+            "pl_improvement": round(pl_net - base_pl, 2),
+            "rescued": rescued,
+            "penalized": penalized,
+            "co_applied": co_applied,
+            "rescue_ratio": rescue_ratio,
+        })
+
+    results.sort(key=lambda x: x["pl_net"], reverse=True)
+    return {
+        "base_pl": base_pl,
+        "total_configs_tested": len(configs),
+        "results": results[:top_n],
+    }
+
+
+def simulate_cashout_cartera(
+    cartera_data: dict,
+    cashout_minute: int = None,
+    *,
+    cashout_lay_pct: float = None,
+    adaptive_early_pct: float = None,
+    adaptive_late_pct: float = None,
+    adaptive_split_min: int = 70,
+    adverse_goal_stop: bool = False,
+    trailing_stop_pct: float = None,
+) -> dict:
     """Apply cashout simulation to cartera data for ALL bets (winners and losers).
 
     cashout_minute == -1 → "Pesimista": worst lay odds in the full period
       (trigger_min, 90] — most conservative, models bad execution timing.
     cashout_minute > 0  → "Minuto": row closest to that minute (original).
     cashout_lay_pct     → "Lay%": first row where lay >= entry_back * (1 + lay_pct/100).
+    adaptive_early_pct / adaptive_late_pct → "Adaptativo": threshold holgado antes de
+      adaptive_split_min, ajustado después.
+    adverse_goal_stop   → "Gol adverso": CO en el primer gol que perjudica la apuesta
+      (solo back_draw_00, odds_drift, momentum_xg — Over bets ignoradas).
+    trailing_stop_pct   → "Trailing": stop se mueve con el mínimo lay visto; dispara
+      cuando lay sube trailing_stop_pct% sobre ese mínimo.
 
-    CO is applied unconditionally when the threshold is crossed — no look-ahead bias.
+    Modos combinables: si varios están activos, gana el primero en dispararse.
+    CO is applied unconditionally when triggered — no look-ahead bias.
     Winning bets where threshold is crossed will have their P/L reduced (premature exit).
     Returns a deep copy of cartera_data with modified pl values and
     recomputed cumulative arrays and strategy summaries.
@@ -2495,6 +2851,14 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int = None, *, 
     stake = 10.0
     co_count = 0
     pessimistic = cashout_minute is not None and cashout_minute == -1
+
+    # Determine if any new-style mode is active
+    new_modes_active = (
+        cashout_lay_pct is not None
+        or (adaptive_early_pct is not None and adaptive_late_pct is not None)
+        or adverse_goal_stop
+        or trailing_stop_pct is not None
+    )
 
     for bet in bets:
 
@@ -2514,20 +2878,52 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int = None, *, 
         if not rows:
             continue
 
-        if cashout_lay_pct is not None:
-            # First row where lay >= entry_back * (1 + lay_pct/100)
-            threshold = back_odds * (1.0 + cashout_lay_pct / 100.0)
+        if new_modes_active:
+            # Multi-mode combinable search: primero en dispararse gana
+            gl_trigger, gv_trigger = _get_trigger_score(rows, trigger_min)
+            team = bet.get("team") or bet.get("dominant_team")
+            trail_min_lay = None
             best_row = None
+
             for row in rows:
                 m = _to_float(row.get("minuto", ""))
                 if m is None or m <= trigger_min:
                     continue
                 if _co_is_corrupted(row, back_col, lay_col):
                     continue
+
                 lay_val = _to_float(row.get(lay_col, ""))
-                if lay_val and lay_val >= threshold:
+                triggered = False
+
+                # Modo 1: Fijo %
+                if cashout_lay_pct is not None and lay_val:
+                    if lay_val >= back_odds * (1.0 + cashout_lay_pct / 100.0):
+                        triggered = True
+
+                # Modo 2: Adaptativo (umbral diferente antes/después del split_min)
+                if not triggered and adaptive_early_pct is not None and adaptive_late_pct is not None and lay_val:
+                    pct = adaptive_early_pct if m < adaptive_split_min else adaptive_late_pct
+                    if lay_val >= back_odds * (1.0 + pct / 100.0):
+                        triggered = True
+
+                # Modo 3: Gol adverso
+                if not triggered and adverse_goal_stop:
+                    if _is_adverse_goal(row, strategy, team, gl_trigger, gv_trigger):
+                        triggered = True
+
+                # Modo 4: Trailing stop (actualizar mínimo, luego comprobar trail)
+                if trailing_stop_pct is not None and lay_val:
+                    if trail_min_lay is None or lay_val < trail_min_lay:
+                        trail_min_lay = lay_val
+                    if not triggered:
+                        trail_threshold = trail_min_lay * (1.0 + trailing_stop_pct / 100.0)
+                        if lay_val >= trail_threshold:
+                            triggered = True
+
+                if triggered:
                     best_row = row
                     break
+
         elif pessimistic:
             # Worst lay odds (highest) in full post-signal window — conservative
             best_row = None
@@ -2637,6 +3033,14 @@ def simulate_cashout_cartera(cartera_data: dict, cashout_minute: int = None, *, 
     result["cashout_lay_pct"] = cashout_lay_pct
     result["cashout_minute"] = cashout_minute
     result["cashout_applied_count"] = co_count
+    result["cashout_mode_params"] = {
+        "cashout_lay_pct": cashout_lay_pct,
+        "adaptive_early_pct": adaptive_early_pct,
+        "adaptive_late_pct": adaptive_late_pct,
+        "adaptive_split_min": adaptive_split_min,
+        "adverse_goal_stop": adverse_goal_stop,
+        "trailing_stop_pct": trailing_stop_pct,
+    }
     return result
 
 
@@ -2859,8 +3263,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         versions = {"draw": "v2r", "xg": "v3", "drift": "v1", "clustering": "v2", "pressure": "v1"}
 
     # --- Minimum duration config (from historical duration analysis) ---
-    # Recommended minimums: draw=1 (no benefit), xg=2, drift=2, clustering=4, pressure=2
-    _DEFAULT_MIN_DUR = {"draw": 1, "xg": 2, "drift": 2, "clustering": 4, "pressure": 2}
+    # Recommended minimums: draw=1 (no benefit), xg=2, drift=2, clustering=4, pressure=2, momentum=1
+    _DEFAULT_MIN_DUR = {"draw": 1, "xg": 2, "drift": 2, "clustering": 4, "pressure": 2, "momentum": 1}
     min_dur_map = {
         family: int(versions.get(f"{family}_min_dur", _DEFAULT_MIN_DUR[family]))
         for family in _DEFAULT_MIN_DUR
@@ -2875,11 +3279,21 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     _drift_mom_gap_min  = float(versions.get("drift_mom_gap_min", 0))       # cartera.ts v1 default: 0
     _clustering_min_max = int(versions.get("clustering_minute_max", 90))    # cartera.ts v3 default: 60
     _clustering_xg_rem  = float(versions.get("clustering_xg_rem_min", 0))  # cartera.ts default: 0
+    _clustering_sot     = int(versions.get("clustering_sot_min", 3))        # cartera.ts default: 3
     _xg_minute_max      = int(versions.get("xg_minute_max", 90))            # cartera.ts v3 default: 70
     _xg_sot_min         = int(versions.get("xg_sot_min", 0))               # cartera.ts base default: 0
+    _xg_excess_min      = float(versions.get("xg_xg_excess_min", 0.5))     # cartera.ts default: 0.5
     _draw_xg_max        = float(versions.get("draw_xg_max", 1.0))           # cartera.ts v2r default: 0.6
     _draw_poss_max      = float(versions.get("draw_poss_max", 100))         # cartera.ts v2r default: 20
     _draw_shots_max     = float(versions.get("draw_shots_max", 20))         # cartera.ts v2r default: 8
+    _draw_minute_min    = int(versions.get("draw_minute_min", 30))          # default 30 (strategy intrinsic min)
+    _draw_minute_max    = int(versions.get("draw_minute_max", 90))
+    _xg_minute_min      = int(versions.get("xg_minute_min", 0))
+    _clustering_min_min = int(versions.get("clustering_minute_min", 0))
+    _pressure_minute_min = int(versions.get("pressure_minute_min", 0))
+    _pressure_minute_max = int(versions.get("pressure_minute_max", 90))
+    _momentum_minute_min = int(versions.get("momentum_minute_min", 0))
+    _momentum_minute_max = int(versions.get("momentum_minute_max", 90))
 
     # --- Load first-seen timestamps from signals_log for age calculation ---
     _log_file = Path(__file__).parent.parent.parent / "signals_log.csv"
@@ -2902,6 +3316,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     def _get_strategy_family(strategy_key: str) -> str:
         if "draw" in strategy_key:
             return "draw"
+        if "momentum" in strategy_key:
+            return "momentum"
         if "xg" in strategy_key or "underperformance" in strategy_key:
             return "xg"
         if "drift" in strategy_key:
@@ -3104,7 +3520,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
         # === STRATEGY 1: Back Empate (version-specific conditions) ===
         # goals_data_ok guards against scraper not capturing goal data (None→0 would cause false 0-0 triggers)
-        if draw_ver != "off" and (minuto >= 30 and
+        # _draw_minute_min is configurable (default 30 = strategy intrinsic minimum)
+        if draw_ver != "off" and (minuto >= _draw_minute_min and
             goals_data_ok and
             goles_local == 0 and goles_visitante == 0 and
             xg_local is not None and xg_visitante is not None):
@@ -3113,35 +3530,43 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             tiros_total = tiros_local + tiros_visitante
             poss_diff = abs((posesion_local or 50) - (posesion_visitante or 50))
 
-            # Version-specific filters
+            # Version-specific filters — use user-configured thresholds from cartera_config
+            # Sentinel values: xg>=1.0=off, poss>=100=off, shots>=20=off
+            _xg_ok  = _draw_xg_max   >= 1.0 or xg_total    < _draw_xg_max
+            _pos_ok = _draw_poss_max >= 100  or poss_diff   < _draw_poss_max
+            _sht_ok = _draw_shots_max >= 20  or tiros_total < _draw_shots_max
             passes = True
             thresholds = {}
+            if _draw_xg_max   < 1.0:  thresholds["xg_total"]       = f"< {_draw_xg_max}"
+            if _draw_poss_max < 100:  thresholds["possession_diff"] = f"< {_draw_poss_max}%"
+            if _draw_shots_max < 20:  thresholds["total_shots"]     = f"< {_draw_shots_max}"
             if draw_ver == "v1":
                 pass  # No extra filters
             elif draw_ver == "v15":
-                passes = xg_total < 0.6 and poss_diff < 25
-                thresholds = {"xg_total": "< 0.6", "possession_diff": "< 25%"}
+                passes = _xg_ok and _pos_ok
             elif draw_ver == "v2r":
-                passes = xg_total < 0.6 and poss_diff < 20 and tiros_total < 8
-                thresholds = {"xg_total": "< 0.6", "possession_diff": "< 20%", "total_shots": "< 8"}
+                passes = _xg_ok and _pos_ok and _sht_ok
             elif draw_ver == "v2":
-                passes = xg_total < 0.5 and poss_diff < 20 and tiros_total < 8
-                thresholds = {"xg_total": "< 0.5", "possession_diff": "< 20%", "total_shots": "< 8"}
+                passes = _xg_ok and _pos_ok and _sht_ok
             elif draw_ver == "v3":
                 # V3: V1.5 + xG dominance asymmetry (one team clearly dominates xG)
                 xg_dom = (xg_local / xg_total) if xg_total and xg_total > 0 else None
                 passes = (
-                    xg_total < 0.6 and poss_diff < 25
+                    _xg_ok and _pos_ok
                     and xg_dom is not None and (xg_dom > 0.55 or xg_dom < 0.45)
                 )
-                thresholds = {"xg_total": "< 0.6", "possession_diff": "< 25%", "xg_dominance": "> 55% o < 45%"}
+                thresholds["xg_dominance"] = "> 55% o < 45%"
             elif draw_ver == "v4":
                 opta_gap_abs = abs(opta_l - opta_v) if opta_l is not None and opta_v is not None else None
                 passes = (
-                    xg_total < 0.6 and poss_diff < 20 and tiros_total < 8
+                    _xg_ok and _pos_ok and _sht_ok
                     and opta_gap_abs is not None and opta_gap_abs <= 10
                 )
-                thresholds = {"xg_total": "< 0.6", "possession_diff": "< 20%", "total_shots": "< 8", "opta_gap": "<= 10"}
+                thresholds["opta_gap"] = "<= 10"
+
+            # minuteMax gate (upper bound — configurable, default: no limit)
+            if passes and _draw_minute_max < 90 and minuto >= _draw_minute_max:
+                passes = False
 
             if passes and back_draw is not None:
                 meta = STRATEGY_META["back_draw_00"]
@@ -3185,7 +3610,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
         # === STRATEGY 2: xG Underperformance (version-specific) ===
         # Skip if match has corrupted Over/Under odds
-        if match_id not in CORRUPTED_OVER_MATCHES and xg_ver != "off" and minuto >= 15 and xg_local is not None and xg_visitante is not None:
+        if match_id not in CORRUPTED_OVER_MATCHES and xg_ver != "off" and minuto >= max(15, _xg_minute_min) and xg_local is not None and xg_visitante is not None:
             # Check both teams for underperformance
             for team_label, xg_team, goals_team, goals_opp, sot_team in [
                 ("Home", xg_local, goles_local, goles_visitante, tiros_puerta_local),
@@ -3194,12 +3619,12 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 if goals_team >= goals_opp:
                     continue  # team not losing
                 xg_excess = xg_team - goals_team
-                if xg_excess < 0.5:
+                if xg_excess < _xg_excess_min:
                     continue
 
                 # Version-specific filters
                 # _xg_sot_min and _xg_minute_max come from cartera_config strategies.xg
-                xg_thresholds = {"xg_excess": ">= 0.5"}
+                xg_thresholds = {"xg_excess": f">= {_xg_excess_min}"}
                 if xg_ver == "base":
                     # Use config params if explicitly set
                     if _xg_sot_min > 0 and sot_team < _xg_sot_min:
@@ -3391,7 +3816,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
         # === STRATEGY 4: Goal Clustering (version-specific) ===
         # Skip if match has corrupted Over/Under odds
-        if match_id not in CORRUPTED_OVER_MATCHES and clustering_ver != "off" and len(rows) >= 2 and 15 <= minuto <= 80:
+        _cluster_min = max(15, _clustering_min_min)
+        if match_id not in CORRUPTED_OVER_MATCHES and clustering_ver != "off" and len(rows) >= 2 and _cluster_min <= minuto <= 80:
             # Look for goal in last 3 captures (approx last 90 seconds)
             recent_goal = False
             goal_minute = None
@@ -3420,7 +3846,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             if recent_goal:
                 sot_max = max(tiros_puerta_local, tiros_puerta_visitante)
 
-                if sot_max >= 3:
+                if _clustering_sot == 0 or sot_max >= _clustering_sot:
                     # minuteMax filter: from cartera_config strategies.clustering.minuteMax
                     # cartera.ts: v3 → minuteMax=60, v2 → 90 (no filter), v4 → 80
                     # _clustering_min_max defaults to 90 (no filter) but config will supply 60 for v3
@@ -3432,7 +3858,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
                         meta = STRATEGY_META["goal_clustering"]
                         min_odds = calculate_min_odds(meta["win_rate"])
-                        cl_thresholds = {"minute_range": "15-80", "sot_max": ">= 3"}
+                        cl_thresholds = {"minute_range": f"{_cluster_min}-80"}
+                        if _clustering_sot > 0:
+                            cl_thresholds["sot_max"] = f">= {_clustering_sot}"
                         if _clustering_min_max < 90:
                             cl_thresholds["minute"] = f"< {_clustering_min_max}"
 
@@ -3483,7 +3911,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         has_goals = total_goals >= 2  # at least 1-1
 
         # Skip if match has corrupted Over/Under odds
-        if match_id not in CORRUPTED_OVER_MATCHES and pressure_ver != "off" and (65 <= minuto <= 75 and is_draw and has_goals):
+        _press_min = max(65, _pressure_minute_min)
+        _press_max = min(75, _pressure_minute_max) if _pressure_minute_max < 90 else 75
+        if match_id not in CORRUPTED_OVER_MATCHES and pressure_ver != "off" and (_press_min <= minuto <= _press_max and is_draw and has_goals):
             # Score confirmation: check last few rows have same score
             score_confirmed = False
             confirm_count = 0
@@ -3549,8 +3979,10 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             else:  # v1
                 mom_cfg = {"sot_min": 1, "ratio": 1.1, "xg": 0.15, "min_m": 10, "max_m": 80, "odds_min": 1.4, "odds_max": 6.0}
 
-            # Check minute range
-            if not (mom_cfg["min_m"] <= minuto <= mom_cfg["max_m"]):
+            # Check minute range (version-specific floor/ceiling + user config)
+            mom_actual_min = max(mom_cfg["min_m"], _momentum_minute_min) if _momentum_minute_min > 0 else mom_cfg["min_m"]
+            mom_actual_max = min(mom_cfg["max_m"], _momentum_minute_max) if _momentum_minute_max < 90 else mom_cfg["max_m"]
+            if not (mom_actual_min <= minuto <= mom_actual_max):
                 pass  # Skip
             else:
                 # Calculate xG underperformance
@@ -3942,7 +4374,7 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
         if not csv_path.exists():
             continue
 
-        rows = _read_csv_rows(csv_path)
+        rows = _normalize_halftime_minutes(_read_csv_rows(csv_path))
         if len(rows) < 10:
             continue
 
@@ -4041,6 +4473,7 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
                                 "score_at_trigger": f"{int(gl)}-{int(gv)}",
                                 "sot_max": sot_max,
                                 "back_over_odds": round(over_odds, 2),
+                                "lay_trigger": _to_float(row.get(over_field.replace("back_", "lay_"), "")) or None,
                                 "over_line": f"Over {total_now + 0.5}",
                                 "ft_score": ft_score,
                                 "won": over_won,
@@ -4125,7 +4558,7 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
         if not csv_path.exists():
             continue
 
-        rows = _read_csv_rows(csv_path)
+        rows = _normalize_halftime_minutes(_read_csv_rows(csv_path))
         if len(rows) < 20:
             continue
 
@@ -4247,6 +4680,7 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
                 "minuto": actual_min,
                 "score": f"{int(gl)}-{int(gv)}",
                 "back_over_odds": round(over_odds, 2),
+                "lay_trigger": _to_float(row.get(over_field.replace("back_", "lay_"), "")) or None if over_field else None,
                 "over_line": over_line,
                 "ft_score": ft_score,
                 "won": won,
@@ -4317,7 +4751,7 @@ def analyze_strategy_tarde_asia(min_dur: int = 1) -> dict:
         if not csv_path.exists():
             continue
 
-        rows = _read_csv_rows(csv_path)
+        rows = _normalize_halftime_minutes(_read_csv_rows(csv_path))
         if len(rows) < 20:
             continue
 
@@ -4451,6 +4885,7 @@ def analyze_strategy_tarde_asia(min_dur: int = 1) -> dict:
                 "minuto": actual_min,
                 "score": score_at_trigger,
                 "back_over_odds": round(over_25_odds, 2),
+                "lay_trigger": _to_float(row.get("lay_over25", "")) or None,
                 "over_line": "Over 2.5",
                 "ft_score": ft_score,
                 "won": won,
@@ -4555,7 +4990,7 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
         if not csv_path.exists():
             continue
 
-        rows = _read_csv_rows(csv_path)
+        rows = _normalize_halftime_minutes(_read_csv_rows(csv_path))
         if len(rows) < 20:
             continue
 
@@ -4687,6 +5122,7 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
                 dominant_team=dominant_team
             )
 
+            _mx_lay_col = "lay_home" if dominant_team == "home" else "lay_away"
             results["bets"].append({
                 "match": match_name,
                 "match_id": match_id,
@@ -4696,6 +5132,7 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
                 "sot_ratio": round(sot_ratio_used, 2),
                 "xg_underperf": round(xg_underperf, 2),
                 "back_odds": round(back_odds, 2),
+                "lay_trigger": _to_float(row.get(_mx_lay_col, "")) or None,
                 "ft_score": ft_score,
                 "won": won,
                 "pl": pl,

@@ -6,12 +6,13 @@
       "possMax": 25,
       "shotsMax": 20,
       "xgDomAsym": false,
-      "minuteMin": 0,
+      "minuteMin": 30,
       "minuteMax": 90
     },
     "xg": {
       "enabled": true,
       "sotMin": 2,
+      "xgExcessMin": 0.5,
       "minuteMin": 0,
       "minuteMax": 70
     },
@@ -26,6 +27,7 @@
     },
     "clustering": {
       "enabled": true,
+      "sotMin": 3,
       "minuteMin": 0,
       "minuteMax": 60,
       "xgRemMin": 0
@@ -41,7 +43,7 @@
       "minuteMax": 90
     },
     "momentum_xg": {
-      "version": "v2",
+      "version": "v1",
       "minuteMin": 0,
       "minuteMax": 90
     }
@@ -52,8 +54,8 @@
   "active_preset": "max_pl",
   "risk_filter": "no_risk",
   "min_duration": {
-    "draw": 1,
-    "xg": 2,
+    "draw": 2,
+    "xg": 3,
     "drift": 2,
     "clustering": 4,
     "pressure": 4
@@ -61,17 +63,17 @@
   "adjustments": {
     "enabled": true,
     "dedup": true,
-    "max_odds": 6,
-    "min_odds": 1.15,
+    "max_odds": 7,
+    "min_odds": 1.21,
     "drift_min_minute": 30,
-    "slippage_pct": 2,
-    "conflict_filter": true,
-    "allow_contrarias": true,
-    "stability": 1,
+    "slippage_pct": 3.5,
+    "conflict_filter": false,
+    "allow_contrarias": false,
+    "stability": 3,
     "conservative_odds": false,
     "global_minute_min": null,
     "global_minute_max": null,
     "cashout_minute": null,
-    "cashout_pct": 20
+    "cashout_pct": 50
   }
 }
