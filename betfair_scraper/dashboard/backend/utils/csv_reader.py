@@ -2699,33 +2699,44 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                 team_xg = xg_h if team == "home" else xg_a
                 team_goals = gl_i if team == "home" else gv_i
 
-                # Check persistence: signal must hold for min_dur consecutive rows
+                # Check persistence: signal must hold for min_dur consecutive rows.
+                # Re-verify via the shared helper at confirmation row (mirrors LIVE
+                # stability: signal must still be present after min_dur captures).
                 entry_row = row
                 if min_dur > 1:
                     end_idx = ri + min_dur - 1
                     if end_idx >= len(rows):
                         continue  # not enough rows remaining
                     entry_row = rows[end_idx]
-                    # Re-validate that signal holds at entry row
+                    # Re-run helper at confirmation row to verify signal persists
                     _gl_e = _to_float(entry_row.get("goles_local", ""))
                     _gv_e = _to_float(entry_row.get("goles_visitante", ""))
                     _xg_h_e = _to_float(entry_row.get("xg_local", ""))
                     _xg_a_e = _to_float(entry_row.get("xg_visitante", ""))
-                    if _gl_e is None or _gv_e is None or _xg_h_e is None or _xg_a_e is None:
-                        continue
-                    _team_xg_e = _xg_h_e if team == "home" else _xg_a_e
-                    _team_goals_e = int(_gl_e) if team == "home" else int(_gv_e)
-                    _opp_goals_e = int(_gv_e) if team == "home" else int(_gl_e)
-                    if (_team_xg_e - _team_goals_e) < 0.3 or _opp_goals_e <= _team_goals_e:
-                        continue  # signal broke
-                    gl_i = int(_gl_e)
-                    gv_i = int(_gv_e)
+                    _sot_l_e = _to_float(entry_row.get("tiros_puerta_local", "")) or 0
+                    _sot_v_e = _to_float(entry_row.get("tiros_puerta_visitante", "")) or 0
                     _min_e = _to_float(entry_row.get("minuto", ""))
+                    confirm_cands = _detect_xg_underperf_candidates(
+                        xg_local=_xg_h_e, xg_visitante=_xg_a_e,
+                        goals_local=int(_gl_e) if _gl_e is not None else 0,
+                        goals_visitante=int(_gv_e) if _gv_e is not None else 0,
+                        sot_local=_sot_l_e, sot_visitante=_sot_v_e,
+                        minuto=_min_e or 0, rows=rows, row=entry_row, cfg=_xg_bt_cfg,
+                    )
+                    # Check same team still qualifies at confirmation row
+                    confirm_ok = any(c["team"] == team for c in confirm_cands)
+                    if not confirm_ok:
+                        continue  # signal broke — team no longer qualifies
+                    # Update trigger data from confirmation row
+                    confirm_cand = next(c for c in confirm_cands if c["team"] == team)
+                    gl_i = int(_gl_e) if _gl_e is not None else gl_i
+                    gv_i = int(_gv_e) if _gv_e is not None else gv_i
                     if _min_e is not None:
                         minuto = _min_e
+                    xg_excess = confirm_cand["xg_excess"]
                     total_at_trigger = gl_i + gv_i
                     score_at_trigger = f"{gl_i}-{gv_i}"
-                    over_field = _get_over_odds_field(total_at_trigger)
+                    over_field = confirm_cand["over_field"]
 
                 # Get back odds from entry row
                 back_over = _to_float(entry_row.get(over_field, "")) if over_field else None
@@ -2886,10 +2897,17 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
             if triggered[team]:
                 continue
 
-            # Min duration persistence: team must stay winning for min_dur rows
+            # Min duration persistence: team must stay winning AND drift trigger
+            # must persist for min_dur rows.  This mirrors LIVE behavior where
+            # analytics.py's stability post-filter requires the signal to be
+            # present across multiple consecutive captures before placing the bet.
             if min_dur > 1:
+                confirm_idx = curr_ri + min_dur - 1
+                if confirm_idx >= len(rows):
+                    continue  # not enough rows remaining
+                # Check team stays winning in every intermediate row
                 persist_ok = True
-                for pi in range(curr_ri + 1, min(curr_ri + min_dur, len(rows))):
+                for pi in range(curr_ri + 1, confirm_idx + 1):
                     pr = rows[pi]
                     pg = _to_float(pr.get("goles_local" if team == "home" else "goles_visitante", ""))
                     po = _to_float(pr.get("goles_visitante" if team == "home" else "goles_local", ""))
@@ -2898,6 +2916,15 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
                         break
                 if not persist_ok:
                     continue
+                # Re-verify the drift trigger at the confirmation row (like LIVE
+                # stability: signal must still be present after min_dur captures).
+                confirm_trig = _detect_drift_trigger(rows, confirm_idx, _drift_bt_cfg)
+                if confirm_trig is None or confirm_trig["team"] != team:
+                    continue
+                # Use confirmation row data (odds at placement time, not trigger time)
+                odds_now = confirm_trig["odds_now"]
+                drift = confirm_trig["drift_pct"] / 100.0
+                curr_min = confirm_trig["minuto"]
 
             triggered[team] = True
             score_at = f"{gl_i}-{gv_i}"
@@ -5207,6 +5234,23 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
             if trig is None:
                 continue
 
+            # Min duration: wait min_dur rows and re-verify trigger persists.
+            # This mirrors LIVE behavior where analytics.py's stability
+            # post-filter requires the signal to still be present after
+            # min_dur captures before placing the bet.
+            entry_row = row
+            if min_dur > 1:
+                end_idx = idx + min_dur - 1
+                if end_idx >= len(rows):
+                    continue  # not enough rows remaining
+                # Re-verify trigger at confirmation row
+                confirm_trig = _detect_pressure_trigger(rows, end_idx, _pc_bt_cfg)
+                if confirm_trig is None:
+                    continue  # trigger disappeared — ephemeral signal
+                # Use confirmation data (reflects state at bet placement time)
+                trig = confirm_trig
+                entry_row = rows[end_idx]
+
             trigger_found = True
             total_goals = trig["total_goals"]
             over_field   = trig["over_field"]
@@ -5214,14 +5258,6 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
             gv           = trig["gv"]
             minuto       = trig["minuto"]
             actual_min   = int(minuto)
-
-            # Min duration: wait min_dur rows before entering
-            entry_row = row
-            if min_dur > 1:
-                end_idx = idx + min_dur - 1
-                if end_idx >= len(rows):
-                    continue  # not enough rows remaining
-                entry_row = rows[end_idx]
 
             results["draws_65_75"] += 1
 
