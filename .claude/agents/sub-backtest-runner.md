@@ -57,9 +57,43 @@ cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python aux/sd_bt_{hypoth
 Si el script falla, diagnostica el error (typo en columna, datos inesperados, etc.),
 corrige el script, y reintenta UNA vez. Si falla de nuevo, reporta el error al padre.
 
+### Paso 2.5 — Validación realista
+
+Después de ejecutar el backtest, valida los resultados con el pipeline realista.
+El script del Paso 1 debe exportar los bets del mejor combo a un fichero JSON:
+
+```python
+# Al final del script, después de encontrar best_by_roi:
+if best_by_roi:
+    best_bets = run_backtest(matches, best_by_roi["params"])
+    with open(f"aux/sd_bt_{HYPOTHESIS_NAME}_bets.json", "w") as f:
+        json.dump(best_bets, f, ensure_ascii=False)
+```
+
+Luego ejecuta el validador realista:
+
+```bash
+cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python strategies/sd_validate_realistic.py --file aux/sd_bt_{hypothesis_name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l)
+```
+
+Esto aplica los mismos filtros que el notebook BT real:
+- **Slippage 2%** en BACK wins (reduce P/L de cada win)
+- **Odds filter** [1.05, 10.0] (elimina bets con odds extremas)
+- **Dedup** (1 bet por match)
+
+Y verifica los quality gates del notebook:
+- N >= max(15, n_matches/25) (~33 con 850 matches)
+- ROI >= 10%
+- IC95 lower bound >= 40%
+- Train ROI > 0 y Test ROI > 0
+
+**IMPORTANTE**: Si el verdict es FAIL, reportalo claramente al padre.
+Las stats "realistic" son las que importan, no las "raw".
+
 ### Paso 3 — Devolver resultados
 
 Parsea la salida JSON del script y devuelvela tal cual al agente padre.
+Incluye tambien el resultado de la validacion realista (Paso 2.5).
 Anade un breve resumen en texto plano al principio:
 
 ```
@@ -68,6 +102,11 @@ Best combo by ROI: {params} -> N={N}, WR={WR}%, ROI={ROI}%, Sharpe={sharpe}
 Combos tested: {total}
 Combos with N >= 60: {count}
 Time elapsed: {seconds}s
+
+REALISTIC VALIDATION: {PASS|FAIL}
+  Raw:       N={N}, WR={WR}%, ROI={ROI}%
+  Realistic: N={N}, WR={WR}%, ROI={ROI}%
+  Failed gates: {list or none}
 ```
 
 ---
@@ -364,6 +403,14 @@ if __name__ == "__main__":
     }
 
     print(json.dumps(output, ensure_ascii=False, indent=2))
+
+    # Export best bets for realistic validation (Paso 2.5)
+    if best_roi:
+        best_bets = run_backtest(matches, best_roi["params"])
+        bets_file = f"aux/sd_bt_HYPOTHESIS_NAME_bets.json"  # REPLACE name
+        with open(bets_file, "w", encoding="utf-8") as f:
+            json.dump(best_bets, f, ensure_ascii=False)
+        print(f"Exported {len(best_bets)} bets to {bets_file}", file=sys.stderr)
 ```
 
 ---
