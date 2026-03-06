@@ -30,6 +30,16 @@ betfair_scraper/dashboard/backend/memory_monitor*.log
 .ipynb_checkpoints/
 analisis/.ipynb_checkpoints/
 
+# Analysis outputs (regenerable)
+analisis/portfolio_analysis_*.json
+analisis/portfolio_bets_*.csv
+analisis/backtest_audit_*.md
+analisis/*_executed.ipynb
+analisis/apuestas_paper_*.csv
+
+# Claude agent memory (regenerable)
+.claude/agent-memory/
+
 # Config backups (use git instead)
 betfair_scraper/cartera_config.json.bak_*
 
