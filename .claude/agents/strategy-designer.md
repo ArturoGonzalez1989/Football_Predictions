@@ -250,9 +250,34 @@ Muestra tabla de resultados con semaforo:
 
 ---
 
+### PASO 4.5 — Validación realista (OBLIGATORIO)
+
+**ANTES de considerar una estrategia como candidata**, el sub-backtest-runner debe haber
+ejecutado el validador realista (`strategies/sd_validate_realistic.py`) sobre los bets
+del mejor combo. Este validador aplica los mismos filtros que el notebook BT real:
+
+- **Slippage 2%** en BACK wins (reduce P/L de cada victoria)
+- **Odds filter [1.05, 10.0]** (elimina bets con odds extremas)
+- **Dedup** (1 bet por match)
+
+Y verifica quality gates adicionales del notebook:
+- N >= max(15, n_matches/25) (~35 con 896 matches)
+- **ROI >= 10% post-ajustes** (el gate más importante)
+- IC95 lower bound >= 40%
+- Train ROI > 0 y Test ROI > 0
+
+**REGLA CRÍTICA**: Las stats "raw" del sub-backtest-runner son ORIENTATIVAS.
+Las stats "realistic" del validador son las DEFINITIVAS. Si el verdict es FAIL,
+la estrategia NO es candidata, independientemente de lo bien que se vea en raw.
+
+Históricamente, estrategias con ROI raw de 20-90% caen a <10% tras ajustes realistas.
+Apunta a ROI raw > 15% para tener margen de sobrevivir el gate de 10% realista.
+
+---
+
 ### PASO 5 — Optimizacion de parametros
 
-Para estrategias que pasen los quality gates, escribe un script de grid search mas fino:
+Para estrategias que pasen los quality gates Y la validación realista, escribe un script de grid search mas fino:
 
 ```python
 # strategies/sd_optimize_{name}.py
