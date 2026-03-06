@@ -80,6 +80,21 @@ def _median(values: list) -> float:
     return (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2 if n % 2 == 0 else sorted_vals[n // 2]
 
 
+def _final_match_minute(rows: list[dict]) -> Optional[float]:
+    """Return the last valid minute from the match rows.
+
+    _final_result_row returns 'finalizado' rows whose minuto field is often
+    empty.  This helper scans backwards to find the last row with a real
+    minute value, which is needed by strategies that check whether the match
+    reached a certain minute threshold.
+    """
+    for row in reversed(rows):
+        m = _to_float(row.get("minuto", ""))
+        if m is not None and m > 0:
+            return m
+    return None
+
+
 def _final_result_row(rows: list[dict]) -> Optional[dict]:
     """Return the row that represents the final match result.
 
@@ -1862,6 +1877,7 @@ def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
         passes_v4 = passes_v2r and opta_gap_ok
 
         bets.append({
+            "strategy": "back_draw_00",
             "match": match["name"],
             "match_id": match["match_id"],
             "minuto": minuto_trigger,
@@ -2087,7 +2103,7 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                     continue
 
                 xg_excess = team_xg - team_goals
-                if xg_excess < 0.5 or opp_goals <= team_goals:
+                if xg_excess < 0.3 or opp_goals <= team_goals:
                     continue
 
                 # Check persistence: signal must hold for min_dur consecutive rows
@@ -2106,7 +2122,7 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                     _team_xg_e = _xg_h_e if team == "home" else _xg_a_e
                     _team_goals_e = int(_gl_e) if team == "home" else int(_gv_e)
                     _opp_goals_e = int(_gv_e) if team == "home" else int(_gl_e)
-                    if (_team_xg_e - _team_goals_e) < 0.5 or _opp_goals_e <= _team_goals_e:
+                    if (_team_xg_e - _team_goals_e) < 0.3 or _opp_goals_e <= _team_goals_e:
                         continue  # signal broke
                     gl_i = int(_gl_e)
                     gv_i = int(_gv_e)
@@ -2114,7 +2130,8 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                     if _min_e is not None:
                         minuto = _min_e
 
-                triggered[team] = True
+                # triggered[team] = True will be set below only after a valid bet is generated
+                # This allows the function to retry later rows if odds are not yet available
                 total_at_trigger = gl_i + gv_i
                 score_at_trigger = f"{gl_i}-{gv_i}"
 
@@ -2131,8 +2148,12 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                 back_over = _to_float(row.get(over_field, "")) if over_field else None
 
                 # SKIP: no registra apuesta si no hay cuota válida (evita won=1 con pl=-10)
+                # Note: do NOT set triggered=True here; allow retry on next rows when odds appear
                 if not back_over or back_over <= 1:
                     continue
+
+                # Valid bet found — mark team as triggered to prevent duplicate bets
+                triggered[team] = True
 
                 # Win = at least 1 more goal scored
                 more_goals = ft_total > total_at_trigger
@@ -2152,6 +2173,7 @@ def analyze_strategy_xg_underperformance(min_dur: int = 1) -> dict:
                 pl = round((back_over - 1) * stake * 0.95, 2) if more_goals else -stake
                 pl_conservative = round((_cons_xg - 1) * stake * 0.95, 2) if more_goals else -stake
                 bets.append({
+                    "strategy": "xg_underperformance",
                     "match": match["name"],
                     "match_id": match["match_id"],
                     "minuto": minuto,
@@ -2221,10 +2243,10 @@ def analyze_strategy_odds_drift(min_dur: int = 1) -> dict:
 
     DRIFT_MIN = 0.30
     LOOKBACK_MIN = 10        # Fixed lookback in minutes — matches live detect_betting_signals
-    MIN_MINUTE = 5
-    MAX_MINUTE = 80
-    MIN_ODDS = 1.50
-    MAX_ODDS = 30.0
+    MIN_MINUTE = 0
+    MAX_MINUTE = 90
+    MIN_ODDS = 1.01
+    MAX_ODDS = 1000.0
     COMMISSION = 0.05
     STAKE = 10
     SCORE_CONFIRM_MIN = 3    # Min captures with same score in last 6 rows — matches live
@@ -3094,6 +3116,42 @@ _SIGNAL_LOG_HEADERS = [
 
 _ODDS_CHANGE_THRESHOLD = 0.05  # 5% change triggers an odds_update event
 
+# ── In-memory cache for signals_log first-seen timestamps ──
+# Avoids re-reading the entire CSV (7k+ lines) on every detect_betting_signals call.
+_first_seen_cache: dict[tuple, datetime] = {}
+_first_seen_cache_loaded = False
+
+
+def _load_first_seen_cache() -> dict[tuple, datetime]:
+    """Load first-seen map from signals_log.csv once, then return cached version."""
+    global _first_seen_cache, _first_seen_cache_loaded
+    if _first_seen_cache_loaded:
+        return _first_seen_cache
+    log_file = Path(__file__).parent.parent.parent / "signals_log.csv"
+    if log_file.exists():
+        try:
+            with open(log_file, "r", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    mid = row.get("match_id", "").strip()
+                    strat = row.get("strategy", "").strip()
+                    ts = row.get("timestamp_utc", "").strip()
+                    if mid and strat and ts and (mid, strat) not in _first_seen_cache:
+                        try:
+                            _first_seen_cache[(mid, strat)] = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+                        except ValueError:
+                            pass
+        except Exception:
+            pass
+    _first_seen_cache_loaded = True
+    return _first_seen_cache
+
+
+def _update_first_seen_cache(match_id: str, strategy: str, timestamp: datetime):
+    """Update in-memory cache when a new signal is written to the log."""
+    key = (match_id, strategy)
+    if key not in _first_seen_cache:
+        _first_seen_cache[key] = timestamp
+
 
 def _write_signal_log_row(row: dict):
     """Write a single row to signals_log.csv, creating headers if needed."""
@@ -3115,6 +3173,16 @@ def _write_signal_log_row(row: dict):
         if not log_file.exists() or not file_exists:
             writer.writeheader()
         writer.writerow({k: row.get(k, "") for k in _SIGNAL_LOG_HEADERS})
+
+    # Keep in-memory cache in sync
+    mid = row.get("match_id", "").strip()
+    strat = row.get("strategy", "").strip()
+    ts_str = row.get("timestamp_utc", "").strip()
+    if mid and strat and ts_str:
+        try:
+            _update_first_seen_cache(mid, strat, datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S"))
+        except (ValueError, Exception):
+            pass
 
 
 def _migrate_signals_log(log_file):
@@ -3308,12 +3376,12 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     _drift_minute_min   = int(versions.get("drift_minute_min", 0))          # cartera.ts v1 default: 0
     _drift_minute_max   = int(versions.get("drift_minute_max", 90))         # cartera.ts v1 default: 90 (no filter)
     _drift_mom_gap_min  = float(versions.get("drift_mom_gap_min", 0))       # cartera.ts v6 default: 200
-    _clustering_min_max = int(versions.get("clustering_minute_max", 90))    # cartera.ts v3 default: 60
-    _clustering_xg_rem  = float(versions.get("clustering_xg_rem_min", 0))  # cartera.ts default: 0
-    _clustering_sot     = int(versions.get("clustering_sot_min", 3))        # cartera.ts default: 3
-    _xg_minute_max      = int(versions.get("xg_minute_max", 90))            # cartera.ts v3 default: 70
-    _xg_sot_min         = int(versions.get("xg_sot_min", 0))               # cartera.ts base default: 0
-    _xg_excess_min      = float(versions.get("xg_xg_excess_min", 0.5))     # cartera.ts default: 0.5
+    _clustering_min_max = int(versions.get("clustering_minute_max", 90))    # default: 90 (no filter; config overrides)
+    _clustering_xg_rem  = float(versions.get("clustering_xg_rem_min", 0))  # default: 0 (no filter; config overrides)
+    _clustering_sot     = int(versions.get("clustering_sot_min", 3))        # default: 3 (original)
+    _xg_minute_max      = int(versions.get("xg_minute_max", 90))            # default: 90 (no filter; config overrides)
+    _xg_sot_min         = int(versions.get("xg_sot_min", 0))               # default: 0 (no filter)
+    _xg_excess_min      = float(versions.get("xg_xg_excess_min", 0.5))     # default: 0.5 (original)
     _draw_xg_max        = float(versions.get("draw_xg_max", 1.0))           # cartera.ts v2r default: 0.6
     _draw_poss_max      = float(versions.get("draw_poss_max", 100))         # cartera.ts v2r default: 20
     _draw_shots_max     = float(versions.get("draw_shots_max", 20))         # cartera.ts v2r default: 8
@@ -3326,23 +3394,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     _momentum_minute_min = int(versions.get("momentum_minute_min", 0))
     _momentum_minute_max = int(versions.get("momentum_minute_max", 90))
 
-    # --- Load first-seen timestamps from signals_log for age calculation ---
-    _log_file = Path(__file__).parent.parent.parent / "signals_log.csv"
-    first_seen_map: dict[tuple, datetime] = {}
-    if _log_file.exists():
-        try:
-            with open(_log_file, "r", encoding="utf-8") as _f:
-                for _row in csv.DictReader(_f):
-                    _mid = _row.get("match_id", "").strip()
-                    _strat = _row.get("strategy", "").strip()
-                    _ts = _row.get("timestamp_utc", "").strip()
-                    if _mid and _strat and _ts and (_mid, _strat) not in first_seen_map:
-                        try:
-                            first_seen_map[(_mid, _strat)] = datetime.strptime(_ts, "%Y-%m-%d %H:%M:%S")
-                        except ValueError:
-                            pass
-        except Exception:
-            pass
+    # --- Load first-seen timestamps from in-memory cache (loaded once from signals_log.csv) ---
+    first_seen_map = _load_first_seen_cache()
 
     def _get_strategy_family(strategy_key: str) -> str:
         if "draw" in strategy_key:
@@ -3888,8 +3941,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
                 if _clustering_sot == 0 or sot_max >= _clustering_sot:
                     # minuteMax filter: from cartera_config strategies.clustering.minuteMax
-                    # cartera.ts: v3 → minuteMax=60, v2 → 90 (no filter), v4 → 80
-                    # _clustering_min_max defaults to 90 (no filter) but config will supply 60 for v3
+                    # Notebook optimal: m_max=80. Default in detect_betting_signals: 80.
                     if _clustering_min_max < 90 and minuto >= _clustering_min_max:
                         pass  # skip - past minuteMax from config
                     else:
@@ -4443,7 +4495,10 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
 
         # Rastrear goles para detectar nuevos
         prev_total = None  # None = aún no hemos procesado ninguna fila válida
-        bet_placed = False  # Flag: solo apostar UNA vez por partido
+        # NOTE: bet_placed flag removed — generate ALL qualifying goal events per match
+        # so that notebook filters (xg_rem_min etc.) can select the appropriate one.
+        # Dedup in _apply_realistic_adj / _apply_realistic_adj ensures only the first
+        # qualifying trigger fires in live trading.
 
         for idx, row in enumerate(rows):
             gl = _to_float(row.get("goles_local", ""))
@@ -4465,14 +4520,14 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
             if total_now > prev_total:
                 results["total_goal_events"] += 1
 
-                # Solo apostar si aún no hemos apostado en este partido
-                if not bet_placed and minuto is not None and 15 <= minuto <= 80:
-                    # Filtro V2: SoT max >= 3
+                # Generar bet para TODOS los goal events (no solo el primero)
+                if minuto is not None and 15 <= minuto <= 90:
+                    # Superconjunto: sot >= 2, minuto 15-90 (notebook filtra m_max=80 internamente)
                     sot_l = _to_float(row.get("tiros_puerta_local", "")) or 0
                     sot_v = _to_float(row.get("tiros_puerta_visitante", "")) or 0
                     sot_max = max(int(sot_l), int(sot_v))
 
-                    if sot_max >= 3:
+                    if sot_max >= 2:
                         # Min duration: wait min_dur rows before entering
                         if min_dur > 1:
                             end_idx = idx + min_dur - 1
@@ -4516,6 +4571,7 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
                             pl = round((over_odds - 1) * stake * 0.95, 2) if over_won else -stake
                             pl_conservative = round((_cons_gc - 1) * stake * 0.95, 2) if over_won else -stake
                             results["bets"].append({
+                                "strategy": "goal_clustering",
                                 "match": match_name,
                                 "match_id": match_id,
                                 "minuto": int(minuto),
@@ -4538,9 +4594,6 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
                                 "País": row.get("País", "Desconocido"),
                                 "Liga": row.get("Liga", "Desconocida"),
                             })
-
-                            # Marcar que ya apostamos en este partido
-                            bet_placed = True
 
             # Actualizar prev_total SIEMPRE (dentro o fuera del rango de minutos)
             prev_total = total_now
@@ -4623,7 +4676,7 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
             continue
 
         # Verificar que el partido finalizo (minuto >= 85)
-        last_min = _to_float(last_row.get("minuto", ""))
+        last_min = _final_match_minute(rows)
         if last_min is None or last_min < 85:
             continue
 
@@ -4816,7 +4869,7 @@ def analyze_strategy_tarde_asia(min_dur: int = 1) -> dict:
             continue
 
         # Verificar que el partido finalizó
-        last_min = _to_float(last_row.get("minuto", ""))
+        last_min = _final_match_minute(rows)
         if last_min is None or last_min < 85:
             continue
 
@@ -5004,8 +5057,8 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
             "sot_min": 1,
             "sot_ratio_min": 1.05,
             "xg_underperf_min": 0.1,
-            "min_minute": 5,
-            "max_minute": 85,
+            "min_minute": 0,
+            "max_minute": 90,
             "min_odds": 1.3,
             "max_odds": 8.0,
             "label": "MÁXIMAS"
@@ -5016,8 +5069,8 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
             "sot_min": 1,
             "sot_ratio_min": 1.1,
             "xg_underperf_min": 0.15,
-            "min_minute": 10,
-            "max_minute": 80,
+            "min_minute": 0,
+            "max_minute": 90,
             "min_odds": 1.4,
             "max_odds": 6.0,
             "label": "ULTRA RELAJADAS"
@@ -5055,7 +5108,7 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
             continue
 
         # Verificar que finalizó
-        last_min = _to_float(last_row.get("minuto", ""))
+        last_min = _final_match_minute(rows)
         if last_min is None or last_min < 85:
             continue
 
@@ -5084,10 +5137,17 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
             back_home_odds = _to_float(row.get("back_home", ""))
             back_away_odds = _to_float(row.get("back_away", ""))
 
-            # Validar datos completos
-            if None in [gl, gv, xg_local, xg_visitante, sot_local, sot_visitante,
-                        back_home_odds, back_away_odds]:
+            # Validar datos mínimos (alineado con live: solo xG requerido, goles default 0)
+            if xg_local is None or xg_visitante is None:
                 continue
+            if gl is None:
+                gl = 0
+            if gv is None:
+                gv = 0
+            if sot_local is None:
+                sot_local = 0
+            if sot_visitante is None:
+                sot_visitante = 0
 
             # Calcular xG underperformance
             xg_underperf_local = xg_local - gl
@@ -5107,7 +5167,7 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
             if (sot_local >= config["sot_min"] and
                 sot_ratio_local >= config["sot_ratio_min"] and
                 xg_underperf_local > config["xg_underperf_min"]):
-                if config["min_odds"] <= back_home_odds <= config["max_odds"]:
+                if back_home_odds is not None and config["min_odds"] <= back_home_odds <= config["max_odds"]:
                     dominant_team = "home"
                     back_odds = back_home_odds
                     sot_ratio_used = sot_ratio_local
@@ -5121,7 +5181,7 @@ def analyze_strategy_momentum_xg(version: str = "v1", min_dur: int = 1) -> dict:
             if (sot_visitante >= config["sot_min"] and
                 sot_ratio_visitante >= config["sot_ratio_min"] and
                 xg_underperf_visitante > config["xg_underperf_min"]):
-                if config["min_odds"] <= back_away_odds <= config["max_odds"]:
+                if back_away_odds is not None and config["min_odds"] <= back_away_odds <= config["max_odds"]:
                     # Si ambos son dominantes, tomar el más dominante
                     if dominant_team is None or xg_underperf_visitante > xg_underperf_local:
                         dominant_team = "away"
