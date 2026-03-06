@@ -1,7 +1,7 @@
 # Strategy Designer — Historial de investigacion
-Ultima actualizacion: 2026-03-05
-Dataset al momento de la investigacion: ~850 partidos (2026-02-10 a 2026-03-05)
-Total hipotesis investigadas: 65 (H1-H65) en 10 rondas
+Ultima actualizacion: 2026-03-06
+Dataset al momento de la investigacion: 871 partidos (2026-02-10 a 2026-03-06)
+Total hipotesis investigadas: 69 (H1-H69) en 11 rondas
 
 > Este fichero es la referencia para el agente strategy-designer.
 > Antes de investigar una hipotesis nueva, verificar que no este ya listada aqui.
@@ -13,6 +13,43 @@ Solo 1 de las 19 aprobadas en rondas anteriores paso los quality gates del noteb
 | Estrategia | Mercado | Config | N | WR | ROI | Notebook status |
 |---|---|---|---|---|---|---|
 | BACK Leader Stat Domination (H2) | BACK Match Winner (leader) | min=55-70, sot>=4, rival<=1 | 26 | 92.3% | +47.4% | ACTIVA |
+
+## APROBADAS RONDA 11 (2 nuevas)
+
+Ronda 11 explored genuinely new angles after 10 rounds of research. Focus: markets not yet covered (Under 3.5, Away Favourite leading). Of 4 hypotheses investigated (H66-H69), 2 approved, 2 in monitoring.
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H66 | BACK Under 3.5 Three-Goal Lid | BACK U3.5 | 84 | 67.9% | +26.2% | 2.33 | +11.9% | +58.3% | strategies/sd_report_back_under35_three_goals.md |
+| 2 | H67 | BACK Away Favourite Leading Late | BACK MO (away fav) | 121 | 85.1% | +23.9% | 2.71 | +16.4% | +41.1% | strategies/sd_report_back_away_fav_leading.md |
+
+### Quality gates resumen (Ronda 11)
+
+| Gate | H66 | H67 |
+|------|-----|-----|
+| G1: N>=60 | PASS (84) | PASS (121) |
+| G2: N_test>=18 | PASS (26) | PASS (37) |
+| G3: ROI train+test>0 | PASS (11.9/58.3) | PASS (16.4/41.1) |
+| G4: IC95_lo>40% | PASS (57.3%) | PASS (77.7%) |
+| G5: MaxDD<400 | PASS (54.50) | PASS (46.26) |
+| G6: Overlap<30% | PASS (0% -- unique market) | PASS (0% -- mutually exclusive with H59) |
+| G7: >=3 ligas | PASS (29) | PASS (29) |
+| G8: DateConc<50% | PASS (47.6%) | PASS (<30%) |
+
+### Notas sobre las nuevas estrategias
+
+- **H66 opens the Under 3.5 market**: First strategy to use Under 3.5. When 3 goals are scored but xG is below 2.5, the goals are "overperformance" and the 4th is unlikely. Market overestimates based on goal count, not chance quality. ROI positive across ALL 48 configs tested (even without xG filter: N=215, ROI=9.8%). xG filter doubles the ROI by removing genuinely high-activity matches.
+- **H67 complements H59 perfectly**: H59 covers underdog leading (any location), H67 covers away FAVOURITE leading. Together they cover ALL "leader late" scenarios. The two strategies are MUTUALLY EXCLUSIVE by definition (same match cannot trigger both). H67 exploits home-advantage bias: market overestimates home comebacks when away favourite already controls the game.
+- **H67 is an "invisible strategy"**: 85.1% WR at avg odds 1.50 means the market prices ~67% hold probability when the actual rate is 85%+. This 18pp gap is one of the largest edges found across all 69 hypotheses.
+- **H66 and H67 have zero market overlap**: H66 trades Under 3.5 (goals market), H67 trades Match Winner (away). They can both trigger on the same match without conflict.
+
+### Cross-overlap between R11 approved
+
+| Par | Market overlap |
+|-----|----------------|
+| H66 vs H67 | 0% (different markets: U3.5 vs Match Winner) |
+| H66 vs H59 | 0% (U3.5 vs Match Winner) |
+| H67 vs H59 | 0% (mutually exclusive: away fav vs underdog) |
 
 ## APROBADAS RONDA 10 (1 nueva, Perplexity-derived)
 
@@ -176,7 +213,7 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | 18 | H35 | BACK Longshot Resistente | BACK MO (longshot) | ROI insuficiente |
 | 19 | H37 | BACK CS 0-0 Early | BACK CS 0-0 | ROI insuficiente |
 
-## EN SEGUIMIENTO (5)
+## EN SEGUIMIENTO (7)
 
 | # | Hipotesis | Nombre | Mercado | N actual | Mejor ROI | Gate que falla | Fecha revision |
 |---|---|---|---|---|---|---|---|
@@ -185,6 +222,12 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | 3 | H55 | BACK CS 2-0/0-2 Hold | BACK CS 2-0/0-2 | 105 | +26.5% | IC95_lo=32.0% < 40% (WR uncertain) | Cuando dataset > 1200 |
 | 4 | H62 | BACK Draw After UD Equalizer Late | BACK Draw | 40 | +149.5% | N=40 < 60 (Sharpe=3.38, train=156%/test=134%) | Cuando dataset > 1200 |
 | 5 | H65 | BACK CS 3-0/0-3 Late Hold | BACK CS 3-0/0-3 | 49 | +74.3% | N=49 < 60 (train=86.6%/test=46.4%) | Cuando dataset > 1200 |
+| 6 | H68 | BACK Draw at 2-2 Late | BACK Draw (2-2) | 44 | +28.4% | N=44 < 60 (WR=54.5%, Sharpe=1.16, edge=+10.5pp vs implied) | Cuando dataset > 1200 |
+| 7 | H69 | BACK Under 0.5 Late Scoreless | BACK U0.5 | 78 | +15.4% | Sharpe=0.78, low edge/variance ratio; overlaps with H44 concept | Cuando dataset > 1200 |
+
+**H68 nota**: BACK Draw at 2-2 at min 70-85. N=44, WR=54.5%, ROI=28.4%, Sharpe=1.16. The market underprices draws at 2-2 by ~10pp (actual 54.5% vs implied ~38%). Both teams have scored twice, creating mutual exhaustion and risk-aversion that favours draws. Different dynamics from H58 (Draw 1-1) -- at 2-2, each goal required different tactical adjustments. With 1200+ matches should reach N>=60. Extends Draw analysis to high-scoring tied games.
+
+**H69 nota**: BACK Under 0.5 at 0-0 at min 78-90. N=78, WR=61.5%, ROI=13.1%, Sharpe=0.69. The edge exists (+12pp at min 80) but Sharpe is low due to high variance in Under 0.5 market. Conceptually overlaps with H44 (LAY Over 1.5 Scoreless) -- both profit from no-goal games. However, Under 0.5 is a different market with potentially better odds structure. Keep monitoring but de-prioritize. Best config: min=80-90, N=74, WR=64.9%, ROI=15.4%.
 
 **H62 nota**: Underdog equalizes the favourite's lead at min 60-85, fav_pre <= 2.5. BACK Draw. WR=60%, avg odds=4.00. Very high ROI but only N=40. Both train (156.2%) and test (134.1%) are strongly positive, suggesting genuine edge. The edge thesis is compelling: after equalization, the favourite has lost momentum and the underdog defends the draw. Market still prices the favourite to win. With 1200+ matches, should reach N>=60.
 
@@ -270,7 +313,15 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 
 ## NOTAS PARA FUTURAS RONDAS
 
-- Hipotesis H1-H65 ya cubiertas. Siguiente ronda empieza en H66.
+- Hipotesis H1-H69 ya cubiertas. Siguiente ronda empieza en H70.
+- **Ronda 11 hallazgos clave**:
+  - **Under 3.5 market is genuinely inefficient**: When 3 goals are scored but xG < 2.5, the 4th goal probability is overpriced. H66 found ROI=+26.2% (N=84). Even WITHOUT xG filter, ROI is +9.8% (N=215) -- the market systematically overestimates 4th goal probability regardless of quality.
+  - **Away favourite leading is massively underpriced**: H67 found 85.1% hold rate vs market-implied 67%. This 18pp edge is one of the largest in the entire research program. The "home advantage comeback" narrative is deeply embedded in market pricing.
+  - **H67 and H59 form a "leader portfolio"**: Together they cover ALL "leading team late" scenarios with zero overlap (mutually exclusive by definition). H59 captures underdog-leads (high odds, high ROI), H67 captures away-favourite-leads (lower odds, very high WR). Combined N would be ~310+.
+  - **Draw at 2-2 has genuine edge (+10pp)** but N=44 is insufficient for approval. Extends the Draw analysis from 1-1 (H58) to 2-2. Different dynamics but similar market bias.
+  - **Under 0.5 late scoreless has edge (+12pp at min 80)** but overlaps conceptually with H44 and has low Sharpe. Not recommended for approval at current N.
+  - **Goal timing analysis**: Second half is more productive (77.3% of matches have 1+ goals in 2H). The 45-55 minute window is peak goal-scoring (avg 0.41 goals/match in those 10 minutes). Late minutes (75-90) see significant goal-scoring but also many holds.
+  - **Comeback analysis**: Leader at 70' holds to win 85.6% of the time. Only 12.2% of trailing teams equalize, 2.1% complete a comeback. The market significantly overestimates comeback probability.
 - El notebook usa `eval_sd()` con gates: N >= G_MIN_BETS_SD (31), ROI >= G_MIN_ROI, IC95_low >= IC95_MIN_LOW.
 - Muchas estrategias aprobadas con 800 partidos quedaron "off" con el dataset filtrado del notebook. Con mas datos pueden reactivarse automaticamente.
 - Las funciones `_apply_sd_*` y configs `SD_APPROVED_CONFIGS` estan en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`.
@@ -293,10 +344,10 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
   - **BACK Draw After UD Equalizer (H62)** has extraordinary metrics (ROI=149.5%, Sharpe=3.38) but only N=40. In monitoring.
   - **CS 3-0/0-3 (H65)** extends CS structural inefficiency to 3-goal leads (WR=63.3%, avg odds=2.70). N=49, in monitoring.
   - **Stat-dominant losers remain a dead angle**: Only 11 matches, 9.1% win rate. Market correct. Perplexity Section 2.1 (underdog with better stats) only works when underdog is ALREADY LEADING (H59), not when they're losing.
-- **Diversificacion de mercados actual tras R10**:
+- **Diversificacion de mercados actual tras R11**:
   - BACK Over 2.5: 7 estrategias (saturado, NO mas)
   - BACK Under 2.5: H25 + H46 (2)
-  - BACK Under 3.5: H26 (1, off)
+  - **BACK Under 3.5: H26 (off) + H66 (NUEVO R11, 3 goals + low xG)**
   - LAY Over 2.5: H41 (1)
   - LAY Over 1.5: H44 (1)
   - LAY Under 2.5: H48 (1)
@@ -308,6 +359,9 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
   - BACK Draw 1-1: H58 (1, NUEVO R9)
   - BACK Draw post-equalizer: H62 (1, EN SEGUIMIENTO -- N insuficiente)
   - BACK Match Winner (leader): H2, H35, H40 (3)
-  - **BACK Match Winner (underdog): H59 (1, NUEVO R10)** -- first strategy on this market!
+  - **BACK Match Winner (underdog): H59 (1, R10)** -- reverse fav-longshot bias
+  - **BACK Match Winner (away fav): H67 (1, NUEVO R11)** -- away favourite leading, mutually exclusive with H59
+  - BACK Under 0.5: H69 (EN SEGUIMIENTO R11)
+  - BACK Draw 2-2: H68 (EN SEGUIMIENTO R11)
   - LAY Over 4.5: H1 (1, off)
   - BACK Over 4.5: H54 (1, EN SEGUIMIENTO -- N insuficiente)

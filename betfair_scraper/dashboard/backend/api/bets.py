@@ -204,19 +204,19 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct:
             bet["potential_pl"] = round(-stake, 2)
 
         # Cashout recommendation: lay_actual >= entry_back * (1 + cashout_pct/100)
-        recommendation = bet.get("recommendation", "")
-        lay_col = _get_lay_col(recommendation)
-        if lay_col and odds > 1:
-            lay_now = _to_float(last.get(lay_col))
-            if lay_now and lay_now > 1:
-                threshold = round(odds * (1.0 + cashout_pct / 100.0), 2)
-                bet["cashout_lay_current"] = round(lay_now, 2)
-                bet["cashout_threshold"] = threshold
-                bet["suggest_cashout"] = lay_now >= threshold
-                if lay_now >= threshold:
-                    # cashout_pl: stake * (back_odds / lay_now - 1)
-                    # Negativo cuando B < L (recortamos pérdida), positivo cuando B > L (bloqueamos ganancia)
-                    bet["cashout_pl"] = round(stake * (odds / lay_now - 1), 2)
+        # Si cashout_pct es None → CO desactivado, no evaluar
+        if cashout_pct is not None:
+            recommendation = bet.get("recommendation", "")
+            lay_col = _get_lay_col(recommendation)
+            if lay_col and odds > 1:
+                lay_now = _to_float(last.get(lay_col))
+                if lay_now and lay_now > 1:
+                    threshold = round(odds * (1.0 + cashout_pct / 100.0), 2)
+                    bet["cashout_lay_current"] = round(lay_now, 2)
+                    bet["cashout_threshold"] = threshold
+                    bet["suggest_cashout"] = lay_now >= threshold
+                    if lay_now >= threshold:
+                        bet["cashout_pl"] = round(stake * (odds / lay_now - 1), 2)
 
         # Auto-settle: match ended if explicitly finalizado OR not in games.csv (removed = finished)
         finished_states = ("finalizado", "finished", "ft", "full_time", "ended")
@@ -333,12 +333,8 @@ def run_auto_cashout() -> dict:
 
     active_match_ids = _get_active_match_ids()
 
-    try:
-        from api.config import load_config as _load_cfg
-        _cfg = _load_cfg()
-        cashout_pct = float(_cfg.get("adjustments", {}).get("cashout_pct", 20))
-    except Exception:
-        cashout_pct = 20.0
+    # CO desactivado hardcoded — no hacer auto-cashout hasta validar en producción
+    cashout_pct = None
 
     csv_updates: dict[str, dict] = {}
     cashed_out = 0
@@ -538,12 +534,8 @@ async def get_placed_bets():
         active_match_ids = _get_active_match_ids()
 
         # Load cashout_pct from config (single source of truth)
-        try:
-            from api.config import load_config as _load_cfg
-            _cfg = _load_cfg()
-            cashout_pct = float(_cfg.get("adjustments", {}).get("cashout_pct", 20))
-        except Exception:
-            cashout_pct = 20.0
+        # CO desactivado hardcoded — no hacer auto-cashout hasta validar en producción
+        cashout_pct = None
 
         # Enrich pending bets with live data (for visualization only, not settlement)
         for bet in bets:

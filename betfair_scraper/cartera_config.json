@@ -124,7 +124,7 @@
     "global_minute_min": null,
     "global_minute_max": null,
     "cashout_minute": null,
-    "cashout_pct": 5
+    "cashout_pct": null
   },
   "_optimizer_stats": {
     "n": 174,
