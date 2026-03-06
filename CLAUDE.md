@@ -58,7 +58,7 @@ betfair_scraper/
   games.csv              → Partidos activos
   placed_bets.csv        → Apuestas paper
   data/                  → CSVs partido_*.csv + .heartbeat
-  logs/                  → Logs scraper
+  logs/                  → Logs scraper (gitignored)
   scripts/               → 8 scripts (find_matches, clean_games, etc.)
   dashboard/
     backend/
@@ -69,7 +69,11 @@ betfair_scraper/
       api/matches.py     → Datos de partidos (133 lineas)
       api/explorer.py    → Explorador estrategias (95 lineas)
       api/system.py      → Start/stop scraper (381 lineas)
-      utils/csv_reader.py → TODO: estrategias, backtest, live (~5100 lineas)
+      api/debug.py       → Debug endpoints (HTML snapshots, memory)
+      api/optimize.py    → Optimizacion presets (Phase 1+2)
+      api/optimizer_cli.py → CLI para optimizacion paralela
+      api/simulate.py    → Simulador de senales (replay timeline)
+      utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~5300 lineas)
       utils/scraper_status.py → Estado scraper via psutil + log parsing
       utils/signals_audit_logger.py → Audit log rotativo
     frontend/src/
@@ -78,7 +82,12 @@ betfair_scraper/
       lib/trading.ts     → PressureIndex, divergencia, momentum swings (311 lineas)
       lib/sounds.ts      → Alerta sonora Web Audio (61 lineas)
       lib/utils.ts       → cn(), formatTimeAgo(), formatTimeTo() (27 lineas)
-      components/        → 23 componentes React (Dashboard, StrategiesView, etc.)
+      components/        → 21 componentes React (Dashboard, StrategiesView, etc.)
+
+aux/                     → Archivos temporales/prescindibles (gitignored)
+strategies/              → Reportes y tracker del strategy-designer agent
+.claude/agents/          → Definiciones de agentes (backtest-auditor, strategy-designer, etc.)
+analisis/                → Notebooks, audits, portfolio analysis
 ```
 
 ## 7 Estrategias
@@ -147,57 +156,45 @@ El cashout simulation requiere llamadas al backend (GET /analytics/strategies/ca
 4. `auto_paper_trading()` — cada 60s: detecta senales + coloca bets + cashout
 5. `_paper_trading_watchdog()` — reinicia paper trading si crashea
 
-## Divergencias Live vs Backtest (auditado 2026-02-22)
+## Alineamiento BT↔LIVE (completado 2026-03-06)
 
-Resultado del audit completo de `detect_betting_signals()` vs `filter*Bets()`. Ordenadas por impacto.
+Las 7 estrategias usan **helpers compartidos** (GR8 compliant). BT y LIVE ejecutan el mismo codigo.
 
-### Divergencias por estrategia
+### Arquitectura de helpers compartidos
 
-#### Back Empate 0-0 (draw)
-- **ALINEADO**: Todos los filtros (xgMax, possMax, shotsMax, xgDomAsym, minuteMin, minuteMax) se pasan al dict versions y se aplican en live igual que en backtest.
+Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en csv_reader.py que:
+- **BT** llama iterando todas las filas con `curr_idx=idx` + persistencia (min_dur)
+- **LIVE** llama con `curr_idx=len(rows)-1` (ultima fila)
+- Solo mira `rows[:curr_idx+1]` — nunca filas futuras
 
-#### xG Underperformance (xg)
-- **ALINEADO**: xgExcessMin, sotMin, minuteMin, minuteMax se pasan y aplican igual.
-- **Fallback hardcodeado en v3**: Si `_xg_minute_max >= 90` en live, usa cutoff=70 igualmente (v3 define minuteMax=70 en el UI, por lo que en la practica no es divergencia si el config se guarda desde el UI).
+| Helper | Estrategia |
+|--------|-----------|
+| `_detect_draw_trigger` + `_detect_draw_filters` | Back Empate 0-0 |
+| `_detect_xg_trigger` | xG Underperformance |
+| `_detect_drift_trigger` | Odds Drift Contrarian |
+| `_detect_clustering_trigger` | Goal Clustering |
+| `_detect_pressure_trigger` | Pressure Cooker |
+| `_detect_momentum_trigger` | Momentum xG |
+| `_detect_tardesia_trigger` | Tarde Asia |
 
-#### Odds Drift Contrarian (drift)
-- **ALINEADO** (corregido 2026-02-22): minute gate usa `_drift_minute_min` del config, minuteMax comprobado, V6 implementado via `_compute_synthetic_at_trigger`.
-- **[MINOR] Nota**: filterDriftBets en frontend usa `b.minuto < p.minuteMin` (corregido de `<=`).
+### Match rate
 
-#### Goal Clustering (clustering)
-- **ALINEADO** (corregido 2026-02-22): xgRemMin comprobado via `_compute_synthetic_at_trigger`. Clustering V4 se comporta igual en live y backtest.
-- **Nota**: max minuto de goal detection en backtest (`analyze_cartera`) y live ambos limitan a 80 de facto. No hay divergencia real.
+- **83% MATCH**, 89.8% MATCH+MIN_DIFF (medido con `aux/run_reconcile.py`)
+- **LIVE P/L >= BT P/L** confirmado (BT es conservador)
+- Discrepancias restantes son por timing (BT muestrea en filas discretas vs LIVE en instante actual)
 
-#### Pressure Cooker (pressure)
-- **ALINEADO** (corregido 2026-02-22): Eliminados los clamps `max(65,...)` y `min(75,...)`. Live usa el rango configurado directamente con defaults 65/75.
+### Post-filtros (Filtros Realistas) — ALINEADOS
 
-#### Momentum xG (momentum)
-- **ALINEADO** (corregido 2026-02-22): minute range usa defaults suaves como Pressure. Config momentum.minuteMin/Max se aplica directamente sin clamps.
-- **Params hardcodeados en live y backtest por igual**: sotMin, sotRatio, xgUnderperf, oddsMin, oddsMax estan hardcodeados identicos en ambos sistemas. No estan en config.
+`analytics.py:_apply_realistic_adjustments()` aplica los mismos filtros que `cartera.ts:applyRealisticAdjustments()`.
 
-#### Tarde Asia
-- Solo existe en backtest (tracking historico). No hay logica en `detect_betting_signals`.
+### Herramientas de verificacion
 
-### Post-filtros (Filtros Realistas) — ALINEADOS (corregido 2026-02-22)
-
-`analytics.py:_apply_realistic_adjustments()` aplica TODOS los filtros en el mismo orden que `cartera.ts:applyRealisticAdjustments()`. Se usa en `get_betting_signals` y `run_paper_auto_place`.
-
-| Filtro Realista | Backtest | Live |
-|-----------------|----------|------|
-| global_minute_min/max | SI | SI (pass 1) |
-| adjDriftMinMin | SI | SI (pass 1, usa drift.minuteMin del config) |
-| min_odds / max_odds con slippage | SI | SI (pass 1, aplica slippage_pct antes) |
-| risk_filter | SI | SI (pass 1) |
-| stability | SI | SI (pass 2, 1 captura ≈ 0.5 min) |
-| conflict_filter (MomXG+xGUnderperf) | SI | SI (pass 3) |
-| allow_contrarias | SI | SI (pass 4) |
-| dedup (mismo match+mercado) | SI | SI (pass 5) |
-| conservative_odds | SI | NO — requiere ventana historial, no disponible en live |
-| maturity (min_duration_caps) | SI | SI (is_mature en detect + post-filtro) |
+- `aux/run_reconcile.py` — simula LIVE fila a fila y compara con BT
+- `aux/compare_bt_live.py` — compara rendimiento BT vs LIVE estimado
+- `.claude/agents/backtest-auditor.md` — agente de mantenimiento de alineamiento
 
 ## Problemas conocidos
 
 1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
-3. **Odds Drift alineado**: analyze_cartera() ahora usa el mismo algoritmo que live: lookback fijo 10 min + mismo marcador en fila historica + score_confirm_count >= 3.
-4. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
-5. **adjDriftMinMin (realistic adj) no en live**: El ajuste drift_min_minute de los Filtros Realistas solo aplica en backtest. En live, el minuteMin del config de drift ya lo controla directamente.
+2. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
+3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.

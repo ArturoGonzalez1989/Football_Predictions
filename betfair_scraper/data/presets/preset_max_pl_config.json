@@ -1,0 +1,137 @@
+{
+  "strategies": {
+    "draw": {
+      "enabled": false,
+      "xgMax": 0.6,
+      "possMax": 20,
+      "shotsMax": 8,
+      "xgDomAsym": false,
+      "minuteMin": 30,
+      "minuteMax": 90
+    },
+    "xg": {
+      "enabled": true,
+      "sotMin": 2,
+      "xgExcessMin": 0.5,
+      "minuteMin": 0,
+      "minuteMax": 70
+    },
+    "drift": {
+      "enabled": true,
+      "goalDiffMin": 0,
+      "driftMin": 30,
+      "oddsMax": 5,
+      "minuteMin": 0,
+      "minuteMax": 90,
+      "momGapMin": 200
+    },
+    "clustering": {
+      "enabled": true,
+      "sotMin": 3,
+      "minuteMin": 0,
+      "minuteMax": 60,
+      "xgRemMin": 0.0
+    },
+    "pressure": {
+      "enabled": true,
+      "minuteMin": 0,
+      "minuteMax": 90
+    },
+    "tarde_asia": {
+      "enabled": false,
+      "minuteMin": 0,
+      "minuteMax": 90
+    },
+    "momentum_xg": {
+      "version": "v1",
+      "minuteMin": 20,
+      "minuteMax": 70
+    },
+    "lay_over15": {
+      "enabled": true,
+      "version": "v1",
+      "minuteMin": 75,
+      "minuteMax": 85,
+      "xgMin": 0.5,
+      "possMax": 30,
+      "shotsMin": 12
+    },
+    "lay_draw_asym": {
+      "enabled": false,
+      "minuteMin": 65,
+      "minuteMax": 75,
+      "xgRatioMin": 2.5,
+      "xgDomMin": 0.5
+    },
+    "lay_over25_def": {
+      "enabled": true,
+      "minuteMin": 65,
+      "minuteMax": 80,
+      "xgMax": 2.0,
+      "goalsMax": 1
+    },
+    "back_sot_dom": {
+      "enabled": false,
+      "minuteMin": 60,
+      "minuteMax": 80,
+      "sotMin": 4,
+      "sotMaxRival": 1
+    },
+    "back_over15_early": {
+      "enabled": false,
+      "minuteMin": 25,
+      "minuteMax": 45,
+      "xgMin": 1.0,
+      "sotMin": 4,
+      "goalsMax": 1
+    },
+    "lay_false_fav": {
+      "enabled": true,
+      "minuteMin": 65,
+      "minuteMax": 85,
+      "xgRatioMin": 2.0,
+      "favOddsMax": 1.7
+    }
+  },
+  "bankroll_mode": "fixed",
+  "flat_stake": 1,
+  "initial_bankroll": 100,
+  "active_preset": "max_pl",
+  "risk_filter": "no_risk",
+  "min_duration": {
+    "draw": 2,
+    "xg": 3,
+    "drift": 2,
+    "clustering": 4,
+    "pressure": 4,
+    "lay_over15": 2,
+    "lay_draw_asym": 2,
+    "lay_over25_def": 2,
+    "back_sot_dom": 1,
+    "back_over15_early": 1,
+    "lay_false_fav": 1
+  },
+  "adjustments": {
+    "enabled": true,
+    "dedup": true,
+    "max_odds": 10.0,
+    "min_odds": 1.21,
+    "drift_min_minute": 0,
+    "slippage_pct": 2,
+    "conflict_filter": false,
+    "allow_contrarias": true,
+    "stability": 2,
+    "global_minute_min": null,
+    "global_minute_max": null,
+    "cashout_minute": null,
+    "cashout_pct": 5
+  },
+  "_optimizer_stats": {
+    "n": 174,
+    "wr": 71.3,
+    "ci_low": 64.1,
+    "ci_high": 77.5,
+    "roi": 40.03,
+    "n_partidos": 737
+  }
+}

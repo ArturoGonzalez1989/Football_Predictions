@@ -53,9 +53,13 @@ betfair_scraper/
     │   │   ├── config.py      # GET/PUT cartera_config.json (102 lineas)
     │   │   ├── matches.py     # Datos de partidos (133 lineas)
     │   │   ├── explorer.py    # Exploracion de estrategias (95 lineas)
-    │   │   └── system.py      # Start/stop scraper, cleanup Chrome (381 lineas)
+    │   │   ├── system.py      # Start/stop scraper, cleanup Chrome (381 lineas)
+    │   │   ├── debug.py       # Debug endpoints: HTML snapshots, memory monitoring (127 lineas)
+    │   │   ├── optimize.py    # Optimizacion presets Phase 1+2 (700+ lineas)
+    │   │   ├── optimizer_cli.py # CLI para optimizacion paralela (600+ lineas)
+    │   │   └── simulate.py    # Simulador de senales: replay timeline (400+ lineas)
     │   └── utils/
-    │       ├── csv_reader.py  # ~5100 lineas. EL fichero critico.
+    │       ├── csv_reader.py  # ~5300 lineas. EL fichero critico. Helpers compartidos BT↔LIVE.
     │       ├── scraper_status.py  # Estado del scraper via psutil + log parsing (231 lineas)
     │       └── signals_audit_logger.py  # Audit log rotativo 50MB x 10 (214 lineas)
     │
@@ -69,10 +73,10 @@ betfair_scraper/
             │   ├── trading.ts     # PressureIndex, divergencia, momentum swings (311 lineas)
             │   ├── sounds.ts      # Alerta sonora Web Audio (61 lineas)
             │   └── utils.ts       # cn(), formatTimeAgo(), formatTimeTo() (27 lineas)
-            └── components/        # 23 componentes React
-                ├── Dashboard.tsx          # Shell de navegacion (9 vistas, polling 10s)
+            └── components/        # 21 componentes React
+                ├── Dashboard.tsx          # Shell de navegacion (vistas, polling 10s)
                 ├── StrategiesView.tsx     # Config estrategias + backtest + optimizacion
-                ├── BettingSignalsView.tsx # Senales live + watchlist + auto-register
+                ├── BettingSignalsView.tsx # Senales live + watchlist + cartera activa
                 ├── PlacedBetsView.tsx     # Tracking de apuestas paper
                 ├── LiveView.tsx           # Partidos en vivo (MatchCard por partido)
                 ├── MatchCard.tsx          # Tarjeta de partido con stats + cuotas
@@ -83,10 +87,9 @@ betfair_scraper/
                 ├── UpcomingView.tsx       # Proximos partidos
                 ├── InsightsView.tsx       # Insights de mercado
                 ├── SystemStatus.tsx       # Estado del sistema + controles
-                └── (10 componentes menores: StatusBadge, CaptureIndicator,
+                └── (8 componentes menores: StatusBadge, CaptureIndicator,
                      StatsBar, GapAnalysis, CaptureTable, OddsChart,
-                     MomentumChart, SiegeMeter, MomentumSwings,
-                     PriceVsReality)
+                     MomentumChart, SiegeMeter)
 ```
 
 ---
