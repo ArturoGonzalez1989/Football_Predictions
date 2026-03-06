@@ -4,14 +4,11 @@ import { isSoundEnabled, setSoundEnabled } from "../lib/sounds"
 import { BettingSignalsView } from "./BettingSignalsView"
 import { LiveView } from "./LiveView"
 import { UpcomingView } from "./UpcomingView"
-import { FinishedView } from "./FinishedView"
 import { DataQualityView } from "./DataQualityView"
 import { PlacedBetsView } from "./PlacedBetsView"
 import { AnalyticsView } from "./AnalyticsView"
-import { StrategiesView } from "./StrategiesView"
-import { ExplorerView } from "./ExplorerView"
 
-type View = "signals" | "bets" | "live" | "upcoming" | "finished" | "quality" | "strategies" | "analytics" | "explorer"
+type View = "signals" | "bets" | "live" | "upcoming" | "quality" | "analytics"
 
 export function Dashboard() {
   const [view, setView] = useState<View>("signals")
@@ -20,7 +17,7 @@ export function Dashboard() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [error, setError] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState(isSoundEnabled)
-  const [gotoMatchId, setGotoMatchId] = useState<string | null>(null)
+
 
   const refresh = useCallback(async () => {
     try {
@@ -79,28 +76,6 @@ export function Dashboard() {
             badgeColor="blue"
           />
           <NavItem
-            active={view === "strategies"}
-            onClick={() => setView("strategies")}
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            }
-            label="Strategies"
-            badgeColor="purple"
-          />
-          <NavItem
-            active={view === "explorer"}
-            onClick={() => setView("explorer")}
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            }
-            label="Explorador"
-            badgeColor="violet"
-          />
-          <NavItem
             active={view === "live"}
             onClick={() => setView("live")}
             icon={
@@ -124,18 +99,6 @@ export function Dashboard() {
             label="Próximos"
             badge={matches.upcoming.length > 0 ? matches.upcoming.length : undefined}
             badgeColor="blue"
-          />
-          <NavItem
-            active={view === "finished"}
-            onClick={() => setView("finished")}
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
-            label="Finalizados"
-            badge={matches.finished.length > 0 ? matches.finished.length : undefined}
-            badgeColor="zinc"
           />
 
           <div className="border-t border-zinc-800 my-2" />
@@ -213,27 +176,7 @@ export function Dashboard() {
 
         {view === "upcoming" && <UpcomingView matches={matches.upcoming} />}
 
-        {view === "finished" && (
-          <FinishedView
-            matches={matches.finished}
-            onRefresh={refresh}
-            initialMatchId={gotoMatchId ?? undefined}
-          />
-        )}
-
-        {view === "quality" && (
-          <DataQualityView
-            onNavigateToMatch={(id) => { setGotoMatchId(id); setView("finished") }}
-          />
-        )}
-
-        {view === "strategies" && <StrategiesView />}
-
-        {view === "explorer" && (
-          <ExplorerView
-            onNavigateToMatch={(id) => { setGotoMatchId(id); setView("finished") }}
-          />
-        )}
+        {view === "quality" && <DataQualityView />}
 
         {view === "analytics" && <AnalyticsView />}
       </main>
