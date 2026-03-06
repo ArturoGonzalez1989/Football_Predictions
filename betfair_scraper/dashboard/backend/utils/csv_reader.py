@@ -2208,7 +2208,7 @@ def _detect_clustering_trigger(
 
     curr_row = rows[curr_idx]
     curr_min_val = _to_float(curr_row.get("minuto", ""))
-    if curr_min_val is None or curr_min_val < MIN_MINUTE or curr_min_val > MAX_MINUTE:
+    if curr_min_val is None or curr_min_val < MIN_MINUTE or curr_min_val >= MAX_MINUTE:
         return None
 
     # Look for goal in last 3 captures (approx last 90 seconds)
@@ -5039,8 +5039,9 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
         # Dedup in _apply_realistic_adj / _apply_realistic_adj ensures only the first
         # qualifying trigger fires in live trading.
 
-        # BT superset cfg: permissive (sot_min=2, 15-90 min, no xg_rem filter)
-        _cl_bt_cfg = {"sot_min": 2, "min_minute": 15, "max_minute": 90, "xg_rem_min": 0}
+        # BT superset cfg: permissive (sot_min=2, 15-91 min, no xg_rem filter)
+        # max_minute=91 because helper uses >= (exclusive), so 91 includes min=90
+        _cl_bt_cfg = {"sot_min": 2, "min_minute": 15, "max_minute": 91, "xg_rem_min": 0}
 
         for idx, row in enumerate(rows):
             gl = _to_float(row.get("goles_local", ""))
@@ -5080,6 +5081,19 @@ def analyze_strategy_goal_clustering(min_dur: int = 1) -> dict:
                             # Actualizar prev_total y continuar
                             prev_total = total_now
                             continue
+                        # Re-verify trigger at confirmation row.  The helper's
+                        # 3-row lookback may no longer reach the goal row when
+                        # min_dur >= 4, so scan backwards from end_idx until we
+                        # find a row where the trigger still fires (sot may have
+                        # increased since the goal row — matches LIVE behaviour).
+                        confirm_trig = None
+                        for _ci in range(end_idx, idx - 1, -1):
+                            confirm_trig = _detect_clustering_trigger(rows, _ci, _cl_bt_cfg)
+                            if confirm_trig is not None:
+                                break
+                        if confirm_trig is not None and confirm_trig["sot_max"] > sot_max:
+                            sot_max = confirm_trig["sot_max"]
+                            over_field = confirm_trig["over_field"]
                         entry_row = rows[end_idx]
 
                     # Obtener cuotas Over
