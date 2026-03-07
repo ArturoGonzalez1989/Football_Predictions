@@ -1600,7 +1600,7 @@ def extraer_momentum(driver) -> dict:
 
         # PASO 3: Abrir URL de momentum en nueva pestaña (sin clickear nada)
         driver.execute_script("window.open(arguments[0]);", momentum_url)
-        time.sleep(1)
+        time.sleep(0.5)
 
         # Cambiar a la nueva pestaña
         new_handles = [h for h in driver.window_handles if h != original_window]
@@ -1609,7 +1609,7 @@ def extraer_momentum(driver) -> dict:
             return momentum
 
         driver.switch_to.window(new_handles[-1])
-        time.sleep(1.5)  # Esperar a que cargue el gráfico completamente
+        time.sleep(1)  # Esperar a que cargue el gráfico
 
         # Verificar que no hubo redirect (si momentum no está disponible, redirige a otra página)
         current_url = driver.current_url
@@ -2218,11 +2218,16 @@ class MatchDriver:
                 momentum_visitante = stats.get("momentum_visitante", "")
 
                 if not momentum_local and not momentum_visitante:
-                    # Fallback: Usar método visual si la API no tiene momentum
-                    log.debug(f"[{self.match_id}] → Extrayendo momentum (fallback visual)...")
-                    momentum = extraer_momentum(self.driver)
-                    momentum_local = momentum["momentum_local"]
-                    momentum_visitante = momentum["momentum_visitante"]
+                    # Fallback visual: extrae momentum del iframe de Betfair
+                    mom_result = extraer_momentum(self.driver)
+                    momentum_local = mom_result.get("momentum_local", "")
+                    momentum_visitante = mom_result.get("momentum_visitante", "")
+                    if momentum_local or momentum_visitante:
+                        stats["momentum_local"] = momentum_local
+                        stats["momentum_visitante"] = momentum_visitante
+                        log.debug(f"[{self.match_id}] ✓ Momentum obtenido vía fallback visual: {momentum_local}-{momentum_visitante}")
+                    else:
+                        log.debug(f"[{self.match_id}] → Momentum no disponible (API ni visual)")
                 else:
                     log.debug(f"[{self.match_id}] ✓ Momentum obtenido de API: {momentum_local}-{momentum_visitante}")
 
@@ -2608,13 +2613,16 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
     momentum_visitante = stats.get("momentum_visitante", "")
 
     if not momentum_local and not momentum_visitante:
-        # Fallback: Usar método visual si la API no tiene momentum
-        log.info(f"[Tab {tab_info['index']}] → Extrayendo momentum (fallback visual)...")
-        momentum = extraer_momentum(driver)
-        momentum_local = momentum["momentum_local"]
-        momentum_visitante = momentum["momentum_visitante"]
-        momentum_count = sum([1 for v in [momentum_local, momentum_visitante] if v])
-        log.info(f"[Tab {tab_info['index']}]   ✓ Momentum visual: {momentum_count}/2 valores capturados")
+        # Fallback visual: extrae momentum del iframe de Betfair
+        mom_result = extraer_momentum(driver)
+        momentum_local = mom_result.get("momentum_local", "")
+        momentum_visitante = mom_result.get("momentum_visitante", "")
+        if momentum_local or momentum_visitante:
+            stats["momentum_local"] = momentum_local
+            stats["momentum_visitante"] = momentum_visitante
+            log.info(f"[Tab {tab_info['index']}] ✓ Momentum obtenido vía fallback visual")
+        else:
+            log.info(f"[Tab {tab_info['index']}] → Momentum no disponible (API ni visual)")
     else:
         log.info(f"[Tab {tab_info['index']}] ✓ Momentum obtenido de API")
 

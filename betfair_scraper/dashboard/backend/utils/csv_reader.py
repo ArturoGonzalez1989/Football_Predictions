@@ -3959,6 +3959,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     first_seen_map = _load_first_seen_cache()
 
     def _get_strategy_family(strategy_key: str) -> str:
+        # SD strategies: use their own key for min_duration lookup
+        if strategy_key.startswith("sd_"):
+            return strategy_key
         if "draw" in strategy_key:
             return "draw"
         if "momentum" in strategy_key:
@@ -4726,6 +4729,234 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                             signals.append(signal)
                             _log_signal_to_csv(signal)
                             _register_outcome(match_id, signal["recommendation"], match_outcomes)
+
+        # === SD STRATEGIES (from strategy-designer agent) ===
+        # Each SD strategy is a one-shot trigger: check current state, emit signal if conditions met.
+        # Config lives in cartera_config.json under strategies.sd_*
+        # SD strategies use versions dict keys: sd_<name>_enabled, sd_<name>_m_min, etc.
+        sd_configs = versions.get("_sd_configs", {})
+        _gl = int(goles_local)
+        _gv = int(goles_visitante)
+        _total_goals = _gl + _gv
+        _goal_diff = abs(_gl - _gv)
+        _sot_total = int(tiros_puerta_local + tiros_puerta_visitante)
+        _xg_total = (xg_local + xg_visitante) if (xg_local is not None and xg_visitante is not None) else None
+        _m = int(minuto) if minuto is not None else 0
+
+        def _sd_signal(strategy_key, strategy_name, recommendation, odds, description, entry_cond):
+            """Helper to build and emit an SD signal."""
+            sig = {
+                "match_id": match_id,
+                "match_name": match["name"],
+                "match_url": match["url"],
+                "strategy": strategy_key,
+                "strategy_name": strategy_name,
+                "minute": _m,
+                "score": f"{_gl}-{_gv}",
+                "recommendation": recommendation,
+                "back_odds": round(odds, 2) if odds else None,
+                "min_odds": 1.21,
+                "expected_value": 0,
+                "odds_favorable": True,
+                "confidence": "medium",
+                "win_rate_historical": 0,
+                "roi_historical": 0,
+                "sample_size": 0,
+                "description": description,
+                "entry_conditions": entry_cond,
+                "thresholds": {},
+            }
+            if (match_id, sig["strategy"]) not in placed_bets_keys:
+                conflict = _has_conflict(match_id, sig["recommendation"], match_outcomes)
+                if conflict:
+                    sig["blocked"] = conflict
+                else:
+                    signals.append(sig)
+                    _log_signal_to_csv(sig)
+                    _register_outcome(match_id, sig["recommendation"], match_outcomes)
+
+        # --- SD: BACK Over 2.5 from 2-Goal Lead ---
+        _sd_cfg = sd_configs.get("sd_over25_2goal", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _sd_m_min = _sd_cfg.get("m_min", 55)
+            _sd_m_max = _sd_cfg.get("m_max", 78)
+            _sd_gd_min = _sd_cfg.get("goal_diff_min", 2)
+            _sd_sot_min = _sd_cfg.get("sot_total_min", 3)
+            _sd_odds_min = _sd_cfg.get("odds_min", 1.5)
+            _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
+            _sd_odds = _to_float(latest.get("back_over25", ""))
+            if (_sd_m_min <= _m <= _sd_m_max and _goal_diff >= _sd_gd_min
+                    and _sot_total >= _sd_sot_min and _sd_odds and _sd_odds > 1.0
+                    and _sd_odds_min <= _sd_odds <= _sd_odds_max):
+                _sd_signal("sd_over25_2goal", "SD BACK O2.5 2-Goal Lead",
+                           f"BACK OVER 2.5 @ {_sd_odds:.2f}", _sd_odds,
+                           "Back Over 2.5 when a team leads by 2+ goals with SoT activity",
+                           {"goal_diff": _goal_diff, "sot_total": _sot_total, "odds": round(_sd_odds, 2)})
+
+        # --- SD: BACK Under 3.5 Late ---
+        _sd_cfg = sd_configs.get("sd_under35_late", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _sd_m_min = _sd_cfg.get("m_min", 65)
+            _sd_m_max = _sd_cfg.get("m_max", 78)
+            _sd_goals_exact = _sd_cfg.get("goals_exact", 3)
+            _sd_xg_max = _sd_cfg.get("xg_max", 2.0)
+            _sd_odds = _to_float(latest.get("back_under35", ""))
+            if (_sd_m_min <= _m <= _sd_m_max and _total_goals == _sd_goals_exact
+                    and _sd_odds and _sd_odds > 1.0
+                    and (_xg_total is None or _xg_total <= _sd_xg_max)):
+                _sd_signal("sd_under35_late", "SD BACK U3.5 Late",
+                           f"BACK UNDER 3.5 @ {_sd_odds:.2f}", _sd_odds,
+                           "Back Under 3.5 when exactly 3 goals scored and xG is low",
+                           {"total_goals": _total_goals, "xg_total": round(_xg_total, 2) if _xg_total else None})
+
+        # --- SD: BACK Longshot Leading ---
+        _sd_cfg = sd_configs.get("sd_longshot", {})
+        if _sd_cfg.get("enabled") and goals_data_ok and _gl != _gv:
+            _sd_m_min = _sd_cfg.get("m_min", 65)
+            _sd_m_max = _sd_cfg.get("m_max", 90)
+            _sd_xg_min = _sd_cfg.get("xg_min", 0.2)
+            _sd_odds_min = _sd_cfg.get("odds_min", 1.3)
+            _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
+            if _sd_m_min <= _m <= _sd_m_max:
+                # Determine pre-match longshot from first row with valid odds
+                _ls_team = None
+                for _r in rows[:5]:  # check first few rows for pre-match odds
+                    _bh0 = _to_float(_r.get("back_home", ""))
+                    _ba0 = _to_float(_r.get("back_away", ""))
+                    if _bh0 and _ba0 and _bh0 > 1 and _ba0 > 1:
+                        _ls_team = "local" if _bh0 >= _ba0 else "visitante"
+                        break
+                if _ls_team:
+                    _ls_winning = (_ls_team == "local" and _gl > _gv) or (_ls_team == "visitante" and _gv > _gl)
+                    if _ls_winning:
+                        _ls_odds = _to_float(latest.get("back_home" if _ls_team == "local" else "back_away", ""))
+                        _ls_xg = _to_float(latest.get(f"xg_{_ls_team}", ""))
+                        if (_ls_odds and _ls_odds > 1.0 and _sd_odds_min <= _ls_odds <= _sd_odds_max
+                                and (_ls_xg is None or _ls_xg >= _sd_xg_min)):
+                            _sd_signal("sd_longshot", "SD BACK Longshot Leading",
+                                       f"BACK {'HOME' if _ls_team == 'local' else 'AWAY'} @ {_ls_odds:.2f}", _ls_odds,
+                                       "Back the pre-match longshot when they are leading late",
+                                       {"longshot_team": _ls_team, "odds": round(_ls_odds, 2),
+                                        "xg_longshot": round(_ls_xg, 2) if _ls_xg else None})
+
+        # --- SD: BACK CS 2-1/1-2 (Close Game) ---
+        _sd_cfg = sd_configs.get("sd_cs_close", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _sd_m_min = _sd_cfg.get("m_min", 70)
+            _sd_m_max = _sd_cfg.get("m_max", 80)
+            if _sd_m_min <= _m <= _sd_m_max and _total_goals >= 2 and _goal_diff == 1:
+                # Only 2-1 / 1-2 scorelines
+                if (_gl, _gv) in ((2, 1), (1, 2)):
+                    _cs_col = f"back_rc_{_gl}_{_gv}"
+                    _cs_odds = _to_float(latest.get(_cs_col, ""))
+                    if _cs_odds and _cs_odds > 1.0:
+                        _sd_signal("sd_cs_close", "SD BACK CS Close",
+                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
+                                   "Back current Correct Score at close game (2-1 / 1-2)",
+                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
+
+        # --- SD: BACK CS 1-0/0-1 (One Goal) ---
+        _sd_cfg = sd_configs.get("sd_cs_one_goal", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _sd_m_min = _sd_cfg.get("m_min", 68)
+            _sd_m_max = _sd_cfg.get("m_max", 85)
+            if _sd_m_min <= _m <= _sd_m_max and _total_goals == 1:
+                if (_gl, _gv) in ((1, 0), (0, 1)):
+                    _cs_col = f"back_rc_{_gl}_{_gv}"
+                    _cs_odds = _to_float(latest.get(_cs_col, ""))
+                    if _cs_odds and _cs_odds > 1.0:
+                        _sd_signal("sd_cs_one_goal", "SD BACK CS One-Goal",
+                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
+                                   "Back current Correct Score at 1-0 / 0-1",
+                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
+
+        # --- SD: BACK Underdog Leading Late ---
+        _sd_cfg = sd_configs.get("sd_ud_leading", {})
+        if _sd_cfg.get("enabled") and goals_data_ok and _gl != _gv:
+            _sd_m_min = _sd_cfg.get("m_min", 55)
+            _sd_m_max = _sd_cfg.get("m_max", 80)
+            _sd_ud_pre = _sd_cfg.get("ud_min_pre_odds", 2.0)
+            _sd_max_lead = _sd_cfg.get("max_lead", 1)
+            if _sd_m_min <= _m <= _sd_m_max and _goal_diff <= _sd_max_lead:
+                # Determine pre-match underdog from first rows
+                _ud_team = None
+                for _r in rows[:5]:
+                    _bh0 = _to_float(_r.get("back_home", ""))
+                    _ba0 = _to_float(_r.get("back_away", ""))
+                    if _bh0 and _ba0 and _bh0 > 1 and _ba0 > 1:
+                        if _bh0 >= _sd_ud_pre:
+                            _ud_team = "local"
+                            _ud_pre_odds = _bh0
+                        elif _ba0 >= _sd_ud_pre:
+                            _ud_team = "visitante"
+                            _ud_pre_odds = _ba0
+                        break
+                if _ud_team:
+                    _ud_winning = (_ud_team == "local" and _gl > _gv) or (_ud_team == "visitante" and _gv > _gl)
+                    if _ud_winning:
+                        _ud_odds = _to_float(latest.get("back_home" if _ud_team == "local" else "back_away", ""))
+                        if _ud_odds and _ud_odds > 1.0:
+                            _sd_signal("sd_ud_leading", "SD BACK Underdog Leading",
+                                       f"BACK {'HOME' if _ud_team == 'local' else 'AWAY'} @ {_ud_odds:.2f}", _ud_odds,
+                                       "Back the underdog when they are leading late",
+                                       {"ud_team": _ud_team, "pre_odds": round(_ud_pre_odds, 2),
+                                        "current_odds": round(_ud_odds, 2)})
+
+        # --- SD: BACK Home Favourite Leading Late ---
+        _sd_cfg = sd_configs.get("sd_home_fav_leading", {})
+        if _sd_cfg.get("enabled") and goals_data_ok and _gl > _gv:
+            _sd_m_min = _sd_cfg.get("m_min", 65)
+            _sd_m_max = _sd_cfg.get("m_max", 85)
+            _sd_max_lead = _sd_cfg.get("max_lead", 3)
+            _sd_fav_max = _sd_cfg.get("fav_max", 2.5)
+            if _sd_m_min <= _m <= _sd_m_max and _goal_diff <= _sd_max_lead:
+                # Check if home was pre-match favourite (odds <= fav_max)
+                _home_pre = None
+                for _r in rows[:5]:
+                    _bh0 = _to_float(_r.get("back_home", ""))
+                    if _bh0 and _bh0 > 1:
+                        _home_pre = _bh0
+                        break
+                if _home_pre and _home_pre <= _sd_fav_max:
+                    _home_odds = _to_float(latest.get("back_home", ""))
+                    if _home_odds and _home_odds > 1.0:
+                        _sd_signal("sd_home_fav_leading", "SD BACK Home Fav Leading",
+                                   f"BACK HOME @ {_home_odds:.2f}", _home_odds,
+                                   "Back home favourite when leading late",
+                                   {"home_pre_odds": round(_home_pre, 2),
+                                    "current_odds": round(_home_odds, 2), "lead": _goal_diff})
+
+        # --- SD: BACK CS 2-0/0-2 Late ---
+        _sd_cfg = sd_configs.get("sd_cs_20", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _sd_m_min = _sd_cfg.get("m_min", 75)
+            _sd_m_max = _sd_cfg.get("m_max", 90)
+            _sd_odds_max = _sd_cfg.get("odds_max", 10.0)
+            if _sd_m_min <= _m <= _sd_m_max:
+                if (_gl, _gv) in ((2, 0), (0, 2)):
+                    _cs_col = f"back_rc_{_gl}_{_gv}"
+                    _cs_odds = _to_float(latest.get(_cs_col, ""))
+                    if _cs_odds and _cs_odds > 1.0 and _cs_odds <= _sd_odds_max:
+                        _sd_signal("sd_cs_20", "SD BACK CS 2-0/0-2",
+                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
+                                   "Back current Correct Score at 2-0 / 0-2",
+                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
+
+        # --- SD: BACK CS Big Lead (3-0/0-3/3-1/1-3) ---
+        _sd_cfg = sd_configs.get("sd_cs_big_lead", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _sd_m_min = _sd_cfg.get("m_min", 70)
+            _sd_m_max = _sd_cfg.get("m_max", 85)
+            _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
+            if _sd_m_min <= _m <= _sd_m_max:
+                if (_gl, _gv) in ((3, 0), (0, 3), (3, 1), (1, 3)):
+                    _cs_col = f"back_rc_{_gl}_{_gv}"
+                    _cs_odds = _to_float(latest.get(_cs_col, ""))
+                    if _cs_odds and _cs_odds > 1.0 and _cs_odds <= _sd_odds_max:
+                        _sd_signal("sd_cs_big_lead", "SD BACK CS Big Lead",
+                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
+                                   "Back current Correct Score at big lead (3-0/0-3/3-1/1-3)",
+                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
 
     # --- Enrich signals with age and maturity info ---
     _now = datetime.utcnow()

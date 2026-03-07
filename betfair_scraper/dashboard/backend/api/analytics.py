@@ -1,4 +1,5 @@
 import csv
+import re
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -107,11 +108,21 @@ def _live_market_key(sig: dict) -> str:
     """
     match_id = sig.get("match_id", "")
     rec = sig.get("recommendation", "").upper()
+    # Correct Score markets: "BACK CS 2-1 @ ..." → cs_2_1
+    if " CS " in rec:
+        cs_match = re.search(r"CS\s+(\d+)[_-](\d+)", rec)
+        if cs_match:
+            return f"{match_id}::cs_{cs_match.group(1)}_{cs_match.group(2)}"
     if "OVER" in rec:
         parts = rec.split()
         over_idx = next((i for i, p in enumerate(parts) if p == "OVER"), -1)
         if over_idx >= 0 and over_idx + 1 < len(parts):
             return f"{match_id}::over_{parts[over_idx + 1]}"
+    if "UNDER" in rec:
+        parts = rec.split()
+        under_idx = next((i for i, p in enumerate(parts) if p == "UNDER"), -1)
+        if under_idx >= 0 and under_idx + 1 < len(parts):
+            return f"{match_id}::under_{parts[under_idx + 1]}"
     if "HOME" in rec:
         return f"{match_id}::home"
     if "AWAY" in rec:
@@ -325,6 +336,13 @@ def run_paper_auto_place() -> dict:
             "momentum_minute_min":   str(momentum_s.get("minuteMin", 0)),
             "momentum_minute_max":   str(momentum_s.get("minuteMax", 90)),
         }
+
+        # SD strategies: pass full config dicts for each sd_* strategy
+        _sd_configs = {}
+        for _sk, _sv in s.items():
+            if _sk.startswith("sd_") and isinstance(_sv, dict):
+                _sd_configs[_sk] = _sv
+        versions["_sd_configs"] = _sd_configs
 
         # ── Audit: contar partidos live para log de ciclo ──
         try:

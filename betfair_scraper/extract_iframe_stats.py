@@ -49,8 +49,8 @@ def extract_stats_from_iframe(driver, betfair_event_id: str) -> dict:
         # Navegar directamente al iframe
         driver.get(iframe_url)
 
-        # Esperar a que carguen las stats
-        wait = WebDriverWait(driver, 12)
+        # Esperar a que carguen las stats (reducido de 12s a 6s — 2026-03-07)
+        wait = WebDriverWait(driver, 6)
         wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
         # Esperar a que se cargue al menos un elemento de estadísticas
@@ -60,7 +60,7 @@ def extract_stats_from_iframe(driver, betfair_event_id: str) -> dict:
             ))
             # Dar tiempo adicional para que se rendericen todas las secciones
             import time
-            time.sleep(1.5)
+            time.sleep(0.5)
         except TimeoutException:
             log.warning("  × Timeout esperando estadísticas básicas")
 
@@ -137,10 +137,12 @@ def extract_stats_from_iframe(driver, betfair_event_id: str) -> dict:
 
             return None, None
 
-        # Extraer TODAS las estadísticas (ya están cargadas en el DOM)
-        log.debug("  → Extrayendo todas las estadísticas del iframe...")
+        # Extraer SOLO estadísticas usadas por estrategias (optimizado 2026-03-07)
+        # Skipped: Free kicks, Offsides, Goal kicks, Saves, Throw-ins,
+        #          Substitutions, Injuries — no usadas por ninguna estrategia
+        log.debug("  → Extrayendo estadísticas críticas del iframe...")
 
-        # Shots y corners
+        # Shots y corners (usados por core + SD strategies)
         home_shots_on, away_shots_on = get_dual_stat("Shots on target")
         home_shots_off, away_shots_off = get_dual_stat("Shots off target")
         home_shots_blocked, away_shots_blocked = get_dual_stat("Shots blocked")
@@ -148,22 +150,12 @@ def extract_stats_from_iframe(driver, betfair_event_id: str) -> dict:
 
         # Possession y ataques peligrosos
         home_poss, away_poss = get_percentage_stat("Ball possession")
-        home_dangerous_pct, away_dangerous_pct = get_percentage_stat("Time in dangerous attack")
         home_attacks, away_attacks = get_dual_stat("Dangerous Attack")
 
-        # Free kicks, offsides, goal kicks, saves
-        home_free_kicks, away_free_kicks = get_dual_stat("Free kicks")
-        home_offsides, away_offsides = get_dual_stat("Offsides")
-        home_goal_kicks, away_goal_kicks = get_dual_stat("Goal kicks")
-        home_saves, away_saves = get_dual_stat("Saves")
-
-        # Throw-ins, substitutions, injuries, fouls
-        home_throw_ins, away_throw_ins = get_dual_stat("Throw-ins")
-        home_subs, away_subs = get_dual_stat("Substitutions")
-        home_injuries, away_injuries = get_dual_stat("Injuries")
+        # Fouls (para stats output)
         home_fouls, away_fouls = get_dual_stat("Fouls")
 
-        # Construir diccionario (mapeo a campos del CSV)
+        # Construir diccionario (solo campos usados por estrategias)
         stats = {
             "tiros_puerta_local": home_shots_on or "",
             "tiros_puerta_visitante": away_shots_on or "",
@@ -173,28 +165,12 @@ def extract_stats_from_iframe(driver, betfair_event_id: str) -> dict:
             "posesion_visitante": away_poss or "",
             "fouls_conceded_local": home_fouls or "",
             "fouls_conceded_visitante": away_fouls or "",
-            "saves_local": home_saves or "",
-            "saves_visitante": away_saves or "",
             "dangerous_attacks_local": home_attacks or "",
             "dangerous_attacks_visitante": away_attacks or "",
-            "goal_kicks_local": home_goal_kicks or "",
-            "goal_kicks_visitante": away_goal_kicks or "",
-            "throw_ins_local": home_throw_ins or "",
-            "throw_ins_visitante": away_throw_ins or "",
             "shots_off_target_local": home_shots_off or "",
             "shots_off_target_visitante": away_shots_off or "",
             "blocked_shots_local": home_shots_blocked or "",
             "blocked_shots_visitante": away_shots_blocked or "",
-            "free_kicks_local": home_free_kicks or "",
-            "free_kicks_visitante": away_free_kicks or "",
-            "offsides_local": home_offsides or "",
-            "offsides_visitante": away_offsides or "",
-            "substitutions_local": home_subs or "",
-            "substitutions_visitante": away_subs or "",
-            "injuries_local": home_injuries or "",
-            "injuries_visitante": away_injuries or "",
-            "time_in_dangerous_attack_pct_local": home_dangerous_pct or "",
-            "time_in_dangerous_attack_pct_visitante": away_dangerous_pct or "",
         }
 
         # Calcular tiros totales (on + off + blocked)

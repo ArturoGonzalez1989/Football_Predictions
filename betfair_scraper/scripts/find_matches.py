@@ -9,7 +9,7 @@ y recorre la paginacion (/2, /3...) para no perderse ninguno.
 import csv
 from datetime import datetime, timedelta
 from pathlib import Path
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, unquote, urlparse
 import time
 import re
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
@@ -23,6 +23,43 @@ GAMES_CSV = Path(__file__).parent.parent / "games.csv"
 HEADLESS = True
 TIMEOUT = 15000  # ms para Playwright
 MAX_PAGES = 10   # Maximo de paginas de paginacion a recorrer
+MAX_MATCHES = 15  # Maximo de partidos simultáneos en games.csv
+
+# Ligas por tier — usadas para priorizar cuando hay >MAX_MATCHES partidos
+# Slugs URL-decoded y lowercase, tal como aparecen en las URLs de Betfair
+TIER_1_SLUGS = {
+    "la-liga-española",
+    "premier-league-inglesa",
+    "bundesliga-alemana",
+    "serie-a-italiana",
+    "ligue-1-francesa",
+    "uefa-champions-league",
+    "uefa-europa-league",
+    "fa-cup-inglesa",
+    "copa-del-rey",
+}
+TIER_2_SLUGS = {
+    "españa-segunda-división",
+    "inglaterra-sky-bet-championship",
+    "eredivisie-holandesa",
+    "portugal-primeira-liga",
+    "superliga-turca",
+    "premiership-escocesa",
+    "bélgica-pro-league",
+    "super-league-suiza",
+    "europa-conference-league",
+    "conmebol-copa-libertadores",
+    "copa-sudamericana",
+    "bundesliga-2-alemana",
+    "ligue-2-francesa",
+    "serie-b-italiana",
+    "argentina-primera-división",
+    "estados-unidos-major-league-soccer",
+    "serie-a-brasil",
+    "liga-mx",
+    "italia-copa",
+    "copa-de-francia",
+}
 
 
 def setup_browser(playwright):
@@ -407,6 +444,28 @@ def extract_start_time_from_text(text):
         return (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M")
 
 
+def _get_league_tier(url: str) -> int:
+    """Extrae el tier de la liga a partir de la URL de Betfair.
+
+    URL format: .../fútbol/<league-slug>/<match>-apuestas-<id>
+    Returns: 1 (top), 2 (strong), 3 (rest)
+    """
+    try:
+        path = unquote(urlparse(url).path).lower()
+        # Extraer segmento de liga: entre /fútbol/ y el último /
+        m = re.search(r"/fútbol/([^/]+)/[^/]+-apuestas-", path)
+        if not m:
+            return 3
+        slug = m.group(1)
+        if slug in TIER_1_SLUGS:
+            return 1
+        if slug in TIER_2_SLUGS:
+            return 2
+    except Exception:
+        pass
+    return 3
+
+
 def _is_relevant_match(start_time_str):
     """Determina si un partido es relevante para trackear.
     Solo partidos en juego (pasados) o que empiezan dentro de 3 horas.
@@ -442,25 +501,50 @@ def add_new_matches_to_csv(discovered_matches):
         except Exception as e:
             print(f"[WARNING] Error leyendo games.csv: {e}")
 
-    # Identificar nuevos partidos (solo relevantes: en juego o proximos 3h)
-    added = 0
+    # Identificar nuevos partidos candidatos (relevantes: en juego o proximos 3h)
+    candidates = []
     skipped_future = 0
     for match in discovered_matches:
-        game_name = match["name"]
+        if match["name"] in existing_games:
+            continue
+        if not _is_relevant_match(match["start_time"]):
+            skipped_future += 1
+            continue
+        candidates.append(match)
+    if skipped_future:
+        print(f"   (omitidos {skipped_future} partidos futuros >3h)")
 
-        if game_name not in existing_games:
-            if not _is_relevant_match(match["start_time"]):
-                skipped_future += 1
-                continue
-            existing_games[game_name] = {
-                "Game": game_name,
+    # Aplicar cap: si ya hay >=MAX_MATCHES, solo añadir T1 (y T2 si hay cupo)
+    # Los partidos ya en games.csv NUNCA se eliminan (terminan solos)
+    current_count = len(existing_games)
+    added = 0
+    skipped_cap = 0
+
+    if candidates:
+        # Ordenar candidatos por tier (T1 primero, luego T2, luego T3)
+        candidates.sort(key=lambda m: _get_league_tier(m["url"]))
+
+        for match in candidates:
+            tier = _get_league_tier(match["url"])
+            slots_available = MAX_MATCHES - (current_count + added)
+
+            if slots_available <= 0:
+                # Sin cupo: solo T1 entra siempre
+                if tier > 1:
+                    skipped_cap += 1
+                    continue
+
+            existing_games[match["name"]] = {
+                "Game": match["name"],
                 "url": match["url"],
                 "fecha_hora_inicio": match["start_time"],
             }
             added += 1
-            print(f"   + {game_name} ({match['start_time']})")
-    if skipped_future:
-        print(f"   (omitidos {skipped_future} partidos futuros >3h)")
+            tier_label = f"T{tier}"
+            print(f"   + [{tier_label}] {match['name']} ({match['start_time']})")
+
+    if skipped_cap:
+        print(f"   (omitidos {skipped_cap} partidos T2/T3 por cap de {MAX_MATCHES})")
 
     # Guardar si hay cambios
     if added > 0:

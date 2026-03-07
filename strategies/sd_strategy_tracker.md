@@ -1,7 +1,7 @@
 # Strategy Designer — Historial de investigacion
 Ultima actualizacion: 2026-03-07
-Dataset al momento de la investigacion: 896 partidos (2026-02-10 a 2026-03-07)
-Total hipotesis investigadas: 81 (H1-H81) en 13 rondas
+Dataset al momento de la investigacion: 931 partidos finalizados (sorted by timestamp, 2026-02-10 a 2026-03-07)
+Total hipotesis investigadas: 87 (H1-H87) en 15 rondas
 
 > Este fichero es la referencia para el agente strategy-designer.
 > Antes de investigar una hipotesis nueva, verificar que no este ya listada aqui.
@@ -323,7 +323,7 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 
 **H55 nota**: CS 2-0/0-2 at min 65-80 without odds cap: N=105, WR=41%, ROI=26.5%, Sharpe=1.48. The WR is too uncertain (IC95 lower bound 32%). With more data, the confidence interval could narrow. The edge appears real (train ROI=22%, test ROI=36.6%) but the variability in outcomes is high because losses cost more (CS odds avg 3.50 means -10 per loss vs +23.75 per win).
 
-## DESCARTADAS (42) -- NO RE-INVESTIGAR
+## DESCARTADAS (47) -- NO RE-INVESTIGAR
 
 | H# | Nombre | Mercado | Razon de descarte |
 |---|---|---|---|
@@ -368,6 +368,12 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | H76 | BACK Home Fav Leading 2+ Early | BACK MO (home) | N=67, test ROI=2.6%. Strong train/test divergence (26%/2.6%). Subsumed by H70 which is broader and better |
 | H78 | BACK Over 3.5 FH Activity | BACK O3.5 | Test ROI=0.5%. N=75 with 3+ goals by min 35-45 but avg odds=1.44, market adjusts correctly |
 | H80 | BACK Home Leading FH (fav only) | BACK MO (home) | Test ROI=1.9%. N=191, WR=81.7% but edge only ~2pp. H70 (late) is far superior |
+| H82 | Team Yield filter for goal_clustering | FILTER | No signal. Removing negative-yield teams removes PROFITABLE bets. Train filter -6.5pp to -15.8pp vs baseline. |
+| H83 | Team Yield filter for pressure_cooker | FILTER | Baseline ROI -2.3%. Best train improvement +4pp but FAILS in test (-16.1pp). Overfitting. |
+| H84 | Global Toxic Team filter | FILTER | Max improvement +1.8pp portfolio ROI. Negligible impact for complexity added. |
+| H85 | Profitable Away Team boost | FILTER | Strong-looking signal in xg_underperf (N=25 boost ROI=78.8%) but N too small. Under_late max_yield>=0% holds in test (+14.1pp) but effect driven by under_late itself having ~0% ROI. |
+| H86 | Team Yield x League Tier interaction | FILTER | Tier 2/3 show positive delta but Tier 1 shows REVERSE signal (-13.8pp). Not actionable. |
+| H87 | Team Yield BY ROLE (home-as-home, away-as-away) | FILTER | Pearson r = -0.016 (essentially zero). Role balance unstable across quarters (Q3 reverses -24pp). 12/216 grid combos positive in train+test but all marginal (<5pp train) or tiny N (20-33). Same counter-intuitive pattern as H82-H86: "bad" teams provide more value. Role-specific yield adds no signal vs generic yield. |
 
 ## MERCADOS / CONCEPTOS AGOTADOS
 
@@ -401,6 +407,7 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 - **Home fav leading 2+ early**: H76 -- subsumed by H70 (broader, more robust). Test ROI collapses.
 - **BACK Over 3.5 first half**: H78 -- test ROI=0.5%, market adjusts O3.5 correctly when goals scored early
 - **BACK Home Leading First Half**: H80 -- test ROI=1.9%, edge only ~2pp. Late strategies (H70) capture this much better
+- **Team Yield as filter (H82-H87)**: R14 tested generic yield (H82-H86, 5 hypotheses, 180 combos). R15 tested role-specific yield (H87: home-as-home, away-as-away, 216 combos). BOTH approaches fail. Generic: ZERO combos improve train+test. Role-specific: Pearson r = -0.016 (zero correlation), 12/216 combos positive in both sets but all marginal or tiny N. Signal unstable across quarters (Q3 reverses -24pp). Counter-intuitive "bad yield = better outcomes" pattern persists in role-specific analysis. Team yield -- whether generic or role-specific -- is NOT predictive. Concept EXHAUSTED across 6 hypotheses.
 - **Handicap / Asian Handicap**: No columns available in dataset (confirmed R8 exploration)
 - **HT-specific markets**: No HT market columns available (confirmed R8 exploration)
 - **BTTS markets**: No columns available (confirmed R7 exploration)
@@ -409,12 +416,30 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 
 ## NOTAS PARA FUTURAS RONDAS
 
-- Hipotesis H1-H81 ya cubiertas. Siguiente ronda empieza en H82.
+- Hipotesis H1-H87 ya cubiertas. Siguiente ronda empieza en H88.
+- **Ronda 15 hallazgos clave (H87 -- Team Yield by Role)**:
+  - Tested role-specific yield (home-as-home ROI, away-as-away ROI, role_balance) across 2155 bets, 7 strategies, 931 matches.
+  - Grid search: 3 yield types x 9 thresholds x 4 min_hist x 2 directions = 216 combos.
+  - **Pearson r (role_balance vs win) = -0.0157**: essentially ZERO correlation. Role-specific yield is slightly "more predictive" than generic (r=0.006) but both are negligible.
+  - **Role balance unstable across quarters**: Q1=+32.8pp, Q2=+6.4pp, Q3=-24.4pp (REVERSED), Q4=+13.5pp. Signal flips sign.
+  - **12/216 combos positive in both train+test** but all are either: (a) marginal improvement <5pp in train, (b) tiny N (20-33 bets), or (c) filter so wide it barely removes anything.
+  - **Counter-intuitive pattern confirmed AGAIN**: `home_as_home_roi keep_below` (teams with NEGATIVE home ROI) improves portfolio. Same dead-end as H82-H86.
+  - **Per-strategy**: 3 strategies show "promising" signals (cs_late, under_late, draw_late) but improvements are small and N is low once filtered.
+  - **Conclusion**: Role-specific yield does NOT solve the fundamental problem found in H82-H86. The team yield concept is EXHAUSTED in all forms (generic, role-specific, league-tiered, per-strategy, directional vs non-directional).
 - **Ronda 13 hallazgos clave**:
   - **CS structural inefficiency confirmed on ALL tested scorelines**: H77 (1-1), H79 (2-0/0-2), H81 (3-0/0-3/3-1/1-3) all pass realistic validation. The CS market systematically underprices the current score at min 70-90 regardless of scoreline.
   - **CS Portfolio now covers 10 scorelines**: H49(2-1/1-2) + H53(1-0/0-1) + H77(1-1) + H79(2-0/0-2) + H81(3-0/0-3/3-1/1-3). Combined N~489, zero market overlap. This is the largest systematic edge found in the research program.
   - **First-half strategies have weak edges**: H78 (O3.5) and H80 (home leading) both show positive train ROI but test ROI collapses to <2%. The market has more time to adjust in the second half, so edges found in FH are smaller and less stable. Confirmed that min 70+ is the "sweet spot" for edge size.
   - **LAY home/away in FH not viable**: Only 5 matches where home leads 1-0 but away dominates stats. Insufficient N for any LAY strategy.
+- **Ronda 14 hallazgos clave (H82-H86 -- Team Yield as filter)**:
+  - Tested team yield (chronological ROI per team) as secondary filter for ALL 7 strategy families across 2151 bets from 918 matches.
+  - **Fundamental finding: Team yield is NOT predictive.** The most common result is that filtering OUT negative-yield teams HURTS performance because those teams tend to have higher odds and provide more value when they win.
+  - **Counter-intuitive reversal in draw_late and cs_late**: Teams with negative yield have HIGHER ROI on draw and CS bets. This is because "bad yield" teams are typically underdogs getting better odds from the market.
+  - **Only under_late shows a test-positive signal** (max_yield >= 0% gives +14.1pp in test), but under_late baseline ROI is 0.5% -- the strategy itself is barely profitable, so improving it still yields <10% ROI.
+  - **Rolling window instability**: Q1-Q2 show no separation or reversal between yield groups; Q3-Q4 show separation. Signal is temporally unstable.
+  - **League tier interaction non-actionable**: Tier 2/3 show positive yield correlation, Tier 1 shows REVERSE. Cannot build a universal filter.
+  - **Grid search conclusive**: 180 parameter combinations tested, ZERO show improvement in BOTH train and test at portfolio level. The best test delta is +2.4pp (hist>=5, away_yield_roi keep_below -30%) -- negligible for the implementation complexity.
+  - **Team yield concept EXHAUSTED**: Do not re-investigate unless dataset grows significantly (>5000 matches) or team yield is computed differently (e.g., strategy-specific, position-weighted, decay-weighted).
   - **Odds drift in FH is noise**: H=34 drift events, 29.4% home win rate -- market is correct.
   - **0-3 scoreline has 82.4% WR**: The highest single-scoreline WR found. Away teams with 3-goal leads are virtually unbeatable.
   - **H55 and H65 superseded**: Both monitoring strategies now have better versions (H79, H81) that pass all gates.
