@@ -250,28 +250,45 @@ Muestra tabla de resultados con semaforo:
 
 ---
 
-### PASO 4.5 — Validación realista (OBLIGATORIO)
+### PASO 4.5 — Validación realista (OBLIGATORIO — NO SALTARSE)
 
-**ANTES de considerar una estrategia como candidata**, el sub-backtest-runner debe haber
-ejecutado el validador realista (`strategies/sd_validate_realistic.py`) sobre los bets
-del mejor combo. Este validador aplica los mismos filtros que el notebook BT real:
+Para cada estrategia que pase los 8 quality gates del Paso 4, DEBES ejecutar el
+validador realista. Este paso NO es opcional y NO puede hacerse "a mano" calculando
+slippage en el script de backtest. DEBE usarse el script oficial.
 
+**Procedimiento exacto:**
+
+1. Exporta los bets del mejor combo a JSON:
+```python
+# En el script de backtest, al final:
+with open(f"aux/sd_bt_{name}_bets.json", "w") as f:
+    json.dump(bets, f, ensure_ascii=False)
+```
+
+2. Ejecuta el validador:
+```bash
+python strategies/sd_validate_realistic.py --file aux/sd_bt_{name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l) 2>&1
+```
+
+3. **Copia el output COMPLETO** (tanto stderr como stdout) en tu reporte.
+
+El validador aplica los mismos filtros que el notebook BT real:
 - **Slippage 2%** en BACK wins (reduce P/L de cada victoria)
 - **Odds filter [1.05, 10.0]** (elimina bets con odds extremas)
 - **Dedup** (1 bet por match)
 
-Y verifica quality gates adicionales del notebook:
+Y verifica quality gates del notebook:
 - N >= max(15, n_matches/25) (~35 con 896 matches)
 - **ROI >= 10% post-ajustes** (el gate más importante)
 - IC95 lower bound >= 40%
 - Train ROI > 0 y Test ROI > 0
 
-**REGLA CRÍTICA**: Las stats "raw" del sub-backtest-runner son ORIENTATIVAS.
-Las stats "realistic" del validador son las DEFINITIVAS. Si el verdict es FAIL,
-la estrategia NO es candidata, independientemente de lo bien que se vea en raw.
-
-Históricamente, estrategias con ROI raw de 20-90% caen a <10% tras ajustes realistas.
-Apunta a ROI raw > 15% para tener margen de sobrevivir el gate de 10% realista.
+**REGLAS CRÍTICAS**:
+- Las stats "raw" del sub-backtest-runner son ORIENTATIVAS. Las "realistic" son DEFINITIVAS.
+- Si el verdict es FAIL, la estrategia NO es candidata.
+- **NUNCA reportes una estrategia como "aprobada" sin incluir el output literal del validador.**
+- Históricamente, estrategias con ROI raw 20-90% caen a <10% tras ajustes realistas.
+- Apunta a ROI raw > 15% para tener margen de sobrevivir el gate de 10% realista.
 
 ---
 
@@ -396,6 +413,23 @@ Para cada estrategia VALIDADA (que pase todos los gates), escribe un informe en
 | Overlap < 30% | PASS ({max_overlap}%) |
 | >= 3 ligas | PASS ({count}) |
 | Concentracion < 50% | PASS ({max_pct}%) |
+
+## Validación Realista (sd_validate_realistic.py)
+**Verdict: {PASS|FAIL}**
+
+| Métrica | Raw | Realistic | Delta |
+|---------|-----|-----------|-------|
+| N | {N_raw} | {N_real} | {delta_n} |
+| WR% | {wr_raw} | {wr_real} | {delta_wr}pp |
+| ROI% | {roi_raw} | {roi_real} | {delta_roi}pp |
+| P/L | {pl_raw} | {pl_real} | {delta_pl} |
+| Train ROI | — | {train_roi_real} | — |
+| Test ROI | — | {test_roi_real} | — |
+
+> Output completo del validador pegado abajo:
+> ```
+> {pegar output stderr+stdout del validador aquí}
+> ```
 
 ## Overlap con Estrategias Existentes
 | Estrategia existente | Match overlap |

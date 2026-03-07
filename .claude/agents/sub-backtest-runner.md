@@ -57,10 +57,12 @@ cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python aux/sd_bt_{hypoth
 Si el script falla, diagnostica el error (typo en columna, datos inesperados, etc.),
 corrige el script, y reintenta UNA vez. Si falla de nuevo, reporta el error al padre.
 
-### Paso 2.5 — Validación realista
+### Paso 2.5 — Validación realista (OBLIGATORIO — NO SALTARSE)
 
-Después de ejecutar el backtest, valida los resultados con el pipeline realista.
-El script del Paso 1 debe exportar los bets del mejor combo a un fichero JSON:
+**Este paso es OBLIGATORIO.** No puedes reportar resultados al padre sin haberlo ejecutado.
+No intentes calcular slippage/dedup manualmente — DEBES usar el script oficial.
+
+**2.5a) Exportar bets a JSON.** El script del Paso 1 debe guardar los bets del mejor combo:
 
 ```python
 # Al final del script, después de encontrar best_by_roi:
@@ -68,33 +70,34 @@ if best_by_roi:
     best_bets = run_backtest(matches, best_by_roi["params"])
     with open(f"aux/sd_bt_{HYPOTHESIS_NAME}_bets.json", "w") as f:
         json.dump(best_bets, f, ensure_ascii=False)
+    print(f"Exported {len(best_bets)} bets to aux/sd_bt_{HYPOTHESIS_NAME}_bets.json", file=sys.stderr)
 ```
 
-Luego ejecuta el validador realista:
+**2.5b) Ejecutar el validador realista:**
 
 ```bash
-cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python strategies/sd_validate_realistic.py --file aux/sd_bt_{hypothesis_name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l)
+cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python strategies/sd_validate_realistic.py --file aux/sd_bt_{hypothesis_name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l) 2>&1
 ```
 
-Esto aplica los mismos filtros que el notebook BT real:
-- **Slippage 2%** en BACK wins (reduce P/L de cada win)
-- **Odds filter** [1.05, 10.0] (elimina bets con odds extremas)
+**2.5c) Capturar el output COMPLETO** (stderr + stdout). Lo necesitas para el Paso 3.
+
+El validador aplica los mismos filtros que el notebook BT real:
+- **Slippage 2%** en BACK wins
+- **Odds filter** [1.05, 10.0]
 - **Dedup** (1 bet por match)
 
-Y verifica los quality gates del notebook:
-- N >= max(15, n_matches/25) (~33 con 850 matches)
-- ROI >= 10%
-- IC95 lower bound >= 40%
-- Train ROI > 0 y Test ROI > 0
+Y verifica quality gates: N >= ~35, ROI >= 10%, IC95_low >= 40%, train/test ROI > 0.
 
-**IMPORTANTE**: Si el verdict es FAIL, reportalo claramente al padre.
+**REGLA**: Si el verdict es FAIL, reportalo claramente al padre.
 Las stats "realistic" son las que importan, no las "raw".
 
 ### Paso 3 — Devolver resultados
 
 Parsea la salida JSON del script y devuelvela tal cual al agente padre.
-Incluye tambien el resultado de la validacion realista (Paso 2.5).
-Anade un breve resumen en texto plano al principio:
+**OBLIGATORIO**: Incluye el output COMPLETO del validador realista (Paso 2.5).
+Si no ejecutaste el validador, tu reporte es INVALIDO y el padre lo rechazara.
+
+Formato de reporte al padre:
 
 ```
 BACKTEST RESULTS: {hypothesis_name}
@@ -103,11 +106,21 @@ Combos tested: {total}
 Combos with N >= 60: {count}
 Time elapsed: {seconds}s
 
-REALISTIC VALIDATION: {PASS|FAIL}
-  Raw:       N={N}, WR={WR}%, ROI={ROI}%
-  Realistic: N={N}, WR={WR}%, ROI={ROI}%
-  Failed gates: {list or none}
+REALISTIC VALIDATION (sd_validate_realistic.py): {PASS|FAIL}
+  Raw:       N={N}, WR={WR}%, ROI={ROI}%, P/L={PL}
+  Realistic: N={N}, WR={WR}%, ROI={ROI}%, P/L={PL}
+  Delta:     N={delta}, ROI={delta}pp
+  Gates:
+    min_n:     {PASS|FAIL} ({actual} vs {required})
+    min_roi:   {PASS|FAIL} ({actual} vs {required})
+    ic95_low:  {PASS|FAIL} ({actual} vs {required})
+    train_roi: {PASS|FAIL} ({actual})
+    test_roi:  {PASS|FAIL} ({actual})
+  Failed gates: {list or "none"}
 ```
+
+**Si no puedes ejecutar el validador** (error, fichero no encontrado, etc.),
+reporta el error explicitamente. No inventes los numeros realistas.
 
 ---
 
