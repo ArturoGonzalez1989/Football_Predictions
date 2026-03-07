@@ -24,6 +24,10 @@ HEARTBEAT_PATH = DATA_DIR / ".heartbeat"
 GAMES_CSV = SCRAPER_DIR / "games.csv"
 PLACED_BETS_CSV = SCRAPER_DIR / "placed_bets.csv"
 LOG_DIR = SCRAPER_DIR / "logs"
+ALERTS_LOG = LOG_DIR / "alerts.jsonl"
+
+# Max alerts log size: 5MB, then rotate
+ALERTS_LOG_MAX_SIZE = 5 * 1024 * 1024
 
 
 def _check_heartbeat() -> List[Dict[str, Any]]:
@@ -261,20 +265,105 @@ def _check_scraper_log() -> List[Dict[str, Any]]:
     return alerts
 
 
+def _get_system_context() -> Dict[str, Any]:
+    """Gather system context for detailed logging."""
+    ctx: Dict[str, Any] = {}
+
+    # Heartbeat data
+    try:
+        if HEARTBEAT_PATH.exists():
+            with open(HEARTBEAT_PATH) as f:
+                hb = json.load(f)
+            hb_time = datetime.fromisoformat(hb["timestamp"])
+            ctx["heartbeat"] = {
+                "timestamp": hb.get("timestamp"),
+                "age_seconds": round((datetime.now(timezone.utc) - hb_time).total_seconds(), 1),
+                "alive_drivers": hb.get("alive_drivers"),
+                "active_drivers": hb.get("active_drivers"),
+                "cycle": hb.get("cycle"),
+                "captures_ok": hb.get("captures_ok"),
+                "matches": hb.get("matches", []),
+            }
+    except Exception:
+        ctx["heartbeat"] = None
+
+    # Games count
+    try:
+        if GAMES_CSV.exists():
+            with open(GAMES_CSV, 'r', encoding='utf-8') as f:
+                games = list(csv.DictReader(f))
+            ctx["games_count"] = len(games)
+            ctx["games_status"] = {}
+            for g in games:
+                st = g.get("status", "unknown")
+                ctx["games_status"][st] = ctx["games_status"].get(st, 0) + 1
+    except Exception:
+        pass
+
+    # Pending bets count
+    try:
+        if PLACED_BETS_CSV.exists():
+            with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+                bets = list(csv.DictReader(f))
+            ctx["bets_total"] = len(bets)
+            ctx["bets_pending"] = sum(1 for b in bets if b.get("status") == "pending")
+            ctx["bets_won"] = sum(1 for b in bets if b.get("status") == "won")
+            ctx["bets_lost"] = sum(1 for b in bets if b.get("status") == "lost")
+            ctx["bets_cashout"] = sum(1 for b in bets if b.get("status") == "cashout")
+    except Exception:
+        pass
+
+    return ctx
+
+
+def _log_alerts_to_file(alerts: List[Dict[str, Any]], context: Dict[str, Any]):
+    """Persist alerts + context to JSONL log file for later analysis."""
+    try:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Rotate if too large
+        if ALERTS_LOG.exists() and ALERTS_LOG.stat().st_size > ALERTS_LOG_MAX_SIZE:
+            rotated = ALERTS_LOG.with_suffix('.jsonl.old')
+            if rotated.exists():
+                rotated.unlink()
+            ALERTS_LOG.rename(rotated)
+
+        entry = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "n_critical": sum(1 for a in alerts if a["level"] == "critical"),
+            "n_warning": sum(1 for a in alerts if a["level"] == "warning"),
+            "alerts": alerts,
+            "context": context,
+        }
+
+        with open(ALERTS_LOG, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception as e:
+        log.warning(f"Failed to write alerts log: {e}")
+
+
 @router.get("/api/alerts")
-async def get_alerts():
-    """Returns all active system alerts."""
+def run_alert_checks(include_stats_api: bool = True) -> Dict[str, Any]:
+    """Run all alert checks, log results, and return structured response.
+
+    Called by the API endpoint and by the background monitor task.
+    """
     alerts = []
     alerts.extend(_check_heartbeat())
     alerts.extend(_check_pending_bets())
     alerts.extend(_check_data_quality())
     alerts.extend(_check_scraper_log())
     # Stats API check is slow (~2s), only run if no other critical alerts
-    if not any(a["level"] == "critical" for a in alerts):
+    if include_stats_api and not any(a["level"] == "critical" for a in alerts):
         alerts.extend(_check_stats_api())
 
     # Sort: critical first, then warning
     alerts.sort(key=lambda a: 0 if a["level"] == "critical" else 1)
+
+    # Log to file with full context for offline analysis
+    context = _get_system_context()
+    if alerts:  # Only log when there are alerts (avoid flooding)
+        _log_alerts_to_file(alerts, context)
 
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -282,7 +371,14 @@ async def get_alerts():
         "critical": sum(1 for a in alerts if a["level"] == "critical"),
         "warning": sum(1 for a in alerts if a["level"] == "warning"),
         "alerts": alerts,
+        "context": context,
     }
+
+
+@router.get("/api/alerts")
+async def get_alerts():
+    """Returns all active system alerts. Also logs to alerts.jsonl."""
+    return run_alert_checks()
 
 
 @router.get("/alerts", response_class=HTMLResponse)

@@ -26,7 +26,7 @@ from api.system import router as system_router
 from api.analytics import router as analytics_router, run_paper_auto_place
 from api.bets import router as bets_router, run_auto_cashout
 from api.config import router as config_router
-from api.alerts import router as alerts_router
+from api.alerts import router as alerts_router, run_alert_checks
 
 # Force fresh reload of csv_reader to avoid stale module cache
 try:
@@ -380,6 +380,24 @@ def _force_kill_scraper(pid: int):
         print(f"[{datetime.now()}] WATCHDOG: Error killing PID {pid}: {e}")
 
 
+ALERTS_MONITOR_INTERVAL = 60  # Check alerts every 60 seconds
+
+
+async def _alerts_monitor():
+    """Background task: runs alert checks every 60s and logs to alerts.jsonl.
+
+    Ensures alerts are captured even when nobody is viewing the dashboard.
+    Skips the Stats API check (slow) to keep the loop lightweight.
+    """
+    await asyncio.sleep(45)  # Initial delay to let other services start
+    while True:
+        try:
+            run_alert_checks(include_stats_api=False)
+        except Exception as e:
+            print(f"[{datetime.now()}] [ALERTS MONITOR] Error: {e}")
+        await asyncio.sleep(ALERTS_MONITOR_INTERVAL)
+
+
 @app.on_event("startup")
 async def start_scheduler():
     """Start the auto-refresh scheduler and scraper watchdog on app startup."""
@@ -405,6 +423,9 @@ async def start_scheduler():
     # Watchdog para el paper trading task — lo reinicia si muere inesperadamente
     asyncio.create_task(_paper_trading_watchdog())
     print(f"[{datetime.now()}] Paper trading watchdog started")
+    # Alerts monitor: logs system alerts every 60s (even when nobody is viewing the dashboard)
+    asyncio.create_task(_alerts_monitor())
+    print(f"[{datetime.now()}] Alerts monitor started (logs to alerts.jsonl every 60s)")
 
 
 @app.on_event("shutdown")
