@@ -43,9 +43,9 @@
       "minuteMax": 90
     },
     "momentum_xg": {
-      "version": "v1",
-      "minuteMin": 20,
-      "minuteMax": 70
+      "version": "off",
+      "minuteMin": 0,
+      "minuteMax": 90
     },
     "lay_over15": {
       "enabled": true,
