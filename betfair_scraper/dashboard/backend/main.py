@@ -26,6 +26,7 @@ from api.system import router as system_router
 from api.analytics import router as analytics_router, run_paper_auto_place
 from api.bets import router as bets_router, run_auto_cashout
 from api.config import router as config_router
+from api.alerts import router as alerts_router
 
 # Force fresh reload of csv_reader to avoid stale module cache
 try:
@@ -50,6 +51,7 @@ app.include_router(system_router)
 app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(bets_router, tags=["bets"])
 app.include_router(config_router, prefix="/api", tags=["config"])
+app.include_router(alerts_router, tags=["alerts"])
 
 
 # ==================== AUTO REFRESH SCHEDULER ====================
@@ -268,14 +270,16 @@ async def _paper_trading_watchdog():
 
 HEARTBEAT_PATH = SCRAPER_DIR / "data" / ".heartbeat"
 SCRAPER_WATCHDOG_INTERVAL = 60  # Check every 60 seconds
-HEARTBEAT_STALE_THRESHOLD = 120  # Heartbeat older than 2 min = scraper is dead/stuck
+HEARTBEAT_STALE_THRESHOLD = 180  # Heartbeat older than 3 min = scraper is stuck
+HEARTBEAT_FORCE_RESTART_THRESHOLD = 300  # >5 min stale = force kill + restart
 _scraper_watchdog_task = None
 _scraper_auto_restarts = 0
+_consecutive_stale_checks = 0
 
 
 async def _scraper_watchdog():
-    """Monitor the scraper heartbeat and auto-restart if dead."""
-    global _scraper_auto_restarts
+    """Monitor the scraper heartbeat and auto-restart if dead or stuck."""
+    global _scraper_auto_restarts, _consecutive_stale_checks
     import json
 
     # Wait for scraper to have time to start
@@ -289,37 +293,27 @@ async def _scraper_watchdog():
                 try:
                     with open(HEARTBEAT_PATH) as f:
                         heartbeat = json.load(f)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"[{datetime.now()}] WATCHDOG: Error reading heartbeat: {e}")
 
             # Check if scraper process is running
-            scraper_running = False
+            scraper_pid = None
             try:
                 import psutil
                 for proc in psutil.process_iter(["pid", "cmdline"]):
                     cmdline = proc.info.get("cmdline") or []
                     if any("main.py" in str(c) for c in cmdline) and any("python" in str(c).lower() for c in cmdline):
                         if str(SCRAPER_DIR) in " ".join(str(c) for c in cmdline):
-                            scraper_running = True
+                            scraper_pid = proc.info["pid"]
                             break
             except Exception:
                 pass
 
-            if not scraper_running:
+            if scraper_pid is None:
                 # Scraper process is not running — auto-restart
+                _consecutive_stale_checks = 0
                 print(f"[{datetime.now()}] WATCHDOG: Scraper process not running! Auto-restarting...")
-                try:
-                    proc = subprocess.Popen(
-                        [sys.executable, str(SCRAPER_DIR / "main.py")],
-                        cwd=str(SCRAPER_DIR),
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                    )
-                    _scraper_auto_restarts += 1
-                    print(f"[{datetime.now()}] WATCHDOG: Scraper restarted (PID {proc.pid}), auto-restart #{_scraper_auto_restarts}")
-                except Exception as e:
-                    print(f"[{datetime.now()}] WATCHDOG: Failed to restart scraper: {e}")
+                _restart_scraper()
 
             elif heartbeat:
                 # Scraper is running — check if heartbeat is stale
@@ -327,15 +321,63 @@ async def _scraper_watchdog():
                     hb_time = datetime.fromisoformat(heartbeat["timestamp"])
                     from datetime import timezone as tz
                     age_seconds = (datetime.now(tz.utc) - hb_time).total_seconds()
-                    if age_seconds > HEARTBEAT_STALE_THRESHOLD:
-                        print(f"[{datetime.now()}] WATCHDOG: Scraper heartbeat stale ({age_seconds:.0f}s old), drivers alive: {heartbeat.get('alive_drivers', '?')}/{heartbeat.get('active_drivers', '?')}")
-                except Exception:
-                    pass
+                    if age_seconds > HEARTBEAT_FORCE_RESTART_THRESHOLD:
+                        _consecutive_stale_checks += 1
+                        print(f"[{datetime.now()}] WATCHDOG: Heartbeat stale {age_seconds:.0f}s "
+                              f"(>{HEARTBEAT_FORCE_RESTART_THRESHOLD}s), consecutive={_consecutive_stale_checks}")
+                        if _consecutive_stale_checks >= 2:
+                            # Force kill and restart
+                            print(f"[{datetime.now()}] WATCHDOG: Force-killing stuck scraper (PID {scraper_pid})...")
+                            _force_kill_scraper(scraper_pid)
+                            await asyncio.sleep(5)
+                            _restart_scraper()
+                            _consecutive_stale_checks = 0
+                    elif age_seconds > HEARTBEAT_STALE_THRESHOLD:
+                        print(f"[{datetime.now()}] WATCHDOG: Heartbeat stale ({age_seconds:.0f}s), "
+                              f"drivers alive: {heartbeat.get('alive_drivers', '?')}/{heartbeat.get('active_drivers', '?')}")
+                    else:
+                        _consecutive_stale_checks = 0
+                except Exception as e:
+                    print(f"[{datetime.now()}] WATCHDOG: Error checking heartbeat age: {e}")
 
         except Exception as e:
             print(f"[{datetime.now()}] WATCHDOG error: {e}")
 
         await asyncio.sleep(SCRAPER_WATCHDOG_INTERVAL)
+
+
+def _restart_scraper():
+    """Start a new scraper process."""
+    global _scraper_auto_restarts
+    try:
+        proc = subprocess.Popen(
+            [sys.executable, str(SCRAPER_DIR / "main.py")],
+            cwd=str(SCRAPER_DIR),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+        )
+        _scraper_auto_restarts += 1
+        print(f"[{datetime.now()}] WATCHDOG: Scraper restarted (PID {proc.pid}), auto-restart #{_scraper_auto_restarts}")
+    except Exception as e:
+        print(f"[{datetime.now()}] WATCHDOG: Failed to restart scraper: {e}")
+
+
+def _force_kill_scraper(pid: int):
+    """Force-kill a stuck scraper process and its children."""
+    try:
+        import psutil
+        parent = psutil.Process(pid)
+        children = parent.children(recursive=True)
+        for child in children:
+            try:
+                child.kill()
+            except Exception:
+                pass
+        parent.kill()
+        print(f"[{datetime.now()}] WATCHDOG: Killed scraper PID {pid} + {len(children)} children")
+    except Exception as e:
+        print(f"[{datetime.now()}] WATCHDOG: Error killing PID {pid}: {e}")
 
 
 @app.on_event("startup")

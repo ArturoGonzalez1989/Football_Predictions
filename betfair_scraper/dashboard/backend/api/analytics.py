@@ -1,8 +1,11 @@
 import csv
 import re
+import logging
 import traceback
 from datetime import datetime
 from pathlib import Path
+
+_log = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Query
 from typing import Dict, List, Any, Optional
@@ -40,59 +43,67 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
         return
 
     try:
-        # Crear CSV si no existe
-        if not _PLACED_BETS_CSV.exists():
-            with open(_PLACED_BETS_CSV, 'w', newline='', encoding='utf-8') as f:
-                csv.writer(f).writerow(_PLACED_BETS_HEADERS)
-
-        # Obtener siguiente ID + dedup en CSV (por si backend reinició)
-        next_id = 1
+        # Atomic read-check-write: read all rows, check dedup, write full file
+        rows = []
         if _PLACED_BETS_CSV.exists():
             with open(_PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
                 rows = list(csv.DictReader(f))
-                if rows:
-                    # Si ya existe en CSV, no duplicar (by market key, not strategy)
-                    for row in rows:
-                        row_market = _live_market_key(row)
-                        if row_market == market_key:
-                            _auto_placed_keys.add(market_key)
-                            return
-                    ids = [int(r['id']) for r in rows if r.get('id', '').isdigit()]
-                    if ids:
-                        next_id = max(ids) + 1
+
+        # Dedup check (by market key)
+        for row in rows:
+            if _live_market_key(row) == market_key:
+                _auto_placed_keys.add(market_key)
+                return
+
+        # Compute next ID
+        ids = [int(r['id']) for r in rows if r.get('id', '').isdigit()]
+        next_id = (max(ids) + 1) if ids else 1
 
         timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        with open(_PLACED_BETS_CSV, 'a', newline='', encoding='utf-8') as f:
-            csv.writer(f).writerow([
-                next_id, timestamp,
-                match_id,
-                sig.get("match_name", ""),
-                sig.get("match_url", ""),
-                strategy,
-                sig.get("strategy_name", ""),
-                sig.get("minute", ""),
-                sig.get("score", ""),
-                sig.get("recommendation", ""),
-                sig.get("back_odds", ""),
-                sig.get("min_odds", ""),
-                sig.get("expected_value", ""),
-                sig.get("confidence", ""),
-                sig.get("win_rate_historical", ""),
-                sig.get("roi_historical", ""),
-                sig.get("sample_size", ""),
-                "paper",
-                stake,
-                "auto",   # notas: marca automático
-                "pending", "", "",
-            ])
+        new_row = [
+            next_id, timestamp,
+            match_id,
+            sig.get("match_name", ""),
+            sig.get("match_url", ""),
+            strategy,
+            sig.get("strategy_name", ""),
+            sig.get("minute", ""),
+            sig.get("score", ""),
+            sig.get("recommendation", ""),
+            sig.get("back_odds", ""),
+            sig.get("min_odds", ""),
+            sig.get("expected_value", ""),
+            sig.get("confidence", ""),
+            sig.get("win_rate_historical", ""),
+            sig.get("roi_historical", ""),
+            sig.get("sample_size", ""),
+            "paper",
+            stake,
+            "auto",   # notas: marca automático
+            "pending", "", "",
+        ]
+
+        # Atomic write: write to temp file, then rename
+        tmp_path = _PLACED_BETS_CSV.with_suffix('.csv.tmp')
+        with open(tmp_path, 'w', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(_PLACED_BETS_HEADERS)
+            for row in rows:
+                w.writerow([row.get(h, '') for h in _PLACED_BETS_HEADERS])
+            w.writerow(new_row)
+        # Atomic rename (on Windows this replaces the target)
+        import shutil
+        shutil.move(str(tmp_path), str(_PLACED_BETS_CSV))
+
         # ── Audit log: apuesta colocada ──
         try:
             _audit.log_bet_placed(next_id, sig, stake)
-        except Exception:
-            pass
+        except Exception as e:
+            logging.getLogger(__name__).warning(f"Audit log failed for bet {next_id}: {e}")
         _auto_placed_keys.add(market_key)
     except Exception as e:
         # Loguear error en fichero para depuración (no interrumpir el endpoint)
+        logging.getLogger(__name__).error(f"Error placing bet {match_id}/{strategy}: {e}")
         try:
             with open(_AUTO_PLACE_LOG, 'a', encoding='utf-8') as _f:
                 _f.write(
@@ -352,8 +363,8 @@ def run_paper_auto_place() -> dict:
             _n_live = 0
         try:
             _audit.log_cycle_start(_n_live, source="auto_poller")
-        except Exception:
-            pass
+        except Exception as e:
+            _log.debug(f"Audit log_cycle_start failed: {e}")
 
         result = csv_reader.detect_betting_signals(versions=versions)
 
@@ -363,8 +374,8 @@ def run_paper_auto_place() -> dict:
             for _item in _watchlist:
                 try:
                     _audit.log_radar_item(_item)
-                except Exception:
-                    pass
+                except Exception as e:
+                    _log.debug(f"Audit log_radar_item failed: {e}")
         except Exception:
             _watchlist = []
 
@@ -374,8 +385,8 @@ def run_paper_auto_place() -> dict:
         for sig in raw_signals:
             try:
                 _audit.log_signal_active(sig)
-            except Exception:
-                pass
+            except Exception as e:
+                _log.debug(f"Audit log_signal_active failed: {e}")
 
         # ── Aplicar TODOS los filtros realistas (mirrors frontend applyRealisticAdjustments) ──
         filtered_signals, skip_reasons = _apply_realistic_adjustments(raw_signals, adj, risk_filter)
@@ -386,8 +397,8 @@ def run_paper_auto_place() -> dict:
             if reason:
                 try:
                     _audit.log_signal_filtered(sig, reason)
-                except Exception:
-                    pass
+                except Exception as e:
+                    _log.debug(f"Audit log_signal_filtered failed: {e}")
 
         placed = 0
         checked = 0
@@ -407,8 +418,8 @@ def run_paper_auto_place() -> dict:
                 )
                 try:
                     _audit.log_signal_filtered(sig, _not_mature)
-                except Exception:
-                    pass
+                except Exception as e:
+                    _log.debug(f"Audit log_signal_filtered failed: {e}")
                 _n_filtered_audit += 1
 
         # ── Audit: fin de ciclo ──
@@ -419,8 +430,8 @@ def run_paper_auto_place() -> dict:
                 n_placed=placed,
                 n_filtered=_n_filtered_audit,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            _log.debug(f"Audit log_cycle_end failed: {e}")
 
         return {"placed": placed, "signals_checked": checked}
 
@@ -715,8 +726,8 @@ async def get_betting_signals(
     try:
         for sig in filtered:
             _audit.log_signal_active(sig)
-    except Exception:
-        pass
+    except Exception as e:
+        _log.debug(f"Audit log_signal_active failed: {e}")
 
     return result
 

@@ -8,7 +8,10 @@ from pathlib import Path
 from datetime import datetime
 import csv
 import re
+import logging
 from typing import Optional, Literal
+
+log = logging.getLogger(__name__)
 
 from utils.csv_reader import _resolve_csv_path, _read_csv_rows, _to_float
 from utils import signals_audit_logger as _audit
@@ -98,8 +101,8 @@ def _get_active_match_ids() -> set[str]:
                     match = re.search(r'([^/]+apuestas-\d+)', url)
                     if match:
                         active_ids.add(match.group(1))
-    except Exception:
-        pass
+    except Exception as e:
+        log.warning(f"Error reading active match IDs: {e}")
 
     return active_ids
 
@@ -232,14 +235,14 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct:
                 bet["pl"] = round(-stake, 2)
             bet["_needs_csv_update"] = True
 
-    except Exception:
-        pass
+    except Exception as e:
+        log.error(f"Error enriching bet {match_id} with live data: {e}")
 
     return bet
 
 
 def _update_csv_rows(updates: dict[str, dict]):
-    """Batch update rows in placed_bets.csv (by bet id)."""
+    """Batch update rows in placed_bets.csv (by bet id). Atomic write."""
     if not updates or not PLACED_BETS_CSV.exists():
         return
     rows = []
@@ -251,10 +254,13 @@ def _update_csv_rows(updates: dict[str, dict]):
                 row.update(updates[bid])
             rows.append(row)
 
-    with open(PLACED_BETS_CSV, 'w', newline='', encoding='utf-8') as f:
+    import shutil
+    tmp_path = PLACED_BETS_CSV.with_suffix('.csv.tmp')
+    with open(tmp_path, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
         writer.writeheader()
         writer.writerows(rows)
+    shutil.move(str(tmp_path), str(PLACED_BETS_CSV))
 
 
 def _market_key_from_recommendation(recommendation: str) -> str:
@@ -366,8 +372,8 @@ def run_auto_cashout() -> dict:
                     lay_now=float(bet.get("cashout_lay_current") or 0),
                     threshold=float(bet.get("cashout_threshold") or 0),
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                log.warning(f"Audit log failed for cashout bet {bid}: {e}")
             cashed_out += 1
 
         elif bet.pop("_needs_csv_update", False):
@@ -381,8 +387,8 @@ def run_auto_cashout() -> dict:
             # ── Audit log: liquidación ──
             try:
                 _audit.log_settlement(bet, result=_settle_result, pl=_settle_pl)
-            except Exception:
-                pass
+            except Exception as e:
+                log.warning(f"Audit log failed for settlement bet {bid}: {e}")
             settled += 1
 
     if csv_updates:
