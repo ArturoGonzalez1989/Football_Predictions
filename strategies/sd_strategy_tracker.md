@@ -1,7 +1,7 @@
 # Strategy Designer — Historial de investigacion
-Ultima actualizacion: 2026-03-06
-Dataset al momento de la investigacion: 871 partidos (2026-02-10 a 2026-03-06)
-Total hipotesis investigadas: 69 (H1-H69) en 11 rondas
+Ultima actualizacion: 2026-03-07
+Dataset al momento de la investigacion: 896 partidos (2026-02-10 a 2026-03-07)
+Total hipotesis investigadas: 76 (H1-H76) en 12 rondas
 
 > Este fichero es la referencia para el agente strategy-designer.
 > Antes de investigar una hipotesis nueva, verificar que no este ya listada aqui.
@@ -13,6 +13,43 @@ Solo 1 de las 19 aprobadas en rondas anteriores paso los quality gates del noteb
 | Estrategia | Mercado | Config | N | WR | ROI | Notebook status |
 |---|---|---|---|---|---|---|
 | BACK Leader Stat Domination (H2) | BACK Match Winner (leader) | min=55-70, sot>=4, rival<=1 | 26 | 92.3% | +47.4% | ACTIVA |
+
+## APROBADAS RONDA 12 (2 nuevas)
+
+Ronda 12 explored 7 hypotheses (H70-H76) with 896 matches. Focus: leader markets (home favourite), Under 4.5, Draw at 0-0, CS extensions. Both approved strategies pass realistic validation (slippage 2%, dedup, odds filter [1.05, 10.0]).
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI (realistic) | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H70 | BACK Home Favourite Leading Late | BACK MO (home fav) | 225 | 85.8% | +31.1% | 4.43 | +30.9% | +31.4% | strategies/sd_report_back_home_fav_leading.md |
+| 2 | H71 | BACK Under 4.5 Three Goals Low xG | BACK U4.5 | 60 | 96.7% | +11.9% | 3.99 | +12.0% | +11.6% | strategies/sd_report_back_under45_three_goals.md |
+
+### Quality gates resumen (Ronda 12, realistic validation)
+
+| Gate | H70 | H71 |
+|------|-----|-----|
+| G1: N>=35 | PASS (225) | PASS (60) |
+| G2: ROI>=10% (realistic) | PASS (31.1%) | PASS (11.9%) |
+| G3: IC95_lo>=40% | PASS (80.6%) | PASS (88.6%) |
+| G4: Train ROI>0% | PASS (30.9%) | PASS (12.0%) |
+| G5: Test ROI>0% | PASS (31.4%) | PASS (11.6%) |
+| G6: Overlap<30% same market | PASS (0% vs H67/H59) | PASS (0% -- U4.5 unique) |
+| G7: >=3 ligas | PASS (32) | PASS (25) |
+
+### Notas sobre las nuevas estrategias
+
+- **H70 is the STAR of R12**: N=225, Sharpe=4.43 (realistic), train/test ROI virtually identical (30.9/31.4%). Completes the "leader portfolio" with H67 (away fav) and H59 (underdog). The three are MUTUALLY EXCLUSIVE by construction. Combined N would be 540+. The 85.8% hold rate vs market-implied ~63% (avg odds 1.59) shows a +23pp edge -- among the largest found in 76 hypotheses.
+- **H71 is ultra-conservative**: 96.7% WR, only 2 losses in 60 bets. MaxDD=10 (one loss). ROI is marginal at 11.9% realistic but extremely stable (train/test nearly equal). 95% match overlap with H66 means they trigger on same matches but different Under markets. Consider as a complementary position to H66 rather than independent strategy.
+- **H70 uses only Tier 1 columns** (back_home, back_away, goles, minuto) -- zero data availability risk.
+- **H71 uses xG (Tier 1)** as its key filter, which is available in >95% of matches.
+
+### Cross-overlap between R12 approved
+
+| Par | Market overlap |
+|-----|----------------|
+| H70 vs H71 | 0% (different markets: MO vs U4.5) |
+| H70 vs H67 | 0% (mutually exclusive: home fav vs away fav) |
+| H70 vs H59 | 2.2% (near-exclusive: fav vs underdog) |
+| H71 vs H66 | 0% (different markets: U4.5 vs U3.5, 95% match overlap) |
 
 ## APROBADAS RONDA 11 (2 nuevas)
 
@@ -239,7 +276,7 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 
 **H55 nota**: CS 2-0/0-2 at min 65-80 without odds cap: N=105, WR=41%, ROI=26.5%, Sharpe=1.48. The WR is too uncertain (IC95 lower bound 32%). With more data, the confidence interval could narrow. The edge appears real (train ROI=22%, test ROI=36.6%) but the variability in outcomes is high because losses cost more (CS odds avg 3.50 means -10 per loss vs +23.75 per win).
 
-## DESCARTADAS (37) -- NO RE-INVESTIGAR
+## DESCARTADAS (42) -- NO RE-INVESTIGAR
 
 | H# | Nombre | Mercado | Razon de descarte |
 |---|---|---|---|
@@ -278,6 +315,10 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | H61 | xG Surge -> BACK Over 2.5 | BACK O2.5 | Only N=10 matches with high xG delta. Insufficient data and overlaps with Momentum xG concept |
 | H63 | BACK Over in Tight Games (Loser Pushing) | BACK Over | N=89, ROI=-11.7%. Market prices correctly when loser has stats in +-1 games |
 | H64 | LAY Favourite After UD Equalizer | LAY MO (fav) | N=23-32, redundant with H62 (same trigger, different side). H62 (BACK Draw) has better ROI |
+| H72 | BACK Over 0.5 Scoreless at HT | BACK O0.5 | Test ROI negative across ALL configs. Best: N=176, ROI=4.2%, test=-4.9%. Market efficient for O0.5 |
+| H74 | BACK Draw 0-0 Mid-Game Balanced | BACK Draw | Sharpe < 1.0 across all 76 configs. Best N=32, ROI=16.3% but train=0.9%. Confirms 0-0 Draw market efficient |
+| H75 | BACK CS 0-0 Very Late (v2) | BACK CS 0-0 | Negative ROI across all configs. Confirms H56 descarte. Edge is an artefact |
+| H76 | BACK Home Fav Leading 2+ Early | BACK MO (home) | N=67, test ROI=2.6%. Strong train/test divergence (26%/2.6%). Subsumed by H70 which is broader and better |
 
 ## MERCADOS / CONCEPTOS AGOTADOS
 
@@ -305,6 +346,10 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 - **Red cards as predictor**: H60 -- only 65 matches with red card data, too rare for strategies. ROI negative.
 - **xG momentum surge**: H61 -- only N=10, insufficient data. Overlaps conceptually with Momentum xG strategy.
 - **BACK Over when loser pushes**: H63 -- ROI -11.7%, market prices correctly
+- **BACK Over 0.5 at 0-0 HT**: H72 -- raw edge +15pp but test ROI always negative. Market adjusts post-HT.
+- **BACK Draw at 0-0 mid-game (55-70)**: H74 -- Sharpe <1.0 across 76 configs. Market efficient for Draw 0-0.
+- **BACK CS 0-0 very late**: H56 + H75 -- confirmed dead across 2 rounds. Edge is artefact.
+- **Home fav leading 2+ early**: H76 -- subsumed by H70 (broader, more robust). Test ROI collapses.
 - **Handicap / Asian Handicap**: No columns available in dataset (confirmed R8 exploration)
 - **HT-specific markets**: No HT market columns available (confirmed R8 exploration)
 - **BTTS markets**: No columns available (confirmed R7 exploration)
@@ -313,7 +358,7 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 
 ## NOTAS PARA FUTURAS RONDAS
 
-- Hipotesis H1-H69 ya cubiertas. Siguiente ronda empieza en H70.
+- Hipotesis H1-H76 ya cubiertas. Siguiente ronda empieza en H77.
 - **Ronda 11 hallazgos clave**:
   - **Under 3.5 market is genuinely inefficient**: When 3 goals are scored but xG < 2.5, the 4th goal probability is overpriced. H66 found ROI=+26.2% (N=84). Even WITHOUT xG filter, ROI is +9.8% (N=215) -- the market systematically overestimates 4th goal probability regardless of quality.
   - **Away favourite leading is massively underpriced**: H67 found 85.1% hold rate vs market-implied 67%. This 18pp edge is one of the largest in the entire research program. The "home advantage comeback" narrative is deeply embedded in market pricing.
@@ -344,7 +389,16 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
   - **BACK Draw After UD Equalizer (H62)** has extraordinary metrics (ROI=149.5%, Sharpe=3.38) but only N=40. In monitoring.
   - **CS 3-0/0-3 (H65)** extends CS structural inefficiency to 3-goal leads (WR=63.3%, avg odds=2.70). N=49, in monitoring.
   - **Stat-dominant losers remain a dead angle**: Only 11 matches, 9.1% win rate. Market correct. Perplexity Section 2.1 (underdog with better stats) only works when underdog is ALREADY LEADING (H59), not when they're losing.
-- **Diversificacion de mercados actual tras R11**:
+- **Ronda 12 hallazgos clave**:
+  - **Home favourite leading is massively underpriced**: H70 found 85.8% hold rate vs market-implied ~63% (avg odds 1.59). Edge of +23pp, the largest single-strategy edge in the entire program. Train/test ROI nearly identical (30.9/31.4%), indicating zero temporal decay.
+  - **Leader portfolio is now COMPLETE**: H70 (home fav) + H67 (away fav) + H59 (underdog) = all possible "leader late" scenarios. Combined N=540+, all mutually exclusive. This is the strongest systematic edge found.
+  - **Under 4.5 at 3 goals with low xG is viable**: H71 passes at ROI=11.9% realistic but is marginal. 95% match overlap with H66 means it's essentially a complementary bet, not independent.
+  - **Over 0.5 at 0-0 HT is NOT viable**: Despite +15pp raw edge (exploration), actual backtest shows negative test ROI. Market adjusts quickly after HT.
+  - **Draw at 0-0 mid-game is NOT viable**: Sharpe < 1.0 across 76 configs. Confirms Draw 0-0 market is efficient (consistent with H51 descartada).
+  - **CS 0-0 very late remains dead**: H75 retest confirms H56 -- negative ROI, edge is artefact.
+  - **Home fav leading 2+ early (55-70)**: Interesting WR (92.5%) but test ROI collapses (2.6%). H70's broader window is more robust.
+  - **Market efficiency by segment**: The market is EFFICIENT for: Draw 0-0, CS 0-0, Over 0.5 scoreless. The market is INEFFICIENT for: leader holds, Under markets at specific goals, CS at non-draw scores.
+- **Diversificacion de mercados actual tras R12**:
   - BACK Over 2.5: 7 estrategias (saturado, NO mas)
   - BACK Under 2.5: H25 + H46 (2)
   - **BACK Under 3.5: H26 (off) + H66 (NUEVO R11, 3 goals + low xG)**
@@ -361,7 +415,9 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
   - BACK Match Winner (leader): H2, H35, H40 (3)
   - **BACK Match Winner (underdog): H59 (1, R10)** -- reverse fav-longshot bias
   - **BACK Match Winner (away fav): H67 (1, NUEVO R11)** -- away favourite leading, mutually exclusive with H59
+  - **BACK Match Winner (home fav leading): H70 (1, NUEVO R12)** -- home favourite leading, completes leader portfolio
   - BACK Under 0.5: H69 (EN SEGUIMIENTO R11)
   - BACK Draw 2-2: H68 (EN SEGUIMIENTO R11)
+  - **BACK Under 4.5: H71 (1, NUEVO R12)** -- 3 goals with low xG, complementary to H66
   - LAY Over 4.5: H1 (1, off)
   - BACK Over 4.5: H54 (1, EN SEGUIMIENTO -- N insuficiente)

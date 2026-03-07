@@ -1,0 +1,806 @@
+{
+  "hypothesis": "H72",
+  "params": "min=46-55, minSoT=2",
+  "bets": [
+    {
+      "match_id": "ac-mil%C3%A1n-parma-apuestas-35245355",
+      "timestamp": "2026-02-22 17:51:18",
+      "minuto": 46.0,
+      "odds": 1.17,
+      "won": true,
+      "pl": 1.61,
+      "league": "Serie A",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "al-ahli-qat-sepahan-apuestas-35281006",
+      "timestamp": "2026-02-18 19:30:11",
+      "minuto": 49.0,
+      "odds": 1.39,
+      "won": false,
+      "pl": -10.0,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "al-fateh-ksa-al-akhdoud-apuestas-35290188",
+      "timestamp": "2026-02-23 20:11:28",
+      "minuto": 51.0,
+      "odds": 1.05,
+      "won": true,
+      "pl": 0.48,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "al-feiha-al-nassr-apuestas-35306045",
+      "timestamp": "2026-02-28 19:48:12",
+      "minuto": 46.0,
+      "odds": 1.11,
+      "won": true,
+      "pl": 1.05,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "al-khaleej-saihat-al-hazm-ksa-apuestas-35316538",
+      "timestamp": "2026-03-06 19:48:07",
+      "minuto": 46.0,
+      "odds": 1.23,
+      "won": true,
+      "pl": 2.18,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "al-khaleej-saihat-neom-sports-club-apuestas-352684",
+      "timestamp": "2026-02-21 20:06:38",
+      "minuto": 46.0,
+      "odds": 1.28,
+      "won": true,
+      "pl": 2.66,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "al-mokawloon-al-masry-apuestas-35260499",
+      "timestamp": "2026-02-19 20:46:13",
+      "minuto": 53.0,
+      "odds": 1.75,
+      "won": true,
+      "pl": 7.12,
+      "league": "Premier League",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "al-riyadh-sc-al-ahli-apuestas-35302379",
+      "timestamp": "2026-02-26 19:49:13",
+      "minuto": 47.0,
+      "odds": 1.12,
+      "won": true,
+      "pl": 1.14,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "america-de-cali-sa-santa-fe-apuestas-35238051",
+      "timestamp": "2026-02-14 01:47:39",
+      "minuto": 46.0,
+      "odds": 1.11,
+      "won": true,
+      "pl": 1.05,
+      "league": "Liga Colombiana",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "annecy-red-star-apuestas-35263813",
+      "timestamp": "2026-02-20 19:51:33",
+      "minuto": 50.0,
+      "odds": 1.45,
+      "won": true,
+      "pl": 4.27,
+      "league": "Ligue 2",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "athletic-de-bilbao-elche-apuestas-35245234",
+      "timestamp": "2026-02-20 21:07:29",
+      "minuto": 47.0,
+      "odds": 1.22,
+      "won": true,
+      "pl": 2.09,
+      "league": "La Liga",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "audax-italiano-everton-de-vina-apuestas-35272581",
+      "timestamp": "2026-02-22 21:46:18",
+      "minuto": 47.0,
+      "odds": 1.3,
+      "won": true,
+      "pl": 2.85,
+      "league": "Primera División",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "austin-fc-dc-utd-apuestas-35298710",
+      "timestamp": "2026-03-01 20:46:53",
+      "minuto": 50.0,
+      "odds": 1.38,
+      "won": true,
+      "pl": 3.61,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "banfield-newells-apuestas-35252624",
+      "timestamp": "2026-02-21 23:03:15",
+      "minuto": 47.0,
+      "odds": 1.46,
+      "won": true,
+      "pl": 4.37,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "bochum-paderborn-apuestas-35243479",
+      "timestamp": "2026-02-15 13:18:03",
+      "minuto": 47.0,
+      "odds": 1.23,
+      "won": false,
+      "pl": -10.0,
+      "league": "Bundesliga",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "bodrum-belediyesi-bodrums-76-igdir-belediyespor-ap",
+      "timestamp": "2026-03-05 18:18:43",
+      "minuto": 46.0,
+      "odds": 1.24,
+      "won": false,
+      "pl": -10.0,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "bologna-udinese-apuestas-35245398",
+      "timestamp": "2026-02-23 20:52:15",
+      "minuto": 46.0,
+      "odds": 1.3,
+      "won": true,
+      "pl": 2.85,
+      "league": "Serie A",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "botafogo-sp-capivariano-sp-apuestas-35245279",
+      "timestamp": "2026-02-16 00:44:47",
+      "minuto": 46.0,
+      "odds": 1.41,
+      "won": false,
+      "pl": -10.0,
+      "league": "Série A",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "boulogne-clermont-apuestas-35263818",
+      "timestamp": "2026-02-20 20:06:24",
+      "minuto": 48.0,
+      "odds": 1.45,
+      "won": true,
+      "pl": 4.27,
+      "league": "Ligue 2",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "boyac%C3%A1-chic%C3%B3-aguilas-doradas-apuestas-35",
+      "timestamp": "2026-02-23 00:16:25",
+      "minuto": 46.0,
+      "odds": 1.5,
+      "won": true,
+      "pl": 4.75,
+      "league": "Liga Colombiana",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "brondby-sonderjyske-apuestas-35275500",
+      "timestamp": "2026-02-23 19:08:54",
+      "minuto": 47.0,
+      "odds": 1.24,
+      "won": false,
+      "pl": -10.0,
+      "league": "Superligaen",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "c%C3%A1diz-sociedad-b-apuestas-35274211",
+      "timestamp": "2026-02-23 20:18:24",
+      "minuto": 46.0,
+      "odds": 1.27,
+      "won": true,
+      "pl": 2.56,
+      "league": "Segunda División",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "c%C3%ADrculo-brujas-club-brugge-apuestas-35245265",
+      "timestamp": "2026-02-15 13:38:53",
+      "minuto": 48.0,
+      "odds": 1.24,
+      "won": true,
+      "pl": 2.28,
+      "league": "Jupiler Pro League",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "ca-platense-barracas-central-apuestas-35252425",
+      "timestamp": "2026-02-21 21:18:26",
+      "minuto": 46.0,
+      "odds": 1.47,
+      "won": true,
+      "pl": 4.46,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "ca-platense-defensa-y-justicia-apuestas-35276412",
+      "timestamp": "2026-02-24 21:09:16",
+      "minuto": 46.0,
+      "odds": 1.45,
+      "won": false,
+      "pl": -10.0,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "calcio-avellino-ssd-pescara-apuestas-35256329",
+      "timestamp": "2026-02-15 19:19:46",
+      "minuto": 48.0,
+      "odds": 1.06,
+      "won": true,
+      "pl": 0.57,
+      "league": "Serie B",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "carrarese-ac-monza-apuestas-35270923",
+      "timestamp": "2026-02-21 19:37:53",
+      "minuto": 47.0,
+      "odds": 1.36,
+      "won": true,
+      "pl": 3.42,
+      "league": "Serie B",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "celta-de-vigo-mallorca-apuestas-35244723",
+      "timestamp": "2026-02-22 18:18:10",
+      "minuto": 46.0,
+      "odds": 1.31,
+      "won": true,
+      "pl": 2.95,
+      "league": "La Liga",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "central-cordoba-sde-talleres-apuestas-35276414",
+      "timestamp": "2026-02-24 23:52:46",
+      "minuto": 47.0,
+      "odds": 1.54,
+      "won": true,
+      "pl": 5.13,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "central-cordoba-sde-tigre-apuestas-35252274",
+      "timestamp": "2026-02-22 01:39:26",
+      "minuto": 49.0,
+      "odds": 1.68,
+      "won": false,
+      "pl": -10.0,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "crystal-palace-wolves-apuestas-35240877",
+      "timestamp": "2026-02-22 14:48:31",
+      "minuto": 46.0,
+      "odds": 1.22,
+      "won": true,
+      "pl": 2.09,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "defensor-sp-cerro-largo-fc-apuestas-35263840",
+      "timestamp": "2026-02-21 01:34:40",
+      "minuto": 46.0,
+      "odds": 1.33,
+      "won": true,
+      "pl": 3.14,
+      "league": "Liga Uruguaya",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "deportivo-riestra-ca-platense-apuestas-35302710",
+      "timestamp": "2026-03-02 23:00:28",
+      "minuto": 46.0,
+      "odds": 1.39,
+      "won": false,
+      "pl": -10.0,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "ec-vitoria-salvador-ad-bahia-de-feira-apuestas-352",
+      "timestamp": "2026-02-18 23:03:21",
+      "minuto": 47.0,
+      "odds": 1.21,
+      "won": true,
+      "pl": 1.99,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "estudiantes-sarmiento-de-junin-apuestas-35252293",
+      "timestamp": "2026-02-20 21:36:47",
+      "minuto": 47.0,
+      "odds": 1.41,
+      "won": true,
+      "pl": 3.89,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "everton-manchester-united-apuestas-35240883",
+      "timestamp": "2026-02-23 21:06:38",
+      "minuto": 47.0,
+      "odds": 1.23,
+      "won": true,
+      "pl": 2.18,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "eyupspor-genclerbirligi-apuestas-35265885",
+      "timestamp": "2026-02-21 11:17:58",
+      "minuto": 46.0,
+      "odds": 1.28,
+      "won": true,
+      "pl": 2.66,
+      "league": "Süper Lig",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "fc-cincinnati-atlanta-utd-apuestas-35189516",
+      "timestamp": "2026-02-21 23:00:25",
+      "minuto": 46.0,
+      "odds": 1.32,
+      "won": true,
+      "pl": 3.04,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "fc-dallas-nashville-sc-apuestas-35295035",
+      "timestamp": "2026-03-01 02:45:46",
+      "minuto": 47.0,
+      "odds": 1.31,
+      "won": false,
+      "pl": -10.0,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "fenerbahce-kasimpasa-apuestas-35274359",
+      "timestamp": "2026-02-23 17:49:56",
+      "minuto": 46.0,
+      "odds": 1.15,
+      "won": true,
+      "pl": 1.42,
+      "league": "Süper Lig",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "feyenoord-go-ahead-eagles-apuestas-35216541",
+      "timestamp": "2026-02-15 12:03:28",
+      "minuto": 47.0,
+      "odds": 1.06,
+      "won": true,
+      "pl": 0.57,
+      "league": "Eredivisie",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "flamengo-madureira-apuestas-35280168",
+      "timestamp": "2026-02-23 00:42:44",
+      "minuto": 48.0,
+      "odds": 1.12,
+      "won": true,
+      "pl": 1.14,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "fluminense-botafogo-fr-apuestas-35248598",
+      "timestamp": "2026-02-12 23:46:31",
+      "minuto": 52.0,
+      "odds": 1.38,
+      "won": true,
+      "pl": 3.61,
+      "league": "Série A",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "goztepe-kayserispor-apuestas-35247853",
+      "timestamp": "2026-02-15 14:50:45",
+      "minuto": 47.0,
+      "odds": 1.1,
+      "won": false,
+      "pl": -10.0,
+      "league": "Süper Lig",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "guarani-par-juventud-de-las-piedras-apuestas-35286",
+      "timestamp": "2026-02-26 22:48:15",
+      "minuto": 47.0,
+      "odds": 1.4,
+      "won": true,
+      "pl": 3.8,
+      "league": "Copa Libertadores",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "hoffenheim-friburgo-apuestas-35217452",
+      "timestamp": "2026-02-14 15:17:34",
+      "minuto": 46.0,
+      "odds": 1.16,
+      "won": true,
+      "pl": 1.52,
+      "league": "Bundesliga",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "ind-medellin-liverpool-montevideo-apuestas-3528014",
+      "timestamp": "2026-02-25 01:39:59",
+      "minuto": 49.0,
+      "odds": 1.32,
+      "won": false,
+      "pl": -10.0,
+      "league": "Copa Libertadores",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "jagiellonia-bialystock-fiorentina-apuestas-3519478",
+      "timestamp": "2026-02-19 21:07:32",
+      "minuto": 47.0,
+      "odds": 1.37,
+      "won": true,
+      "pl": 3.52,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "johor-darul-ta-zim-kobe-apuestas-35273414",
+      "timestamp": "2026-02-17 13:02:12",
+      "minuto": 46.0,
+      "odds": 1.23,
+      "won": true,
+      "pl": 2.18,
+      "league": "J-League",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "juventud-de-las-piedras-guarani-par-apuestas-35269",
+      "timestamp": "2026-02-19 22:47:09",
+      "minuto": 47.0,
+      "odds": 1.37,
+      "won": false,
+      "pl": -10.0,
+      "league": "Copa Libertadores",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "kasetsart-fc-chanthaburi-fc-apuestas-35291163",
+      "timestamp": "2026-02-22 12:08:42",
+      "minuto": 46.0,
+      "odds": 1.29,
+      "won": false,
+      "pl": -10.0,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "kayserispor-antalyaspor-apuestas-35270464",
+      "timestamp": "2026-02-22 11:19:54",
+      "minuto": 47.0,
+      "odds": 1.27,
+      "won": true,
+      "pl": 2.56,
+      "league": "Süper Lig",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "lan%C3%BAs-flamengo-apuestas-35073144",
+      "timestamp": "",
+      "minuto": 46.0,
+      "odds": 1.54,
+      "won": true,
+      "pl": 5.13,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "lecce-inter-apuestas-35243175",
+      "timestamp": "2026-02-21 18:09:41",
+      "minuto": 47.0,
+      "odds": 1.22,
+      "won": true,
+      "pl": 2.09,
+      "league": "Serie A",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "leverkusen-olympiacos-apuestas-35283504",
+      "timestamp": "2026-02-24 21:05:57",
+      "minuto": 49.0,
+      "odds": 1.29,
+      "won": false,
+      "pl": -10.0,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "liverpool-montevideo-ind-medellin-apuestas-3507430",
+      "timestamp": "2026-02-18 01:18:35",
+      "minuto": 46.0,
+      "odds": 1.49,
+      "won": true,
+      "pl": 4.66,
+      "league": "",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "lyngby-kolding-if-apuestas-35285716",
+      "timestamp": "2026-02-27 18:48:03",
+      "minuto": 47.0,
+      "odds": 1.25,
+      "won": true,
+      "pl": 2.38,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "m%C3%A1laga-albacete-apuestas-35272960",
+      "timestamp": "2026-02-22 21:05:30",
+      "minuto": 46.0,
+      "odds": 1.27,
+      "won": true,
+      "pl": 2.56,
+      "league": "Segunda División",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "minnesota-utd-fc-cincinnati-apuestas-35294976",
+      "timestamp": "2026-02-28 22:27:42",
+      "minuto": 46.0,
+      "odds": 1.23,
+      "won": true,
+      "pl": 2.18,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "mirand%C3%A9s-las-palmas-apuestas-35247639",
+      "timestamp": "2026-02-15 14:03:16",
+      "minuto": 46.0,
+      "odds": 1.07,
+      "won": true,
+      "pl": 0.67,
+      "league": "Segunda División",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "nac-breda-volendam-apuestas-35243102",
+      "timestamp": "2026-02-21 20:15:03",
+      "minuto": 52.0,
+      "odds": 1.3,
+      "won": true,
+      "pl": 2.85,
+      "league": "Eredivisie",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "necaxa-toluca-apuestas-35246128",
+      "timestamp": "2026-02-22 01:52:05",
+      "minuto": 47.0,
+      "odds": 1.22,
+      "won": true,
+      "pl": 2.09,
+      "league": "Liga MX",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "newells-estudiantes-apuestas-35276443",
+      "timestamp": "2026-02-25 23:39:04",
+      "minuto": 46.0,
+      "odds": 1.49,
+      "won": true,
+      "pl": 4.66,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "nottingham-forest-liverpool-apuestas-35240878",
+      "timestamp": "2026-02-22 14:47:27",
+      "minuto": 46.0,
+      "odds": 1.18,
+      "won": true,
+      "pl": 1.71,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "oita-kitakyushu-apuestas-35265820",
+      "timestamp": "2026-02-15 06:06:56",
+      "minuto": 46.0,
+      "odds": 1.09,
+      "won": true,
+      "pl": 0.86,
+      "league": "J-League",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "palestino-universidad-de-chile-apuestas-35242276",
+      "timestamp": "2026-02-14 00:17:10",
+      "minuto": 46.0,
+      "odds": 1.44,
+      "won": false,
+      "pl": -10.0,
+      "league": "Primera División",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "pouso-alegre-cruzeiro-apuestas-35275975",
+      "timestamp": "2026-02-21 22:19:05",
+      "minuto": 46.0,
+      "odds": 1.19,
+      "won": true,
+      "pl": 1.8,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "rasi-salai-united-fc-esan-pattaya-apuestas-3529119",
+      "timestamp": "2026-02-22 11:48:14",
+      "minuto": 46.0,
+      "odds": 1.28,
+      "won": true,
+      "pl": 2.66,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "rodez-montpellier-apuestas-35266151",
+      "timestamp": "2026-02-20 20:06:24",
+      "minuto": 46.0,
+      "odds": 1.26,
+      "won": true,
+      "pl": 2.47,
+      "league": "Ligue 2",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "sao-bernardo-corinthians-apuestas-35245281",
+      "timestamp": "2026-02-16 00:44:10",
+      "minuto": 46.0,
+      "odds": 1.35,
+      "won": true,
+      "pl": 3.33,
+      "league": "Série A",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "shkendija-samsunspor-apuestas-35194768",
+      "timestamp": "2026-02-19 21:07:32",
+      "minuto": 48.0,
+      "odds": 1.36,
+      "won": true,
+      "pl": 3.42,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "sporting-cristal-club-2-de-mayo-de-pedro-juan-c-ap",
+      "timestamp": "2026-02-25 01:45:12",
+      "minuto": 54.0,
+      "odds": 1.33,
+      "won": false,
+      "pl": -10.0,
+      "league": "Copa Libertadores",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "st-louis-city-sc-charlotte-fc-apuestas-35189525",
+      "timestamp": "2026-02-21 20:44:52",
+      "minuto": 47.0,
+      "odds": 1.27,
+      "won": true,
+      "pl": 2.56,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "talleres-san-lorenzo-apuestas-35302684",
+      "timestamp": "2026-03-01 02:29:29",
+      "minuto": 53.0,
+      "odds": 1.68,
+      "won": false,
+      "pl": -10.0,
+      "league": "Liga Argentina",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "torino-bologna-apuestas-35215941",
+      "timestamp": "2026-02-15 18:07:35",
+      "minuto": 46.0,
+      "odds": 1.08,
+      "won": true,
+      "pl": 0.76,
+      "league": "Serie A",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "vancouver-whitecaps-real-salt-lake-apuestas-351896",
+      "timestamp": "2026-02-22 01:26:56",
+      "minuto": 46.0,
+      "odds": 1.14,
+      "won": true,
+      "pl": 1.33,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "waterford-sligo-rovers-apuestas-35268755",
+      "timestamp": "2026-02-20 21:00:18",
+      "minuto": 52.0,
+      "odds": 1.38,
+      "won": false,
+      "pl": -10.0,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "west-bromwich-charlton-apuestas-35268730",
+      "timestamp": "2026-02-24 20:32:41",
+      "minuto": 46.0,
+      "odds": 1.33,
+      "won": true,
+      "pl": 3.14,
+      "league": "Championship",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "west-ham-bournemouth-apuestas-35240880",
+      "timestamp": "2026-02-21 18:35:02",
+      "minuto": 46.0,
+      "odds": 1.22,
+      "won": false,
+      "pl": -10.0,
+      "league": "Desconocida",
+      "bet_type": "back"
+    },
+    {
+      "match_id": "wigan-luton-apuestas-35268033",
+      "timestamp": "2026-02-18 20:32:32",
+      "minuto": 46.0,
+      "odds": 1.33,
+      "won": true,
+      "pl": 3.14,
+      "league": "League One",
+      "bet_type": "back"
+    }
+  ]
+}
