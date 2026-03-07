@@ -341,6 +341,9 @@ def _build_preset_config(combo: dict, adj: dict, risk_filter: str,
                 "xgRatioMin": _sp_lff.get("xg_ratio_min", 2.0),
                 "favOddsMax": _sp_lff.get("fav_odds_max", 1.7),
             },
+            # SD strategies — passed quality gates in notebook, persisted here
+            **{k: {"enabled": True, **v}
+               for k, v in _sp.items() if k.startswith("sd_")},
         },
         "bankroll_mode":    br_mode,
         "flat_stake":       flat_stake,

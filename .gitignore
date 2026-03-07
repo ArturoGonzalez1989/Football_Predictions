@@ -56,6 +56,3 @@ _ux*/
 # OS
 .DS_Store
 Thumbs.db
-
-# Aux directory (temporary/disposable files)
-aux/

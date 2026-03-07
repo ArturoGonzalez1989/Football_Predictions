@@ -1,0 +1,225 @@
+fecha,partido,liga,estrategia,tipo,minuto,odds,won,pl,pl_acum,ft_score,riesgo,xg_total,xg_excess,sot_max,drift_pct,match_id
+2026-02-12 21:03,Thun Lausanne 35244305,,Goal Clustering,BACK,71,1.80,SI,+0.72,+0.72,,,,,4,,thun-lausanne-apuestas-35244305
+2026-02-12 21:36,Brentford Arsenal 35212180,,Goal Clustering,BACK,71,2.02,NO,-1.00,-0.28,,,,,3,,brentford-arsenal-apuestas-35212180
+2026-02-12 23:37,Athletico Pr Santos 35207628,,Pressure Cooker,BACK,68,1.96,SI,+0.87,+0.60,,,,,,,athletico-pr-santos-apuestas-35207628
+2026-02-13 00:32,Corinthians Red Bull Bragantino 35207556,,xG Underperf,BACK,64.0,1.69,SI,+0.63,+1.22,,,,1.24,,,corinthians-red-bull-bragantino-apuestas-35207556
+2026-02-13 00:47,Corinthians Red Bull Bragantino 35207556,,Goal Clustering,BACK,75,2.38,NO,-1.00,+0.22,,,,,4,,corinthians-red-bull-bragantino-apuestas-35207556
+2026-02-13 17:32,Spartak Varna Lokomotiv Sofia 35239864,,Goal Clustering,BACK,77,3.65,SI,+2.45,+2.67,,,,,6,,spartak-varna-lokomotiv-sofia-apuestas-35239864
+2026-02-14 01:18,Liverpool Montevideo Defensor Sp 35238332,,Goal Clustering,BACK,43,2.26,SI,+1.15,+3.82,,,,,3,,liverpool-montevideo-defensor-sp-apuestas-35238332
+2026-02-14 12:49,Braunschweig Darmstadt 35243475,,Goal Clustering,BACK,45,1.86,SI,+0.78,+4.60,,,,,4,,braunschweig-darmstadt-apuestas-35243475
+2026-02-14 13:17,Reading Wycombe 35240945,,Goal Clustering,BACK,43,2.06,SI,+0.97,+5.57,,,,,3,,reading-wycombe-apuestas-35240945
+2026-02-14 13:17,hertha-berlín-hannover-apuestas-35243477,,Goal Clustering,BACK,52,1.84,SI,+0.76,+6.33,,,,,4,,hertha-berlín-hannover-apuestas-35243477
+2026-02-14 14:31,Espanyol Celta De Vigo 35216696,,Goal Clustering,BACK,66,2.64,SI,+1.51,+7.84,,,,,3,,espanyol-celta-de-vigo-apuestas-35216696
+2026-02-14 14:33,Espanyol Celta De Vigo 35216696,,Pressure Cooker,BACK,71,2.64,SI,+1.51,+9.35,,,,,,,espanyol-celta-de-vigo-apuestas-35216696
+2026-02-14 14:40,cska-1948-sofia-cska-sofía-apuestas-3523,,Goal Clustering,BACK,89,2.12,NO,-1.00,+8.35,,,,,4,,cska-1948-sofia-cska-sofía-apuestas-35239870
+2026-02-14 15:41,Hoffenheim Friburgo 35217452,,Goal Clustering,BACK,45,1.75,SI,+0.68,+9.04,,,,,4,,hoffenheim-friburgo-apuestas-35217452
+2026-02-14 16:12,eintracht-frankfurt-b-mönchengladbach-ap,,Goal Clustering,BACK,74,2.56,NO,-1.00,+8.04,,,,,7,,eintracht-frankfurt-b-mönchengladbach-apuesta
+2026-02-14 20:34,Granada Valladolid 35243577,,Goal Clustering,BACK,28,5.80,SI,+4.45,+12.48,,,,,4,,granada-valladolid-apuestas-35243577
+2026-02-14 20:39,Real Madrid Real Sociedad 35216679,,Goal Clustering,BACK,31,4.80,SI,+3.52,+16.00,,,,,3,,real-madrid-real-sociedad-apuestas-35216679
+2026-02-14 21:22,Fc Groningen Utrecht 35216585,,xG Underperf,BACK,65.0,1.61,SI,+0.55,+16.55,,,,2.02,,,fc-groningen-utrecht-apuestas-35216585
+2026-02-14 21:37,Liverpool Brighton 35172770,,Goal Clustering,BACK,69,2.20,NO,-1.00,+15.55,,,,,5,,liverpool-brighton-apuestas-35172770
+2026-02-14 21:46,Fc Groningen Utrecht 35216585,,Goal Clustering,BACK,79,2.76,SI,+1.61,+17.16,,,,,6,,fc-groningen-utrecht-apuestas-35216585
+2026-02-15 05:36,Kamatamare Sanuki Toyama 35265771,,Goal Clustering,BACK,28,3.80,SI,+2.58,+19.75,,,,,3,,kamatamare-sanuki-toyama-apuestas-35265771
+2026-02-15 05:38,Tegevajaro Miyazaki Tottori 35265891,,Goal Clustering,BACK,30,1.97,SI,+0.88,+20.63,,,,,7,,tegevajaro-miyazaki-tottori-apuestas-35265891
+2026-02-15 05:47,Tokushima Albirex Niigata 35265824,,Goal Clustering,BACK,40,2.60,SI,+1.47,+22.10,,,,,3,,tokushima-albirex-niigata-apuestas-35265824
+2026-02-15 05:48,Renofa Yamaguchi Mio Biwako Shiga 3526582,,Goal Clustering,BACK,40,1.74,SI,+0.67,+22.78,,,,,3,,renofa-yamaguchi-mio-biwako-shiga-apuestas-3526582
+2026-02-15 05:51,Fc Osaka Kochi Univ 35265821,,Goal Clustering,BACK,45,2.24,SI,+1.14,+23.92,,,,,3,,fc-osaka-kochi-univ-apuestas-35265821
+2026-02-15 06:15,Ehime Kanazawa 35265809,,Goal Clustering,BACK,46,2.02,SI,+0.93,+24.85,,,,,3,,ehime-kanazawa-apuestas-35265809
+2026-02-15 06:35,Oita Kitakyushu 35265820,,Goal Clustering,BACK,71,2.38,NO,-1.00,+23.85,,,,,8,,oita-kitakyushu-apuestas-35265820
+2026-02-15 06:40,Kagoshima Utd Fc Ryukyu 35265797,,Goal Clustering,BACK,73,4.20,NO,-1.00,+22.85,,,,,9,,kagoshima-utd-fc-ryukyu-apuestas-35265797
+2026-02-15 06:44,Fc Gifu Iwata 35265818,,Goal Clustering,BACK,77,3.30,NO,-1.00,+21.85,,,,,6,,fc-gifu-iwata-apuestas-35265818
+2026-02-15 06:54,Tochigi Sc Yamagata 35265890,,Goal Clustering,BACK,89,3.50,NO,-1.00,+20.85,,,,,6,,tochigi-sc-yamagata-apuestas-35265890
+2026-02-15 06:54,Tosu Kumamoto 35265823,,Goal Clustering,BACK,88,3.70,NO,-1.00,+19.85,,,,,5,,tosu-kumamoto-apuestas-35265823
+2026-02-15 09:44,Arema Cronus Semen Padang 35243387,,Goal Clustering,BACK,51,1.82,SI,+0.74,+20.59,,,,,3,,arema-cronus-semen-padang-apuestas-35243387
+2026-02-15 13:04,Udinese Sassuolo 35216337,,Goal Clustering,BACK,70,6.60,NO,-1.00,+19.59,,,,,3,,udinese-sassuolo-apuestas-35216337
+2026-02-15 13:07,Kiel Schalke 04 35243480,,Goal Clustering,BACK,31,1.77,NO,-1.00,+18.59,,,,,4,,kiel-schalke-04-apuestas-35243480
+2026-02-15 13:16,Kocaelispor Gaziantep Fk 35248519,,Goal Clustering,BACK,75,8.80,SI,+7.24,+25.83,,,,,6,,kocaelispor-gaziantep-fk-apuestas-35248519
+2026-02-15 14:08,círculo-brujas-club-brugge-apuestas-3524,,Goal Clustering,BACK,71,2.06,NO,-1.00,+24.83,,,,,5,,círculo-brujas-club-brugge-apuestas-35245265
+2026-02-15 14:20,Oviedo Athletic De Bilbao 35216603,,Goal Clustering,BACK,57,2.36,SI,+1.24,+26.07,,,,,3,,oviedo-athletic-de-bilbao-apuestas-35216603
+2026-02-15 14:22,Fc Magdeburg Arminia Bielefeld 35243485,,Goal Clustering,BACK,87,3.85,NO,-1.00,+25.07,,,,,4,,fc-magdeburg-arminia-bielefeld-apuestas-35243485
+2026-02-15 14:22,Ludogorets Razgrad Beroe Stara Za 3524331,,Goal Clustering,BACK,84,10.00,SI,+8.36,+33.43,,,,,8,,ludogorets-razgrad-beroe-stara-za-apuestas-3524331
+2026-02-15 14:49,Parma Verona 35215939,,Goal Clustering,BACK,43,2.72,SI,+1.59,+35.02,,,,,3,,parma-verona-apuestas-35215939
+2026-02-15 15:18,Stoke Fulham 35172767,,Goal Clustering,BACK,56,1.80,SI,+0.72,+35.74,,,,,5,,stoke-fulham-apuestas-35172767
+2026-02-15 15:23,Le Havre Toulouse 35216498,,Goal Clustering,BACK,53,4.80,NO,-1.00,+34.74,,,,,4,,le-havre-toulouse-apuestas-35216498
+2026-02-15 15:26,Odense Midtjylland 35244627,,Goal Clustering,BACK,19,2.58,SI,+1.45,+36.19,,,,,6,,odense-midtjylland-apuestas-35244627
+2026-02-15 15:29,Parma Verona 35215939,,Pressure Cooker,BACK,70,2.72,SI,+1.59,+37.78,,,,,,,parma-verona-apuestas-35215939
+2026-02-15 15:41,Ssd Bari Sudtirol 35256352,,Goal Clustering,BACK,74,2.54,SI,+1.42,+39.19,,,,,5,,ssd-bari-sudtirol-apuestas-35256352
+2026-02-15 15:54,Univ De Concepcion Deportes Concepcion 35,,Goal Clustering,BACK,45,2.02,SI,+0.93,+40.12,,,,,3,,univ-de-concepcion-deportes-concepcion-apuestas-35
+2026-02-15 16:18,Odense Midtjylland 35244627,,Odds Drift,BACK,54.0,4.80,SI,+3.52,+43.64,,none,,,,92.0,odense-midtjylland-apuestas-35244627
+2026-02-15 16:28,Pfc Levski Sofia Botev Plovdiv 35243302,,Goal Clustering,BACK,60,2.50,NO,-1.00,+42.64,,,,,7,,pfc-levski-sofia-botev-plovdiv-apuestas-35243302
+2026-02-15 17:40,Lorient Angers 35216803,,Goal Clustering,BACK,57,2.68,NO,-1.00,+41.64,,,,,3,,lorient-angers-apuestas-35216803
+2026-02-15 18:02,Metz Auxerre 35216502,,Goal Clustering,BACK,83,4.30,SI,+3.05,+44.69,,,,,3,,metz-auxerre-apuestas-35216502
+2026-02-15 18:29,Torino Bologna 35215941,,Goal Clustering,BACK,61,2.14,SI,+1.04,+45.73,,,,,5,,torino-bologna-apuestas-35215941
+2026-02-15 19:33,Leiria Porto B 35245372,,Goal Clustering,BACK,65,3.30,NO,-1.00,+44.73,,,,,4,,leiria-porto-b-apuestas-35245372
+2026-02-15 21:34,Mallorca Betis 35216706,,Goal Clustering,BACK,66,3.60,NO,-1.00,+43.73,,,,,4,,mallorca-betis-apuestas-35216706
+2026-02-15 22:31,Sporting De Lisboa Famalicao 35247011,,Goal Clustering,BACK,81,4.00,NO,-1.00,+42.73,,,,,5,,sporting-de-lisboa-famalicao-apuestas-35247011
+2026-02-16 00:54,ponte-preta-são-paulo-apuestas-35245206,,Goal Clustering,BACK,51,2.56,NO,-1.00,+41.73,,,,,5,,ponte-preta-são-paulo-apuestas-35245206
+2026-02-16 01:08,Sao Bernardo Corinthians 35245281,,Goal Clustering,BACK,66,2.06,NO,-1.00,+40.73,,,,,6,,sao-bernardo-corinthians-apuestas-35245281
+2026-02-16 16:22,Hermannstadt Cfr Cluj 35247993,,xG Underperf,BACK,56.0,1.60,NO,-1.00,+39.73,,,,0.88,,,hermannstadt-cfr-cluj-apuestas-35247993
+2026-02-16 16:41,Al Sharjah Nasaf 35269093,,Odds Drift,BACK,41.0,2.00,SI,+0.91,+40.65,,none,,,,49.2,al-sharjah-nasaf-apuestas-35269093
+2026-02-16 18:36,Kasimpasa Fatih Karagumruk Istanbul 35248,,Goal Clustering,BACK,70,4.10,SI,+2.87,+43.52,,,,,5,,kasimpasa-fatih-karagumruk-istanbul-apuestas-35248
+2026-02-16 19:47,Sonderjyske Silkeborg 35244497,,Goal Clustering,BACK,83,2.54,NO,-1.00,+42.52,,,,,6,,sonderjyske-silkeborg-apuestas-35244497
+2026-02-16 21:02,sociedad-b-málaga-apuestas-35248844,,Goal Clustering,BACK,67,1.84,NO,-1.00,+41.52,,,,,7,,sociedad-b-málaga-apuestas-35248844
+2026-02-16 21:13,Cagliari Lecce 35216885,,Goal Clustering,BACK,64,1.92,SI,+0.84,+42.35,,,,,3,,cagliari-lecce-apuestas-35216885
+2026-02-16 21:18,Coventry Middlesbrough 35239500,,Goal Clustering,BACK,55,1.76,SI,+0.68,+43.04,,,,,3,,coventry-middlesbrough-apuestas-35239500
+2026-02-16 21:52,Girona Fc Barcelona 35216932,,Goal Clustering,BACK,88,1.86,NO,-1.00,+42.04,,,,,9,,girona-fc-barcelona-apuestas-35216932
+2026-02-16 23:45,Albion Fc Cerro 35242273,,Goal Clustering,BACK,85,5.00,SI,+3.71,+45.74,,,,,3,,albion-fc-cerro-apuestas-35242273
+2026-02-17 10:27,Fc Machida Chengdu Rongcheng 35273391,,Goal Clustering,BACK,24,1.75,SI,+0.68,+46.42,,,,,4,,fc-machida-chengdu-rongcheng-apuestas-35273391
+2026-02-17 16:37,Al Sadd Al Ittihad 35273530,,Goal Clustering,BACK,32,2.36,SI,+1.24,+47.67,,,,,3,,al-sadd-al-ittihad-apuestas-35273530
+2026-02-17 18:20,Galatasaray Juventus 35207338,,Goal Clustering,BACK,31,3.25,SI,+2.07,+49.74,,,,,3,,galatasaray-juventus-apuestas-35207338
+2026-02-17 20:09,Salford City Newport County 35263008,,Odds Drift,BACK,25.0,2.42,SI,+1.30,+51.04,,none,,,,36.7,salford-city-newport-county-apuestas-35263008
+2026-02-17 21:05,Charlton Portsmouth 35239489,,Goal Clustering,BACK,57,1.73,SI,+0.67,+51.71,,,,,5,,charlton-portsmouth-apuestas-35239489
+2026-02-17 21:12,Cambridge United Colchester 35263012,,Pressure Cooker,BACK,68,1.90,NO,-1.00,+50.71,,,,,,,cambridge-united-colchester-apuestas-35263012
+2026-02-17 21:19,Lincoln Northampton 35268034,,Goal Clustering,BACK,72,4.10,SI,+2.87,+53.58,,,,,11,,lincoln-northampton-apuestas-35268034
+2026-02-17 21:21,Leyton Orient Plymouth 35268012,,Goal Clustering,BACK,70,2.00,NO,-1.00,+52.58,,,,,6,,leyton-orient-plymouth-apuestas-35268012
+2026-02-17 21:21,Bristol City Wrexham 35253015,,Goal Clustering,BACK,75,2.24,NO,-1.00,+51.58,,,,,5,,bristol-city-wrexham-apuestas-35253015
+2026-02-18 02:00,Liverpool Montevideo Ind Medellin 3507430,,Pressure Cooker,BACK,69,2.16,SI,+1.06,+52.64,,,,,,,liverpool-montevideo-ind-medellin-apuestas-3507430
+2026-02-18 13:59,Tampines Rovers Cong An Ha Noi 35281005,,Goal Clustering,BACK,80,2.00,NO,-1.00,+51.64,,,,,5,,tampines-rovers-cong-an-ha-noi-apuestas-35281005
+2026-02-18 19:31,Winterthur St Gallen 35270585,,Goal Clustering,BACK,66,1.77,SI,+0.69,+52.33,,,,,10,,winterthur-st-gallen-apuestas-35270585
+2026-02-18 20:53,Grimsby Walsall 35256480,,Odds Drift,BACK,46.0,3.45,NO,-1.00,+51.33,,none,,,,58.3,grimsby-walsall-apuestas-35256480
+2026-02-18 21:22,Wolves Arsenal 35242975,,Goal Clustering,BACK,56,2.88,SI,+1.73,+53.06,,,,,4,,wolves-arsenal-apuestas-35242975
+2026-02-18 23:56,Ec Vitoria Salvador Ad Bahia De Feira 352,,Goal Clustering,BACK,74,2.26,NO,-1.00,+52.06,,,,,9,,ec-vitoria-salvador-ad-bahia-de-feira-apuestas-352
+2026-02-19 19:16,Zrinjski Crystal Palace 35187500,,Pressure Cooker,BACK,71,1.89,NO,-1.00,+51.06,,,,,,,zrinjski-crystal-palace-apuestas-35187500
+2026-02-19 21:30,Jagiellonia Bialystock Fiorentina 3519478,,Goal Clustering,BACK,66,1.88,SI,+0.80,+51.86,,,,,6,,jagiellonia-bialystock-fiorentina-apuestas-3519478
+2026-02-19 21:32,Ludogorets Razgrad Ferencvaros 35260537,,Goal Clustering,BACK,66,1.97,NO,-1.00,+50.86,,,,,4,,ludogorets-razgrad-ferencvaros-apuestas-35260537
+2026-02-19 21:39,Kf Drita Celje 35194711,,Goal Clustering,BACK,74,2.26,SI,+1.15,+52.01,,,,,5,,kf-drita-celje-apuestas-35194711
+2026-02-19 21:41,Shkendija Samsunspor 35194768,,Goal Clustering,BACK,76,3.00,NO,-1.00,+51.01,,,,,6,,shkendija-samsunspor-apuestas-35194768
+2026-02-19 21:44,Panathinaikos Plzen 35238688,,Goal Clustering,BACK,81,3.30,NO,-1.00,+50.01,,,,,6,,panathinaikos-plzen-apuestas-35238688
+2026-02-19 21:49,Omonia Rijeka 35194713,,Goal Clustering,BACK,87,2.82,NO,-1.00,+49.01,,,,,4,,omonia-rijeka-apuestas-35194713
+2026-02-20 16:15,Cherno More Varna Botev Vratsa 35246972,,Goal Clustering,BACK,24,1.77,NO,-1.00,+48.01,,,,,3,,cherno-more-varna-botev-vratsa-apuestas-35246972
+2026-02-20 19:09,bochum-núremberg-apuestas-35263854,,Goal Clustering,BACK,71,2.02,NO,-1.00,+47.01,,,,,3,,bochum-núremberg-apuestas-35263854
+2026-02-20 20:27,Annecy Red Star 35263813,,Goal Clustering,BACK,50,1.92,SI,+0.84,+47.85,,,,,3,,annecy-red-star-apuestas-35263813
+2026-02-20 20:39,Rodez Montpellier 35266151,,Goal Clustering,BACK,73,2.46,NO,-1.00,+46.85,,,,,8,,rodez-montpellier-apuestas-35266151
+2026-02-20 21:20,Ad Ceuta Fc Granada 35269250,,Goal Clustering,BACK,79,3.35,NO,-1.00,+45.85,,,,,4,,ad-ceuta-fc-granada-apuestas-35269250
+2026-02-20 22:31,Club Football Estrela Tondela 35268297,,Goal Clustering,BACK,75,2.26,NO,-1.00,+44.85,,,,,4,,club-football-estrela-tondela-apuestas-35268297
+2026-02-21 00:38,Instituto Atl Tucuman 35252275,,Pressure Cooker,BACK,69,2.16,SI,+1.06,+45.91,,,,,,,instituto-atl-tucuman-apuestas-35252275
+2026-02-21 00:40,Llaneros Ind Medellin 35269192,,xG Underperf,BACK,55.0,1.57,SI,+0.51,+46.42,,,,1.33,,,llaneros-ind-medellin-apuestas-35269192
+2026-02-21 01:07,Llaneros Ind Medellin 35269192,,Goal Clustering,BACK,76,2.86,SI,+1.71,+48.13,,,,,3,,llaneros-ind-medellin-apuestas-35269192
+2026-02-21 02:29,Cd Tepatitlan De Morelos Deportivo Irapuato Fc Apu,,Goal Clustering,BACK,66,1.73,SI,+0.67,+48.80,,,,,3,,cd-tepatitlan-de-morelos-deportivo-irapuato-fc-apu
+2026-02-21 02:56,Tigres Pachuca 35246138,,Goal Clustering,BACK,80,2.98,SI,+1.82,+50.62,,,,,4,,tigres-pachuca-apuestas-35246138
+2026-02-21 13:16,Khonkaen Police Tero 35288067,,Goal Clustering,BACK,79,2.00,SI,+0.91,+51.53,,,,,6,,khonkaen-police-tero-apuestas-35288067
+2026-02-21 19:08,Osasuna Real Madrid 35244726,,Goal Clustering,BACK,73,1.91,SI,+0.83,+52.36,,,,,5,,osasuna-real-madrid-apuestas-35244726
+2026-02-21 19:10,almería-cordoba-apuestas-35268170,,Goal Clustering,BACK,78,2.18,NO,-1.00,+51.36,,,,,4,,almería-cordoba-apuestas-35268170
+2026-02-21 19:45,Moreirense Sporting De Lisboa 35273774,,Goal Clustering,BACK,75,2.14,NO,-1.00,+50.36,,,,,8,,moreirense-sporting-de-lisboa-apuestas-35273774
+2026-02-21 20:46,Al Nassr Al Hazm Ksa 35268414,,Goal Clustering,BACK,81,1.78,NO,-1.00,+49.36,,,,,10,,al-nassr-al-hazm-ksa-apuestas-35268414
+2026-02-21 20:52,Nac Breda Volendam 35243102,,Goal Clustering,BACK,86,4.60,NO,-1.00,+48.36,,,,,3,,nac-breda-volendam-apuestas-35243102
+2026-02-21 21:14,Grasshoppers Zurich Fc Zurich 35268545,,Goal Clustering,BACK,81,3.20,NO,-1.00,+47.36,,,,,5,,grasshoppers-zurich-fc-zurich-apuestas-35268545
+2026-02-21 21:17,St Louis City Sc Charlotte Fc 35189525,,Goal Clustering,BACK,74,2.18,NO,-1.00,+46.36,,,,,7,,st-louis-city-sc-charlotte-fc-apuestas-35189525
+2026-02-21 21:26,Union St Gilloise Amberes 35271129,,Goal Clustering,BACK,77,6.60,NO,-1.00,+45.36,,,,,3,,union-st-gilloise-amberes-apuestas-35271129
+2026-02-21 21:44,Independiente Rivadavia Ca Independiente ,,Goal Clustering,BACK,76,3.10,SI,+1.94,+47.30,,,,,5,,independiente-rivadavia-ca-independiente-apuestas-
+2026-02-21 21:49,Psg Metz 35243049,,Goal Clustering,BACK,76,2.08,NO,-1.00,+46.30,,,,,5,,psg-metz-apuestas-35243049
+2026-02-21 23:13,red-bull-bragantino-são-paulo-apuestas-3,,Goal Clustering,BACK,72,2.06,NO,-1.00,+45.30,,,,,5,,red-bull-bragantino-são-paulo-apuestas-352759
+2026-02-21 23:14,Pouso Alegre Cruzeiro 35275975,,Goal Clustering,BACK,76,2.28,SI,+1.17,+46.47,,,,,7,,pouso-alegre-cruzeiro-apuestas-35275975
+2026-02-21 23:38,Fc Cincinnati Atlanta Utd 35189516,,Goal Clustering,BACK,79,2.80,SI,+1.65,+48.12,,,,,3,,fc-cincinnati-atlanta-utd-apuestas-35189516
+2026-02-21 23:47,Banfield Newells 35252624,,Goal Clustering,BACK,66,2.14,SI,+1.04,+49.16,,,,,4,,banfield-newells-apuestas-35252624
+2026-02-22 01:07,Univ Catolica Chile Coquimbo Unido 352692,,Goal Clustering,BACK,70,1.84,NO,-1.00,+48.16,,,,,6,,univ-catolica-chile-coquimbo-unido-apuestas-352692
+2026-02-22 03:10,Houston Dynamo Chicago Fire 35189509,,Goal Clustering,BACK,68,1.73,SI,+0.67,+48.83,,,,,3,,houston-dynamo-chicago-fire-apuestas-35189509
+2026-02-22 03:10,Austin Fc Minnesota Utd 35189679,,Pressure Cooker,BACK,71,2.02,SI,+0.93,+49.76,,,,,,,austin-fc-minnesota-utd-apuestas-35189679
+2026-02-22 03:12,Fc Dallas Toronto Fc 35189526,,Goal Clustering,BACK,68,1.75,SI,+0.68,+50.45,,,,,5,,fc-dallas-toronto-fc-apuestas-35189526
+2026-02-22 03:19,Austin Fc Minnesota Utd 35189679,,Goal Clustering,BACK,76,2.66,SI,+1.53,+51.97,,,,,5,,austin-fc-minnesota-utd-apuestas-35189679
+2026-02-22 04:24,Los Angeles Fc Inter Miami Cf 35189514,,Goal Clustering,BACK,74,2.04,SI,+0.95,+52.92,,,,,4,,los-angeles-fc-inter-miami-cf-apuestas-35189514
+2026-02-22 04:27,San Jose Earthquakes Kansas City 35189520,,Goal Clustering,BACK,43,1.73,SI,+0.67,+53.59,,,,,3,,san-jose-earthquakes-kansas-city-apuestas-35189520
+2026-02-22 05:01,Cruz Azul Guadalajara 35246099,,Goal Clustering,BACK,85,3.15,NO,-1.00,+52.59,,,,,4,,cruz-azul-guadalajara-apuestas-35246099
+2026-02-22 05:35,Kumamoto Kitakyushu 35285502,,Goal Clustering,BACK,71,1.99,SI,+0.90,+53.49,,,,,5,,kumamoto-kitakyushu-apuestas-35285502
+2026-02-22 06:34,Tochigi Sc Sendai 35285516,,Goal Clustering,BACK,68,1.79,SI,+0.71,+54.20,,,,,4,,tochigi-sc-sendai-apuestas-35285516
+2026-02-22 12:23,Rasi Salai United Fc Esan Pattaya 3529119,,Goal Clustering,BACK,54,2.76,NO,-1.00,+53.20,,,,,6,,rasi-salai-united-fc-esan-pattaya-apuestas-3529119
+2026-02-22 13:02,Nakhon Si United Fc Jl Chiangmai United 3,,Goal Clustering,BACK,66,1.73,NO,-1.00,+52.20,,,,,9,,nakhon-si-united-fc-jl-chiangmai-united-apuestas-3
+2026-02-22 14:11,Genk Standard De Lieja 35270647,,Goal Clustering,BACK,75,1.80,NO,-1.00,+51.20,,,,,6,,genk-standard-de-lieja-apuestas-35270647
+2026-02-22 14:18,Sion Young Boys 35270697,,Goal Clustering,BACK,53,2.76,SI,+1.61,+52.82,,,,,7,,sion-young-boys-apuestas-35270697
+2026-02-22 14:52,sporting-de-gijón-valladolid-apuestas-35,,Goal Clustering,BACK,82,7.20,NO,-1.00,+51.82,,,,,4,,sporting-de-gijón-valladolid-apuestas-3527175
+2026-02-22 15:09,Wattens Sv Ried 35243316,,Goal Clustering,BACK,71,2.48,NO,-1.00,+50.82,,,,,5,,wattens-sv-ried-apuestas-35243316
+2026-02-22 15:30,atalanta-nápoles-apuestas-35245356,,Goal Clustering,BACK,60,1.77,SI,+0.69,+51.51,,,,,5,,atalanta-nápoles-apuestas-35245356
+2026-02-22 15:34,atalanta-nápoles-apuestas-35245356,,Pressure Cooker,BACK,71,1.91,SI,+0.83,+52.34,,,,,,,atalanta-nápoles-apuestas-35245356
+2026-02-22 16:18,La Serena Univ De Concepcion 35272763,,Goal Clustering,BACK,52,3.20,NO,-1.00,+51.34,,,,,4,,la-serena-univ-de-concepcion-apuestas-35272763
+2026-02-22 16:20,friburgo-b-mönchengladbach-apuestas-3524,,Goal Clustering,BACK,82,3.35,NO,-1.00,+50.34,,,,,6,,friburgo-b-mönchengladbach-apuestas-35244108
+2026-02-22 16:32,La Serena Univ De Concepcion 35272763,,Pressure Cooker,BACK,71,1.92,NO,-1.00,+49.34,,,,,,,la-serena-univ-de-concepcion-apuestas-35272763
+2026-02-22 16:44,Livingston Rangers 35273832,,Goal Clustering,BACK,81,1.88,SI,+0.80,+50.14,,,,,12,,livingston-rangers-apuestas-35273832
+2026-02-22 16:52,Celtic Hibernian 35273836,,Goal Clustering,BACK,88,4.30,NO,-1.00,+49.14,,,,,4,,celtic-hibernian-apuestas-35273836
+2026-02-22 17:01,Niza Lorient 35243044,,xG Underperf,BACK,45.0,2.04,SI,+0.95,+50.09,,,,0.64,,,niza-lorient-apuestas-35243044
+2026-02-22 17:10,Lucerna Fc Basel 35271229,,Goal Clustering,BACK,76,2.20,SI,+1.10,+51.19,,,,,7,,lucerna-fc-basel-apuestas-35271229
+2026-02-22 17:14,Lugano Lausanne 35271216,,Goal Clustering,BACK,80,3.00,NO,-1.00,+50.19,,,,,8,,lugano-lausanne-apuestas-35271216
+2026-02-22 17:17,Az Alkmaar Sparta Rotterdam 35243141,,xG Underperf,BACK,69.0,1.57,SI,+0.51,+50.70,,,,0.51,,,az-alkmaar-sparta-rotterdam-apuestas-35243141
+2026-02-22 17:21,Portimonense Academico De Viseu 35271227,,Goal Clustering,BACK,84,3.40,NO,-1.00,+49.70,,,,,3,,portimonense-academico-de-viseu-apuestas-35271227
+2026-02-22 17:43,Reggiana Calcio Avellino Ssd 35271866,,Pressure Cooker,BACK,69,2.10,NO,-1.00,+48.70,,,,,,,reggiana-calcio-avellino-ssd-apuestas-35271866
+2026-02-22 17:53,Tottenham Arsenal 35240868,,Goal Clustering,BACK,47,2.84,SI,+1.69,+50.39,,,,,4,,tottenham-arsenal-apuestas-35240868
+2026-02-22 18:05,St Pauli Werder Bremen 35244116,,Goal Clustering,BACK,70,2.06,NO,-1.00,+49.39,,,,,3,,st-pauli-werder-bremen-apuestas-35244116
+2026-02-22 18:13,Zulte Waregem Anderlecht 35271861,,xG Underperf,BACK,41.0,1.69,SI,+0.63,+50.02,,,,0.73,,,zulte-waregem-anderlecht-apuestas-35271861
+2026-02-22 18:39,Besiktas Goztepe 35271694,,Goal Clustering,BACK,73,2.22,NO,-1.00,+49.02,,,,,7,,besiktas-goztepe-apuestas-35271694
+2026-02-22 19:18,Celta De Vigo Mallorca 35244723,,Goal Clustering,BACK,85,3.60,SI,+2.40,+51.42,,,,,3,,celta-de-vigo-mallorca-apuestas-35244723
+2026-02-22 19:32,Unirea Slobozia Universitatea Craiova 352,,Goal Clustering,BACK,64,1.82,NO,-1.00,+50.42,,,,,4,,unirea-slobozia-universitatea-craiova-apuestas-352
+2026-02-22 19:37,Estoril Gil Vicente 35271813,,Pressure Cooker,BACK,71,1.84,SI,+0.76,+51.18,,,,,,,estoril-gil-vicente-apuestas-35271813
+2026-02-22 19:44,Estoril Gil Vicente 35271813,,Goal Clustering,BACK,73,9.00,SI,+7.43,+58.61,,,,,6,,estoril-gil-vicente-apuestas-35271813
+2026-02-22 20:31,Novorizontino Santos 35276018,,Goal Clustering,BACK,65,1.85,SI,+0.77,+59.38,,,,,5,,novorizontino-santos-apuestas-35276018
+2026-02-22 20:35,Novorizontino Santos 35276018,,Pressure Cooker,BACK,72,1.99,SI,+0.90,+60.28,,,,,,,novorizontino-santos-apuestas-35276018
+2026-02-22 21:27,Roma Us Cremonese 35245360,,Goal Clustering,BACK,76,2.22,SI,+1.12,+61.40,,,,,4,,roma-us-cremonese-apuestas-35245360
+2026-02-22 21:38,Estrasburgo Lyon 35243047,,Goal Clustering,BACK,83,3.35,NO,-1.00,+60.40,,,,,7,,estrasburgo-lyon-apuestas-35243047
+2026-02-22 22:33,Audax Italiano Everton De Vina 35272581,,Goal Clustering,BACK,66,1.73,NO,-1.00,+59.40,,,,,3,,audax-italiano-everton-de-vina-apuestas-35272581
+2026-02-22 22:36,juventude-grêmio-apuestas-35272704,,Goal Clustering,BACK,71,2.02,NO,-1.00,+58.40,,,,,3,,juventude-grêmio-apuestas-35272704
+2026-02-22 22:37,juventude-grêmio-apuestas-35272704,,Pressure Cooker,BACK,75,1.88,NO,-1.00,+57.40,,,,,,,juventude-grêmio-apuestas-35272704
+2026-02-23 01:23,Universidad De Chile Deportes Limache 352,,Goal Clustering,BACK,85,3.40,NO,-1.00,+56.40,,,,,4,,universidad-de-chile-deportes-limache-apuestas-352
+2026-02-23 02:07,unión-santa-fe-aldosivi-apuestas-3525227,,Goal Clustering,BACK,67,2.20,NO,-1.00,+55.40,,,,,5,,unión-santa-fe-aldosivi-apuestas-35252277
+2026-02-23 13:38,Fk Graficar Fk Fap 35296327,,Goal Clustering,BACK,70,1.77,SI,+0.69,+56.10,,,,,3,,fk-graficar-fk-fap-apuestas-35296327
+2026-02-23 20:41,Al Shabab Ksa Al Riyadh Sc 35290195,,Goal Clustering,BACK,72,1.84,SI,+0.76,+56.86,,,,,3,,al-shabab-ksa-al-riyadh-sc-apuestas-35290195
+2026-02-23 21:02,Kahraba Ismailia El Geish 35276446,,Pressure Cooker,BACK,73,2.30,SI,+1.19,+58.05,,,,,,,kahraba-ismailia-el-geish-apuestas-35276446
+2026-02-23 21:09,cádiz-sociedad-b-apuestas-35274211,,Goal Clustering,BACK,72,2.30,SI,+1.19,+59.23,,,,,7,,cádiz-sociedad-b-apuestas-35274211
+2026-02-23 21:16,Kahraba Ismailia El Geish 35276446,,Goal Clustering,BACK,83,3.15,SI,+1.99,+61.22,,,,,6,,kahraba-ismailia-el-geish-apuestas-35276446
+2026-02-23 21:16,Le Mans Guingamp 35273823,,Pressure Cooker,BACK,71,2.20,NO,-1.00,+60.22,,,,,,,le-mans-guingamp-apuestas-35273823
+2026-02-23 21:23,Bologna Udinese 35245398,,Goal Clustering,BACK,75,2.12,NO,-1.00,+59.22,,,,,6,,bologna-udinese-apuestas-35245398
+2026-02-23 21:32,alavés-girona-apuestas-35244729,,Pressure Cooker,BACK,72,1.97,SI,+0.88,+60.10,,,,,,,alavés-girona-apuestas-35244729
+2026-02-23 21:37,Everton Manchester United 35240883,,Goal Clustering,BACK,72,1.98,NO,-1.00,+59.10,,,,,3,,everton-manchester-united-apuestas-35240883
+2026-02-23 21:38,alavés-girona-apuestas-35244729,,Goal Clustering,BACK,75,2.20,SI,+1.10,+60.20,,,,,5,,alavés-girona-apuestas-35244729
+2026-02-23 21:49,Walsall Mk Dons 35277663,,Goal Clustering,BACK,84,3.45,NO,-1.00,+59.20,,,,,3,,walsall-mk-dons-apuestas-35277663
+2026-02-23 22:02,Famalicao Casa Pia 35273780,,Goal Clustering,BACK,81,2.98,NO,-1.00,+58.20,,,,,7,,famalicao-casa-pia-apuestas-35273780
+2026-02-24 19:22,atlético-de-madrid-club-brugge-apuestas-,,Goal Clustering,BACK,75,2.04,SI,+0.95,+59.15,,,,,5,,atlético-de-madrid-club-brugge-apuestas-35283
+2026-02-24 20:41,Al Khaleej Saihat Al Kholood Club 3529583,,Goal Clustering,BACK,76,2.16,SI,+1.06,+60.22,,,,,4,,al-khaleej-saihat-al-kholood-club-apuestas-3529583
+2026-02-24 21:02,Ayr Inverness Ct 35296340,,Pressure Cooker,BACK,72,2.06,SI,+0.97,+61.19,,,,,,,ayr-inverness-ct-apuestas-35296340
+2026-02-24 21:15,Burton Albion Stockport 35292541,,Goal Clustering,BACK,65,1.83,NO,-1.00,+60.19,,,,,6,,burton-albion-stockport-apuestas-35292541
+2026-02-24 21:15,Hull Derby 35268742,,Pressure Cooker,BACK,71,1.85,SI,+0.77,+60.96,,,,,,,hull-derby-apuestas-35268742
+2026-02-24 21:17,Salford City Shrewsbury 35292779,,Pressure Cooker,BACK,71,1.90,SI,+0.82,+61.77,,,,,,,salford-city-shrewsbury-apuestas-35292779
+2026-02-24 21:25,Watford Ipswich 35272377,,Goal Clustering,BACK,77,2.96,NO,-1.00,+60.77,,,,,3,,watford-ipswich-apuestas-35272377
+2026-02-24 21:27,Salford City Shrewsbury 35292779,,Goal Clustering,BACK,77,2.56,NO,-1.00,+59.77,,,,,6,,salford-city-shrewsbury-apuestas-35292779
+2026-02-24 23:52,Huachipato Carabobo 35280058,,Goal Clustering,BACK,86,3.00,NO,-1.00,+58.77,,,,,8,,huachipato-carabobo-apuestas-35280058
+2026-02-25 00:12,Central Cordoba Sde Talleres 35276414,,Goal Clustering,BACK,62,2.08,SI,+0.99,+59.76,,,,,3,,central-cordoba-sde-talleres-apuestas-35276414
+2026-02-25 00:12,San Lorenzo Instituto 35276411,,Goal Clustering,BACK,88,3.60,NO,-1.00,+58.76,,,,,4,,san-lorenzo-instituto-apuestas-35276411
+2026-02-25 02:13,Belgrano Atl Tucuman 35276499,,Goal Clustering,BACK,78,2.98,SI,+1.82,+60.59,,,,,4,,belgrano-atl-tucuman-apuestas-35276499
+2026-02-25 21:32,Gimnasia La Plata Rosario Central 3527643,,Pressure Cooker,BACK,70,1.96,SI,+0.87,+61.46,,,,,,,gimnasia-la-plata-rosario-central-apuestas-3527643
+2026-02-25 21:44,Gimnasia La Plata Rosario Central 3527643,,Goal Clustering,BACK,76,2.76,NO,-1.00,+60.46,,,,,3,,gimnasia-la-plata-rosario-central-apuestas-3527643
+2026-02-26 00:19,Newells Estudiantes 35276443,,Goal Clustering,BACK,82,4.80,NO,-1.00,+59.46,,,,,6,,newells-estudiantes-apuestas-35276443
+2026-02-26 20:47,Al Riyadh Sc Al Ahli 35302379,,Goal Clustering,BACK,76,2.54,NO,-1.00,+58.46,,,,,7,,al-riyadh-sc-al-ahli-apuestas-35302379
+2026-02-26 23:29,Guarani Par Juventud De Las Piedras 35286,,Pressure Cooker,BACK,71,2.12,SI,+1.03,+59.49,,,,,,,guarani-par-juventud-de-las-piedras-apuestas-35286
+2026-02-27 18:29,Hobro Hb Koge 35285715,,Pressure Cooker,BACK,69,1.94,NO,-1.00,+58.49,,,,,,,hobro-hb-koge-apuestas-35285715
+2026-02-27 19:31,Lyngby Kolding If 35285716,,Goal Clustering,BACK,66,1.83,NO,-1.00,+57.49,,,,,5,,lyngby-kolding-if-apuestas-35285716
+2026-02-27 20:48,Al Hazm Ksa Al Ettifaq 35305756,,Goal Clustering,BACK,81,2.82,NO,-1.00,+56.49,,,,,7,,al-hazm-ksa-al-ettifaq-apuestas-35305756
+2026-02-27 21:12,Harrogate Town Cheltenham 35293565,,Pressure Cooker,BACK,70,1.93,NO,-1.00,+55.49,,,,,,,harrogate-town-cheltenham-apuestas-35293565
+2026-02-27 21:17,Standard De Lieja Raal La Louviere 352970,,Pressure Cooker,BACK,70,1.97,NO,-1.00,+54.49,,,,,,,standard-de-lieja-raal-la-louviere-apuestas-352970
+2026-02-28 00:30,Cerro Boston River 35294889,,Pressure Cooker,BACK,68,1.88,NO,-1.00,+53.49,,,,,,,cerro-boston-river-apuestas-35294889
+2026-02-28 11:50,Sporting Lisbon B Leixoes 35292792,,Odds Drift,BACK,45.0,2.12,SI,+1.03,+54.51,,none,,,,86.0,sporting-lisbon-b-leixoes-apuestas-35292792
+2026-02-28 14:33,Rayo Vallecano Athletic De Bilbao 3527246,,Pressure Cooker,BACK,74,2.42,NO,-1.00,+53.51,,,,,,,rayo-vallecano-athletic-de-bilbao-apuestas-3527246
+2026-02-28 18:31,verona-nápoles-apuestas-35270720,,Pressure Cooker,BACK,70,1.92,SI,+0.84,+54.35,,,,,,,verona-nápoles-apuestas-35270720
+2026-02-28 20:43,Cd Leones Del Norte Libertad Fc 35298906,,Pressure Cooker,BACK,73,1.92,NO,-1.00,+53.35,,,,,,,cd-leones-del-norte-libertad-fc-apuestas-35298906
+2026-02-28 20:49,Al Feiha Al Nassr 35306045,,Goal Clustering,BACK,82,3.30,SI,+2.12,+55.47,,,,,6,,al-feiha-al-nassr-apuestas-35306045
+2026-02-28 21:29,Danubio Progreso 35294816,,Pressure Cooker,BACK,72,2.32,SI,+1.21,+56.67,,,,,,,danubio-progreso-apuestas-35294816
+2026-02-28 23:11,Minnesota Utd Fc Cincinnati 35294976,,Goal Clustering,BACK,65,1.79,NO,-1.00,+55.67,,,,,5,,minnesota-utd-fc-cincinnati-apuestas-35294976
+2026-03-01 02:19,San Jose Earthquakes Atlanta Utd 35295112,,Goal Clustering,BACK,78,2.56,NO,-1.00,+54.67,,,,,6,,san-jose-earthquakes-atlanta-utd-apuestas-35295112
+2026-03-01 09:22,Shanghai Port Fc Beijing Guoan 35309504,,Goal Clustering,BACK,85,2.76,NO,-1.00,+53.67,,,,,6,,shanghai-port-fc-beijing-guoan-apuestas-35309504
+2026-03-01 15:56,Grasshoppers Zurich Lugano 35297166 Desktop P9Kitr3,,Odds Drift,BACK,25.0,2.66,SI,+1.53,+55.20,,none,,,,52.0,grasshoppers-zurich-lugano-apuestas-35297166-DESKTOP-P9KITR3
+2026-03-01 15:56,Grasshoppers Zurich Lugano 35297166,,Odds Drift,BACK,25.0,2.66,SI,+1.53,+56.73,,none,,,,52.0,grasshoppers-zurich-lugano-apuestas-35297166
+2026-03-01 19:30,Casa Pia Moreirense 35312487,,Pressure Cooker,BACK,69,1.97,NO,-1.00,+55.73,,,,,,,casa-pia-moreirense-apuestas-35312487
+2026-03-01 20:36,deportivo-pasto-cúcuta-deportivo-apuesta,,Goal Clustering,BACK,72,2.50,SI,+1.38,+57.11,,,,,10,,deportivo-pasto-cúcuta-deportivo-apuestas-353
+2026-03-01 21:23,Austin Fc Dc Utd 35298710,,Goal Clustering,BACK,81,3.40,NO,-1.00,+56.11,,,,,3,,austin-fc-dc-utd-apuestas-35298710
+2026-03-01 21:49,Newells Rosario Central 35302704,,Goal Clustering,BACK,84,3.60,NO,-1.00,+55.11,,,,,4,,newells-rosario-central-apuestas-35302704
+2026-03-01 23:32,Philadelphia New York City 35299144,,Goal Clustering,BACK,89,2.64,SI,+1.51,+56.62,,,,,8,,philadelphia-new-york-city-apuestas-35299144
+2026-03-02 01:52,Tigre Gimnasia La Plata 35302692,,Goal Clustering,BACK,59,1.74,NO,-1.00,+55.62,,,,,8,,tigre-gimnasia-la-plata-apuestas-35302692
+2026-03-02 01:59,Tigre Gimnasia La Plata 35302692,,Pressure Cooker,BACK,69,1.94,NO,-1.00,+54.62,,,,,,,tigre-gimnasia-la-plata-apuestas-35302692
+2026-03-02 02:02,defensa-y-justicia-lanús-apuestas-353026,,Pressure Cooker,BACK,70,2.20,NO,-1.00,+53.62,,,,,,,defensa-y-justicia-lanús-apuestas-35302689
+2026-03-03 01:58,Independiente Rivadavia River Plate 35302,,Pressure Cooker,BACK,69,2.00,NO,-1.00,+52.62,,,,,,,independiente-rivadavia-river-plate-apuestas-35302
+2026-03-03 02:08,Banfield Aldosivi 35302702,,Goal Clustering,BACK,73,2.40,NO,-1.00,+51.62,,,,,3,,banfield-aldosivi-apuestas-35302702
+2026-03-03 23:44,Ca Huracan Belgrano 35302696,,Goal Clustering,BACK,68,1.92,NO,-1.00,+50.62,,,,,5,,ca-huracan-belgrano-apuestas-35302696
+2026-03-04 01:59,Atl Tucuman Racing Club 35302694,,Goal Clustering,BACK,81,2.52,SI,+1.40,+52.02,,,,,7,,atl-tucuman-racing-club-apuestas-35302694
+2026-03-04 02:05,Barcelona Ecu Botafogo Fr 35314261,,Pressure Cooker,BACK,75,2.70,NO,-1.00,+51.02,,,,,,,barcelona-ecu-botafogo-fr-apuestas-35314261
+2026-03-04 10:28,G Osaka Ratchaburi 35329145,,Odds Drift,BACK,29.0,5.60,NO,-1.00,+50.02,,none,,,,83.6,g-osaka-ratchaburi-apuestas-35329145
+2026-03-04 21:34,Lazio Atalanta 35257842,,Pressure Cooker,BACK,74,2.00,SI,+0.91,+50.93,,,,,,,lazio-atalanta-apuestas-35257842
+2026-03-05 02:34,fortaleza-jaguares-de-córdoba-apuestas-3,,Pressure Cooker,BACK,72,1.94,SI,+0.85,+51.78,,,,,,,fortaleza-jaguares-de-córdoba-apuestas-353081
+2026-03-05 20:37,Thun St Gallen 35317711,,Odds Drift,BACK,48.0,1.89,NO,-1.00,+50.78,,none,,,,61.5,thun-st-gallen-apuestas-35317711
+2026-03-06 19:14,Hb Koge Esbjerg 35318573,,Goal Clustering,BACK,81,2.82,NO,-1.00,+49.78,,,,,6,,hb-koge-esbjerg-apuestas-35318573
+2026-03-06 19:35,Kolding If Hobro 35316211,,Goal Clustering,BACK,66,2.18,SI,+1.08,+50.87,,,,,5,,kolding-if-hobro-apuestas-35316211

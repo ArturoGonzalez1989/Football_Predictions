@@ -32,10 +32,10 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
     """Registra automáticamente una señal madura como apuesta paper en placed_bets.csv."""
     match_id = sig.get("match_id", "")
     strategy = sig.get("strategy", "")
-    key = (match_id, strategy)
+    market_key = _live_market_key(sig)  # dedup by market, not strategy
 
     # Dedup en sesión: ya fue colocado en este ciclo de vida del backend
-    if key in _auto_placed_keys:
+    if market_key in _auto_placed_keys:
         return
 
     try:
@@ -50,10 +50,11 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
             with open(_PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
                 rows = list(csv.DictReader(f))
                 if rows:
-                    # Si ya existe en CSV, no duplicar
+                    # Si ya existe en CSV, no duplicar (by market key, not strategy)
                     for row in rows:
-                        if row.get("match_id") == match_id and row.get("strategy") == strategy:
-                            _auto_placed_keys.add(key)
+                        row_market = _live_market_key(row)
+                        if row_market == market_key:
+                            _auto_placed_keys.add(market_key)
                             return
                     ids = [int(r['id']) for r in rows if r.get('id', '').isdigit()]
                     if ids:
@@ -88,7 +89,7 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
             _audit.log_bet_placed(next_id, sig, stake)
         except Exception:
             pass
-        _auto_placed_keys.add(key)
+        _auto_placed_keys.add(market_key)
     except Exception as e:
         # Loguear error en fichero para depuración (no interrumpir el endpoint)
         try:
@@ -222,7 +223,7 @@ def _apply_realistic_adjustments(signals: list, adj: dict, risk_filter: str) -> 
         filtered4 = []
         for sig in pass1:
             strat = sig.get("strategy", "")
-            is_match_odds = (strat == "back_draw_00" or strat.startswith("odds_drift")
+            is_match_odds = (strat.startswith("back_draw_00") or strat.startswith("odds_drift")
                              or strat.startswith("momentum_xg"))
             if not is_match_odds:
                 filtered4.append(sig)
@@ -269,9 +270,6 @@ def run_paper_auto_place() -> dict:
         risk_filter = cfg.get("risk_filter", "all")
         flat_stake  = float(cfg.get("flat_stake", 10.0))
 
-        tarde_asia_ver = v.get("tarde_asia") or ("v1" if s.get("tarde_asia", {}).get("enabled") else "off")
-        momentum_ver   = s.get("momentum_xg", {}).get("version") or v.get("momentum_xg", "off")
-
         drift_s      = s.get("drift", {})
         clustering_s = s.get("clustering", {})
         xg_s         = s.get("xg", {})
@@ -280,11 +278,12 @@ def run_paper_auto_place() -> dict:
         momentum_s   = s.get("momentum_xg", {})
 
         def _ver(v_key, s_key, default):
-            if v.get(v_key):
-                return v.get(v_key)
             strat = s.get(s_key, {})
+            # enabled: false ALWAYS wins — regardless of version overrides
             if strat.get("enabled") is False:
                 return "off"
+            if v.get(v_key):
+                return v.get(v_key)
             if strat.get("version"):
                 return strat.get("version")
             return default
@@ -295,8 +294,8 @@ def run_paper_auto_place() -> dict:
             "drift":      _ver("drift",      "drift",      "v1"),
             "clustering": _ver("clustering", "clustering", "v2"),
             "pressure":   _ver("pressure",   "pressure",   "v1"),
-            "momentum":   momentum_ver,
-            "tarde_asia": tarde_asia_ver,
+            "momentum":   _ver("momentum_xg", "momentum_xg", "off"),
+            "tarde_asia": _ver("tarde_asia", "tarde_asia", "off"),
             "draw_min_dur":          str(md.get("draw", 1)),
             "xg_min_dur":            str(md.get("xg", 2)),
             "drift_min_dur":         str(md.get("drift", 2)),
@@ -622,22 +621,18 @@ async def get_betting_signals(
     flat_stake = float(cfg.get("flat_stake", 10.0))
 
     def _ver(query_param, v_key, s_key, default):
-        """Resuelve versión: query > versions.<key> > strategies.<key>.enabled > default."""
+        """Resuelve versión: query > enabled check > versions.<key> > strategies.<key>.version > default."""
         if query_param:
             return query_param
-        if v.get(v_key):
-            return v.get(v_key)
         strat = s.get(s_key, {})
+        # enabled: false ALWAYS wins — regardless of version overrides
         if strat.get("enabled") is False:
             return "off"
+        if v.get(v_key):
+            return v.get(v_key)
         if strat.get("version"):
             return strat.get("version")
         return default
-
-    # Tarde asia: usa enabled del bloque strategies
-    tarde_asia_ver = v.get("tarde_asia") or ("v1" if s.get("tarde_asia", {}).get("enabled") else "off")
-    # Momentum: usa strategies.momentum_xg.version explícitamente
-    momentum_ver = momentum or s.get("momentum_xg", {}).get("version") or v.get("momentum_xg", "off")
 
     # ── Extraer parámetros por estrategia desde config (single source of truth) ──
     # Estos params fluyen al detector live para garantizar alineación con histórico.
@@ -654,8 +649,8 @@ async def get_betting_signals(
         "drift":      _ver(drift,       "drift",      "drift",      "v1"),
         "clustering": _ver(clustering,  "clustering", "clustering", "v2"),
         "pressure":   _ver(pressure,    "pressure",   "pressure",   "v1"),
-        "momentum":   momentum_ver,
-        "tarde_asia": tarde_asia_ver,
+        "momentum":   _ver(momentum,    "momentum_xg", "momentum_xg", "off"),
+        "tarde_asia": _ver(None,        "tarde_asia", "tarde_asia", "off"),
         "draw_min_dur":       str(draw_min_dur       if draw_min_dur       is not None else md.get("draw", 1)),
         "xg_min_dur":         str(xg_min_dur         if xg_min_dur         is not None else md.get("xg", 2)),
         "drift_min_dur":      str(drift_min_dur      if drift_min_dur      is not None else md.get("drift", 2)),
@@ -725,17 +720,15 @@ async def get_watchlist(
     def _ver(query_param, v_key, s_key, default):
         if query_param:
             return query_param
-        if v.get(v_key):
-            return v.get(v_key)
         strat = s.get(s_key, {})
+        # enabled: false ALWAYS wins — regardless of version overrides
         if strat.get("enabled") is False:
             return "off"
+        if v.get(v_key):
+            return v.get(v_key)
         if strat.get("version"):
             return strat.get("version")
         return default
-
-    tarde_asia_ver = v.get("tarde_asia") or ("v1" if s.get("tarde_asia", {}).get("enabled") else "off")
-    momentum_ver = momentum or s.get("momentum_xg", {}).get("version") or v.get("momentum_xg", "off")
 
     versions = {
         "draw":       _ver(draw,      "draw",       "draw",       "v2r"),
@@ -743,8 +736,8 @@ async def get_watchlist(
         "drift":      _ver(drift,      "drift",      "drift",      "v1"),
         "clustering": _ver(clustering, "clustering", "clustering", "v2"),
         "pressure":   _ver(pressure,   "pressure",   "pressure",   "v1"),
-        "momentum":   momentum_ver,
-        "tarde_asia": tarde_asia_ver,
+        "momentum":   _ver(momentum,   "momentum_xg", "momentum_xg", "off"),
+        "tarde_asia": _ver(None,       "tarde_asia", "tarde_asia", "off"),
     }
     return csv_reader.detect_watchlist(versions=versions)
 

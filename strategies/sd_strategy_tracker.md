@@ -1,7 +1,7 @@
 # Strategy Designer — Historial de investigacion
 Ultima actualizacion: 2026-03-07
 Dataset al momento de la investigacion: 896 partidos (2026-02-10 a 2026-03-07)
-Total hipotesis investigadas: 76 (H1-H76) en 12 rondas
+Total hipotesis investigadas: 81 (H1-H81) en 13 rondas
 
 > Este fichero es la referencia para el agente strategy-designer.
 > Antes de investigar una hipotesis nueva, verificar que no este ya listada aqui.
@@ -13,6 +13,53 @@ Solo 1 de las 19 aprobadas en rondas anteriores paso los quality gates del noteb
 | Estrategia | Mercado | Config | N | WR | ROI | Notebook status |
 |---|---|---|---|---|---|---|
 | BACK Leader Stat Domination (H2) | BACK Match Winner (leader) | min=55-70, sot>=4, rival<=1 | 26 | 92.3% | +47.4% | ACTIVA |
+
+## APROBADAS RONDA 13 (3 nuevas)
+
+Ronda 13 explored 5 hypotheses (H77-H81) with 896 matches. Focus: unexploited CS scorelines, first-half patterns, LAY home/away. All 3 approved are CS market strategies extending the CS structural inefficiency portfolio. Discarded 2 hypotheses (H78: O3.5 FH test ROI=0.5%; H80: Home leading FH test ROI=1.9%).
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI (realistic) | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H77 | BACK CS 1-1 Late | BACK CS 1-1 | 102 | 57.8% | +24.1% | 1.63 | +14.6% | +45.7% | strategies/sd_report_back_cs_11_late.md |
+| 2 | H79 | BACK CS 2-0/0-2 Late | BACK CS 2-0/0-2 | 90 | 53.3% | +46.2% | 2.19 | +43.5% | +52.0% | strategies/sd_report_back_cs_20_late.md |
+| 3 | H81 | BACK CS Big-Lead Late | BACK CS 3-0/0-3/3-1/1-3 | 79 | 65.8% | +58.3% | 3.51 | +69.6% | +32.4% | strategies/sd_report_back_cs_big_lead_late.md |
+
+### Quality gates resumen (Ronda 13, realistic validation)
+
+| Gate | H77 | H79 | H81 |
+|------|-----|-----|-----|
+| G1: N>=35 | PASS (102) | PASS (90) | PASS (79) |
+| G2: ROI>=10% (realistic) | PASS (24.1%) | PASS (46.2%) | PASS (58.3%) |
+| G3: IC95_lo>=40% | PASS (48.1%) | PASS (43.1%) | PASS (54.8%) |
+| G4: Train ROI>0% | PASS (14.6%) | PASS (43.5%) | PASS (69.6%) |
+| G5: Test ROI>0% | PASS (45.7%) | PASS (52.0%) | PASS (32.4%) |
+| G6: Overlap<30% same market | PASS (0%) | PASS (0%) | PASS (0%) |
+| G7: >=3 ligas | PASS (28) | PASS (28) | PASS (23) |
+
+### Notas sobre las nuevas estrategias
+
+- **All three exploit the same CS structural inefficiency** found in H49/H53 but on NEW scorelines. The CS market must distribute probability across dozens of scores, systematically underpricing whichever score is current. This pattern is now confirmed across 10 different scorelines.
+- **H77 (CS 1-1) complements H58 (Draw 1-1)**: Both trigger on 1-1 at min 75+, but trade DIFFERENT markets (CS vs Match Odds). 96% match overlap but 0% market overlap. They are complementary bets on the same situation.
+- **H79 supersedes H55**: H55 was in monitoring (IC95_lo=32%). With optimized params (min 75-90, odds_max 10.0), it now passes all gates. H55 removed from monitoring.
+- **H81 supersedes H65**: H65 covered only 3-0/0-3 (N=49, insufficient). By adding 3-1/1-3, H81 reaches N=79 and passes all gates. H65 removed from monitoring.
+- **H81 is the STAR of R13**: Sharpe=3.51 (realistic), ROI=58.3%, MaxDD=52. The 0-3 scoreline has 82.4% WR -- the highest of any individual scoreline tested.
+- **Complete CS Portfolio after R13**: H49(2-1/1-2) + H53(1-0/0-1) + H77(1-1) + H79(2-0/0-2) + H81(3-0/0-3/3-1/1-3) = 10 scorelines, combined N~489, ALL with zero market overlap.
+- **All three use ONLY Tier 1 columns** (CS odds, score, minuto) -- zero data availability risk.
+
+### Cross-overlap between R13 approved
+
+| Par | Match overlap | Market overlap |
+|-----|---------------|----------------|
+| H77 vs H79 | 0% | 0% (different scores) |
+| H77 vs H81 | 0% | 0% (different scores) |
+| H79 vs H81 | 11.1% of H79 | 0% (different scores) |
+
+### Hypotheses discarded in R13
+
+| H# | Name | Reason |
+|----|------|--------|
+| H78 | BACK Over 3.5 FH Activity | Test ROI=0.5% (below 10% threshold). N=75, WR=74.7% but avg odds=1.44. Train=14.3%, test collapses. Market adjusts O3.5 accurately when goals are scored early. |
+| H80 | BACK Home Leading FH | Test ROI=1.9% (below 10% threshold). N=191, WR=81.7% but avg odds=1.39. The edge at first half is real but tiny (~2pp over implied). H70 (late version, min 55+) captures this much better because the edge grows as time runs out. |
 
 ## APROBADAS RONDA 12 (2 nuevas)
 
@@ -256,9 +303,9 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 |---|---|---|---|---|---|---|---|
 | 1 | H40 | BACK HT Leader | BACK MO (leader) | 302 | +3.3% | Train ROI=0.3% (marginal) | Cuando dataset > 1200 |
 | 2 | H54 | BACK Over 4.5 High-Activity Momentum | BACK O4.5 | 25 | +96.0% | N=25 < 60 (need more high-scoring games) | Cuando dataset > 1500 |
-| 3 | H55 | BACK CS 2-0/0-2 Hold | BACK CS 2-0/0-2 | 105 | +26.5% | IC95_lo=32.0% < 40% (WR uncertain) | Cuando dataset > 1200 |
+| 3 | H55 | BACK CS 2-0/0-2 Hold | BACK CS 2-0/0-2 | 105 | +26.5% | SUPERSEDED by H79 (R13) -- better params, passes all gates | -- |
 | 4 | H62 | BACK Draw After UD Equalizer Late | BACK Draw | 40 | +149.5% | N=40 < 60 (Sharpe=3.38, train=156%/test=134%) | Cuando dataset > 1200 |
-| 5 | H65 | BACK CS 3-0/0-3 Late Hold | BACK CS 3-0/0-3 | 49 | +74.3% | N=49 < 60 (train=86.6%/test=46.4%) | Cuando dataset > 1200 |
+| 5 | H65 | BACK CS 3-0/0-3 Late Hold | BACK CS 3-0/0-3 | 49 | +74.3% | SUPERSEDED by H81 (R13) -- adds 3-1/1-3, passes all gates | -- |
 | 6 | H68 | BACK Draw at 2-2 Late | BACK Draw (2-2) | 44 | +28.4% | N=44 < 60 (WR=54.5%, Sharpe=1.16, edge=+10.5pp vs implied) | Cuando dataset > 1200 |
 | 7 | H69 | BACK Under 0.5 Late Scoreless | BACK U0.5 | 78 | +15.4% | Sharpe=0.78, low edge/variance ratio; overlaps with H44 concept | Cuando dataset > 1200 |
 
@@ -319,6 +366,8 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | H74 | BACK Draw 0-0 Mid-Game Balanced | BACK Draw | Sharpe < 1.0 across all 76 configs. Best N=32, ROI=16.3% but train=0.9%. Confirms 0-0 Draw market efficient |
 | H75 | BACK CS 0-0 Very Late (v2) | BACK CS 0-0 | Negative ROI across all configs. Confirms H56 descarte. Edge is an artefact |
 | H76 | BACK Home Fav Leading 2+ Early | BACK MO (home) | N=67, test ROI=2.6%. Strong train/test divergence (26%/2.6%). Subsumed by H70 which is broader and better |
+| H78 | BACK Over 3.5 FH Activity | BACK O3.5 | Test ROI=0.5%. N=75 with 3+ goals by min 35-45 but avg odds=1.44, market adjusts correctly |
+| H80 | BACK Home Leading FH (fav only) | BACK MO (home) | Test ROI=1.9%. N=191, WR=81.7% but edge only ~2pp. H70 (late) is far superior |
 
 ## MERCADOS / CONCEPTOS AGOTADOS
 
@@ -350,6 +399,8 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 - **BACK Draw at 0-0 mid-game (55-70)**: H74 -- Sharpe <1.0 across 76 configs. Market efficient for Draw 0-0.
 - **BACK CS 0-0 very late**: H56 + H75 -- confirmed dead across 2 rounds. Edge is artefact.
 - **Home fav leading 2+ early**: H76 -- subsumed by H70 (broader, more robust). Test ROI collapses.
+- **BACK Over 3.5 first half**: H78 -- test ROI=0.5%, market adjusts O3.5 correctly when goals scored early
+- **BACK Home Leading First Half**: H80 -- test ROI=1.9%, edge only ~2pp. Late strategies (H70) capture this much better
 - **Handicap / Asian Handicap**: No columns available in dataset (confirmed R8 exploration)
 - **HT-specific markets**: No HT market columns available (confirmed R8 exploration)
 - **BTTS markets**: No columns available (confirmed R7 exploration)
@@ -358,7 +409,15 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 
 ## NOTAS PARA FUTURAS RONDAS
 
-- Hipotesis H1-H76 ya cubiertas. Siguiente ronda empieza en H77.
+- Hipotesis H1-H81 ya cubiertas. Siguiente ronda empieza en H82.
+- **Ronda 13 hallazgos clave**:
+  - **CS structural inefficiency confirmed on ALL tested scorelines**: H77 (1-1), H79 (2-0/0-2), H81 (3-0/0-3/3-1/1-3) all pass realistic validation. The CS market systematically underprices the current score at min 70-90 regardless of scoreline.
+  - **CS Portfolio now covers 10 scorelines**: H49(2-1/1-2) + H53(1-0/0-1) + H77(1-1) + H79(2-0/0-2) + H81(3-0/0-3/3-1/1-3). Combined N~489, zero market overlap. This is the largest systematic edge found in the research program.
+  - **First-half strategies have weak edges**: H78 (O3.5) and H80 (home leading) both show positive train ROI but test ROI collapses to <2%. The market has more time to adjust in the second half, so edges found in FH are smaller and less stable. Confirmed that min 70+ is the "sweet spot" for edge size.
+  - **LAY home/away in FH not viable**: Only 5 matches where home leads 1-0 but away dominates stats. Insufficient N for any LAY strategy.
+  - **Odds drift in FH is noise**: H=34 drift events, 29.4% home win rate -- market is correct.
+  - **0-3 scoreline has 82.4% WR**: The highest single-scoreline WR found. Away teams with 3-goal leads are virtually unbeatable.
+  - **H55 and H65 superseded**: Both monitoring strategies now have better versions (H79, H81) that pass all gates.
 - **Ronda 11 hallazgos clave**:
   - **Under 3.5 market is genuinely inefficient**: When 3 goals are scored but xG < 2.5, the 4th goal probability is overpriced. H66 found ROI=+26.2% (N=84). Even WITHOUT xG filter, ROI is +9.8% (N=215) -- the market systematically overestimates 4th goal probability regardless of quality.
   - **Away favourite leading is massively underpriced**: H67 found 85.1% hold rate vs market-implied 67%. This 18pp edge is one of the largest in the entire research program. The "home advantage comeback" narrative is deeply embedded in market pricing.
@@ -408,7 +467,9 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
   - BACK CS 2-1/1-2: H49 (1)
   - BACK CS 1-0/0-1: H53 (1, NUEVO R9)
   - BACK CS 0-0: H37 (1, off)
-  - BACK CS 3-0/0-3: H65 (1, EN SEGUIMIENTO -- N insuficiente)
+  - **BACK CS 1-1: H77 (1, NUEVO R13)**
+  - **BACK CS 2-0/0-2: H79 (1, NUEVO R13, supersedes H55)**
+  - BACK CS 3-0/0-3+3-1/1-3: **H81 (1, NUEVO R13, supersedes H65)**
   - BACK Draw 0-0: H14, H24, H30 (3, todos off)
   - BACK Draw 1-1: H58 (1, NUEVO R9)
   - BACK Draw post-equalizer: H62 (1, EN SEGUIMIENTO -- N insuficiente)

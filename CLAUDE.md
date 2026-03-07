@@ -33,7 +33,7 @@ La carpeta `/aux` puede borrarse en cualquier momento sin afectar al sistema. Si
    - `csv_reader.py:detect_betting_signals(versions)` aplica filtros inline.
    - No hay segunda capa. Ademas, `analytics.py` aplica post-filtros (odds, risk, maturity).
 
-4. **FICHERO CRITICO**: `betfair_scraper/dashboard/backend/utils/csv_reader.py` (~5100 lineas).
+4. **FICHERO CRITICO**: `betfair_scraper/dashboard/backend/utils/csv_reader.py` (~5761 lineas).
    - Contiene TODA la logica de estrategias (backtest y live), carga de datos, cashout simulation, watchlist.
    - Cambios aqui deben ser quirurgicos y verificados.
 
@@ -63,44 +63,64 @@ betfair_scraper/
   dashboard/
     backend/
       main.py            → FastAPI app + 5 background tasks (417 lineas)
-      api/analytics.py   → Paper trading, senales, cartera (654 lineas)
+      api/analytics.py   → Paper trading, senales, cartera (750 lineas)
       api/bets.py        → CRUD apuestas + cashout/settlement (604 lineas)
       api/config.py      → GET/PUT cartera_config.json (102 lineas)
       api/matches.py     → Datos de partidos (133 lineas)
-      api/explorer.py    → Explorador estrategias (95 lineas)
       api/system.py      → Start/stop scraper (381 lineas)
       api/debug.py       → Debug endpoints (HTML snapshots, memory)
-      api/optimize.py    → Optimizacion presets (Phase 1+2)
-      api/optimizer_cli.py → CLI para optimizacion paralela
-      api/simulate.py    → Simulador de senales (replay timeline)
-      utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~5300 lineas)
+      api/optimize.py    → Optimizacion presets Phase 1+2 (1329 lineas)
+      api/optimizer_cli.py → CLI para optimizacion paralela (691 lineas)
+      api/simulate.py    → Simulador de senales replay timeline (540 lineas)
+      utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~5761 lineas)
+      utils/sd_strategies.py → 19 SD configs + evaluador (205 lineas)
       utils/scraper_status.py → Estado scraper via psutil + log parsing
       utils/signals_audit_logger.py → Audit log rotativo
     frontend/src/
-      lib/api.ts         → Cliente API tipado (938 lineas)
-      lib/cartera.ts     → Filtros, simulacion bankroll, optimizacion, presets 3 fases (~1100 lineas)
+      lib/api.ts         → Cliente API tipado (932 lineas)
+      lib/cartera.ts     → Filtros, simulacion bankroll, optimizacion, presets 3 fases (1104 lineas)
       lib/trading.ts     → PressureIndex, divergencia, momentum swings (311 lineas)
       lib/sounds.ts      → Alerta sonora Web Audio (61 lineas)
       lib/utils.ts       → cn(), formatTimeAgo(), formatTimeTo() (27 lineas)
-      components/        → 21 componentes React (Dashboard, StrategiesView, etc.)
+      components/        → 19 componentes React (Dashboard, BettingSignalsView, etc.)
 
-aux/                     → Archivos temporales/prescindibles (gitignored)
+aux/                     → Archivos auxiliares de analisis (tracked en git)
+  sd_generators.py       → 19 generadores SD (1816 lineas)
+  sd_filters.py          → Filtros realistas SD (825 lineas)
+  run_reconcile.py       → Verificacion BT↔LIVE
+  compare_bt_live.py     → Comparacion rendimiento BT vs LIVE
 strategies/              → Reportes y tracker del strategy-designer agent
 .claude/agents/          → Definiciones de agentes (backtest-auditor, strategy-designer, etc.)
 analisis/                → Notebooks, audits, portfolio analysis
 ```
 
-## 7 Estrategias
+## 7 Estrategias Core (cartera_config.json)
+
+Estrategias de produccion con deteccion live + backtest. Configuradas en `cartera_config.json`. Solo las que pasan quality gates (N minimo, ROI >= 10%, IC95_lower >= 40%) se activan.
 
 | Estrategia | Clave config | Estado |
 |------------|-------------|--------|
-| Back Empate 0-0 | draw | Activa (6 versiones: v1/v15/v2/v2r/v3/v4) |
+| Back Empate 0-0 | draw | Desactivada por IC95 gate (6 versiones: v1/v15/v2/v2r/v3/v4) |
 | xG Underperformance | xg | Activa (3 versiones: base/v2/v3) |
-| Odds Drift Contrarian | drift | Activa (6 versiones: v1-v6) |
+| Odds Drift Contrarian | drift | Depende de datos (6 versiones: v1-v6) |
 | Goal Clustering | clustering | Activa (3 versiones: v2/v3/v4) |
 | Pressure Cooker | pressure | Activa (2 versiones: v1/v2) |
-| Momentum xG | momentum_xg | Activa (2 versiones: v1/v2) |
+| Momentum xG | momentum_xg | Depende de datos (2 versiones: v1/v2) |
 | Tarde Asia | tarde_asia | Inactiva (solo tracking backtest) |
+
+## 19 Estrategias SD (solo backtest)
+
+Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). **NO tienen deteccion live** — solo backtest.
+
+Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores en `aux/sd_generators.py`, filtros en `aux/sd_filters.py`.
+
+## Quality Gates (aplicados a TODAS las estrategias)
+
+1. **N >= G_MIN_BETS**: `max(15, n_partidos // 25)` (~33 con 800+ partidos)
+2. **ROI >= G_MIN_ROI** (10%)
+3. **IC95_lower >= IC95_MIN_LOW** (40%): intervalo Wilson al 95%
+
+Implementados en `_eval_combo()` (notebook) y `eval_sd()` (`sd_strategies.py`).
 
 ## Sistema de Presets (cartera.ts + StrategiesView.tsx)
 
@@ -195,6 +215,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ## Problemas conocidos
 
-1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
-2. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
-3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
+1. **SD sin deteccion live**: Las 19 estrategias SD solo funcionan en backtest (notebook). No hay codigo en `detect_betting_signals()` para SD.
+2. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
+3. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
+4. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.

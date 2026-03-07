@@ -9,10 +9,11 @@
 El sistema captura cuotas y estadisticas de partidos de futbol en vivo desde Betfair Exchange, las almacena en CSVs, y proporciona un dashboard web para:
 
 1. **Monitorizar partidos en vivo** (cuotas, stats, momentum)
-2. **Detectar senales de apuesta** en tiempo real (6 estrategias activas + 1 inactiva)
+2. **Detectar senales de apuesta** en tiempo real (7 estrategias core + 19 SD backtest-only)
 3. **Paper trading automatico** (colocacion automatica de apuestas simuladas)
 4. **Analisis historico** (backtest sobre datos pasados con filtrado configurable)
 5. **Optimizacion de cartera** (busqueda de la mejor combinacion de versiones y ajustes)
+6. **Strategy Designer** (descubrimiento automatizado de nuevas estrategias via agentes)
 
 ---
 
@@ -27,7 +28,6 @@ betfair_scraper/
 ├── cartera_config.json        # UNICA FUENTE DE VERDAD de parametros de estrategia
 ├── games.csv                  # Lista de partidos activos a scrapear
 ├── placed_bets.csv            # Apuestas paper colocadas
-├── explorer_results.json      # Cache de resultados del strategy explorer (JSON)
 ├── signals_audit.log          # Audit log rotativo de senales (50MB x 10)
 ├── supervisor_workflow.py     # Orquestador de 7 scripts de mantenimiento
 ├── data/                      # CSVs individuales: partido_*.csv + .heartbeat
@@ -48,18 +48,18 @@ betfair_scraper/
     ├── backend/
     │   ├── main.py            # FastAPI app, routers, 5 background tasks (417 lineas)
     │   ├── api/
-    │   │   ├── analytics.py   # Paper trading, senales, cartera, cashout (654 lineas)
+    │   │   ├── analytics.py   # Paper trading, senales, cartera, cashout (750 lineas)
     │   │   ├── bets.py        # CRUD apuestas colocadas (604 lineas)
     │   │   ├── config.py      # GET/PUT cartera_config.json (102 lineas)
     │   │   ├── matches.py     # Datos de partidos (133 lineas)
-    │   │   ├── explorer.py    # Exploracion de estrategias (95 lineas)
     │   │   ├── system.py      # Start/stop scraper, cleanup Chrome (381 lineas)
     │   │   ├── debug.py       # Debug endpoints: HTML snapshots, memory monitoring (127 lineas)
-    │   │   ├── optimize.py    # Optimizacion presets Phase 1+2 (700+ lineas)
-    │   │   ├── optimizer_cli.py # CLI para optimizacion paralela (600+ lineas)
-    │   │   └── simulate.py    # Simulador de senales: replay timeline (400+ lineas)
+    │   │   ├── optimize.py    # Optimizacion presets Phase 1+2 (1329 lineas)
+    │   │   ├── optimizer_cli.py # CLI para optimizacion paralela (691 lineas)
+    │   │   └── simulate.py    # Simulador de senales: replay timeline (540 lineas)
     │   └── utils/
-    │       ├── csv_reader.py  # ~5300 lineas. EL fichero critico. Helpers compartidos BT↔LIVE.
+    │       ├── csv_reader.py      # ~5761 lineas. EL fichero critico. Helpers compartidos BT↔LIVE.
+    │       ├── sd_strategies.py   # 19 SD strategies: configs + evaluator (205 lineas)
     │       ├── scraper_status.py  # Estado del scraper via psutil + log parsing (231 lineas)
     │       └── signals_audit_logger.py  # Audit log rotativo 50MB x 10 (214 lineas)
     │
@@ -68,28 +68,46 @@ betfair_scraper/
             ├── App.tsx, main.tsx
             ├── index.css          # Tema "Charcoal Pro"
             ├── lib/
-            │   ├── api.ts         # Cliente API con interfaces TypeScript (938 lineas)
-            │   ├── cartera.ts     # Filtros, simulacion bankroll, optimizacion (1063 lineas)
+            │   ├── api.ts         # Cliente API con interfaces TypeScript (932 lineas)
+            │   ├── cartera.ts     # Filtros, simulacion bankroll, optimizacion (1104 lineas)
             │   ├── trading.ts     # PressureIndex, divergencia, momentum swings (311 lineas)
             │   ├── sounds.ts      # Alerta sonora Web Audio (61 lineas)
             │   └── utils.ts       # cn(), formatTimeAgo(), formatTimeTo() (27 lineas)
-            └── components/        # 21 componentes React
+            └── components/        # 19 componentes React
                 ├── Dashboard.tsx          # Shell de navegacion (vistas, polling 10s)
-                ├── StrategiesView.tsx     # Config estrategias + backtest + optimizacion
-                ├── BettingSignalsView.tsx # Senales live + watchlist + cartera activa
-                ├── PlacedBetsView.tsx     # Tracking de apuestas paper
+                ├── BettingSignalsView.tsx  # Senales live + watchlist + cartera activa
+                ├── PlacedBetsView.tsx      # Tracking de apuestas paper
                 ├── LiveView.tsx           # Partidos en vivo (MatchCard por partido)
                 ├── MatchCard.tsx          # Tarjeta de partido con stats + cuotas
                 ├── DataQualityView.tsx    # Calidad de datos capturados
                 ├── AnalyticsView.tsx      # Analisis de mercado
-                ├── ExplorerView.tsx       # Explorador de estrategias (grid search)
-                ├── FinishedView.tsx       # Partidos terminados + detalle completo
                 ├── UpcomingView.tsx       # Proximos partidos
-                ├── InsightsView.tsx       # Insights de mercado
                 ├── SystemStatus.tsx       # Estado del sistema + controles
-                └── (8 componentes menores: StatusBadge, CaptureIndicator,
+                └── (10 componentes menores: StatusBadge, CaptureIndicator,
                      StatsBar, GapAnalysis, CaptureTable, OddsChart,
-                     MomentumChart, SiegeMeter)
+                     MomentumChart, MomentumSwings, PriceVsReality, SiegeMeter)
+
+aux/                           # Archivos auxiliares de analisis (tracked en git)
+├── sd_generators.py           # 19 generadores de estrategias SD (1816 lineas)
+├── sd_filters.py              # Filtros realistas para SD backtests (825 lineas)
+├── run_reconcile.py           # Verificacion BT↔LIVE fila a fila
+├── compare_bt_live.py         # Comparacion rendimiento BT vs LIVE
+└── (scripts temporales de analisis, CSVs intermedios)
+
+strategies/                    # Trabajo del strategy-designer agent
+├── sd_strategy_tracker.md     # Estado de investigacion de todas las rondas
+└── (reportes de backtests, resultados por ronda)
+
+analisis/                      # Notebooks y analisis
+├── strategies_designer.ipynb  # Notebook principal: BT + presets + SD (65 celdas)
+└── (portfolio analysis, audit reports)
+
+.claude/agents/                # Definiciones de agentes Claude
+├── backtest-auditor.md        # Auditor de alineamiento BT↔LIVE (5 pasos)
+├── strategy-designer.md       # Disenador de nuevas estrategias (8 pasos)
+├── sub-backtest-runner.md     # Sub-agente: ejecuta backtests individuales
+├── sub-match-analyzer.md      # Sub-agente: analisis de partidos individuales
+└── sub-strategy-meta-analyst.md # Sub-agente: meta-analisis de portfolio
 ```
 
 ---
@@ -143,13 +161,12 @@ betfair_scraper/
 
 - **Puerto**: 8000
 - **CORS**: localhost:5173, localhost:3000
-- **6 Routers** (incluidos en este orden):
-  1. `matches_router` → prefijo `/api/matches`
-  2. `system_router` → prefijo `/api/system`
-  3. `analytics_router` → prefijo `/api/analytics`
-  4. `bets_router` → sin prefijo en include (endpoints definen `/api/bets/*`)
-  5. `config_router` → prefijo `/api` (endpoints definen `/config/cartera`)
-  6. `explorer_router` → prefijo `/api/explorer`
+- **5 Routers** (incluidos en este orden):
+  1. `matches_router` → datos de partidos
+  2. `system_router` → start/stop scraper, cleanup
+  3. `analytics_router` → prefijo `/api/analytics` (senales, cartera, cashout)
+  4. `bets_router` → CRUD apuestas (`/api/bets/*`)
+  5. `config_router` → prefijo `/api` (GET/PUT `/config/cartera`)
 - **5 background tasks** (lanzadas en `startup_event`, lineas 343-367):
   1. **`auto_refresh_matches()`** — cada 10 minutos (delay inicial 30s): ejecuta `clean_games.py` + `find_matches.py` via subprocess. Flag `_is_refreshing` previene concurrencia.
   2. **`_scheduler_watchdog()`** — reinicia `auto_refresh_matches()` si crashea.
@@ -158,7 +175,7 @@ betfair_scraper/
   5. **`_paper_trading_watchdog()`** — reinicia `auto_paper_trading()` si crashea.
 - **`/api/health`** endpoint: estado comprensivo del sistema (scraper, paper trading, auto-refresh, config).
 
-### 3.5 csv_reader.py — El fichero critico (~5100 lineas)
+### 3.5 csv_reader.py — El fichero critico (~5761 lineas)
 
 Este fichero contiene TODA la logica de:
 1. Carga y limpieza de datos CSV
@@ -206,7 +223,7 @@ Este fichero contiene TODA la logica de:
 - **Stack**: React 18 + TypeScript + Vite + Tailwind CSS
 - **Puerto dev**: 5173 (proxy Vite redirige `/api` → `localhost:8000`)
 - **Tema**: "Charcoal Pro" (dark theme definido en index.css)
-- **Dashboard.tsx**: 9 vistas (signals, bets, strategies, explorer, live, upcoming, finished, quality, analytics). Polling de matches + system status cada 10 segundos.
+- **Dashboard.tsx**: 6 vistas (signals, bets, live, upcoming, quality, analytics). Polling de matches + system status cada 10 segundos.
 - **Librerias clave**:
   - `api.ts`: objeto `api` con metodos tipados para todos los endpoints. Interfaces TypeScript completas (Match, CarteraBet, BettingSignal, PlacedBet, CarteraConfig, ExplorerResult, etc.)
   - `cartera.ts`: filtros por estrategia, simulacion de bankroll (6 modos), optimizacion de presets (57,600 combos fase 1 + 2,592 combos fase 2), ajustes realistas
@@ -373,24 +390,23 @@ versions = {
 | **Versiones de estrategia** | Backend genera ALL bets con version flags; frontend filtra con la version activa | Backend filtra con la version activa directamente |
 | **Thresholds hardcodeados** | Cada `analyze_strategy_*()` tiene sus propias constantes internas | `detect_betting_signals()` lee params de `versions` dict |
 
-### El gap de datos NULL (problema conocido)
+### Nota sobre datos NULL (descartado como problema)
 
-Frontend usa este patron en todas las funciones `filter*Bets()`:
-
-```typescript
-// filterDrawBets en cartera.ts
-if (p.xgMax < 1.0 && b.xg_total != null && b.xg_total >= p.xgMax) return false;
-```
-
-Cuando `b.xg_total` es `null`, la condicion `b.xg_total != null` es `false`, el AND cortocircuita, y el `return false` **NO se ejecuta** → la bet PASA el filtro.
-
-En cambio, el sistema live en `detect_betting_signals()` requiere datos no-null para generar una senal. Si xG es null, la senal simplemente no se genera.
-
-**Resultado**: el backtest incluye "bets fantasma" donde los datos estadisticos son null (porque el filtro no las excluye), mientras que el live nunca las generaria. Esto causa discrepancias entre el P/L historico y el paper trading real.
+Ambos sistemas (backtest y live) parten del mismo CSV. Si un stat es null en una fila del CSV historico, eso refleja que el scraper tampoco lo tenia disponible en ese momento en vivo. No hay inflacion sistematica del backtest por nulls.
 
 ---
 
 ## 7. Estrategias
+
+### 7.0 Quality Gates (aplicados a TODAS las estrategias)
+
+Tanto las estrategias core como las SD deben pasar 3 quality gates:
+
+1. **N >= G_MIN_BETS**: minimo de apuestas (dinamico: `max(15, n_partidos // 25)`, tipicamente ~33)
+2. **ROI >= G_MIN_ROI** (10%): retorno minimo sobre inversion
+3. **IC95_lower >= IC95_MIN_LOW** (40%): limite inferior del intervalo de confianza Wilson al 95%
+
+Si una estrategia no pasa alguno de estos gates, se desactiva automaticamente en la combinacion optima.
 
 ### 7.1 Back Empate (`back_draw_00`)
 
@@ -458,6 +474,43 @@ En cambio, el sistema live en `detect_betting_signals()` requiere datos no-null 
 - **Deteccion de liga**: por URL keywords primero, luego fallback por nombres de equipos (listas hardcodeadas de equipos por pais)
 - Solo tracking en backtest. Config: `enabled: true` pero `tarde_asia: "off"` en versions dict.
 - No genera senales live.
+
+### 7.8 Estrategias SD (Strategy Designer) — 19 estrategias, SOLO BACKTEST
+
+Las estrategias SD fueron descubiertas automaticamente por el agente strategy-designer sobre los datos historicos (~800+ partidos). Estan definidas en:
+
+- **`aux/sd_generators.py`** (1816 lineas): 19 funciones generadoras que iteran filas de CSV y producen bets
+- **`aux/sd_filters.py`** (825 lineas): filtros realistas (odds, dedup, slippage, stability)
+- **`betfair_scraper/dashboard/backend/utils/sd_strategies.py`** (205 lineas): `SD_APPROVED_CONFIGS` (19 configs) + `eval_sd()` evaluador
+
+**Las 19 estrategias SD aprobadas:**
+
+| # | Clave | Descripcion |
+|---|-------|-------------|
+| 1 | `sd_over25_2goal` | BACK O2.5 from 2-Goal Lead |
+| 2 | `sd_under35_late` | BACK U3.5 Late |
+| 3 | `sd_lay_over45_v3` | LAY O4.5 V3 Tight |
+| 4 | `sd_draw_xg_conv` | BACK Draw xG Convergence |
+| 5 | `sd_poss_extreme` | BACK O0.5 Poss Extreme |
+| 6 | `sd_longshot` | BACK Longshot |
+| 7 | `sd_cs_00` | BACK CS 0-0 |
+| 8 | `sd_over25_2goals` | BACK O2.5 from Two Goals |
+| 9 | `sd_cs_close` | BACK CS 2-1/1-2 |
+| 10 | `sd_cs_one_goal` | BACK CS 1-0/0-1 |
+| 11 | `sd_draw_11` | BACK Draw 1-1 |
+| 12 | `sd_ud_leading` | BACK UD Leading |
+| 13 | `sd_under35_3goals` | BACK U3.5 Three-Goal Lid |
+| 14 | `sd_away_fav_leading` | BACK Away Fav Leading |
+| 15 | `sd_home_fav_leading` | BACK Home Fav Leading |
+| 16 | `sd_under45_3goals` | BACK U4.5 Three Goals Low xG |
+| 17 | `sd_cs_11` | BACK CS 1-1 Late |
+| 18 | `sd_cs_20` | BACK CS 2-0/0-2 Late |
+| 19 | `sd_cs_big_lead` | BACK CS Big Lead Late |
+
+**Limitaciones actuales:**
+- **Sin deteccion live**: no hay codigo en `detect_betting_signals()` para SD. Solo funcionan en backtest via el notebook.
+- **Evaluacion**: el notebook (`strategies_designer.ipynb`) ejecuta los generadores sobre datos historicos y aplica los mismos quality gates + ajustes realistas que las core.
+- **Presets**: las SD se incluyen en `_STRATEGY_PARAMS` (celda notebook) y en `_build_preset_config()` (`optimizer_cli.py`) para persistir en `cartera_config.json`.
 
 ---
 
@@ -759,9 +812,9 @@ Grid search independiente sobre combinaciones minuto × condicion × resultado. 
 
 ## 17. Problemas conocidos
 
-### 17.1 Gap de datos NULL (backtest vs live)
+### 17.1 SD strategies: sin deteccion live
 
-**Descrito en seccion 6.** El frontend deja pasar bets con datos null; el live las rechaza. Causa "bets fantasma" en el historico.
+Las 19 estrategias SD solo funcionan en backtest (notebook). No hay codigo en `detect_betting_signals()` para detectar senales SD en tiempo real. Implementar esto requiere anadir generadores SD al flujo live de `csv_reader.py`.
 
 ### 17.2 Momentum xG: params hardcodeados
 
@@ -867,3 +920,4 @@ BettingSignalsView (auto-refresh 10s)
 8. **Testar cambios** comparando output de backtest y senales live con los mismos datos.
 9. **No tocar la cache key** de analyze_cartera() sin entender que los filtros se aplican en frontend.
 10. **Los params hardcodeados** de Momentum xG y Odds Drift backtest son un problema conocido — no asumir que estan en config.
+11. **SD strategies** son backtest-only. Sus configs estan en `sd_strategies.py` y se integran en presets via `optimizer_cli.py`.

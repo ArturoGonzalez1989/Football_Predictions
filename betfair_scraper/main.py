@@ -239,6 +239,88 @@ URL_LEAGUE_MAPPING = {
     'egipto-premier-league': ('Egipto', 'Premier League'),
     # Eslovenia
     'premier-league-eslovena': ('Eslovenia', 'Premier League'),
+    # ── Añadidos para cubrir "Desconocido" (2026-03-07) ──
+    # Arabia Saudita
+    'arabia-saudí-liga-profesional': ('Arabia Saudita', 'Saudi Pro League'),
+    'arabia-saud%C3%AD-liga-profesional': ('Arabia Saudita', 'Saudi Pro League'),
+    # USA - MLS
+    'estados-unidos-major-league-soccer': ('USA', 'MLS'),
+    'major-league-soccer': ('USA', 'MLS'),
+    # Inglaterra (variante URL)
+    'premier-league-inglesa': ('Inglaterra', 'Premier League'),
+    'national-league-inglesa': ('Inglaterra', 'National League'),
+    # Competiciones UEFA
+    'europa-conference-league': ('Internacional', 'Conference League'),
+    'uefa-europa-league': ('Internacional', 'Europa League'),
+    'uefa-champions-league': ('Internacional', 'Champions League'),
+    # Sudamérica
+    'copa-sudamericana': ('Internacional', 'Copa Sudamericana'),
+    'concacaf-champions-league': ('Internacional', 'CONCACAF Champions'),
+    'conmebol-recopa-sudamericana': ('Internacional', 'Recopa Sudamericana'),
+    # Brasil (estaduales y copa)
+    'copa-de-brasil': ('Brasil', 'Copa do Brasil'),
+    'partidos-carioca-brasileña': ('Brasil', 'Carioca'),
+    'partidos-carioca-brasile%C3%B1a': ('Brasil', 'Carioca'),
+    'brasil-partidos-del-campeonato-mineiro': ('Brasil', 'Mineiro'),
+    'brasil-partidos-del-campeonato-baiano': ('Brasil', 'Baiano'),
+    'partidos-goiano-brasileño': ('Brasil', 'Goiano'),
+    'partidos-goiano-brasile%C3%B1o': ('Brasil', 'Goiano'),
+    'gaucho-brasileña': ('Brasil', 'Gaúcho'),
+    'gaucho-brasile%C3%B1a': ('Brasil', 'Gaúcho'),
+    # Italia Serie C
+    'serie-c-italiana': ('Italia', 'Serie C'),
+    # Ecuador
+    'serie-a-ecuatoriana': ('Ecuador', 'Serie A'),
+    # Dinamarca 1st Division
+    'danish-1st-division': ('Dinamarca', '1st Division'),
+    # Tailandia
+    'tailandia-liga-2': ('Tailandia', 'Liga 2'),
+    'tailandia-liga-1': ('Tailandia', 'Liga 1'),
+    'thai-league': ('Tailandia', 'Thai League'),
+    # Irlanda
+    'irlanda-premier-division': ('Irlanda', 'Premier Division'),
+    # China
+    'china-superliga': ('China', 'Superliga'),
+    # Turquía copa
+    'copa-turca': ('Turquía', 'Copa Turca'),
+    # Corea del Sur
+    'corea-del-sur-k1-league': ('Corea del Sur', 'K1 League'),
+    'corea-del-sur-k2-league': ('Corea del Sur', 'K2 League'),
+    # Francia copa
+    'copa-de-francia': ('Francia', 'Coupe de France'),
+    # Bosnia
+    'premier-league-bosnia': ('Bosnia', 'Premier League'),
+    # Escocia
+    'escocia-challenge-cup': ('Escocia', 'Challenge Cup'),
+    # México expansión
+    'méxico-liga-de-expansión-mx': ('México', 'Liga de Expansión'),
+    'm%C3%A9xico-liga-de-expansi%C3%B3n-mx': ('México', 'Liga de Expansión'),
+    # FIFA
+    'copa-mundial-de-la-fifa-femenino-clasificatorios': ('Internacional', 'FIFA Women WC Qualifiers'),
+    # AFC
+    'afc-champions-league-2': ('Internacional', 'AFC Champions League 2'),
+    # ── Añadidos batch 2 (restantes del backfill) ──
+    'albania-kategoria-superiore': ('Albania', 'Kategoria Superiore'),
+    'azerbaiy%C3%A1n-premier-league': ('Azerbaiyán', 'Premier League'),
+    'azerbaiyán-premier-league': ('Azerbaiyán', 'Premier League'),
+    'brasil-pernambucano': ('Brasil', 'Pernambucano'),
+    'championship-escocesa': ('Escocia', 'Championship'),
+    'escocia-copa': ('Escocia', 'Copa Escocesa'),
+    'league-1-escocesa': ('Escocia', 'League One'),
+    'fifa-copa-mundial-femenina': ('Internacional', 'FIFA Women World Cup'),
+    'i-liga-polaca': ('Polonia', 'I Liga'),
+    'italia-copa': ('Italia', 'Coppa Italia'),
+    'malaysian-super-league': ('Malasia', 'Super League'),
+    'perú-primera-división': ('Perú', 'Primera División'),
+    'per%C3%BA-primera-divisi%C3%B3n': ('Perú', 'Primera División'),
+    'república-popular-china': ('China', 'Superliga'),
+    'rep%C3%BAblica-popular-china': ('China', 'Superliga'),
+    'serbia-prva-liga': ('Serbia', 'Prva Liga'),
+    'super-league-eslovaca': ('Eslovaquia', 'Super League'),
+    'tanzania-premier-league': ('Tanzania', 'Premier League'),
+    'virsliga-letona': ('Letonia', 'Virsliga'),
+    'zambia-superliga': ('Zambia', 'Superliga'),
+    'bolivian-torneo-amistoso': ('Bolivia', 'Torneo Amistoso'),
 }
 
 def extraer_pais_liga_de_url(url: str) -> tuple:

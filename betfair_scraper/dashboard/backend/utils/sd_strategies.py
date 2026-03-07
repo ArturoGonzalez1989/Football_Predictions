@@ -18,141 +18,83 @@ import math
 # ---------------------------------------------------------------------------
 
 SD_APPROVED_CONFIGS: dict = {
-    # #1 — LAY Over 4.5 Late Shield (optimized: min=65-75, goals<=2, odds<=8)
-    # odds_max reducido de 15 a 8: liability -(odds-1) demasiado alta en odds>8
-    # (loss a odds=15 borra 14.7 wins; odds>8 implica <12.5% prob Over4.5 → filtrar)
-    "lay_over45": {
-        "m_min": 65, "m_max": 75, "goals_max": 2, "odds_max": 8, "xg_max": 999,
-    },
-    # #2 — BACK Leader Stat Domination (min=55-70, sot>=4, rival<=1)
-    "leader_dom": {
-        "m_min": 55, "m_max": 70, "sot_min": 4, "sot_max_rival": 1,
-    },
-    # #3 — BACK Over 2.5 from 2-Goal Lead (min=55-78, goal_diff>=2, SoT>=3, odds=1.5-8)
+    # #1 — BACK Over 2.5 from 2-Goal Lead (min=55-78, goal_diff>=2, SoT>=3, odds=1.5-8)
     "over25_2goal": {
         "m_min": 55, "m_max": 78, "goal_diff_min": 2,
         "sot_total_min": 3, "odds_min": 1.5, "odds_max": 8.0,
     },
-    # #4 — BACK Over 2.5 Confluence (H23 tied + Clustering; min=50-70, SoT>=4)
-    "confluence": {
-        "m_min": 50, "m_max": 70, "sot_total_min": 4,
-    },
-    # #5 — BACK Draw After Equalizer (equalizador min=58-85, odds=2.0-15.0)
-    "draw_eq": {
-        "m_min": 58, "m_max": 85, "odds_min": 2.0, "odds_max": 15.0,
-    },
-    # #6 — BACK Under 2.5 Scoreless Late (0-0 min=64-80, xG<2.0)
-    "under25_scl": {
-        "m_min": 64, "m_max": 80, "xg_max": 2.0,
-    },
-    # #7 — BACK Under 3.5 Low-xG Late (3 goles min=65-78, xG<2.0)
+    # #2 — BACK Under 3.5 Low-xG Late (3 goles min=65-78, xG<2.0)
     "under35_late": {
         "m_min": 65, "m_max": 78, "goals_exact": 3, "xg_max": 2.0,
     },
-    # #8 — BACK Draw Late Stalemate (empatado con goles min=70-90, xG_residual>=-0.5, odds>=2.5)
-    # odds_min=2.5: ROI negativo en odds<2.5 según reporte sd_report_draw_late_stalemate.md
-    "draw_stl": {
-        "m_min": 70, "m_max": 90, "xg_res_min": -0.5, "odds_min": 2.5,
-    },
-    # #9  — LAY O4.5 V3 Tight (min=55-75, goals<=1, odds<=15)
+    # #3  — LAY O4.5 V3 Tight (min=55-75, goals<=1, odds<=15)
     "lay_over45_v3": {
         "m_min": 55, "m_max": 75, "goals_max": 1, "odds_max": 15,
     },
-    # #10 — LAY O4.5 V2+V4 (min=62-75, goals<=2, odds<=15, xG<2.0)
-    "lay_over45_v2v4": {
-        "m_min": 62, "m_max": 75, "goals_max": 2, "odds_max": 15, "xg_max": 2.0,
-    },
-    # #11 — LAY O4.5 Late entry (min=68-78, goals<=2, odds<=10)
-    # odds_max alineado con max_odds global del portfolio (10.0) para backtest pesimista:
-    # solo evaluamos bets que realmente pasarían el filtro del combo.
-    "lay_over45_late": {
-        "m_min": 68, "m_max": 78, "goals_max": 2, "odds_max": 10,
-    },
-    # #12 — BACK Draw xG Convergence (H14; min=60-80, xg_diff<=0.5)
+    # #4 — BACK Draw xG Convergence (H14; min=60-80, xg_diff<=0.5)
     "draw_xg_conv": {
         "m_min": 60, "m_max": 80, "xg_diff_max": 0.5,
     },
-    # #13 — Corner+SoT -> Over 2.5 (H19; min=45-75, SoT>=4, corners>=5)
-    "corner_sot": {
-        "m_min": 45, "m_max": 75, "sot_min": 4, "corners_min": 5,
-    },
-    # #14 — BACK Over 2.5 V4 +xG (goal_diff>=2, SoT>=3, xG>=0.5, odds=1.5-8)
-    "over25_2goal_v4": {
-        "m_min": 55, "m_max": 78, "goal_diff_min": 2,
-        "sot_total_min": 3, "xg_min": 0.5,
-    },
-    # #15 — BACK Over 3.5 FH Goals (H21; min=45-60, goals>=2)
-    "over35_fh": {
-        "m_min": 45, "m_max": 60, "goals_min": 2,
-    },
-    # #16 — BACK Over 2.5 from 1-1 (H23; tied 1-1+, sot_total>=4, min=50-70)
-    "over25_11": {
-        "m_min": 50, "m_max": 70, "sot_total_min": 4,
-    },
-    # #17 — BACK Over 0.5 Possession Extreme (H32; min=30-50, poss>=58%)
+    # #5 — BACK Over 0.5 Possession Extreme (H32; min=30-50, poss>=58%)
     "poss_extreme": {
         "m_min": 30, "m_max": 50, "poss_min": 58,
     },
-    # #18 — BACK Longshot Resistente (H35; min=65-90, xg_longshot>=0.2, odds=1.3-8)
+    # #6 — BACK Longshot Resistente (H35; min=65-90, xg_longshot>=0.2, odds=1.3-8)
     "longshot": {
         "m_min": 65, "m_max": 90, "xg_min": 0.2, "odds_min": 1.3, "odds_max": 8.0,
     },
-    # #19 — BACK CS 0-0 Early (H37; edge en odds [7-9), min=28-30, xG<1.5, SoT<=3)
+    # #7 — BACK CS 0-0 Early (H37; edge en odds [7-9), min=28-30, xG<1.5, SoT<=3)
     "cs_00": {
         "m_min": 28, "m_max": 30, "xg_max": 1.5, "sot_max": 3,
         "odds_min": 7.0, "odds_max": 9.0,
     },
-    # #20 — BACK Over 2.5 from Two Goals (H39; min=50-60, odds<=4.0)
+    # #8 — BACK Over 2.5 from Two Goals (H39; min=50-60, odds<=4.0)
     "over25_2goals": {
         "m_min": 50, "m_max": 60, "odds_max": 4.0,
     },
-    # #21 — LAY Over 2.5 Scoreless Late (H41; 0-0 min=60-70, layMax=20)
-    "lay_over25_scl": {
-        "m_min": 60, "m_max": 70, "lay_max": 20.0,
-    },
-    # #22 — LAY Over 1.5 Scoreless Fortress (H44; 0-0 min=68-78, layMax=8)
-    "lay_over15_scl": {
-        "m_min": 68, "m_max": 78, "lay_max": 8.0,
-    },
-    # #23 — BACK Under 2.5 One-Goal Late (H46; 1 goal min=75-85, xG<2.0, SoT<=6)
-    "under25_1goal": {
-        "m_min": 75, "m_max": 85, "xg_max": 2.0, "sot_max": 6,
-    },
-    # #24 — LAY Under 2.5 Tied at 1-1 (H48; 1-1 min=55-65, layMax=2.5)
-    "lay_under25_11": {
-        "m_min": 55, "m_max": 65, "lay_max": 2.5,
-    },
-    # #25 — BACK Correct Score 2-1/1-2 (H49; min=70-80, no odds cap)
+    # #9 — BACK Correct Score 2-1/1-2 (H49; min=70-80, no odds cap)
     "cs_close": {
         "m_min": 70, "m_max": 80,
     },
-    # #26 — BACK Correct Score 1-0/0-1 (H53; min=68-85, no odds cap)
+    # #10 — BACK Correct Score 1-0/0-1 (H53; min=68-85, no odds cap)
     "cs_one_goal": {
         "m_min": 68, "m_max": 85,
     },
-    # #27 — BACK Draw at 1-1 (H58; min=70-85, odds>1.5)
+    # #11 — BACK Draw at 1-1 (H58; min=70-85, odds>1.5)
     "draw_11": {
         "m_min": 70, "m_max": 85, "odds_min": 1.5,
     },
-    # #28 — BACK Underdog Leading Late (H59; min=55-80, ud_pre>=2.0, max_lead=1)
+    # #12 — BACK Underdog Leading Late (H59; min=55-80, ud_pre>=2.0, max_lead=1)
     "ud_leading": {
         "m_min": 55, "m_max": 80, "ud_min_pre_odds": 2.0, "max_lead": 1,
     },
-    # #29 — BACK Under 3.5 Three-Goal Lid (H66; min=68-82, xg_max=3.0)
+    # #13 — BACK Under 3.5 Three-Goal Lid (H66; min=68-82, xg_max=3.0)
     "under35_3goals": {
         "m_min": 68, "m_max": 82, "xg_max": 3.0,
     },
-    # #30 — BACK Away Favourite Leading Late (H67; min=65-85, max_lead=1, odds<=5.0)
+    # #14 — BACK Away Favourite Leading Late (H67; min=65-85, max_lead=1, odds<=5.0)
     "away_fav_leading": {
         "m_min": 65, "m_max": 85, "max_lead": 1, "odds_max": 5.0,
     },
-    # #31 — BACK Home Favourite Leading Late (H70; min=65-85, maxLead=3, favMax=2.5)
+    # #15 — BACK Home Favourite Leading Late (H70; min=65-85, maxLead=3, favMax=2.5)
     "home_fav_leading": {
         "m_min": 65, "m_max": 85, "max_lead": 3, "fav_max": 2.5,
     },
-    # #32 — BACK Under 4.5 Three Goals Low xG (H71; min=65-85, xG<2.0)
+    # #16 — BACK Under 4.5 Three Goals Low xG (H71; min=65-85, xG<2.0)
     "under45_3goals": {
         "m_min": 65, "m_max": 85, "xg_max": 2.0,
+    },
+    # #17 — BACK CS 1-1 Late (H77; min=75-90, odds_max=8.0)
+    "cs_11": {
+        "m_min": 75, "m_max": 90, "odds_max": 8.0,
+    },
+    # #18 — BACK CS 2-0/0-2 Late (H79; min=75-90, odds_max=10.0)
+    "cs_20": {
+        "m_min": 75, "m_max": 90, "odds_max": 10.0,
+    },
+    # #19 — BACK CS Big Lead Late (H81; 3-0/0-3/3-1/1-3, min=70-85, odds_max=8.0)
+    "cs_big_lead": {
+        "m_min": 70, "m_max": 85, "odds_max": 8.0,
     },
 }
 
