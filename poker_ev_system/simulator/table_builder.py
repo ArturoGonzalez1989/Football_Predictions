@@ -15,7 +15,7 @@ DB_PATH = os.path.join(
     "data", "equity_tables.db"
 )
 
-# Hand categories
+# Legacy broad categories (kept for backward compatibility in tests)
 HAND_CATEGORIES = {
     "pocket_pair": "Pocket Pair",
     "suited_connectors": "Suited Connectors",
@@ -41,8 +41,26 @@ BOARD_TEXTURES = [
 ]
 
 
+def canonical_hand(card1_rank: str, card2_rank: str, suited: bool) -> str:
+    """Convert two card ranks + suited flag to canonical hand notation.
+
+    Always puts the higher rank first. Examples: 'AA', 'AKs', 'AKo', '72o'.
+    """
+    r1 = RANK_VALUES.get(card1_rank, 0)
+    r2 = RANK_VALUES.get(card2_rank, 0)
+    if r1 < r2:
+        card1_rank, card2_rank = card2_rank, card1_rank
+
+    if card1_rank == card2_rank:
+        return f"{card1_rank}{card2_rank}"
+    elif suited:
+        return f"{card1_rank}{card2_rank}s"
+    else:
+        return f"{card1_rank}{card2_rank}o"
+
+
 def categorize_hand(card1_rank: str, card2_rank: str, suited: bool) -> str:
-    """Categorize a starting hand."""
+    """Categorize a starting hand into broad category (legacy)."""
     r1 = RANK_VALUES.get(card1_rank, 0)
     r2 = RANK_VALUES.get(card2_rank, 0)
     if r1 < r2:
@@ -78,15 +96,12 @@ def classify_board_texture(board: list[int]) -> str:
     if not board:
         return "preflop"
 
-    # Extract suits and ranks
     suits = [Card.get_suit_int(c) for c in board]
     ranks = [Card.get_rank_int(c) for c in board]
 
-    # Check for paired board
     if len(set(ranks)) < len(ranks):
         return "paired"
 
-    # Suit texture
     unique_suits = len(set(suits))
     if unique_suits == 1:
         suit_label = "monotone"
@@ -95,11 +110,10 @@ def classify_board_texture(board: list[int]) -> str:
     else:
         suit_label = "rainbow"
 
-    # Rank height (0=2 .. 12=A)
     avg_rank = sum(ranks) / len(ranks)
-    if avg_rank >= 9:  # average T+
+    if avg_rank >= 9:
         height = "high"
-    elif avg_rank >= 5:  # average 7-9
+    elif avg_rank >= 5:
         height = "medium"
     else:
         height = "low"
@@ -163,20 +177,19 @@ def init_db(db_path: str | None = None):
         db_path = DB_PATH
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
+    # Drop old table if schema changed
+    c.execute("DROP TABLE IF EXISTS equity")
     c.execute("""
-        CREATE TABLE IF NOT EXISTS equity (
-            hand_category TEXT NOT NULL,
+        CREATE TABLE equity (
+            hand TEXT NOT NULL,
             board_texture TEXT NOT NULL,
-            position TEXT NOT NULL,
             street TEXT NOT NULL,
-            spr TEXT NOT NULL,
-            bet_size TEXT NOT NULL,
             equity REAL NOT NULL,
             sample_count INTEGER NOT NULL,
-            PRIMARY KEY (hand_category, board_texture, position, street, spr, bet_size)
+            PRIMARY KEY (hand, board_texture, street)
         )
     """)
-    c.execute("CREATE INDEX IF NOT EXISTS idx_lookup ON equity(hand_category, board_texture, street)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_hand_street ON equity(hand, street)")
     conn.commit()
     conn.close()
 
@@ -184,11 +197,11 @@ def init_db(db_path: str | None = None):
 def _simulate_batch(args) -> list[tuple]:
     """Worker: simulate a batch of random hands and return aggregated results.
 
-    Returns list of (hand_cat, board_texture, street, equity, count) tuples.
+    Returns list of (canonical_hand, board_texture, street, total_equity, count) tuples.
     """
     batch_size, seed = args
     random.seed(seed)
-    results = {}  # (hand_cat, board_texture, street) -> (total_equity, count)
+    results = {}  # (canonical_hand, board_texture, street) -> (total_equity, count)
 
     for _ in range(batch_size):
         # Deal random cards
@@ -199,18 +212,17 @@ def _simulate_batch(args) -> list[tuple]:
         villain = [deck[2], deck[3]]
         board_full = deck[4:9]
 
-        # Categorize hero hand
+        # Get canonical hand notation
         r1 = _get_rank_char(hero[0])
         r2 = _get_rank_char(hero[1])
         suited = _is_suited(hero[0], hero[1])
-        hand_cat = categorize_hand(r1, r2, suited)
+        hand = canonical_hand(r1, r2, suited)
 
         # Evaluate at each street
         for street, num_board in [("preflop", 0), ("flop", 3), ("turn", 4), ("river", 5)]:
             board = board_full[:num_board]
             board_tex = classify_board_texture(board)
 
-            # Evaluate hands
             if num_board < 3:
                 # For preflop, run a mini-sim (5 random boards)
                 wins = 0
@@ -226,7 +238,6 @@ def _simulate_batch(args) -> list[tuple]:
                         wins += 0.5
                 eq = wins / total
             else:
-                # Complete the board if needed
                 if num_board < 5:
                     remaining = [c for c in ALL_CARDS if c not in hero and c not in villain and c not in board]
                     extra = random.sample(remaining, 5 - num_board)
@@ -242,7 +253,7 @@ def _simulate_batch(args) -> list[tuple]:
                 else:
                     eq = 0.0
 
-            key = (hand_cat, board_tex, street)
+            key = (hand, board_tex, street)
             if key in results:
                 old_eq, old_cnt = results[key]
                 results[key] = (old_eq + eq, old_cnt + 1)
@@ -260,11 +271,8 @@ def build_tables(
 ):
     """Build precalculated equity tables via Monte Carlo simulation.
 
-    Args:
-        num_simulations: Total hands to simulate.
-        db_path: Path to SQLite DB.
-        num_workers: Number of parallel workers.
-        progress_callback: Optional callable(completed, total) for progress.
+    Uses 169 canonical hand notations (e.g., AA, AKs, AKo, 72o) instead of
+    broad categories for much higher precision.
     """
     if db_path is None:
         db_path = DB_PATH
@@ -277,15 +285,16 @@ def build_tables(
     args = [(batch_size, random.randint(0, 2**31)) for _ in range(num_workers)]
 
     print(f"Starting simulation: {num_simulations:,} hands across {num_workers} workers...")
+    print(f"Using 169 canonical hands (AA, AKs, AKo, ..., 32o)")
     start = time.time()
 
     # Aggregate results across all workers
-    aggregated = {}  # (hand_cat, board_tex, street) -> (total_eq, count)
+    aggregated = {}
 
     with Pool(num_workers) as pool:
         for i, result_batch in enumerate(pool.imap_unordered(_simulate_batch, args)):
-            for hand_cat, board_tex, street, total_eq, count in result_batch:
-                key = (hand_cat, board_tex, street)
+            for hand, board_tex, street, total_eq, count in result_batch:
+                key = (hand, board_tex, street)
                 if key in aggregated:
                     old_eq, old_cnt = aggregated[key]
                     aggregated[key] = (old_eq + total_eq, old_cnt + count)
@@ -296,23 +305,22 @@ def build_tables(
             print(f"  Worker {i+1}/{num_workers} done.")
 
     elapsed = time.time() - start
-    print(f"Simulation complete in {elapsed:.1f}s. Writing {len(aggregated)} entries to DB...")
 
-    # Write to SQLite - expand across all position/spr/bet_size combos
+    # Count unique hands
+    unique_hands = set(k[0] for k in aggregated.keys())
+    print(f"Simulation complete in {elapsed:.1f}s. {len(unique_hands)} unique hands, {len(aggregated)} entries.")
+
+    # Write to SQLite
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    c.execute("DELETE FROM equity")  # Clear old data
 
     rows = []
-    for (hand_cat, board_tex, street), (total_eq, count) in aggregated.items():
+    for (hand, board_tex, street), (total_eq, count) in aggregated.items():
         avg_equity = total_eq / count
-        for pos in POSITIONS:
-            for spr in SPR_RANGES:
-                for bet in BET_SIZES:
-                    rows.append((hand_cat, board_tex, pos, street, spr, bet, avg_equity, count))
+        rows.append((hand, board_tex, street, avg_equity, count))
 
     c.executemany(
-        "INSERT OR REPLACE INTO equity VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO equity VALUES (?, ?, ?, ?, ?)",
         rows
     )
     conn.commit()

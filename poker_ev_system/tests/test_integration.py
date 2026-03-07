@@ -8,7 +8,8 @@ from poker_ev_system.simulator.monte_carlo import equity_vs_hand, ALL_CARDS
 from poker_ev_system.engine.ev_calculator import EVCalculator
 from poker_ev_system.engine.range_model import expand_hand_notation, get_position_range
 from poker_ev_system.simulator.table_builder import (
-    categorize_hand, classify_board_texture, classify_spr, classify_bet_size,
+    categorize_hand, canonical_hand, classify_board_texture,
+    classify_spr, classify_bet_size,
 )
 
 
@@ -43,6 +44,128 @@ class TestTableBuilderClassifiers:
         assert classify_bet_size(75, 100) == "0.75x"
         assert classify_bet_size(100, 100) == "1x"
         assert classify_bet_size(200, 100) == "1.5x+"
+
+
+class TestCanonicalHand:
+    """Verify canonical hand notation works correctly."""
+
+    def test_pocket_pairs(self):
+        assert canonical_hand("A", "A", True) == "AA"
+        assert canonical_hand("A", "A", False) == "AA"
+        assert canonical_hand("2", "2", True) == "22"
+
+    def test_suited_hands(self):
+        assert canonical_hand("A", "K", True) == "AKs"
+        assert canonical_hand("K", "A", True) == "AKs"  # order normalized
+        assert canonical_hand("T", "9", True) == "T9s"
+
+    def test_offsuit_hands(self):
+        assert canonical_hand("A", "K", False) == "AKo"
+        assert canonical_hand("K", "A", False) == "AKo"
+        assert canonical_hand("7", "2", False) == "72o"
+        assert canonical_hand("2", "7", False) == "72o"
+
+    def test_all_169_unique(self):
+        """Verify we can generate all 169 canonical hands."""
+        from poker_ev_system.simulator.hand_evaluator import RANKS
+        hands = set()
+        for i, r1 in enumerate(RANKS):
+            for j, r2 in enumerate(RANKS):
+                if i <= j:
+                    if i == j:
+                        hands.add(canonical_hand(r1, r2, False))
+                    else:
+                        hands.add(canonical_hand(r1, r2, True))
+                        hands.add(canonical_hand(r1, r2, False))
+        assert len(hands) == 169
+
+
+class TestCanonicalTableAccuracy:
+    """Verify that canonical hand tables produce different equities for different hands."""
+
+    def test_aa_much_higher_than_22(self):
+        """AA preflop equity must be significantly higher than 22."""
+        calc = EVCalculator(use_tables=True)
+        r_aa = calc.calculate(
+            hero_cards=["As", "Ad"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="BTN", villain_position="CO",
+            fold_equity=0.45, num_simulations=100,
+        )
+        r_22 = calc.calculate(
+            hero_cards=["2s", "2d"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="BTN", villain_position="CO",
+            fold_equity=0.45, num_simulations=100,
+        )
+        calc.close()
+        assert r_aa.equity > r_22.equity + 0.25, (
+            f"AA ({r_aa.equity:.4f}) must be >25% higher than 22 ({r_22.equity:.4f})"
+        )
+
+    def test_aks_higher_than_72o(self):
+        """AKs preflop equity must be significantly higher than 72o."""
+        calc = EVCalculator(use_tables=True)
+        r_ak = calc.calculate(
+            hero_cards=["Ah", "Kh"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="CO", villain_position="BTN",
+            fold_equity=0.45, num_simulations=100,
+        )
+        r_72 = calc.calculate(
+            hero_cards=["7s", "2d"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="CO", villain_position="BTN",
+            fold_equity=0.45, num_simulations=100,
+        )
+        calc.close()
+        assert r_ak.equity > r_72.equity + 0.20, (
+            f"AKs ({r_ak.equity:.4f}) must be >20% higher than 72o ({r_72.equity:.4f})"
+        )
+
+    def test_known_preflop_equity_aa(self):
+        """AA preflop equity from tables should be ~85%."""
+        calc = EVCalculator(use_tables=True)
+        r = calc.calculate(
+            hero_cards=["As", "Ad"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="BTN", villain_position="CO",
+            fold_equity=0.45, num_simulations=100,
+        )
+        calc.close()
+        assert 0.82 <= r.equity <= 0.88, f"AA equity {r.equity:.4f} out of expected range"
+
+    def test_known_preflop_equity_72o(self):
+        """72o preflop equity from tables should be ~35%."""
+        calc = EVCalculator(use_tables=True)
+        r = calc.calculate(
+            hero_cards=["7s", "2d"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="BB", villain_position="CO",
+            fold_equity=0.45, num_simulations=100,
+        )
+        calc.close()
+        assert 0.30 <= r.equity <= 0.40, f"72o equity {r.equity:.4f} out of expected range"
+
+    def test_suited_vs_offsuit_difference(self):
+        """AKs should have slightly higher equity than AKo."""
+        calc = EVCalculator(use_tables=True)
+        r_s = calc.calculate(
+            hero_cards=["Ah", "Kh"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="CO", villain_position="BTN",
+            fold_equity=0.45, num_simulations=100,
+        )
+        r_o = calc.calculate(
+            hero_cards=["Ah", "Kd"], board_cards=None,
+            pot_bb=6, bet_bb=3, stack_bb=97,
+            hero_position="CO", villain_position="BTN",
+            fold_equity=0.45, num_simulations=100,
+        )
+        calc.close()
+        assert r_s.equity >= r_o.equity, (
+            f"AKs ({r_s.equity:.4f}) should be >= AKo ({r_o.equity:.4f})"
+        )
 
 
 class TestRangeModel:
