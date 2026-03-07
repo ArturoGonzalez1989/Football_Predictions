@@ -86,45 +86,62 @@ def _check_heartbeat() -> List[Dict[str, Any]]:
 
 
 def _check_stats_api() -> List[Dict[str, Any]]:
-    """Check if Stats API is responding by testing a quick call."""
+    """Check if Stats API is responding by testing with a live match."""
     alerts = []
     try:
         import sys
         sys.path.insert(0, str(SCRAPER_DIR))
         from stats_api import _api_get
 
-        # Try to get a match that's currently active
-        if GAMES_CSV.exists():
-            with open(GAMES_CSV, 'r', encoding='utf-8') as f:
-                rows = list(csv.DictReader(f))
-            if rows:
-                url = rows[0].get("url", "")
-                m = re.search(r'(\d{7,})', url)
-                if m:
-                    betfair_id = m.group(1)
-                    # Quick check: can we get Opta ID?
-                    import requests
-                    vp_url = f"https://videoplayer.betfair.es/GetPlayer.do?eID={betfair_id}&contentType=viz&contentView=mstats"
-                    r = requests.get(vp_url, timeout=5)
-                    opta_match = re.search(
-                        r'(?:providerEventId|performMCCFixtureUUID|streamUUID)\s*[=:]\s*["\']?([a-z0-9]{20,30})["\']?',
-                        r.text, re.IGNORECASE
-                    )
-                    if opta_match:
-                        opta_id = opta_match.group(1)
-                        result = _api_get("matchstats", opta_id, "&detailed=yes")
-                        if result is None:
-                            alerts.append({
-                                "level": "critical",
-                                "category": "stats_api",
-                                "message": "Stats API no responde — estadísticas no disponibles",
-                            })
-                    else:
-                        alerts.append({
-                            "level": "warning",
-                            "category": "stats_api",
-                            "message": "No se pudo obtener Opta ID del videoplayer",
-                        })
+        if not GAMES_CSV.exists():
+            return alerts
+
+        with open(GAMES_CSV, 'r', encoding='utf-8') as f:
+            rows = list(csv.DictReader(f))
+
+        # Only test when there are live matches (data CSVs modified in last 5 min)
+        import time
+        has_live = any(
+            f.stat().st_mtime > time.time() - 300
+            for f in DATA_DIR.glob("partido_*.csv")
+        )
+        if not has_live:
+            return alerts  # No live matches — skip check
+
+        live_rows = rows  # All games are candidates when scraper is active
+
+        import requests
+        for row in live_rows[:2]:  # Test up to 2 live matches
+            url = row.get("url", "")
+            m = re.search(r'(\d{7,})', url)
+            if not m:
+                continue
+            betfair_id = m.group(1)
+            vp_url = f"https://videoplayer.betfair.es/GetPlayer.do?eID={betfair_id}&contentType=viz&contentView=mstats"
+            r = requests.get(vp_url, timeout=5)
+            opta_match = re.search(
+                r'(?:providerEventId|performMCCFixtureUUID|streamUUID)\s*[=:]\s*["\']?([a-z0-9]{20,30})["\']?',
+                r.text, re.IGNORECASE
+            )
+            if opta_match:
+                opta_id = opta_match.group(1)
+                result = _api_get("matchstats", opta_id, "&detailed=yes")
+                if result is None:
+                    alerts.append({
+                        "level": "critical",
+                        "category": "stats_api",
+                        "message": f"Stats API no responde para partido live (Opta {opta_id})",
+                    })
+                return alerts  # Got a valid test, done
+            # Opta ID not found for this live match — try next one
+
+        # All live matches failed to resolve Opta ID
+        alerts.append({
+            "level": "warning",
+            "category": "stats_api",
+            "message": f"No se pudo obtener Opta ID para {len(live_rows)} partido(s) live",
+            "detail": "El videoplayer no devuelve providerEventId — posible cambio de API o partidos sin cobertura Stats Perform",
+        })
     except Exception as e:
         alerts.append({
             "level": "warning",
