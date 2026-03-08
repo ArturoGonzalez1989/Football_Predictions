@@ -1,9 +1,29 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { api, type BettingSignals, type BettingSignal, type WatchlistItem, type CarteraConfig } from "../lib/api"
 import { playSignalAlert } from "../lib/sounds"
-import { type VersionCombo, comboToSignalVersions } from "../lib/cartera"
+// ── Version combo types (inlined from removed cartera.ts) ────────────────────
+interface VersionCombo {
+  draw: string
+  xg: string
+  drift: string
+  clustering: string
+  pressure: string
+  tardeAsia: string
+  momentumXG: string
+  br: string
+}
 
-// Default combo used before backend config loads
+function comboToSignalVersions(combo: VersionCombo): Record<string, string> {
+  return {
+    draw: combo.draw,
+    xg: combo.xg,
+    drift: combo.drift,
+    clustering: combo.clustering,
+    pressure: combo.pressure,
+    momentum: combo.momentumXG ?? "v1",
+  }
+}
+
 const DEFAULT_COMBO: VersionCombo = {
   draw: "v2r", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed"
 }

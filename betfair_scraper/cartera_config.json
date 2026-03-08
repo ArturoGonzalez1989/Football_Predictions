@@ -5,7 +5,6 @@
       "xgMax": 0.6,
       "possMax": 20,
       "shotsMax": 8,
-      "xgDomAsym": false,
       "minuteMin": 30,
       "minuteMax": 90
     },
@@ -46,51 +45,6 @@
       "version": "off",
       "minuteMin": 0,
       "minuteMax": 90
-    },
-    "lay_over15": {
-      "enabled": true,
-      "version": "v1",
-      "minuteMin": 75,
-      "minuteMax": 85,
-      "xgMin": 0.5,
-      "possMax": 30,
-      "shotsMin": 12
-    },
-    "lay_draw_asym": {
-      "enabled": false,
-      "minuteMin": 65,
-      "minuteMax": 75,
-      "xgRatioMin": 2.5,
-      "xgDomMin": 0.5
-    },
-    "lay_over25_def": {
-      "enabled": true,
-      "minuteMin": 65,
-      "minuteMax": 80,
-      "xgMax": 2.0,
-      "goalsMax": 1
-    },
-    "back_sot_dom": {
-      "enabled": false,
-      "minuteMin": 60,
-      "minuteMax": 80,
-      "sotMin": 4,
-      "sotMaxRival": 1
-    },
-    "back_over15_early": {
-      "enabled": false,
-      "minuteMin": 25,
-      "minuteMax": 45,
-      "xgMin": 1.0,
-      "sotMin": 4,
-      "goalsMax": 1
-    },
-    "lay_false_fav": {
-      "enabled": true,
-      "minuteMin": 65,
-      "minuteMax": 85,
-      "xgRatioMin": 2.0,
-      "favOddsMax": 1.7
     },
     "sd_over25_2goal": {
       "enabled": true,
@@ -164,12 +118,6 @@
     "drift": 2,
     "clustering": 4,
     "pressure": 4,
-    "lay_over15": 2,
-    "lay_draw_asym": 2,
-    "lay_over25_def": 2,
-    "back_sot_dom": 1,
-    "back_over15_early": 1,
-    "lay_false_fav": 1,
     "sd_over25_2goal": 1,
     "sd_under35_late": 1,
     "sd_longshot": 1,

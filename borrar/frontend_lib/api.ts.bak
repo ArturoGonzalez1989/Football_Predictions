@@ -212,6 +212,10 @@ export interface QualityOverview {
   bins: { label: string; count: number; matches: string[] }[]
 }
 
+export interface QualityDistribution {
+  bins: { label: string; count: number; matches: string[] }[]
+}
+
 export interface StatsCoverage {
   fields: { name: string; coverage_pct: number }[]
 }
@@ -220,6 +224,14 @@ export interface GapAnalysis {
   avg_gaps: number
   max_gaps: number
   distribution: { gap_count: number; match_count: number }[]
+}
+
+export interface LowQualityMatch {
+  match_id: string
+  name: string
+  quality: number
+  total_captures: number
+  gap_count: number
 }
 
 export interface OddsCoverageMatch {
@@ -246,6 +258,321 @@ export interface OddsCoverage {
   total_outlier_matches: number
   bins: { label: string; count: number }[]
   matches: OddsCoverageMatch[]
+}
+
+export interface MomentumPatterns {
+  avg_swing: number
+  comeback_frequency: number
+  top_swings: { match_id: string; name: string; swing: number }[]
+}
+
+export interface XgAccuracy {
+  correlation: number
+  avg_accuracy: number
+  scatter_data: { xg: number; actual: number; match_id: string; team: string }[]
+}
+
+export interface OddsMovements {
+  avg_drift: number
+  drift_by_minute: { minute: number; avg_drift: number }[]
+  top_movements: { match_id: string; name: string; movement: number; drift_pct: number }[]
+}
+
+export interface OverUnderAnalysis {
+  hit_rates: { line: string; hit_rate: number }[]
+  minute_probabilities: { minute: number; probability: number }[]
+}
+
+export interface StatCorrelations {
+  matrix: { stat1: string; stat2: string; correlation: number }[]
+  top_correlations: { pair: string; value: number }[]
+}
+
+export interface StrategyBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  back_draw: number | null
+  xg_total: number | null
+  xg_max: number | null
+  sot_total: number | null
+  poss_diff: number | null
+  shots_total: number | null
+  bfed_prematch: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  passes_v2: boolean
+  passes_v15: boolean
+  passes_v2r: boolean
+}
+
+export interface StrategySummaryBlock {
+  bets: number
+  wins: number
+  win_pct: number
+  pl: number
+  roi: number
+}
+
+export interface StrategyBackDraw00 {
+  total_matches: number
+  with_trigger: number
+  summary: {
+    base: StrategySummaryBlock
+    v15: StrategySummaryBlock
+    v2: StrategySummaryBlock
+    v2r: StrategySummaryBlock
+  }
+  bets: StrategyBet[]
+}
+
+export interface StrategyXGBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  score_at_trigger: string
+  team: "home" | "away"
+  team_xg: number | null
+  team_goals: number
+  xg_excess: number | null
+  back_over_odds: number | null
+  over_line: string
+  sot_team: number | null
+  poss_team: number | null
+  shots_team: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  passes_v2: boolean
+}
+
+export interface StrategyXGUnderperformance {
+  total_matches: number
+  with_trigger: number
+  summary: {
+    base: StrategySummaryBlock
+    v2: StrategySummaryBlock
+  }
+  bets: StrategyXGBet[]
+}
+
+export interface StrategyOddsDriftBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  score_at_trigger: string
+  team: "home" | "away"
+  goal_diff: number
+  odds_before: number
+  back_odds: number
+  drift_pct: number
+  sot_team: number | null
+  poss_team: number | null
+  shots_team: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  passes_v2: boolean
+  passes_v3: boolean
+  passes_v4: boolean
+}
+
+export interface StrategyOddsDrift {
+  total_matches: number
+  with_trigger: number
+  summary: {
+    v1: StrategySummaryBlock
+    v2: StrategySummaryBlock
+    v3: StrategySummaryBlock
+    v4: StrategySummaryBlock
+  }
+  bets: StrategyOddsDriftBet[]
+}
+
+export interface StrategyGoalClusteringBet {
+  match: string
+  match_id: string
+  minuto: number
+  score: string
+  sot_max: number
+  over_odds: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  timestamp_utc: string
+}
+
+export interface StrategyGoalClustering {
+  total_matches: number
+  total_goal_events: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyGoalClusteringBet[]
+}
+
+export interface StrategyPressureCookerBet {
+  match: string
+  match_id: string
+  minuto: number
+  score: string
+  back_over_odds: number | null
+  over_line: string
+  ft_score: string
+  won: boolean
+  pl: number
+  sot_delta: number
+  corners_delta: number
+  shots_delta: number
+  timestamp_utc: string
+}
+
+export interface StrategyPressureCooker {
+  total_matches: number
+  draws_65_75: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyPressureCookerBet[]
+}
+
+export interface StrategyTardeAsiaBet {
+  match: string
+  match_id: string
+  minuto: number
+  score: string
+  back_over_odds: number | null
+  over_line: string
+  ft_score: string
+  won: boolean
+  pl: number
+  liga: string
+  hora_local: string
+  timestamp_utc: string
+}
+
+export interface StrategyTardeAsia {
+  total_matches: number
+  tarde_asia_matches: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyTardeAsiaBet[]
+}
+
+export interface StrategyMomentumXGBet {
+  match: string
+  match_id: string
+  minuto: number
+  score_at_trigger: string
+  dominant_team: string
+  sot_ratio: number
+  xg_underperf: number
+  back_odds: number
+  ft_score: string
+  won: boolean
+  pl: number
+  timestamp_utc: string
+}
+
+export interface StrategyMomentumXG {
+  total_matches: number
+  momentum_triggers: number
+  summary: {
+    total_bets: number
+    wins: number
+    win_rate: number
+    total_pl: number
+    roi: number
+  }
+  bets: StrategyMomentumXGBet[]
+}
+
+export interface CarteraBet {
+  match: string
+  match_id: string
+  minuto: number | null
+  ft_score: string
+  won: boolean
+  pl: number
+  strategy: string
+  strategy_label: string
+  timestamp_utc: string
+  back_draw?: number | null
+  back_over_odds?: number | null
+  over_line?: string
+  team?: string
+  xg_excess?: number | null
+  passes_v2?: boolean
+  passes_v15?: boolean
+  passes_v2r?: boolean
+  passes_v3?: boolean
+  // odds drift fields
+  back_odds?: number | null
+  drift_pct?: number | null
+  goal_diff?: number | null
+  passes_v4?: boolean
+  passes_v5?: boolean
+  passes_v6?: boolean
+  // back_draw raw stats (for dynamic param filtering)
+  xg_total?: number | null
+  poss_diff?: number | null
+  shots_total?: number | null
+  // xg_underperf raw stats
+  sot_team?: number | null
+  // synthetic attribute fields
+  synth_xg_dominance?: number | null
+  synth_pressure_index_v?: number | null
+  synth_momentum_gap?: number | null
+  synth_xg_remaining?: number | null
+  // risk assessment fields
+  risk_level?: "none" | "medium" | "high"
+  risk_reason?: string
+  time_remaining?: number
+  deficit?: number
+  // stability: consecutive captures where bet odds were in valid range at trigger time
+  stability_count?: number
+  // lay odds at trigger time (bet placement moment, not cashout)
+  lay_trigger?: number | null
+  // cash-out simulation fields (set by backend when adjCashout is on)
+  cashout_applied?: boolean
+  cashout_minute_actual?: number
+  cashout_lay_odds?: number
+  // geographic fields
+  País?: string
+  Liga?: string
+}
+
+export interface Cartera {
+  total_bets: number
+  flat: { pl: number; roi: number; cumulative: number[] }
+  managed: {
+    initial_bankroll: number
+    bankroll_pct: number
+    final_bankroll: number
+    pl: number
+    roi: number
+    cumulative: number[]
+  }
+  by_strategy: {
+    back_draw_00: StrategySummaryBlock
+    xg_underperformance: StrategySummaryBlock
+    odds_drift: StrategySummaryBlock
+  }
+  bets: CarteraBet[]
 }
 
 export interface BettingSignal {
@@ -465,10 +792,56 @@ export const api = {
 
   // Quality endpoints
   getQualityOverview: () => get<QualityOverview>("/analytics/quality/overview"),
+  getQualityDistribution: () => get<QualityDistribution>("/analytics/quality/distribution"),
   getStatsCoverage: () => get<StatsCoverage>("/analytics/quality/stats-coverage"),
   getGapAnalysis: () => get<GapAnalysis>("/analytics/quality/gaps"),
+  getLowQualityMatches: (threshold: number) => get<{ threshold: number; matches: LowQualityMatch[] }>(`/analytics/quality/low-quality-matches?threshold=${threshold}`),
   getOddsCoverage: () => get<OddsCoverage>("/analytics/quality/odds-coverage"),
   clearAnalyticsCache: () => post<{ status: string; message: string }>("/analytics/cache/clear"),
+
+  // Insights endpoints
+  getMomentumPatterns: () => get<MomentumPatterns>("/analytics/insights/momentum-patterns"),
+  getXgAccuracy: () => get<XgAccuracy>("/analytics/insights/xg-accuracy"),
+  getOddsMovements: () => get<OddsMovements>("/analytics/insights/odds-movements"),
+  getOverUnderAnalysis: () => get<OverUnderAnalysis>("/analytics/insights/over-under"),
+  getStatCorrelations: () => get<StatCorrelations>("/analytics/insights/correlations"),
+
+  // Strategy tracking endpoints
+  getStrategyBackDraw00: () => get<StrategyBackDraw00>("/analytics/strategies/back-draw-00"),
+  getStrategyXGUnderperformance: () => get<StrategyXGUnderperformance>("/analytics/strategies/xg-underperformance"),
+  getStrategyOddsDrift: () => get<StrategyOddsDrift>("/analytics/strategies/odds-drift"),
+  getStrategyGoalClustering: () => get<StrategyGoalClustering>("/analytics/strategies/goal-clustering"),
+  getStrategyPressureCooker: () => get<StrategyPressureCooker>("/analytics/strategies/pressure-cooker"),
+  getStrategyTardeAsia: () => get<StrategyTardeAsia>("/analytics/strategies/tarde-asia"),
+  getStrategyMomentumXGV1: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v1"),
+  getStrategyMomentumXGV2: () => get<StrategyMomentumXG>("/analytics/strategies/momentum-xg-v2"),
+  getCartera: (
+    cashoutMinute?: number,
+    cashoutLayPct?: number,
+    adaptiveEarlyPct?: number,
+    adaptiveLatePct?: number,
+    adaptiveSplitMin?: number,
+    adverseGoalStop?: boolean,
+    trailingStopPct?: number,
+  ) => {
+    const params = new URLSearchParams()
+    if (cashoutMinute !== undefined) params.set("cashout_minute", String(cashoutMinute))
+    if (cashoutLayPct !== undefined) params.set("cashout_lay_pct", String(cashoutLayPct))
+    if (adaptiveEarlyPct !== undefined) params.set("adaptive_early_pct", String(adaptiveEarlyPct))
+    if (adaptiveLatePct !== undefined) params.set("adaptive_late_pct", String(adaptiveLatePct))
+    if (adaptiveSplitMin !== undefined) params.set("adaptive_split_min", String(adaptiveSplitMin))
+    if (adverseGoalStop) params.set("adverse_goal_stop", "true")
+    if (trailingStopPct !== undefined) params.set("trailing_stop_pct", String(trailingStopPct))
+    const q = params.toString()
+    return get<Cartera>(q ? `/analytics/strategies/cartera?${q}` : "/analytics/strategies/cartera")
+  },
+
+  optimizeCartera: (topN?: number) => {
+    const params = new URLSearchParams()
+    if (topN !== undefined) params.set("top_n", String(topN))
+    const q = params.toString()
+    return get<any>(q ? `/analytics/strategies/cartera/optimize?${q}` : "/analytics/strategies/cartera/optimize")
+  },
 
   // Betting signals
   getBettingSignals: (versions?: Record<string, string>, minDur?: Record<string, number>) => {
@@ -495,4 +868,65 @@ export const api = {
   getConfig: () => get<CarteraConfig>("/config/cartera"),
   saveConfig: (config: CarteraConfig) => put<{ status: string }>("/config/cartera", config),
 
+  // Strategy Explorer
+  getExplorerResults: (minSample?: number, maxResults?: number) => {
+    const params = new URLSearchParams()
+    if (minSample !== undefined) params.set("min_sample", String(minSample))
+    if (maxResults !== undefined) params.set("max_results", String(maxResults))
+    const qs = params.toString()
+    return get<ExplorationRun>(`/explorer/results${qs ? `?${qs}` : ""}`)
+  },
+  getExplorerMatches: (condition_id: string, target: string, minutes: number[], bet_type: string) => {
+    const params = new URLSearchParams({
+      condition_id,
+      target,
+      minutes: minutes.join(","),
+      bet_type,
+    })
+    return get<{ matches: ExplorerMatchRow[]; count: number }>(`/explorer/matches?${params}`)
+  },
+  runExploration: (minSample?: number, maxResults?: number) => {
+    const params = new URLSearchParams()
+    if (minSample !== undefined) params.set("min_sample", String(minSample))
+    if (maxResults !== undefined) params.set("max_results", String(maxResults))
+    const qs = params.toString()
+    return post<ExplorationRun>(`/explorer/run${qs ? `?${qs}` : ""}`)
+  },
+}
+
+// ── Explorer interfaces ───────────────────────────────────────────────────────
+
+export interface ExplorerMatchRow {
+  match_id:              string
+  match_name:            string
+  score_at_checkpoint:   string
+  final_score:           string
+  odds:                  number | null
+  won:                   boolean
+  pl:                    number
+}
+
+export interface ExplorerResult {
+  minute:          number
+  condition:       string
+  condition_id:    string
+  target:          string
+  bet_type:        "back" | "lay"
+  n_matches:       number
+  wins:            number
+  win_rate:        number
+  avg_odds:        number | null
+  std_odds:        number | null
+  ev_pct:          number
+  avg_pl_per_bet:  number
+  total_pl:        number
+}
+
+export interface ExplorationRun {
+  run_at:           string
+  n_total_matches:  number
+  n_results:        number
+  min_sample:       number
+  max_results:      number
+  results:          ExplorerResult[]
 }

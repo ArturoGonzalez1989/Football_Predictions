@@ -3923,11 +3923,16 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
     # --- Minimum duration config (from historical duration analysis) ---
     # Recommended minimums: draw=1 (no benefit), xg=2, drift=2, clustering=4, pressure=2, momentum=1
-    _DEFAULT_MIN_DUR = {"draw": 1, "xg": 2, "drift": 2, "clustering": 4, "pressure": 2, "momentum": 1}
+    _DEFAULT_MIN_DUR = {"draw": 1, "xg": 2, "drift": 2, "clustering": 4, "pressure": 2, "momentum": 1, "tarde_asia": 1}
     min_dur_map = {
         family: int(versions.get(f"{family}_min_dur", _DEFAULT_MIN_DUR[family]))
         for family in _DEFAULT_MIN_DUR
     }
+    # SD min_duration: read from full min_duration dict passed by analytics.py
+    _full_min_dur = versions.get("_min_duration", {})
+    for _md_key, _md_val in _full_min_dur.items():
+        if _md_key.startswith("sd_") and _md_key not in min_dur_map:
+            min_dur_map[_md_key] = int(_md_val)
 
     # --- Strategy thresholds from cartera_config (single source of truth) ---
     # These flow from analytics.py → here, ensuring live detector == historical analysis.
@@ -3974,6 +3979,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             return "clustering"
         if "pressure" in strategy_key:
             return "pressure"
+        if "tarde_asia" in strategy_key:
+            return "tarde_asia"
         return "draw"
 
     # Strategy metadata (from historical backtesting in cartera_final.md)

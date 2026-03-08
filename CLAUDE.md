@@ -22,10 +22,11 @@ La carpeta `/aux` puede borrarse en cualquier momento sin afectar al sistema. Si
 
 1. **NO ASUMIR** como funciona algo. Verificar siempre en el codigo fuente antes de hacer afirmaciones.
 
-2. **DOBLE CAPA DE FILTRADO (BACKTEST)**:
-   - Backend (`csv_reader.py:analyze_cartera()`) genera un SUPERCONJUNTO de bets con condiciones basicas + version flags.
-   - Frontend (`cartera.ts:filter*Bets()`) aplica los filtros de `cartera_config.json`.
-   - Los params de config (xgMax, possMax, etc.) se aplican en FRONTEND, no en backend.
+2. **CAPA UNICA (BACKTEST)**:
+   - El backtest se ejecuta via notebook (`analisis/strategies_designer.ipynb`) o `optimizer_cli.py`.
+   - Backend (`csv_reader.py:analyze_cartera()`) genera bets con condiciones basicas + version flags.
+   - Ya no existe capa de filtrado frontend (cartera.ts fue eliminado en limpieza 2026-03-08).
+   - El notebook aplica su propia logica de filtrado y quality gates.
    - `analyze_cartera()` solo recibe `min_dur` de config. Cache key solo incluye min_duration.
 
 3. **CAPA UNICA (LIVE)**:
@@ -43,7 +44,7 @@ La carpeta `/aux` puede borrarse en cualquier momento sin afectar al sistema. Si
 
 7. **NO CONTRADECIRSE**: Antes de hacer una afirmacion sobre la arquitectura, verificar en el codigo. No decir "funciona asi" y luego "en realidad funciona de otra forma".
 
-8. **DOCUMENTAR PROACTIVAMENTE**: Cualquier cambio que afecte a logica, interfaz o arquitectura documentada DEBE reflejarse en este CLAUDE.md sin que el usuario lo pida. Si se modifica un fichero clave (cartera.ts, csv_reader.py, StrategiesView.tsx, analytics.py, etc.) y el cambio altera el comportamiento documentado, actualizar la seccion correspondiente antes de terminar la tarea.
+8. **DOCUMENTAR PROACTIVAMENTE**: Cualquier cambio que afecte a logica, interfaz o arquitectura documentada DEBE reflejarse en este CLAUDE.md sin que el usuario lo pida. Si se modifica un fichero clave (csv_reader.py, analytics.py, etc.) y el cambio altera el comportamiento documentado, actualizar la seccion correspondiente antes de terminar la tarea.
 
 ## Estructura del proyecto
 
@@ -64,21 +65,19 @@ betfair_scraper/
     backend/
       main.py            → FastAPI app + 5 background tasks (417 lineas)
       api/analytics.py   → Paper trading, senales, cartera (750 lineas)
+      api/alerts.py      → Alertas y monitor (~750 lineas)
       api/bets.py        → CRUD apuestas + cashout/settlement (604 lineas)
       api/config.py      → GET/PUT cartera_config.json (102 lineas)
       api/matches.py     → Datos de partidos (133 lineas)
       api/system.py      → Start/stop scraper (381 lineas)
-      api/debug.py       → Debug endpoints (HTML snapshots, memory)
       api/optimize.py    → Optimizacion presets Phase 1+2 (1329 lineas)
       api/optimizer_cli.py → CLI para optimizacion paralela (691 lineas)
-      api/simulate.py    → Simulador de senales replay timeline (540 lineas)
       utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~5761 lineas)
       utils/sd_strategies.py → 19 SD configs + evaluador (205 lineas)
       utils/scraper_status.py → Estado scraper via psutil + log parsing
       utils/signals_audit_logger.py → Audit log rotativo
     frontend/src/
-      lib/api.ts         → Cliente API tipado (932 lineas)
-      lib/cartera.ts     → Filtros, simulacion bankroll, optimizacion, presets 3 fases (1104 lineas)
+      lib/api.ts         → Cliente API tipado (~500 lineas)
       lib/trading.ts     → PressureIndex, divergencia, momentum swings (311 lineas)
       lib/sounds.ts      → Alerta sonora Web Audio (61 lineas)
       lib/utils.ts       → cn(), formatTimeAgo(), formatTimeTo() (27 lineas)
@@ -89,9 +88,12 @@ aux/                     → Archivos auxiliares de analisis (tracked en git)
   sd_filters.py          → Filtros realistas SD (825 lineas)
   run_reconcile.py       → Verificacion BT↔LIVE
   compare_bt_live.py     → Comparacion rendimiento BT vs LIVE
-strategies/              → Reportes y tracker del strategy-designer agent
-.claude/agents/          → Definiciones de agentes (backtest-auditor, strategy-designer, etc.)
-analisis/                → Notebooks, audits, portfolio analysis
+  data_quality_analysis.py → Analisis calidad datos
+  data_quality_deep.py   → Analisis profundo calidad datos
+strategies/              → Reportes .md de estrategias aprobadas + tracker
+.claude/agents/          → Definiciones de agentes (system-auditor, strategy-designer, etc.)
+analisis/                → 2 notebooks (strategies_designer + reconcile_bt_live)
+borrar/                  → Archivos movidos durante limpieza (red de seguridad)
 ```
 
 ## 7 Estrategias Core (cartera_config.json)
@@ -108,9 +110,9 @@ Estrategias de produccion con deteccion live + backtest. Configuradas en `carter
 | Momentum xG | momentum_xg | Depende de datos (2 versiones: v1/v2) |
 | Tarde Asia | tarde_asia | Inactiva (solo tracking backtest) |
 
-## 19 Estrategias SD (solo backtest)
+## 19 Estrategias SD (backtest + config)
 
-Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). **NO tienen deteccion live** — solo backtest.
+Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). Muchas SD strategies ahora tienen entradas en `cartera_config.json` para sus parametros. **NO tienen deteccion live** — solo backtest. No hay codigo en `detect_betting_signals()` para SD.
 
 Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores en `aux/sd_generators.py`, filtros en `aux/sd_filters.py`.
 
@@ -122,24 +124,9 @@ Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generador
 
 Implementados en `_eval_combo()` (notebook) y `eval_sd()` (`sd_strategies.py`).
 
-## Sistema de Presets (cartera.ts + StrategiesView.tsx)
+## Sistema de Presets
 
-**Regla**: Cualquier parametro que sea guardable con el boton Guardar DEBE poder ser optimizado y asignado por los presets.
-
-### Lo que optimiza cada preset
-
-Los presets ejecutan una busqueda en 3 fases y asignan TODOS los parametros configurables (excepto bankroll inicial y stake, que son del usuario):
-
-| Parametro | Fuente |
-|-----------|--------|
-| Versiones de estrategia (draw/xg/drift/clustering/pressure/tardeAsia/momentumXG) | Phase 1 |
-| Modo bankroll (fixed/kelly/half_kelly/dd_protection/anti_racha) | Phase 1 |
-| Filtro de riesgo (all/sin_riesgo/con_riesgo/riesgo_medio) | Phase 1 |
-| Ajustes realistas (dedup, minOdds, maxOdds, slippage, conflictFilter, allowContrarias, stability, conservativeOdds, driftMinMinute) | Phase 2 |
-| Rango global de minutos (globalMinuteMin/Max) | Phase 2 (candidatos: null, 15-85, 20-80) |
-| Rango de minutos Momentum xG (momentumMinuteMin/Max) | Phase 3 (5 opciones: 0-90, 5-85, 10-80, 15-75, 20-70) |
-| Rangos de minutos Pressure/TardeAsia | Fijos a 0-90 (su logica ya esta acotada en backend) |
-| CO percentage (coLayPct) | Heuristico por criterio |
+Los presets se computan offline via `optimizer_cli.py` o el notebook `strategies_designer.ipynb` y se guardan directamente en `cartera_config.json`. La optimizacion ejecuta una busqueda en 3 fases (versiones, ajustes realistas, rangos de minutos) y produce la configuracion optima segun el criterio seleccionado (max_roi, max_pl, max_wr, min_dd, max_bets).
 
 ### Heuristico CO por criterio
 - `max_roi` → 15% (solo cashouts con ganancia grande)
@@ -147,26 +134,6 @@ Los presets ejecutan una busqueda en 3 fases y asignan TODOS los parametros conf
 - `max_wr` → 30% (cashout agresivo, mas % ganadas)
 - `min_dd` → 10% (cashout muy temprano, reduce perdidas)
 - `max_bets` → 20% (default)
-
-### Interfaz `FullPresetResult` (cartera.ts)
-```typescript
-{
-  combo: VersionCombo           // versiones + bankroll mode
-  riskFilter: RiskFilter        // filtro de riesgo
-  adj: RealisticAdjustments     // ajustes realistas + rango global
-  coLayPct: number              // % cashout
-  pressureMinuteRange: { min, max }
-  tardeAsiaMinuteRange: { min, max }
-  momentumMinuteRange: { min, max }
-}
-```
-
-### Candidatos Phase 2 (_presetAdjCandidates)
-7776 combinaciones (2592 base × 3 rangos globales). Incluye:
-- `globalMinuteMin/Max`: null×null, 15×85, 20×80
-
-### Nota importante: CO no se puede optimizar inline
-El cashout simulation requiere llamadas al backend (GET /analytics/strategies/cartera con cashout_lay_pct). Por eso se usa heuristico fijo. Si se quiere el CO optimo real, usar el boton "Optimizar CO" (runCOOptimizer) que si hace llamadas al backend.
 
 ## 5 Background tasks del backend
 
@@ -205,13 +172,13 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ### Post-filtros (Filtros Realistas) — ALINEADOS
 
-`analytics.py:_apply_realistic_adjustments()` aplica los mismos filtros que `cartera.ts:applyRealisticAdjustments()`.
+`analytics.py:_apply_realistic_adjustments()` aplica los filtros realistas en el backend.
 
 ### Herramientas de verificacion
 
 - `aux/run_reconcile.py` — simula LIVE fila a fila y compara con BT
 - `aux/compare_bt_live.py` — compara rendimiento BT vs LIVE estimado
-- `.claude/agents/backtest-auditor.md` — agente de mantenimiento de alineamiento
+- `.claude/agents/system-auditor.md` — agente de mantenimiento de alineamiento
 
 ## Problemas conocidos
 
@@ -219,3 +186,12 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 2. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
 3. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
 4. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
+
+## Limpieza 2026-03-08
+
+Limpieza mayor del proyecto para eliminar codigo muerto y simplificar la arquitectura:
+
+- **Frontend**: eliminado `cartera.ts` (1104 lineas), `cartera.worker.ts`; limpiado `api.ts` (-435 lineas)
+- **Backend**: eliminados `debug.py`, `simulate.py`; limpiados 15 endpoints de `analytics.py`
+- **Archivos**: organizados `_ux/` a `aux/`, limpiados `strategies/`, `analisis/`, logs antiguos
+- Todo lo eliminado movido a `/borrar` como red de seguridad
