@@ -135,13 +135,9 @@ def _check_stats_api() -> List[Dict[str, Any]]:
                 return alerts  # Got a valid test, done
             # Opta ID not found for this live match — try next one
 
-        # All live matches failed to resolve Opta ID
-        alerts.append({
-            "level": "warning",
-            "category": "stats_api",
-            "message": f"No se pudo obtener Opta ID para {len(live_rows)} partido(s) live",
-            "detail": "El videoplayer no devuelve providerEventId — posible cambio de API o partidos sin cobertura Stats Perform",
-        })
+        # All live matches failed to resolve Opta ID — normal for leagues
+        # without Stats Perform coverage. Not an alert-worthy event.
+        log.debug(f"No Opta ID for {len(live_rows)} live match(es) — no Stats Perform coverage")
     except Exception as e:
         alerts.append({
             "level": "warning",
