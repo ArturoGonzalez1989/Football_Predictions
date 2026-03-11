@@ -34,7 +34,7 @@ La carpeta `/auxiliar` puede borrarse en cualquier momento sin afectar al sistem
    - `csv_reader.py:detect_betting_signals(versions)` aplica filtros inline.
    - No hay segunda capa. Ademas, `analytics.py` aplica post-filtros (odds, risk, maturity).
 
-4. **FICHERO CRITICO**: `betfair_scraper/dashboard/backend/utils/csv_reader.py` (~5761 lineas).
+4. **FICHERO CRITICO**: `betfair_scraper/dashboard/backend/utils/csv_reader.py` (~6200 lineas).
    - Contiene TODA la logica de estrategias (backtest y live), carga de datos, cashout simulation, watchlist.
    - Cambios aqui deben ser quirurgicos y verificados.
 
@@ -72,7 +72,7 @@ betfair_scraper/
       api/system.py      → Start/stop scraper (381 lineas)
       api/optimize.py    → Optimizacion presets Phase 1+2 (1329 lineas)
       api/optimizer_cli.py → CLI para optimizacion paralela (691 lineas)
-      utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~5761 lineas)
+      utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~6200 lineas)
       utils/sd_strategies.py → 19 SD configs + evaluador (205 lineas)
       utils/scraper_status.py → Estado scraper via psutil + log parsing
       utils/signals_audit_logger.py → Audit log rotativo
@@ -84,12 +84,15 @@ betfair_scraper/
       components/        → 19 componentes React (Dashboard, BettingSignalsView, etc.)
 
 auxiliar/                     → Archivos auxiliares de analisis (tracked en git)
-  sd_generators.py       → 19 generadores SD (1816 lineas)
-  sd_filters.py          → Filtros realistas SD (825 lineas)
+  sd_generators.py       → 19 generadores SD (wrappers sobre triggers de csv_reader)
+  sd_filters.py          → Filtros realistas SD
   run_reconcile.py       → Verificacion BT↔LIVE
   compare_bt_live.py     → Comparacion rendimiento BT vs LIVE
   data_quality_analysis.py → Analisis calidad datos
   data_quality_deep.py   → Analisis profundo calidad datos
+  capture_baseline.py    → Captura baseline de metricas (refactor_baseline_*.json)
+  refactor_baseline_sd.json → Baseline SD bets por estrategia (2542 total)
+  refactor_baseline_cartera.json → Baseline analyze_cartera() (2102 bets)
 strategies/              → Reportes .md de estrategias aprobadas + tracker
 .claude/agents/          → Definiciones de agentes (system-auditor, strategy-designer, etc.)
 analisis/                → 2 notebooks (strategies_designer + reconcile_bt_live)
@@ -110,11 +113,11 @@ Estrategias de produccion con deteccion live + backtest. Configuradas en `carter
 | Momentum xG | momentum_xg | Depende de datos (2 versiones: v1/v2) |
 | Tarde Asia | tarde_asia | Inactiva (solo tracking backtest) |
 
-## 19 Estrategias SD (backtest + config)
+## 19 Estrategias SD (backtest + live)
 
-Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). Muchas SD strategies ahora tienen entradas en `cartera_config.json` para sus parametros. **NO tienen deteccion live** — solo backtest. No hay codigo en `detect_betting_signals()` para SD.
+Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). Tienen entradas en `cartera_config.json` para sus parametros. **Tienen deteccion live** via `detect_betting_signals()` cuando `enabled: true` en config.
 
-Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores en `auxiliar/sd_generators.py`, filtros en `auxiliar/sd_filters.py`.
+Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores en `auxiliar/sd_generators.py` (wrappers sobre triggers de csv_reader), filtros en `auxiliar/sd_filters.py`.
 
 ## Quality Gates (aplicados a TODAS las estrategias)
 
@@ -143,9 +146,9 @@ Los presets se computan offline via `optimizer_cli.py` o el notebook `strategies
 4. `auto_paper_trading()` — cada 60s: detecta senales + coloca bets + cashout
 5. `_paper_trading_watchdog()` — reinicia paper trading si crashea
 
-## Alineamiento BT↔LIVE (completado 2026-03-06)
+## Alineamiento BT↔LIVE (completado 2026-03-11)
 
-Las 7 estrategias usan **helpers compartidos** (GR8 compliant). BT y LIVE ejecutan el mismo codigo.
+Las **26 estrategias** (7 core + 19 SD) usan **helpers compartidos** (GR8/GR9 compliant). BT y LIVE ejecutan el mismo codigo de deteccion.
 
 ### Arquitectura de helpers compartidos
 
@@ -154,19 +157,29 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 - **LIVE** llama con `curr_idx=len(rows)-1` (ultima fila)
 - Solo mira `rows[:curr_idx+1]` — nunca filas futuras
 
+**7 triggers core:**
+
 | Helper | Estrategia |
 |--------|-----------|
-| `_detect_draw_trigger` + `_detect_draw_filters` | Back Empate 0-0 |
-| `_detect_xg_trigger` | xG Underperformance |
-| `_detect_drift_trigger` | Odds Drift Contrarian |
-| `_detect_clustering_trigger` | Goal Clustering |
-| `_detect_pressure_trigger` | Pressure Cooker |
-| `_detect_momentum_trigger` | Momentum xG |
+| `_detect_back_draw_00_trigger` + `_detect_draw_filters` | Back Empate 0-0 |
+| `_detect_xg_underperformance_trigger` | xG Underperformance |
+| `_detect_odds_drift_trigger` | Odds Drift Contrarian |
+| `_detect_goal_clustering_trigger` | Goal Clustering |
+| `_detect_pressure_cooker_trigger` | Pressure Cooker |
+| `_detect_momentum_xg_trigger` | Momentum xG |
 | `_detect_tardesia_trigger` | Tarde Asia |
+
+**19 triggers SD** (en csv_reader.py, usados por LIVE loop y por `auxiliar/sd_generators.py`):
+`_detect_over25_2goal_trigger`, `_detect_under35_late_trigger`, `_detect_lay_over45_v3_trigger`,
+`_detect_draw_xg_conv_trigger`, `_detect_poss_extreme_trigger`, `_detect_longshot_trigger`,
+`_detect_cs_00_trigger`, `_detect_over25_2goals_trigger`, `_detect_cs_close_trigger`,
+`_detect_cs_one_goal_trigger`, `_detect_draw_11_trigger`, `_detect_ud_leading_trigger`,
+`_detect_under35_3goals_trigger`, `_detect_away_fav_leading_trigger`, `_detect_home_fav_leading_trigger`,
+`_detect_under45_3goals_trigger`, `_detect_cs_11_trigger`, `_detect_cs_20_trigger`, `_detect_cs_big_lead_trigger`
 
 ### Match rate
 
-- **83% MATCH**, 89.8% MATCH+MIN_DIFF (medido con `auxiliar/run_reconcile.py`)
+- **71.3% MATCH**, 80.4% MATCH+MIN_DIFF (medido con `auxiliar/run_reconcile.py` en 1136 partidos)
 - **LIVE P/L >= BT P/L** confirmado (BT es conservador)
 - Discrepancias restantes son por timing (BT muestrea en filas discretas vs LIVE en instante actual)
 
@@ -182,10 +195,9 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ## Problemas conocidos
 
-1. **SD sin deteccion live**: Las 19 estrategias SD solo funcionan en backtest (notebook). No hay codigo en `detect_betting_signals()` para SD.
-2. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
-3. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
-4. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
+1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
+2. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
+3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
 
 ## Limpieza 2026-03-08
 

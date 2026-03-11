@@ -24,7 +24,7 @@ import os as _os
 _BACKEND = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'betfair_scraper', 'dashboard', 'backend')
 if _BACKEND not in _sys.path:
     _sys.path.insert(0, _BACKEND)
-from utils.csv_reader import (
+from utils.strategy_triggers import (
     _detect_over25_2goal_trigger,
     _detect_under35_late_trigger,
     _detect_lay_over45_v3_trigger,
