@@ -86,13 +86,14 @@ betfair_scraper/
 auxiliar/                     → Archivos auxiliares de analisis (tracked en git)
   sd_generators.py       → 19 generadores SD (wrappers sobre triggers de csv_reader)
   sd_filters.py          → Filtros realistas SD
-  run_reconcile.py       → Verificacion BT↔LIVE
   compare_bt_live.py     → Comparacion rendimiento BT vs LIVE
   data_quality_analysis.py → Analisis calidad datos
   data_quality_deep.py   → Analisis profundo calidad datos
   capture_baseline.py    → Captura baseline de metricas (refactor_baseline_*.json)
   refactor_baseline_sd.json → Baseline SD bets por estrategia (2542 total)
   refactor_baseline_cartera.json → Baseline analyze_cartera() (2102 bets)
+tests/                        → Herramientas de verificacion permanentes
+  reconcile.py           → Simula LIVE fila a fila y mide match rate vs BT
 strategies/              → Reportes .md de estrategias aprobadas + tracker
 .claude/agents/          → Definiciones de agentes (system-auditor, strategy-designer, etc.)
 analisis/                → 2 notebooks (strategies_designer + reconcile_bt_live)
@@ -179,7 +180,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ### Match rate
 
-- **71.3% MATCH**, 80.4% MATCH+MIN_DIFF (medido con `auxiliar/run_reconcile.py` en 1136 partidos)
+- **71.3% MATCH**, 80.4% MATCH+MIN_DIFF (medido con `tests/reconcile.py` en 1136 partidos)
 - **LIVE P/L >= BT P/L** confirmado (BT es conservador)
 - Discrepancias restantes son por timing (BT muestrea en filas discretas vs LIVE en instante actual)
 
@@ -189,7 +190,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ### Herramientas de verificacion
 
-- `auxiliar/run_reconcile.py` — simula LIVE fila a fila y compara con BT
+- `tests/reconcile.py` — simula LIVE fila a fila y compara con BT
 - `auxiliar/compare_bt_live.py` — compara rendimiento BT vs LIVE estimado
 - `.claude/agents/system-auditor.md` — agente de mantenimiento de alineamiento
 
