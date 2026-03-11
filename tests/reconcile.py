@@ -143,6 +143,9 @@ if COMBO.get('layFalseFav') != 'off':
     bt_filtered.extend(lff)
     print(f"  layFalseFav (on): {len(lff)}")
 
+# SD strategies: analyze_cartera() does not generate SD bets (separate BT pipeline).
+# SD match rates are reported separately at the end, based on LIVE-only counts.
+
 print(f"\nBT pre-adj: {len(bt_filtered)} bets")
 
 def normalize_strat(key):
@@ -212,6 +215,7 @@ VERSIONS = {
     'lay_draw_asym': COMBO['layDrawAsym'],
     'back_sot_dom': COMBO['backSotDom'],
     'back_over15_early': COMBO['backOver15Early'],
+    '_sd_configs': {k: v for k, v in s.items() if k.startswith('sd_')},
 }
 
 MIN_DUR_MAP = {
@@ -228,6 +232,7 @@ MIN_DUR_MAP = {
     'back_sot_dom': 1,
     'back_over15_early': 1,
     'lay_false_fav': md.get('lay_false_fav', 1),
+    **{k: md.get(k, 1) for k in s if k.startswith('sd_')},
 }
 
 def _simulate_match(csv_path_str, versions, min_dur_map):
@@ -345,18 +350,23 @@ print(f"Live sim done. Fired: {len(live_set)} unique (match,family). Errors: {er
 BT_MATCH_IDS = set(mid for mid, fam in bt_set.keys())
 live_in_bt = {(m, f): v for (m, f), v in live_set.items() if m in BT_MATCH_IDS}
 
+# Split live results: core strategies (have BT comparison) vs SD strategies (LIVE-only pipeline)
+_SD_FAMILIES = set(k for k in s if k.startswith('sd_'))
+live_core = {k: v for k, v in live_in_bt.items() if k[1] not in _SD_FAMILIES}
+live_sd = {k: v for k, v in live_set.items() if k[1] in _SD_FAMILIES}
+
 MINUTE_TOL = 5
 stats = Counter()
 by_fam = defaultdict(Counter)
 
-all_keys = set(bt_set.keys()) | set(live_in_bt.keys())
+all_keys = set(bt_set.keys()) | set(live_core.keys())
 for key in all_keys:
     mid, fam = key
     in_bt = key in bt_set
-    in_live = key in live_in_bt
+    in_live = key in live_core
     if in_bt and in_live:
         bt_min = bt_set[key]
-        live_min = live_in_bt[key]
+        live_min = live_core[key]
         if abs((bt_min or 0) - (live_min or 0)) <= MINUTE_TOL:
             status = 'MATCH'
         else:
@@ -373,16 +383,30 @@ for key in all_keys:
 print(f"\n--- Clustering LIVE_ONLY (diagnosis) ---")
 for key in sorted(all_keys):
     mid, fam = key
-    if fam == 'goal_clustering' and key not in bt_set and key in live_in_bt:
-        print(f"  {mid}  min={live_in_bt[key]}")
+    if fam == 'goal_clustering' and key not in bt_set and key in live_core:
+        print(f"  {mid}  min={live_core[key]}")
 
 total = sum(stats.values())
 match = stats['MATCH']
 match_md = stats['MATCH'] + stats['MINUTE_DIFF']
-print(f"\n=== FRESH MATCH RATE ===")
+print(f"\n=== CORE MATCH RATE (BT vs LIVE) ===")
 print(f"Total: {total} | MATCH: {match} ({100*match/total:.1f}%) | MATCH+MIN_DIFF: {match_md} ({100*match_md/total:.1f}%)")
-print(f"BT total: {len(bt_set)} | Live (in BT matches): {len(live_in_bt)}")
+print(f"BT total: {len(bt_set)} | Live (in BT matches): {len(live_core)}")
 print(f"{dict(stats)}")
 print(f"\nBy strategy:")
 for fam, c in sorted(by_fam.items()):
-    print(f"  {fam}: {dict(c)}")
+    if fam not in _SD_FAMILIES:
+        print(f"  {fam}: {dict(c)}")
+
+# SD strategies: no BT comparison available (different BT pipeline via sd_generators.py)
+# Report LIVE coverage only.
+if live_sd:
+    print(f"\n=== SD STRATEGIES — LIVE COVERAGE ===")
+    print(f"(Note: no BT comparison — SD BT path is auxiliar/sd_generators.py, not analyze_cartera)")
+    sd_by_fam = defaultdict(int)
+    for (mid, fam) in live_sd:
+        sd_by_fam[fam] += 1
+    for fam in sorted(sd_by_fam):
+        cfg = s.get(fam, {})
+        status = "enabled" if cfg.get('enabled') else "disabled"
+        print(f"  {fam} ({status}): {sd_by_fam[fam]} LIVE signals")
