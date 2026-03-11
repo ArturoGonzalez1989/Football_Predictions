@@ -261,13 +261,13 @@ slippage en el script de backtest. DEBE usarse el script oficial.
 1. Exporta los bets del mejor combo a JSON:
 ```python
 # En el script de backtest, al final:
-with open(f"aux/sd_bt_{name}_bets.json", "w") as f:
+with open(f"auxiliar/sd_bt_{name}_bets.json", "w") as f:
     json.dump(bets, f, ensure_ascii=False)
 ```
 
 2. Ejecuta el validador:
 ```bash
-python strategies/sd_validate_realistic.py --file aux/sd_bt_{name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l) 2>&1
+python strategies/sd_validate_realistic.py --file auxiliar/sd_bt_{name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l) 2>&1
 ```
 
 3. **Copia el output COMPLETO** (tanto stderr como stdout) en tu reporte.
@@ -780,23 +780,23 @@ editar el mismo fichero simultaneamente, el patron es:
 
 2. **Lanza sub-agentes en paralelo** (maximo 4 simultaneos via Task tool):
    Cada sub-agente recibe un batch de ~5 estrategias y su spec completa.
-   Cada sub-agente escribe a archivos SEPARADOS en `aux/`:
+   Cada sub-agente escribe a archivos SEPARADOS en `auxiliar/`:
 
    ```
    Sub-agente batch-integrator #1 (estrategias #1-#5):
-     -> aux/sd_int_batch1_generators.py   (funciones de generacion de bets standalone)
-     -> aux/sd_int_batch1_filters.py      (funciones _filter_{key} + PARAMS dicts)
-     -> aux/sd_int_batch1_notebook.json    (celdas de grid search en formato JSON)
-     -> aux/sd_int_batch1_cartera.py       (fragmento de integracion en cartera combinada)
+     -> auxiliar/sd_int_batch1_generators.py   (funciones de generacion de bets standalone)
+     -> auxiliar/sd_int_batch1_filters.py      (funciones _filter_{key} + PARAMS dicts)
+     -> auxiliar/sd_int_batch1_notebook.json    (celdas de grid search en formato JSON)
+     -> auxiliar/sd_int_batch1_cartera.py       (fragmento de integracion en cartera combinada)
 
    Sub-agente batch-integrator #2 (estrategias #6-#10):
-     -> aux/sd_int_batch2_*.py/json
+     -> auxiliar/sd_int_batch2_*.py/json
 
    Sub-agente batch-integrator #3 (estrategias #11-#15):
-     -> aux/sd_int_batch3_*.py/json
+     -> auxiliar/sd_int_batch3_*.py/json
 
    Sub-agente batch-integrator #4 (estrategias #16-#19):
-     -> aux/sd_int_batch4_*.py/json
+     -> auxiliar/sd_int_batch4_*.py/json
    ```
 
    **Prompt tipo para cada sub-agente:**
@@ -812,25 +812,25 @@ editar el mismo fichero simultaneamente, el patron es:
    ...
 
    OUTPUTS REQUERIDOS:
-   1. aux/sd_int_batch{N}_generators.py - Funciones standalone que lean CSVs y generen bets
-   2. aux/sd_int_batch{N}_filters.py - Funciones _filter_{key}() + {KEY}_PARAMS dicts + {KEY}_OPTS
-   3. aux/sd_int_batch{N}_notebook.json - Array JSON de celdas [{type:"markdown",source:...}, {type:"code",source:...}]
-   4. aux/sd_int_batch{N}_cartera.py - Fragmento para la seccion de cartera combinada
+   1. auxiliar/sd_int_batch{N}_generators.py - Funciones standalone que lean CSVs y generen bets
+   2. auxiliar/sd_int_batch{N}_filters.py - Funciones _filter_{key}() + {KEY}_PARAMS dicts + {KEY}_OPTS
+   3. auxiliar/sd_int_batch{N}_notebook.json - Array JSON de celdas [{type:"markdown",source:...}, {type:"code",source:...}]
+   4. auxiliar/sd_int_batch{N}_cartera.py - Fragmento para la seccion de cartera combinada
    ```
 
 3. **Orchestrator consolida** (secuencial, tras recoger todos los sub-agentes):
-   a. Lee todos los `aux/sd_int_batch*_filters.py` y los inyecta en `optimize.py`
-   b. Lee todos los `aux/sd_int_batch*_generators.py` y los consolida en un helper
+   a. Lee todos los `auxiliar/sd_int_batch*_filters.py` y los inyecta en `optimize.py`
+   b. Lee todos los `auxiliar/sd_int_batch*_generators.py` y los consolida en un helper
       `betfair_scraper/dashboard/backend/api/new_strategies_gen.py` (o los inserta en el notebook)
-   c. Lee todos los `aux/sd_int_batch*_notebook.json` e inserta las celdas en el notebook
+   c. Lee todos los `auxiliar/sd_int_batch*_notebook.json` e inserta las celdas en el notebook
       (tras las estrategias existentes, antes de la cartera combinada)
-   d. Lee todos los `aux/sd_int_batch*_cartera.py` y actualiza la celda de cartera combinada
+   d. Lee todos los `auxiliar/sd_int_batch*_cartera.py` y actualiza la celda de cartera combinada
    e. Actualiza `_PHASE1_TOTAL` y el preset optimizer con los nuevos `*_OPTS`
    f. Ejecuta el notebook para verificar que funciona
 
 #### Regla para sub-agentes PASO 9
 
-- Cada sub-agente escribe SOLO a `aux/sd_int_batch{N}_*.py/json` — NUNCA a ficheros de produccion
+- Cada sub-agente escribe SOLO a `auxiliar/sd_int_batch{N}_*.py/json` — NUNCA a ficheros de produccion
 - El orchestrator es el UNICO que edita `optimize.py`, el notebook, y `optimizer_cli.py`
 - Si un sub-agente necesita leer ficheros de referencia (optimize.py, reportes), puede hacerlo
 - Los sub-agentes deben incluir comentarios `# Strategy: {key}` para facilitar la consolidacion

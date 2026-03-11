@@ -34,7 +34,8 @@
     "pressure": {
       "enabled": true,
       "minuteMin": 0,
-      "minuteMax": 90
+      "minuteMax": 90,
+      "xg_sum_min": 0.5
     },
     "tarde_asia": {
       "enabled": false,
@@ -53,14 +54,17 @@
       "goal_diff_min": 2,
       "sot_total_min": 3,
       "odds_min": 1.5,
-      "odds_max": 8.0
+      "odds_max": 8.0,
+      "xg_min": 0
     },
     "sd_under35_late": {
       "enabled": true,
       "m_min": 65,
       "m_max": 78,
       "goals_exact": 3,
-      "xg_max": 2.0
+      "xg_max": 2.0,
+      "odds_min": 1.1,
+      "odds_max": 5.0
     },
     "sd_longshot": {
       "enabled": true,
@@ -127,6 +131,9 @@
     "sd_home_fav_leading": 1,
     "sd_cs_20": 1,
     "sd_cs_big_lead": 1
+  },
+  "min_duration_live": {
+    "clustering": 1
   },
   "adjustments": {
     "enabled": true,

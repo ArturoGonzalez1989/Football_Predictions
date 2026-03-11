@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_playwright_playwright__browser_resize",
+      "WebFetch(domain:simonwillison.net)",
+      "mcp__plugin_claude-mem_mcp-search__get_observations"
+    ]
+  }
+}

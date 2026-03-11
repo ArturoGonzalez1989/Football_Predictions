@@ -2205,10 +2205,14 @@ def _detect_clustering_trigger(
     MIN_MINUTE = float(cfg.get("min_minute", 15))
     MAX_MINUTE = float(cfg.get("max_minute", 90))
     XG_REM_MIN = float(cfg.get("xg_rem_min", 0))
+    # entry_buffer: extra minutes past MAX_MINUTE that the current row may be.
+    # Used by LIVE detection to keep the signal alive while it matures (min_dur wait).
+    # BT always passes max_minute=91 so this has no effect there.
+    ENTRY_MAX  = MAX_MINUTE + float(cfg.get("entry_buffer", 0))
 
     curr_row = rows[curr_idx]
     curr_min_val = _to_float(curr_row.get("minuto", ""))
-    if curr_min_val is None or curr_min_val < MIN_MINUTE or curr_min_val >= MAX_MINUTE:
+    if curr_min_val is None or curr_min_val < MIN_MINUTE or curr_min_val >= ENTRY_MAX:
         return None
 
     # Look for goal in last 3 captures (approx last 90 seconds)
@@ -2310,6 +2314,14 @@ def _detect_pressure_trigger(
     # Must be a draw with goals (not 0-0)
     if gl_i != gv_i or (gl_i == 0 and gv_i == 0):
         return None
+
+    # Optional xG guard: require minimum combined xG (0 = disabled)
+    XG_SUM_MIN = float(cfg.get("xg_sum_min", 0))
+    if XG_SUM_MIN > 0:
+        xg_l = _to_float(curr_row.get("xg_local", ""))
+        xg_v = _to_float(curr_row.get("xg_visitante", ""))
+        if xg_l is None or xg_v is None or (xg_l + xg_v) < XG_SUM_MIN:
+            return None
 
     # Score confirmation: last 6 rows up to curr_idx
     check_rows = rows[max(0, curr_idx - 5):curr_idx + 1]
@@ -3957,6 +3969,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     _clustering_min_min = int(versions.get("clustering_minute_min", 0))
     _pressure_minute_min = int(versions.get("pressure_minute_min", 0))
     _pressure_minute_max = int(versions.get("pressure_minute_max", 90))
+    _pressure_xg_sum_min = float(versions.get("pressure_xg_sum_min", 0))
     _momentum_minute_min = int(versions.get("momentum_minute_min", 0))
     _momentum_minute_max = int(versions.get("momentum_minute_max", 90))
 
@@ -4468,11 +4481,17 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         # Skip if match has corrupted Over/Under odds
         # Uses _detect_clustering_trigger (GR9 shared helper) for consistent BT/LIVE logic.
         _cluster_min = max(15, _clustering_min_min)
+        # entry_buffer: allows the trigger to keep firing past max_minute so the signal
+        # can mature before the window closes. Formula: live_min_dur + PAPER_REACTION_DELAY(1) + 2.
+        # The GOAL must still occur within max_minute; only the current-row check is relaxed.
+        # With min_duration_live.clustering=1: buffer=1+3=4 → window extends to minuteMax+4.
+        _cl_entry_buffer = int(versions.get("clustering_min_dur", 4)) + 3
         _cl_live_cfg = {
-            "sot_min":    _clustering_sot,
-            "min_minute": _cluster_min,
-            "max_minute": _clustering_min_max,
-            "xg_rem_min": _clustering_xg_rem,
+            "sot_min":      _clustering_sot,
+            "min_minute":   _cluster_min,
+            "max_minute":   _clustering_min_max,
+            "entry_buffer": _cl_entry_buffer,
+            "xg_rem_min":   _clustering_xg_rem,
         }
         if match_id not in CORRUPTED_OVER_MATCHES and clustering_ver != "off":
             cl_trig = _detect_clustering_trigger(rows, len(rows) - 1, _cl_live_cfg)
@@ -4536,6 +4555,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             "min_minute":    _press_min,
             "max_minute":    _press_max,
             "score_confirm": 2,
+            "xg_sum_min":    _pressure_xg_sum_min,
         }
         if match_id not in CORRUPTED_OVER_MATCHES and pressure_ver != "off":
             pc_trig = _detect_pressure_trigger(rows, len(rows) - 1, _pc_live_cfg)
@@ -4792,7 +4812,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             _sd_odds_min = _sd_cfg.get("odds_min", 1.5)
             _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
             _sd_odds = _to_float(latest.get("back_over25", ""))
-            if (_sd_m_min <= _m <= _sd_m_max and _goal_diff >= _sd_gd_min
+            if (_sd_m_min <= _m < _sd_m_max and _goal_diff >= _sd_gd_min
                     and _sot_total >= _sd_sot_min and _sd_odds and _sd_odds > 1.0
                     and _sd_odds_min <= _sd_odds <= _sd_odds_max):
                 _sd_signal("sd_over25_2goal", "SD BACK O2.5 2-Goal Lead",
@@ -4807,10 +4827,12 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             _sd_m_max = _sd_cfg.get("m_max", 78)
             _sd_goals_exact = _sd_cfg.get("goals_exact", 3)
             _sd_xg_max = _sd_cfg.get("xg_max", 2.0)
+            _sd_odds_min = _sd_cfg.get("odds_min", 1.1)
+            _sd_odds_max = _sd_cfg.get("odds_max", 5.0)
             _sd_odds = _to_float(latest.get("back_under35", ""))
-            if (_sd_m_min <= _m <= _sd_m_max and _total_goals == _sd_goals_exact
-                    and _sd_odds and _sd_odds > 1.0
-                    and (_xg_total is None or _xg_total <= _sd_xg_max)):
+            if (_sd_m_min <= _m < _sd_m_max and _total_goals == _sd_goals_exact
+                    and _sd_odds and _sd_odds_min <= _sd_odds <= _sd_odds_max
+                    and (_xg_total is not None and _xg_total <= _sd_xg_max)):
                 _sd_signal("sd_under35_late", "SD BACK U3.5 Late",
                            f"BACK UNDER 3.5 @ {_sd_odds:.2f}", _sd_odds,
                            "Back Under 3.5 when exactly 3 goals scored and xG is low",
@@ -4824,7 +4846,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             _sd_xg_min = _sd_cfg.get("xg_min", 0.2)
             _sd_odds_min = _sd_cfg.get("odds_min", 1.3)
             _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
-            if _sd_m_min <= _m <= _sd_m_max:
+            if _sd_m_min <= _m < _sd_m_max:
                 # Determine pre-match longshot from first row with valid odds
                 _ls_team = None
                 for _r in rows[:5]:  # check first few rows for pre-match odds
@@ -4839,7 +4861,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                         _ls_odds = _to_float(latest.get("back_home" if _ls_team == "local" else "back_away", ""))
                         _ls_xg = _to_float(latest.get(f"xg_{_ls_team}", ""))
                         if (_ls_odds and _ls_odds > 1.0 and _sd_odds_min <= _ls_odds <= _sd_odds_max
-                                and (_ls_xg is None or _ls_xg >= _sd_xg_min)):
+                                and (_ls_xg is not None and _ls_xg >= _sd_xg_min)):
                             _sd_signal("sd_longshot", "SD BACK Longshot Leading",
                                        f"BACK {'HOME' if _ls_team == 'local' else 'AWAY'} @ {_ls_odds:.2f}", _ls_odds,
                                        "Back the pre-match longshot when they are leading late",
@@ -4851,7 +4873,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         if _sd_cfg.get("enabled") and goals_data_ok:
             _sd_m_min = _sd_cfg.get("m_min", 70)
             _sd_m_max = _sd_cfg.get("m_max", 80)
-            if _sd_m_min <= _m <= _sd_m_max and _total_goals >= 2 and _goal_diff == 1:
+            if _sd_m_min <= _m < _sd_m_max and _total_goals >= 2 and _goal_diff == 1:
                 # Only 2-1 / 1-2 scorelines
                 if (_gl, _gv) in ((2, 1), (1, 2)):
                     _cs_col = f"back_rc_{_gl}_{_gv}"
@@ -4867,7 +4889,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         if _sd_cfg.get("enabled") and goals_data_ok:
             _sd_m_min = _sd_cfg.get("m_min", 68)
             _sd_m_max = _sd_cfg.get("m_max", 85)
-            if _sd_m_min <= _m <= _sd_m_max and _total_goals == 1:
+            if _sd_m_min <= _m < _sd_m_max and _total_goals == 1:
                 if (_gl, _gv) in ((1, 0), (0, 1)):
                     _cs_col = f"back_rc_{_gl}_{_gv}"
                     _cs_odds = _to_float(latest.get(_cs_col, ""))
@@ -4884,17 +4906,18 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             _sd_m_max = _sd_cfg.get("m_max", 80)
             _sd_ud_pre = _sd_cfg.get("ud_min_pre_odds", 2.0)
             _sd_max_lead = _sd_cfg.get("max_lead", 1)
-            if _sd_m_min <= _m <= _sd_m_max and _goal_diff <= _sd_max_lead:
+            if _sd_m_min <= _m < _sd_m_max and _goal_diff <= _sd_max_lead:
                 # Determine pre-match underdog from first rows
                 _ud_team = None
                 for _r in rows[:5]:
                     _bh0 = _to_float(_r.get("back_home", ""))
                     _ba0 = _to_float(_r.get("back_away", ""))
                     if _bh0 and _ba0 and _bh0 > 1 and _ba0 > 1:
-                        if _bh0 >= _sd_ud_pre:
+                        # Pick the higher-odds team as underdog (matching BT logic)
+                        if _bh0 > _ba0 and _bh0 >= _sd_ud_pre:
                             _ud_team = "local"
                             _ud_pre_odds = _bh0
-                        elif _ba0 >= _sd_ud_pre:
+                        elif _ba0 >= _bh0 and _ba0 >= _sd_ud_pre:
                             _ud_team = "visitante"
                             _ud_pre_odds = _ba0
                         break
@@ -4916,7 +4939,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             _sd_m_max = _sd_cfg.get("m_max", 85)
             _sd_max_lead = _sd_cfg.get("max_lead", 3)
             _sd_fav_max = _sd_cfg.get("fav_max", 2.5)
-            if _sd_m_min <= _m <= _sd_m_max and _goal_diff <= _sd_max_lead:
+            if _sd_m_min <= _m < _sd_m_max and _goal_diff <= _sd_max_lead:
                 # Check if home was pre-match favourite (odds <= fav_max)
                 _home_pre = None
                 for _r in rows[:5]:
@@ -4939,7 +4962,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             _sd_m_min = _sd_cfg.get("m_min", 75)
             _sd_m_max = _sd_cfg.get("m_max", 90)
             _sd_odds_max = _sd_cfg.get("odds_max", 10.0)
-            if _sd_m_min <= _m <= _sd_m_max:
+            if _sd_m_min <= _m < _sd_m_max:
                 if (_gl, _gv) in ((2, 0), (0, 2)):
                     _cs_col = f"back_rc_{_gl}_{_gv}"
                     _cs_odds = _to_float(latest.get(_cs_col, ""))
@@ -4955,7 +4978,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             _sd_m_min = _sd_cfg.get("m_min", 70)
             _sd_m_max = _sd_cfg.get("m_max", 85)
             _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
-            if _sd_m_min <= _m <= _sd_m_max:
+            if _sd_m_min <= _m < _sd_m_max:
                 if (_gl, _gv) in ((3, 0), (0, 3), (3, 1), (1, 3)):
                     _cs_col = f"back_rc_{_gl}_{_gv}"
                     _cs_odds = _to_float(latest.get(_cs_col, ""))
@@ -5435,6 +5458,9 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
         }
     """
     finished = _get_all_finished_matches()
+    from api.config import load_config as _load_config
+    _pressure_cfg = _load_config().get("strategies", {}).get("pressure", {})
+    _xg_sum_min_bt = float(_pressure_cfg.get("xg_sum_min", 0))
 
     results = {
         "total_matches": 0,
@@ -5475,7 +5501,7 @@ def analyze_strategy_pressure_cooker(min_dur: int = 1) -> dict:
 
         # Buscar primera fila con empate 1-1+ entre min 65-75 via shared GR9 helper
         # BT superset cfg: 65-75 min range (hardcoded strategy window), confirm>=2 via last-6-rows
-        _pc_bt_cfg = {"min_minute": 65, "max_minute": 75, "score_confirm": 2}
+        _pc_bt_cfg = {"min_minute": 65, "max_minute": 75, "score_confirm": 2, "xg_sum_min": _xg_sum_min_bt}
         trigger_found = False
         for idx, row in enumerate(rows):
             if trigger_found:

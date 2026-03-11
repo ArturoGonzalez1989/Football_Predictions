@@ -262,7 +262,7 @@ se ejecutan en cada batch — solo los indicados.
 ## SALIDA
 
 Guarda el resultado JSON en el fichero indicado por el orquestador:
-`aux/mqa_deepdive_batch{N}.json`
+`auxiliar/mqa_deepdive_batch{N}.json`
 
 El JSON debe ser un array de objetos, uno por fichero:
 

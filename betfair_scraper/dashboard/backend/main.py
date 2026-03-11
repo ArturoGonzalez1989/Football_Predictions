@@ -196,7 +196,7 @@ async def _scheduler_watchdog():
 
 # ==================== PAPER TRADING AUTO-POLLER ====================
 
-PAPER_TRADING_INTERVAL_SECONDS = 60  # Pollea señales cada minuto
+PAPER_TRADING_INTERVAL_SECONDS = 30  # Pollea señales cada 30s
 _paper_trading_task = None
 _paper_trading_cycle_count = 0
 _paper_trading_last_run = None

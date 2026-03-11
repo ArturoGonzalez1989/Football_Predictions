@@ -6,9 +6,9 @@
 
 ## Archivos temporales y auxiliares
 
-**REGLA**: Todo archivo temporal, prescindible o de análisis ad hoc debe guardarse en `/aux` (raiz del proyecto), nunca en la raiz ni en otros directorios.
+**REGLA**: Todo archivo temporal, prescindible o de análisis ad hoc debe guardarse en `/auxiliar` (raiz del proyecto), nunca en la raiz ni en otros directorios.
 
-Ejemplos de lo que va en `/aux`:
+Ejemplos de lo que va en `/auxiliar`:
 - Scripts temporales de análisis (`analyze_*.py`, `test_*.py`, `check_*.py`)
 - Capturas de pantalla (`.png`, `.jpg`)
 - CSVs de resultados intermedios
@@ -16,7 +16,7 @@ Ejemplos de lo que va en `/aux`:
 - Logs de análisis puntuales
 - Cualquier fichero que no forme parte de la arquitectura permanente
 
-La carpeta `/aux` puede borrarse en cualquier momento sin afectar al sistema. Si no existe, crearla antes de guardar el archivo.
+La carpeta `/auxiliar` puede borrarse en cualquier momento sin afectar al sistema. Si no existe, crearla antes de guardar el archivo.
 
 ## Reglas criticas
 
@@ -83,7 +83,7 @@ betfair_scraper/
       lib/utils.ts       → cn(), formatTimeAgo(), formatTimeTo() (27 lineas)
       components/        → 19 componentes React (Dashboard, BettingSignalsView, etc.)
 
-aux/                     → Archivos auxiliares de analisis (tracked en git)
+auxiliar/                     → Archivos auxiliares de analisis (tracked en git)
   sd_generators.py       → 19 generadores SD (1816 lineas)
   sd_filters.py          → Filtros realistas SD (825 lineas)
   run_reconcile.py       → Verificacion BT↔LIVE
@@ -114,7 +114,7 @@ Estrategias de produccion con deteccion live + backtest. Configuradas en `carter
 
 Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). Muchas SD strategies ahora tienen entradas en `cartera_config.json` para sus parametros. **NO tienen deteccion live** — solo backtest. No hay codigo en `detect_betting_signals()` para SD.
 
-Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores en `aux/sd_generators.py`, filtros en `aux/sd_filters.py`.
+Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores en `auxiliar/sd_generators.py`, filtros en `auxiliar/sd_filters.py`.
 
 ## Quality Gates (aplicados a TODAS las estrategias)
 
@@ -166,7 +166,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ### Match rate
 
-- **83% MATCH**, 89.8% MATCH+MIN_DIFF (medido con `aux/run_reconcile.py`)
+- **83% MATCH**, 89.8% MATCH+MIN_DIFF (medido con `auxiliar/run_reconcile.py`)
 - **LIVE P/L >= BT P/L** confirmado (BT es conservador)
 - Discrepancias restantes son por timing (BT muestrea en filas discretas vs LIVE en instante actual)
 
@@ -176,8 +176,8 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ### Herramientas de verificacion
 
-- `aux/run_reconcile.py` — simula LIVE fila a fila y compara con BT
-- `aux/compare_bt_live.py` — compara rendimiento BT vs LIVE estimado
+- `auxiliar/run_reconcile.py` — simula LIVE fila a fila y compara con BT
+- `auxiliar/compare_bt_live.py` — compara rendimiento BT vs LIVE estimado
 - `.claude/agents/system-auditor.md` — agente de mantenimiento de alineamiento
 
 ## Problemas conocidos
@@ -193,5 +193,5 @@ Limpieza mayor del proyecto para eliminar codigo muerto y simplificar la arquite
 
 - **Frontend**: eliminado `cartera.ts` (1104 lineas), `cartera.worker.ts`; limpiado `api.ts` (-435 lineas)
 - **Backend**: eliminados `debug.py`, `simulate.py`; limpiados 15 endpoints de `analytics.py`
-- **Archivos**: organizados `_ux/` a `aux/`, limpiados `strategies/`, `analisis/`, logs antiguos
+- **Archivos**: organizados `_ux/` a `auxiliar/`, limpiados `strategies/`, `analisis/`, logs antiguos
 - Todo lo eliminado movido a `/borrar` como red de seguridad

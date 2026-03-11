@@ -454,7 +454,7 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 - El notebook usa `eval_sd()` con gates: N >= G_MIN_BETS_SD (31), ROI >= G_MIN_ROI, IC95_low >= IC95_MIN_LOW.
 - Muchas estrategias aprobadas con 800 partidos quedaron "off" con el dataset filtrado del notebook. Con mas datos pueden reactivarse automaticamente.
 - Las funciones `_apply_sd_*` y configs `SD_APPROVED_CONFIGS` estan en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`.
-- Generadores de bets en `aux/sd_generators.py`, filtros en `aux/sd_filters.py`.
+- Generadores de bets en `auxiliar/sd_generators.py`, filtros en `auxiliar/sd_filters.py`.
 - **Ronda 9 hallazgos clave**:
   - CS structural inefficiency confirmed UNIVERSALLY across all tight scorelines. At min 70-80, EVERY tested score has positive edge vs market-implied probability.
   - The edge is largest for rarer scorelines (3-0, 1-2, 3-1) where market has least information, but also significant for common scores (1-0, 0-1, 2-1).

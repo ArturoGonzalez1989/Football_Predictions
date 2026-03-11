@@ -1,0 +1,381 @@
+"""
+Fresh match rate measurement with CURRENT csv_reader.py and config.
+"""
+import sys, io, json, csv, glob, builtins
+from pathlib import Path
+from collections import defaultdict, Counter
+from urllib.parse import unquote
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+ROOT = Path('C:/Users/agonz/OneDrive/Documents/Proyectos/Furbo')
+sys.path.insert(0, str(ROOT / 'betfair_scraper' / 'dashboard' / 'backend'))
+sys.path.insert(0, str(ROOT / 'betfair_scraper'))
+
+for mod in list(sys.modules.keys()):
+    if 'csv_reader' in mod or 'optimize' in mod:
+        del sys.modules[mod]
+
+from utils import csv_reader
+from api.optimize import (
+    _filter_draw, _filter_xg, _filter_drift, _filter_clustering,
+    _filter_pressure, _filter_tardesia, _filter_momentum,
+    _filter_lay_over15, _filter_lay_draw_asym,
+)
+
+with open(str(ROOT / 'betfair_scraper' / 'cartera_config.json'), encoding='utf-8') as f:
+    CONFIG = json.load(f)
+
+s = CONFIG.get('strategies', {})
+md = CONFIG.get('min_duration', {})
+DATA_DIR = ROOT / 'betfair_scraper' / 'data'
+
+def _ver(s_key, default):
+    strat = s.get(s_key, {})
+    if strat.get('enabled') is False:
+        return 'off'
+    if strat.get('version'):
+        return strat['version']
+    return default
+
+COMBO = {
+    'draw': _ver('draw', 'v2r'),
+    'xg': _ver('xg', 'base'),
+    'drift': _ver('drift', 'v1'),
+    'clustering': _ver('clustering', 'v2'),
+    'pressure': _ver('pressure', 'v1'),
+    'tardeAsia': 'v1' if s.get('tarde_asia', {}).get('enabled') else 'off',
+    'momentumXG': s.get('momentum_xg', {}).get('version', 'v1'),
+    'layOver15': _ver('lay_over15', 'off'),
+    'layDrawAsym': 'on' if s.get('lay_draw_asym', {}).get('enabled') else 'off',
+    'layOver25Def': 'on' if s.get('lay_over25_def', {}).get('enabled', True) else 'off',
+    'backSotDom': 'on' if s.get('back_sot_dom', {}).get('enabled') else 'off',
+    'backOver15Early': 'on' if s.get('back_over15_early', {}).get('enabled') else 'off',
+    'layFalseFav': 'on' if s.get('lay_false_fav', {}).get('enabled') else 'off',
+}
+print(f"Combo: {COMBO}")
+
+if hasattr(csv_reader, '_cartera_cache'):
+    csv_reader._cartera_cache.clear()
+bt_raw = csv_reader.analyze_cartera()
+all_bets = bt_raw.get('bets', [])
+print(f"\nBT superset: {len(all_bets)} bets")
+
+lo25_cfg = s.get('lay_over25_def', {})
+lff_cfg = s.get('lay_false_fav', {})
+lo15_s = s.get('lay_over15', {})
+lda_s = s.get('lay_draw_asym', {})
+drift_s = s.get('drift', {})
+cl_s = s.get('clustering', {})
+xg_s = s.get('xg', {})
+draw_s = s.get('draw', {})
+pr_s = s.get('pressure', {})
+mom_s = s.get('momentum_xg', {})
+
+bt_filtered = []
+
+# --- Draw: filter from raw superset using CONFIG values (like cartera.ts filterDrawBets),
+# bypassing optimize.py _filter_draw which uses hardcoded DRAW_PARAMS thresholds.
+if COMBO.get('draw', 'off') != 'off':
+    _d_xg_max = draw_s.get('xgMax', 1.0)
+    _d_poss_max = draw_s.get('possMax', 100)
+    _d_shots_max = draw_s.get('shotsMax', 20)
+    _d_min_min = draw_s.get('minuteMin', 0)
+    _d_min_max = draw_s.get('minuteMax', 90)
+    def _cfg_draw_filter(b):
+        if b.get('strategy') != 'back_draw_00':
+            return False
+        if _d_xg_max < 1.0 and b.get('xg_total') is not None and b['xg_total'] >= _d_xg_max:
+            return False
+        if _d_poss_max < 100 and b.get('poss_diff') is not None and b['poss_diff'] >= _d_poss_max:
+            return False
+        if _d_shots_max < 20 and b.get('shots_total') is not None and b['shots_total'] >= _d_shots_max:
+            return False
+        if _d_min_min > 0 and b.get('minuto') is not None and b['minuto'] < _d_min_min:
+            return False
+        if _d_min_max < 90 and b.get('minuto') is not None and b['minuto'] >= _d_min_max:
+            return False
+        return True
+    draw_filtered = [b for b in all_bets if _cfg_draw_filter(b)]
+    bt_filtered.extend(draw_filtered)
+    print(f"  draw ({COMBO['draw']}): {len(draw_filtered)}")
+
+for combo_key, filter_fn in [
+    ('xg', _filter_xg), ('drift', _filter_drift),
+    ('clustering', _filter_clustering), ('pressure', _filter_pressure),
+    ('tardeAsia', _filter_tardesia), ('momentumXG', _filter_momentum),
+    ('layOver15', _filter_lay_over15), ('layDrawAsym', _filter_lay_draw_asym),
+]:
+    ver = COMBO.get(combo_key, 'off')
+    filtered = filter_fn(all_bets, ver)
+
+    # Post-filter: apply config-level params that cartera.ts applies but optimize.py doesn't.
+    if combo_key == 'clustering':
+        cl_max = cl_s.get('minuteMax', 90)  # config minuteMax (not CLUSTERING_PARAMS default)
+        filtered = [b for b in filtered if (b.get('minuto') or 0) < cl_max]
+
+    bt_filtered.extend(filtered)
+    if filtered:
+        print(f"  {combo_key} ({ver}): {len(filtered)}")
+
+if COMBO.get('layOver25Def') != 'off':
+    lo25 = [b for b in all_bets if b.get('strategy') == 'lay_over25_def']
+    lo25 = [b for b in lo25
+            if b.get('total_goals_trigger', 0) <= lo25_cfg.get('goalsMax', 1)
+            and (b.get('xg_total') is None or b.get('xg_total') < lo25_cfg.get('xgMax', 2.0))]
+    bt_filtered.extend(lo25)
+    print(f"  layOver25Def (on): {len(lo25)}")
+
+if COMBO.get('layFalseFav') != 'off':
+    lff = [b for b in all_bets if b.get('strategy') == 'lay_false_fav']
+    xg_ratio_min = lff_cfg.get('xgRatioMin', 2.0)
+    fav_odds_max = lff_cfg.get('favOddsMax', 1.70)
+    lff = [b for b in lff
+           if not (b.get('xg_ratio') is not None and b['xg_ratio'] < xg_ratio_min)
+           and not (b.get('fav_back_odds') is not None and b['fav_back_odds'] > fav_odds_max)]
+    bt_filtered.extend(lff)
+    print(f"  layFalseFav (on): {len(lff)}")
+
+print(f"\nBT pre-adj: {len(bt_filtered)} bets")
+
+def normalize_strat(key):
+    base = key
+    for suffix in ['_v1', '_v15', '_v2', '_v2r', '_v3', '_v4', '_v5', '_v6', '_base']:
+        if base.endswith(suffix):
+            base = base[:-len(suffix)]
+            break
+    mapping = {'odds_drift_contrarian': 'odds_drift', 'momentum_xg_v1': 'momentum_xg', 'momentum_xg_v2': 'momentum_xg'}
+    return mapping.get(base, base)
+
+bt_set = {}
+for b in bt_filtered:
+    mid = b.get('match_id', '')
+    fam = normalize_strat(b.get('strategy', ''))
+    if (mid, fam) not in bt_set:
+        bt_set[(mid, fam)] = b.get('minuto', 0) or 0
+
+print(f"BT unique (match,family) pairs: {len(bt_set)}")
+
+VERSIONS = {
+    'draw': COMBO['draw'], 'xg': COMBO['xg'], 'drift': COMBO['drift'],
+    'clustering': COMBO['clustering'], 'pressure': COMBO['pressure'],
+    'momentum': COMBO['momentumXG'],
+    'tarde_asia': COMBO['tardeAsia'],
+    'lay_over15': COMBO['layOver15'],
+    'lay_over25_def': COMBO['layOver25Def'],
+    'lay_over25_def_minute_min': str(lo25_cfg.get('minuteMin', 65)),
+    'lay_over25_def_minute_max': str(lo25_cfg.get('minuteMax', 80)),
+    'lay_over25_def_xg_max': str(lo25_cfg.get('xgMax', 2.0)),
+    'lay_over25_def_goals_max': str(lo25_cfg.get('goalsMax', 1)),
+    'lay_over25_def_min_dur': str(md.get('lay_over25_def', 2)),
+    'lay_false_fav': COMBO['layFalseFav'],
+    'lay_false_fav_minute_min': str(lff_cfg.get('minuteMin', 65)),
+    'lay_false_fav_minute_max': str(lff_cfg.get('minuteMax', 85)),
+    'lay_false_fav_xg_ratio_min': str(lff_cfg.get('xgRatioMin', 2.0)),
+    'lay_false_fav_fav_odds_max': str(lff_cfg.get('favOddsMax', 1.70)),
+    'lay_false_fav_min_dur': str(md.get('lay_false_fav', 1)),
+    'drift_threshold': str(drift_s.get('driftMin', 30)),
+    'drift_odds_max': str(drift_s.get('oddsMax', 999)),
+    'drift_goal_diff_min': str(drift_s.get('goalDiffMin', 0)),
+    'drift_minute_min': str(drift_s.get('minuteMin', 0)),
+    'drift_minute_max': str(drift_s.get('minuteMax', 90)),
+    'drift_mom_gap_min': str(drift_s.get('momGapMin', 0)),
+    'clustering_minute_max': str(cl_s.get('minuteMax', 90)),
+    'clustering_xg_rem_min': str(cl_s.get('xgRemMin', 0.6)),
+    'clustering_sot_min': str(cl_s.get('sotMin', 2)),
+    'clustering_minute_min': str(cl_s.get('minuteMin', 0)),
+    'xg_minute_max': str(xg_s.get('minuteMax', 90)),
+    'xg_sot_min': str(xg_s.get('sotMin', 0)),
+    'xg_xg_excess_min': str(xg_s.get('xgExcessMin', 0.3)),
+    'xg_minute_min': str(xg_s.get('minuteMin', 0)),
+    'draw_xg_max': str(draw_s.get('xgMax', 1.0)),
+    'draw_poss_max': str(draw_s.get('possMax', 100)),
+    'draw_shots_max': str(draw_s.get('shotsMax', 20)),
+    'draw_minute_min': str(draw_s.get('minuteMin', 30)),
+    'draw_minute_max': str(draw_s.get('minuteMax', 90)),
+    'pressure_minute_min': str(pr_s.get('minuteMin', 0)),
+    'pressure_minute_max': str(pr_s.get('minuteMax', 90)),
+    'momentum_minute_min': str(mom_s.get('minuteMin', 0)),
+    'momentum_minute_max': str(mom_s.get('minuteMax', 90)),
+    'lay_over15_minute_min': str(lo15_s.get('minuteMin', 75)),
+    'lay_over15_minute_max': str(lo15_s.get('minuteMax', 85)),
+    'lay_over15_xg_min': str(lo15_s.get('xgMin', 0.5)),
+    'lay_over15_poss_max': str(lo15_s.get('possMax', 30)),
+    'lay_over15_shots_min': str(lo15_s.get('shotsMin', 12)),
+    'lay_draw_asym': COMBO['layDrawAsym'],
+    'back_sot_dom': COMBO['backSotDom'],
+    'back_over15_early': COMBO['backOver15Early'],
+}
+
+MIN_DUR_MAP = {
+    'back_draw_00': md.get('draw', 2),
+    'xg_underperformance': md.get('xg', 3),
+    'odds_drift': md.get('drift', 2),
+    'goal_clustering': 1,
+    'pressure_cooker': md.get('pressure', 4),
+    'momentum_xg': 1,
+    'tarde_asia': 1,
+    'lay_over15': md.get('lay_over15', 2),
+    'lay_draw_asym': 2,
+    'lay_over25_def': md.get('lay_over25_def', 2),
+    'back_sot_dom': 1,
+    'back_over15_early': 1,
+    'lay_false_fav': md.get('lay_false_fav', 1),
+}
+
+def _simulate_match(csv_path_str, versions, min_dur_map):
+    csv_path_obj = Path(csv_path_str)
+    with open(csv_path_str, 'r', encoding='utf-8', errors='replace') as f:
+        all_rows = list(csv.DictReader(f))
+    if len(all_rows) < 3:
+        return []
+
+    name = csv_path_obj.stem
+    raw = name[len('partido_'):] if name.startswith('partido_') else name
+    match_id = unquote(raw)
+
+    first_seen = {}
+    first_seen_data = {}
+    fired = {}
+
+    _orig_load = csv_reader.load_games
+    _orig_resolve = csv_reader._resolve_csv_path
+    _orig_read = csv_reader._read_csv_rows
+    _orig_open = builtins.open
+
+    def _normalize(key):
+        base = key
+        for suffix in ['_v1', '_v15', '_v2', '_v2r', '_v3', '_v4', '_v5', '_v6', '_base']:
+            if base.endswith(suffix):
+                base = base[:-len(suffix)]
+                break
+        mapping = {'odds_drift_contrarian': 'odds_drift'}
+        return mapping.get(base, base)
+
+    try:
+        game_entry = [{'match_id': match_id, 'name': match_id, 'status': 'live', 'url': ''}]
+        csv_reader.load_games = lambda _ge=game_entry: _ge
+        csv_reader._resolve_csv_path = lambda mid, _p=csv_path_obj: _p
+
+        def _patched_open(file, *a, **kw):
+            if 'placed_bets' in str(file):
+                raise FileNotFoundError('patched')
+            return _orig_open(file, *a, **kw)
+        builtins.open = _patched_open
+
+        signals_by_row = []
+        for i in range(len(all_rows)):
+            partial_rows = all_rows[:i + 1]
+            csv_reader._read_csv_rows = lambda path, _pr=partial_rows: _pr
+            try:
+                result = csv_reader.detect_betting_signals(versions)
+                signals = result.get('signals', [])
+            except Exception:
+                signals = []
+
+            row_signals = {}
+            for sig in signals:
+                key = sig.get('strategy', '')
+                family = _normalize(key)
+                if family not in row_signals:
+                    row_signals[family] = {'minute': sig.get('minute'), 'odds': sig.get('back_odds')}
+            signals_by_row.append(row_signals)
+
+        for i, row_sigs in enumerate(signals_by_row):
+            for family, data in row_sigs.items():
+                if family in fired:
+                    continue
+                if family not in first_seen:
+                    first_seen[family] = i
+                    first_seen_data[family] = data
+
+            for family in list(first_seen.keys()):
+                if family in fired:
+                    continue
+                start_i = first_seen[family]
+                min_dur = min_dur_map.get(family, 1)
+                target_i = start_i + min_dur - 1
+
+                if i == target_i:
+                    if family in signals_by_row[i]:
+                        fired[family] = first_seen_data[family]
+                    else:
+                        del first_seen[family]
+                        if family in first_seen_data:
+                            del first_seen_data[family]
+                elif i > target_i and family not in fired:
+                    if family not in row_sigs:
+                        del first_seen[family]
+                        if family in first_seen_data:
+                            del first_seen_data[family]
+    finally:
+        csv_reader.load_games = _orig_load
+        csv_reader._resolve_csv_path = _orig_resolve
+        csv_reader._read_csv_rows = _orig_read
+        builtins.open = _orig_open
+
+    return [{'match_id': match_id, 'strategy_family': fam, **data} for fam, data in fired.items()]
+
+csv_files = sorted(glob.glob(str(DATA_DIR / 'partido_*.csv')))
+print(f"\nSimulating {len(csv_files)} matches...")
+
+live_set = {}
+errors = 0
+for idx, cf in enumerate(csv_files):
+    if (idx + 1) % 100 == 0:
+        print(f"  {idx + 1}/{len(csv_files)}...", flush=True)
+    try:
+        fired = _simulate_match(cf, VERSIONS, MIN_DUR_MAP)
+        for r in fired:
+            key = (r['match_id'], r['strategy_family'])
+            if key not in live_set:
+                live_set[key] = r.get('minute', 0)
+    except Exception as e:
+        errors += 1
+
+print(f"Live sim done. Fired: {len(live_set)} unique (match,family). Errors: {errors}")
+
+BT_MATCH_IDS = set(mid for mid, fam in bt_set.keys())
+live_in_bt = {(m, f): v for (m, f), v in live_set.items() if m in BT_MATCH_IDS}
+
+MINUTE_TOL = 5
+stats = Counter()
+by_fam = defaultdict(Counter)
+
+all_keys = set(bt_set.keys()) | set(live_in_bt.keys())
+for key in all_keys:
+    mid, fam = key
+    in_bt = key in bt_set
+    in_live = key in live_in_bt
+    if in_bt and in_live:
+        bt_min = bt_set[key]
+        live_min = live_in_bt[key]
+        if abs((bt_min or 0) - (live_min or 0)) <= MINUTE_TOL:
+            status = 'MATCH'
+        else:
+            status = 'MINUTE_DIFF'
+    elif in_bt:
+        status = 'BT_ONLY'
+    else:
+        status = 'LIVE_ONLY'
+
+    stats[status] += 1
+    by_fam[fam][status] += 1
+
+# Dump LIVE_ONLY clustering for diagnosis
+print(f"\n--- Clustering LIVE_ONLY (diagnosis) ---")
+for key in sorted(all_keys):
+    mid, fam = key
+    if fam == 'goal_clustering' and key not in bt_set and key in live_in_bt:
+        print(f"  {mid}  min={live_in_bt[key]}")
+
+total = sum(stats.values())
+match = stats['MATCH']
+match_md = stats['MATCH'] + stats['MINUTE_DIFF']
+print(f"\n=== FRESH MATCH RATE ===")
+print(f"Total: {total} | MATCH: {match} ({100*match/total:.1f}%) | MATCH+MIN_DIFF: {match_md} ({100*match_md/total:.1f}%)")
+print(f"BT total: {len(bt_set)} | Live (in BT matches): {len(live_in_bt)}")
+print(f"{dict(stats)}")
+print(f"\nBy strategy:")
+for fam, c in sorted(by_fam.items()):
+    print(f"  {fam}: {dict(c)}")

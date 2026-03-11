@@ -72,11 +72,13 @@ analytics.py aplica post-filtros:
 | `betfair_scraper/dashboard/backend/api/analytics.py` | Puente config → LIVE (versions dict, post-filtros) | Paso 2, 5 |
 | `betfair_scraper/dashboard/backend/utils/csv_reader.py` | Lógica real (helpers, BT, LIVE) ~5800 líneas | Paso 2, 3, 5 |
 | `betfair_scraper/dashboard/backend/utils/sd_strategies.py` | SD configs aprobadas | Paso 1 |
+| `auxiliar/sd_generators.py` | Generadores BT de SD strategies (~1800 líneas) | Paso 2e |
 
 ### Estrategias
 
 - **7 Core** (con helper GR8): `draw`, `xg`, `drift`, `clustering`, `pressure`, `tarde_asia`, `momentum_xg`
-- **~13 SD** (solo BT, sin LIVE — problema conocido): `lay_over15`, `lay_draw_asym`, etc.
+- **9 SD con LIVE**: `sd_over25_2goal`, `sd_under35_late`, `sd_longshot`, `sd_cs_close`, `sd_cs_one_goal`, `sd_ud_leading`, `sd_home_fav_leading`, `sd_cs_20`, `sd_cs_big_lead` — usan código **inline** en `detect_betting_signals()`, NO helpers compartidos
+- **10 SD solo BT** (sin LIVE): el resto de configs en `sd_strategies.py`
 
 ---
 
@@ -252,6 +254,330 @@ else:
 PYEOF
 ```
 
+#### 2e. SD Logic Parity — ¿La lógica inline de LIVE es idéntica al generador BT? ⭐ NUEVO
+
+**Este es el check que faltaba.** Para las 9 SD con detección LIVE, verificar que la lógica
+inline en `detect_betting_signals()` es semánticamente equivalente al generador en `auxiliar/sd_generators.py`.
+
+**NO basta con que el param llegue — hay que verificar que la CONDICIÓN es la misma.**
+
+```bash
+python3 << 'PYEOF'
+import re, sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+with open('betfair_scraper/dashboard/backend/utils/csv_reader.py', encoding='utf-8') as f:
+    live_code = f.read()
+with open('auxiliar/sd_generators.py', encoding='utf-8') as f:
+    bt_code = f.read()
+
+SD_WITH_LIVE = [
+    'sd_over25_2goal', 'sd_under35_late', 'sd_longshot', 'sd_cs_close',
+    'sd_cs_one_goal', 'sd_ud_leading', 'sd_home_fav_leading', 'sd_cs_20', 'sd_cs_big_lead'
+]
+
+# Antipatrón 1: "None passthrough"
+# BT:   if stat is None: continue  → salta si no hay dato
+# LIVE: (stat is None or stat <= max) → PASA si no hay dato ← BUG
+print("=== ANTIPATRON: None passthrough en LIVE ===\n")
+none_passthrough = re.findall(r'(_\w+ is None or _\w+)', live_code)
+for match in none_passthrough:
+    # Find context
+    idx = live_code.find(match)
+    snippet = live_code[max(0,idx-80):idx+80].replace('\n',' ')
+    print(f"  ALERTA: '{match}' — acepta None cuando BT requeriría dato real")
+    print(f"    Contexto: ...{snippet}...")
+    print()
+
+# Antipatrón 2: "None passthrough" inverso (>= con None)
+none_passthrough2 = re.findall(r'(_\w+ is None or _\w+ >=)', live_code)
+for match in none_passthrough2:
+    idx = live_code.find(match)
+    snippet = live_code[max(0,idx-80):idx+80].replace('\n',' ')
+    print(f"  ALERTA: '{match}' — acepta None cuando BT requeriría dato real")
+    print(f"    Contexto: ...{snippet}...")
+    print()
+
+# Buscar bloques SD en BT que usen "if stat is None: continue"
+print("=== BT generators: gates de datos (None checks) ===\n")
+bt_none_gates = re.findall(r'(if \w+ is None.*?continue)', bt_code)
+for gate in set(bt_none_gates):
+    print(f"  BT gate: {gate.strip()}")
+    # Check if LIVE has corresponding NOT None check
+    var = re.search(r'if (\w+) is None', gate)
+    if var:
+        live_var = '_' + var.group(1)  # LIVE vars often have _ prefix
+        live_check = f'{live_var} is not None'
+        if live_check not in live_code:
+            print(f"    ← POSIBLE BUG: LIVE no tiene '{live_check}'")
+
+print("\nSi ves ALERTAs arriba, revisar manualmente cada caso:")
+print("  - 'is None or <= max' debería ser 'is not None and <= max'")
+print("  - 'is None or >= min' debería ser 'is not None and >= min'")
+PYEOF
+```
+
+Para cada estrategia SD con LIVE, leer manualmente:
+1. El generador BT en `auxiliar/sd_generators.py` (función `gen_<nombre>`)
+2. El bloque LIVE en `detect_betting_signals()` (buscar `# --- SD: <nombre>`)
+3. Comparar **gate de datos** (¿qué pasa si xG/odds es None?), **dirección del filtro** (>= vs <=), **umbrales**
+
+#### 2f. Compatibilidad temporal: min_duration vs ventana del trigger ⭐ NUEVO
+
+**Problema que detecta**: estrategia enabled, helper correcto, params bien pasados, pero la señal NUNCA se coloca porque la ventana válida del trigger es más corta que el tiempo de maduración requerido.
+
+```bash
+python3 << 'PYEOF'
+import json, sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+with open('betfair_scraper/cartera_config.json', encoding='utf-8') as f:
+    config = json.load(f)
+
+PAPER_REACTION_DELAY = 1  # minutos (hardcoded en analytics.py)
+POLL_INTERVAL_S = 60      # segundos entre polls de auto_paper_trading
+
+strategies = config.get('strategies', {})
+min_dur = config.get('min_duration', {})
+
+# Estrategias con trigger de ventana corta (evento puntual + minuteMax restrictivo)
+# Trigger válido ~= (max_minute - trigger_minute) minutos de partido
+# Ejemplo: goal_clustering con max_minute=60, gol a min=57 -> ventana = 3 min
+
+SHORT_TRIGGER_STRATEGIES = {
+    'clustering': {
+        'trigger_type': 'goal_event_recent',
+        'lookback_rows': 3,
+        'lookback_secs': 90,  # 3 rows * 30s
+        'max_minute_key': 'minuteMax',
+        'typical_trigger_minute': 55,  # gol típico en ventana
+    }
+    # Añadir aquí otras estrategias de evento puntual si las hubiera
+}
+
+print("=== CHECK 2f: Compatibilidad min_duration vs ventana trigger ===\n")
+issues = []
+for strat_key, meta in SHORT_TRIGGER_STRATEGIES.items():
+    strat_cfg = strategies.get(strat_key, {})
+    if not strat_cfg.get('enabled', False):
+        continue
+    max_minute = strat_cfg.get(meta['max_minute_key'], 90)
+    md = min_dur.get(strat_key, 1)
+    maturity_needed = md + PAPER_REACTION_DELAY
+    trigger_window_mins = max_minute - meta['typical_trigger_minute']
+    if maturity_needed > trigger_window_mins:
+        issues.append(strat_key)
+        print(f"  🚨 ALTO: {strat_key}")
+        print(f"     max_minute={max_minute}, trigger_típico=min{meta['typical_trigger_minute']}")
+        print(f"     ventana_válida={trigger_window_mins} min < maduración_necesaria={maturity_needed} min")
+        print(f"     (min_duration={md} + reaction_delay={PAPER_REACTION_DELAY})")
+        print(f"     → La señal nunca puede madurar. entry_buffer en _cl_live_cfg o reducir min_duration.")
+    else:
+        print(f"  OK: {strat_key}  ventana={trigger_window_mins} min >= maduración={maturity_needed} min")
+
+if not issues:
+    print("OK: No se detectan incompatibilidades temporales")
+PYEOF
+```
+
+#### 2g. Semántica m_max: `<` exclusivo vs `<=` inclusivo ⭐ NUEVO
+
+**Antipatrón detectado (2026-03-10):** BT (`sd_filters.py`) usa `< mx` (exclusivo) para el límite superior de minuto, pero LIVE puede usar `<= _sd_m_max` (inclusivo). Resultado: LIVE coloca apuestas en el último minuto válido que BT rechazaría — apuestas fantasma sin respaldo estadístico.
+
+```bash
+python3 << 'PYEOF'
+import re, json, csv, sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+with open('auxiliar/sd_filters.py', encoding='utf-8') as f:
+    bt_code = f.read()
+with open('betfair_scraper/dashboard/backend/utils/csv_reader.py', encoding='utf-8') as f:
+    live_code = f.read()
+    detect_start = live_code.find('def detect_betting_signals')
+    live_body = live_code[detect_start:]
+
+print("=== CHECK 2g: m_max boundary semantics (<= vs <) ===\n")
+issues = []
+
+bt_incl = re.findall(r'\(b\.get\(.minuto.\) or 0\) <= mx', bt_code)
+bt_excl = re.findall(r'\(b\.get\(.minuto.\) or 0\) < mx', bt_code)
+print(f"BT (sd_filters.py):")
+print(f"  Inclusive (<= mx): {len(bt_incl)}  |  Exclusive (< mx): {len(bt_excl)}")
+if bt_incl:
+    issues.append(f"BT: {len(bt_incl)} usos de '<= mx' (deberia ser '< mx')")
+
+live_incl = re.findall(r'_m <= _sd_m_max', live_body)
+live_excl = re.findall(r'_m < _sd_m_max', live_body)
+print(f"\nLIVE (detect_betting_signals):")
+print(f"  Inclusive (<= _sd_m_max): {len(live_incl)}  |  Exclusive (< _sd_m_max): {len(live_excl)}")
+if live_incl:
+    issues.append(f"LIVE: {len(live_incl)} usos de '<= _sd_m_max' (deberia ser '< _sd_m_max')")
+
+if not issues:
+    print("\nOK: BT y LIVE usan < m_max (exclusive) consistentemente")
+else:
+    for issue in issues:
+        print(f"\nALTO: {issue}")
+    # Show placed bets at exactly m_max (affected)
+    with open('betfair_scraper/cartera_config.json', encoding='utf-8') as f:
+        cfg = json.load(f)
+    sd_mmax = {k: v.get('m_max') for k, v in cfg.get('strategies', {}).items()
+               if k.startswith('sd_') and 'm_max' in v}
+    try:
+        with open('betfair_scraper/placed_bets.csv', encoding='utf-8') as f:
+            hits = [r for r in csv.DictReader(f)
+                    if r.get('strategy') in sd_mmax
+                    and int(r.get('minute') or 0) >= (sd_mmax.get(r['strategy']) or 999)]
+        if hits:
+            print("\nApuestas placed_bets.csv colocadas en minuto >= m_max (invalidas con codigo correcto):")
+            for r in hits:
+                print(f"  id={r['id']} {r['strategy']} min={r['minute']} m_max={sd_mmax.get(r['strategy'])} result={r.get('result')} pl={r.get('pl')}")
+    except FileNotFoundError:
+        pass
+PYEOF
+```
+
+**Fix si hay issues:** En `csv_reader.py` buscar todas las ocurrencias de `<= _sd_m_max` en el bloque SD de `detect_betting_signals()` y reemplazar por `< _sd_m_max`. En `sd_filters.py` verificar que todos los `_apply_sd_*` usen `< mx`.
+
+---
+
+#### 2h. Pre-match odds lookup window: rows[0] vs rows[:5] ⭐ NUEVO
+
+**Antipatrón detectado (2026-03-10):** Para estrategias que identifican el equipo underdog/favorito usando cuotas pre-partido (sd_ud_leading, sd_home_fav_leading, sd_longshot), BT usaba `rows[0]` (solo primera fila) mientras LIVE usa `rows[:5]` (busca la primera fila con cuotas válidas entre las 5 primeras). Si `rows[0]` no tiene cuotas, el BT descartaba el partido silenciosamente aunque el partido sí activara en LIVE.
+
+```bash
+python3 << 'PYEOF'
+import re, sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+with open('auxiliar/sd_generators.py', encoding='utf-8') as f:
+    gen_code = f.read()
+with open('betfair_scraper/dashboard/backend/utils/csv_reader.py', encoding='utf-8') as f:
+    live_code = f.read()
+    detect_start = live_code.find('def detect_betting_signals')
+    live_body = live_code[detect_start:]
+
+STRATEGIES_PREMATCH = [
+    ('gen_ud_leading',       'sd_ud_leading',       '# --- SD: BACK Underdog Leading Late ---'),
+    ('gen_home_fav_leading', 'sd_home_fav_leading', '# --- SD: BACK Home Favourite Leading Late ---'),
+    ('gen_back_longshot',    'sd_longshot',          '# --- SD: BACK Longshot Leading ---'),  # nombre real del generator
+]
+
+print("=== CHECK 2h: Pre-match odds lookup window (BT vs LIVE) ===\n")
+issues = []
+for gen_name, strat_name, live_marker in STRATEGIES_PREMATCH:
+    gen_start = gen_code.find(f'def {gen_name}(')
+    gen_end = gen_code.find('\ndef ', gen_start + 1) if gen_start >= 0 else len(gen_code)
+    gen_body = gen_code[gen_start:gen_end] if gen_start >= 0 else ""
+
+    live_start = live_body.find(live_marker)
+    live_end = len(live_body)
+    for marker in ['# --- SD:', '# --- Enrich']:
+        pos = live_body.find(marker, live_start + 1)
+        if 0 < pos < live_end:
+            live_end = pos
+    live_section = live_body[live_start:live_end] if live_start >= 0 else ""
+
+    bt_row0 = 'rows[0]' in gen_body
+    bt_rowN = re.findall(r'rows\[:(\d+)\]', gen_body)
+    live_row0 = 'rows[0]' in live_section
+    live_rowN = re.findall(r'rows\[:(\d+)\]', live_section)
+
+    bt_desc = "rows[0]" if bt_row0 else (f"rows[:{bt_rowN[0]}]" if bt_rowN else "no prematch lookup")
+    live_desc = "rows[0]" if live_row0 else (f"rows[:{live_rowN[0]}]" if live_rowN else "no prematch lookup")
+
+    aligned = (bt_desc == live_desc)
+    print(f"  {strat_name}:")
+    print(f"    BT  ({gen_name}):       {bt_desc}")
+    print(f"    LIVE (csv_reader):     {live_desc}")
+    if not aligned:
+        issues.append(f"{strat_name}: BT={bt_desc} vs LIVE={live_desc}")
+        print(f"    ALTO: Divergencia en lookup window!")
+    else:
+        print(f"    OK")
+
+if not issues:
+    print("\nOK: BT y LIVE usan la misma ventana de lookup pre-partido")
+else:
+    print(f"\nALTO: {len(issues)} estrategias con lookup window divergente")
+    print("FIX: Actualizar generators BT para usar rows[:5] con loop (igual que LIVE)")
+PYEOF
+```
+
+**Fix si hay issues:** En `auxiliar/sd_generators.py`, reemplazar `rows[0]` directo por un loop `for _r in rows[:5]: if valid_odds: use; break` siguiendo el patrón de LIVE.
+
+---
+
+#### 2i. Params de BT (_apply_sd_*) no presentes en cartera_config.json ⭐ NUEVO
+
+**Antipatrón detectado (2026-03-10):** `sd_filters.py` aplica filtros con defaults hardcodeados que NO están en `cartera_config.json`. Ejemplo: `_apply_sd_under35_late` tenía `odds_min=1.1, odds_max=5.0` pero el config no los definía → LIVE no aplicaba estos filtros → se colocaban apuestas con cuotas fuera del rango validado por el BT.
+
+```bash
+python3 << 'PYEOF'
+import re, json, sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+with open('auxiliar/sd_filters.py', encoding='utf-8') as f:
+    bt_code = f.read()
+with open('betfair_scraper/cartera_config.json', encoding='utf-8') as f:
+    config = json.load(f)
+with open('betfair_scraper/dashboard/backend/utils/csv_reader.py', encoding='utf-8') as f:
+    live_code = f.read()
+    detect_start = live_code.find('def detect_betting_signals')
+    live_body = live_code[detect_start:]
+
+strategies = config.get('strategies', {})
+apply_pattern = re.compile(r'def _apply_sd_(\w+)\(bets, cfg\):(.*?)(?=\ndef |\Z)', re.DOTALL)
+param_pattern = re.compile(r"cfg\.get\(['\"](\w+)['\"],\s*([^)]+)\)")
+
+# Params always structurally present in config (skip — not a gap)
+SKIP_PARAMS = {'m_min', 'm_max'}
+
+# Estrategias con LIVE detection (las 9 que importan): si tienen gap es ALTO
+# Las demás (BT-only) son INFO — no tienen LIVE ni config, es el diseño esperado
+SD_WITH_LIVE = {
+    'sd_over25_2goal', 'sd_under35_late', 'sd_longshot', 'sd_cs_close',
+    'sd_cs_one_goal', 'sd_ud_leading', 'sd_home_fav_leading', 'sd_cs_20', 'sd_cs_big_lead'
+}
+
+print("=== CHECK 2i: Params de _apply_sd_* no en cartera_config.json ===\n")
+alto_issues = []
+info_issues = []
+for func_match in apply_pattern.finditer(bt_code):
+    suffix = func_match.group(1)
+    func_body = func_match.group(2)
+    strat_key = f'sd_{suffix}'
+    strat_cfg = strategies.get(strat_key)
+    has_live = strat_key in SD_WITH_LIVE
+
+    for param_name, default_val in param_pattern.findall(func_body):
+        if param_name in SKIP_PARAMS:
+            continue
+        if strat_cfg is None or param_name not in strat_cfg:
+            default_str = default_val.strip()
+            if has_live:
+                # Estrategia con LIVE: el gap en config significa que LIVE no aplica el filtro
+                alto_issues.append((strat_key, param_name, default_str))
+                print(f"  ALTO: {strat_key}.{param_name} (BT default={default_str}) ausente en config")
+                print(f"    → BT filtra con este valor, LIVE lo ignora. Añadir al config.")
+            else:
+                # Estrategia BT-only: sin LIVE, sin config es el diseño esperado
+                info_issues.append((strat_key, param_name, default_str))
+
+if not alto_issues:
+    print("OK: Ninguna estrategia con LIVE detection tiene params BT sin correspondencia en config")
+else:
+    print(f"\nALTO: {len(alto_issues)} params de estrategias LIVE sin correspondencia en config.")
+    print("ACCION: Añadir al config + verificar cadena analytics.py → detect_betting_signals (pasos 2a+2b).")
+
+print(f"\nINFO: {len(info_issues)} params BT-only (sin config, sin LIVE — diseño esperado, no requieren accion)")
+PYEOF
+```
+
+**Fix si hay issues:** Añadir el param faltante a `cartera_config.json` bajo la estrategia correspondiente con el valor default del BT. Luego verificar la cadena config → analytics.py → csv_reader.py (pasos 2a + 2b).
+
+---
+
 #### 2d. Post-filtros de analytics.py
 
 Verificar que `auto_paper_trading()` aplica:
@@ -326,12 +652,12 @@ Informa: `[4/6] Comparando rendimiento BT vs LIVE...`
 
 ```bash
 cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo
-PYTHONIOENCODING=utf-8 python aux/compare_bt_live.py
+PYTHONIOENCODING=utf-8 python auxiliar/compare_bt_live.py
 ```
 
 - Extraer: BT (N, WR%, P/L, ROI%, MaxDD) vs LIVE estimado (N, P/L, ROI%)
 - **Regla: LIVE P/L >= BT P/L.** Si BT sobreestima → ALERTA.
-- Si falla, usar `aux/run_reconcile.py` como alternativa.
+- Si falla, usar `auxiliar/run_reconcile.py` como alternativa.
 
 ---
 
@@ -471,12 +797,54 @@ Genera `analisis/system_audit_<YYYYMMDD_HHMMSS>.md`:
 
 ---
 
+## CASOS HISTÓRICOS — Bugs que el auditor NO detectó (lecciones aprendidas)
+
+### Caso 1 (2026-03-08): goal_clustering nunca apostaba en paper
+**Síntoma**: `goal_clustering` tenía N=0 en placed_bets.csv aunque enabled=true y helper correcto.
+**Root cause**: Incompatibilidad entre `min_duration.clustering=4` (señal necesita 5 min reales para madurar) y la ventana válida del trigger (~2 min, limitada por `minuteMax=60` + lookback de 3 filas). La señal aparecía 1-2 polls y desaparecía antes de poder colocarse.
+**Por qué no lo detectó el auditor**: El auditor verifica que params llegan y helpers se llaman, pero NO verifica la compatibilidad temporal: `min_duration + PAPER_REACTION_DELAY <= trigger_valid_window`.
+**Fix aplicado**: Añadido `entry_buffer` en `_detect_clustering_trigger` y `_cl_live_cfg` para extender la ventana del current row (manteniendo la condición del gol sin cambios). BT no se ve afectado.
+
+**CHECK A AÑADIR** en Paso 2 (Live Fidelity): Para estrategias con trigger de ventana corta (goal_clustering, cualquier trigger basado en lookback de N filas), verificar:
+```
+trigger_valid_window = (max_minute - entry_minute_typical) * 2  # en polls de 60s
+maturity_needed = min_duration + PAPER_REACTION_DELAY_MINS
+if maturity_needed > trigger_valid_window:
+    🚨 ALTO: señal nunca madurará — trigger_valid_window=X min < maturity_needed=Y min
+```
+Estrategias con este riesgo: **cualquier trigger basado en evento puntual** (gol reciente, cambio súbito de odds) combinado con `minuteMax` restrictivo.
+
+---
+
+### Caso 2 (2026-03-10): m_max inclusivo vs exclusivo — apuestas fuera de rango validado
+**Síntoma**: Apuestas colocadas en el último minuto del rango (ej. sd_home_fav_leading min=85 con m_max=85) que el BT nunca habría generado.
+**Root cause**: BT (`sd_filters.py`) usa `< mx` (exclusivo). LIVE (`detect_betting_signals`) usaba `<= _sd_m_max` (inclusivo). Las 9 estrategias SD con LIVE estaban afectadas.
+**Por qué no lo detectó el auditor**: El auditor verificaba que el param `m_max` llegaba al código LIVE (conectividad), pero no comparaba el operador de comparación usado (semántica).
+**Fix aplicado**: Reemplazadas 9 ocurrencias de `<= _sd_m_max` por `< _sd_m_max` en `csv_reader.py`. Eliminada de `placed_bets.csv` la apuesta id=20 (sd_home_fav_leading min=85) que no habría existido.
+**CHECK AÑADIDO**: Paso 2g — compara operadores `<`/`<=` entre BT (sd_filters.py) y LIVE (csv_reader.py).
+
+### Caso 3 (2026-03-10): rows[0] vs rows[:5] — lookup de cuotas pre-partido divergente
+**Síntoma**: BT y LIVE podían clasificar el equipo underdog/favorito de forma diferente si `rows[0]` no tenía cuotas válidas.
+**Root cause**: `gen_ud_leading()` y `gen_home_fav_leading()` en `sd_generators.py` usaban `rows[0]` directamente. LIVE en `detect_betting_signals()` usaba un loop `for _r in rows[:5]` para encontrar la primera fila con cuotas válidas.
+**Por qué no lo detectó el auditor**: El código de lookup existía en ambos lados (conectividad OK). La diferencia era el número de filas inspeccionadas — invisible a búsqueda de texto.
+**Fix aplicado**: `gen_ud_leading()` y `gen_home_fav_leading()` actualizados para usar loop `rows[:5]` idéntico al de LIVE.
+**CHECK AÑADIDO**: Paso 2h — compara el patrón de lookup (rows[0] vs rows[:N]) entre BT generators y LIVE para las 3 estrategias con lookup pre-partido.
+
+### Caso 4 (2026-03-10): Params BT hardcodeados en sd_filters.py pero ausentes del config
+**Síntoma**: `sd_under35_late` aplicaba `odds_min=1.1, odds_max=5.0` en BT (hardcodeado en `_apply_sd_under35_late`) pero LIVE no aplicaba ningún filtro de odds (solo `> 1.0`).
+**Root cause**: Los params `odds_min` y `odds_max` estaban hardcodeados como defaults en `sd_filters.py` pero no existían en `cartera_config.json`. El auditor en el Paso 2a solo buscaba params que SÍ estuvieran en el config — si el param nunca estuvo en el config, era invisible para el check.
+**Fix aplicado**: Añadidos `odds_min: 1.1, odds_max: 5.0` a `cartera_config.json` bajo `sd_under35_late`, y el check correspondiente en `detect_betting_signals()`.
+**CHECK AÑADIDO**: Paso 2i — extrae todos los `cfg.get('param', default)` de `_apply_sd_*` en sd_filters.py y verifica que cada param exista en cartera_config.json.
+
+---
+
 ## REGLAS
 
 1. **NUNCA modificar cartera_config.json** — es propiedad del usuario/notebook.
 2. **Cuantificar siempre** — no "falta un param", sino "`xg.sotMin=2` definido en config línea 14 pero analytics.py NO lo pasa al dict versions".
 3. **Niveles de gravedad:**
    - CRITICO: estrategia enabled pero no se ejecuta en LIVE (dinero perdido)
+   - ALTO: param llega a LIVE pero con lógica invertida o incorrecta vs BT (pérdidas silenciosas)
    - ALTO: param del config que no llega a LIVE (filtro no aplicado)
    - MEDIO: estrategia aprobada sin entrada en config
    - BAJO: firma de helper no estándar
@@ -486,5 +854,10 @@ Genera `analisis/system_audit_<YYYYMMDD_HHMMSS>.md`:
 6. **Salida en analisis/** — informe en `analisis/system_audit_<fecha>.md`.
 7. **LIVE >= BT** — si BT sobreestima, es un problema serio.
 8. **GR8 es sagrado** — lógica de estrategia fuera de un helper compartido = violación.
-9. **El paso 2 es tu razón de existir** — dedícale el mayor esfuerzo y detalle.
+9. **El paso 2 es tu razón de existir** — dedícale el mayor esfuerzo y detalle. Ejecuta TODOS los sub-pasos: 2a, 2b, 2c, 2d, 2e, 2f, 2g, 2h, 2i.
 10. **BUSCAR, NUNCA INVENTAR** — toda corrección se basa en código que YA EXISTE. Si el helper/función no se encuentra, PARA y avisa. No crear lógica nueva.
+11. **"Param presente" ≠ "Lógica correcta"** — que un param aparezca en el código LIVE no significa que se aplique igual que en BT. Verificar siempre la SEMÁNTICA de la condición, no solo su presencia.
+12. **Antipatrón None passthrough** — en LIVE, `(x is None or x <= max)` acepta None silenciosamente. El BT genera bets con `if x is None: continue`. Si ves este patrón en LIVE para una SD strategy, es ALTO — el edge del BT no aplica a casos sin datos.
+13. **Conectividad ≠ Semántica** — que el cable esté enchufado no significa que transporte la señal correcta. Tres tipos de bug semántico siempre presentes: (a) operador incorrecto (`<` vs `<=`), (b) ventana de datos diferente (`rows[0]` vs `rows[:5]`), (c) param hardcodeado en BT no expuesto al config. Los pasos 2g, 2h, 2i detectan estos tres tipos automáticamente.
+14. **Auditar desde la fuente BT, no desde el config** — el config solo contiene lo que el usuario decidió exponer. Los defaults hardcodeados en `sd_filters.py` son parte del contrato BT aunque no estén en el config. El Paso 2i garantiza que todo param BT tenga su correspondiente en config y llegue a LIVE.
+15. **Boundary conditions son críticas** — siempre verificar los valores límite de rangos de minutos (`m_min`, `m_max`, `minuteMin`, `minuteMax`). Un operador `<=` vs `<` en el límite superior es suficiente para generar apuestas sin respaldo estadístico.

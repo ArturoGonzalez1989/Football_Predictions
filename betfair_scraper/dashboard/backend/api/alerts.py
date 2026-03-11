@@ -240,25 +240,22 @@ def _check_scraper_log() -> List[Dict[str, Any]]:
         return alerts
 
     try:
+        import time
         log_files = sorted(LOG_DIR.glob("scraper_*.log"), key=lambda p: p.stat().st_mtime, reverse=True)
         if not log_files:
             return alerts
 
         latest_log = log_files[0]
+        # Only check if log was modified in last 2 hours (skip stale logs)
+        if time.time() - latest_log.stat().st_mtime > 7200:
+            return alerts
+
         # Read last 200 lines
         with open(latest_log, 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()[-200:]
 
         error_count = sum(1 for l in lines if "ERROR" in l)
         crash_count = sum(1 for l in lines if "muerto" in l.lower() or "crash" in l.lower() or "💀" in l)
-        stats_fail = sum(1 for l in lines if "0/5 endpoints" in l or "0/3 endpoints" in l)
-
-        if stats_fail > 3:
-            alerts.append({
-                "level": "critical",
-                "category": "stats_api",
-                "message": f"Stats API fallando repetidamente: {stats_fail} fallos en log reciente",
-            })
 
         if crash_count > 2:
             alerts.append({
@@ -275,6 +272,408 @@ def _check_scraper_log() -> List[Dict[str, Any]]:
             })
     except Exception as e:
         log.warning(f"Error checking scraper log: {e}")
+    return alerts
+
+
+def _check_frozen_rc_odds() -> List[Dict[str, Any]]:
+    """Detect matches where correct score odds are frozen (all live rows have same value)."""
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    import time
+    try:
+        cutoff = time.time() - 7200  # active in last 2h
+        csv_files = [f for f in DATA_DIR.glob("partido_*.csv") if f.stat().st_mtime > cutoff]
+
+        frozen_matches = []
+        for csv_path in csv_files:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))
+
+                live_rows = [r for r in rows if r.get("estado_partido") == "en_juego"]
+                if len(live_rows) < 5:
+                    continue
+
+                # Frozen: 5+ live rows, back_rc_1_0 non-empty but all identical
+                rc_vals = [r.get("back_rc_1_0", "") for r in live_rows]
+                non_empty = [v for v in rc_vals if v]
+                if len(non_empty) >= 5 and len(set(non_empty)) == 1:
+                    frozen_matches.append(csv_path.stem.replace("partido_", "")[:50])
+            except Exception:
+                pass
+
+        if frozen_matches:
+            alerts.append({
+                "level": "warning",
+                "category": "frozen_rc",
+                "message": f"Cuotas RC congeladas en {len(frozen_matches)} partido(s) — scraper no accede al mercado RC",
+                "detail": "; ".join(frozen_matches),
+            })
+    except Exception as e:
+        log.warning(f"Error checking frozen RC: {e}")
+    return alerts
+
+
+def _check_onedrive_conflicts() -> List[Dict[str, Any]]:
+    """Detect OneDrive conflict copies in data/ (partido_*-HOSTNAME-*.csv)."""
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    try:
+        conflict_files = [
+            f for f in DATA_DIR.glob("partido_*.csv")
+            if re.search(r"-[A-Z]+-[A-Z0-9]+(-\d+)?\.csv$", f.name)
+        ]
+        if conflict_files:
+            alerts.append({
+                "level": "warning",
+                "category": "onedrive",
+                "message": f"{len(conflict_files)} archivos de conflicto OneDrive en data/ — datos duplicados en BT",
+                "detail": "; ".join(f.name[:50] for f in conflict_files[:5]) + ("..." if len(conflict_files) > 5 else ""),
+            })
+    except Exception as e:
+        log.warning(f"Error checking OneDrive conflicts: {e}")
+    return alerts
+
+
+def _check_missing_stats() -> List[Dict[str, Any]]:
+    """Detect active matches where xG/stats are consistently empty in live rows."""
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    import time
+    try:
+        cutoff = time.time() - 600  # modified in last 10 min
+        csv_files = [f for f in DATA_DIR.glob("partido_*.csv") if f.stat().st_mtime > cutoff]
+
+        missing_stats_matches = []
+        for csv_path in csv_files:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))
+
+                live_rows = [r for r in rows if r.get("estado_partido") == "en_juego"]
+                if len(live_rows) < 3:
+                    continue
+
+                empty_xg = sum(1 for r in live_rows if not r.get("xg_local", "").strip())
+                if empty_xg / len(live_rows) > 0.8:
+                    missing_stats_matches.append(csv_path.stem.replace("partido_", "")[:50])
+            except Exception:
+                pass
+
+        if missing_stats_matches:
+            alerts.append({
+                "level": "warning",
+                "category": "stats_missing",
+                "message": f"xG/estadísticas ausentes en {len(missing_stats_matches)} partido(s) activo(s)",
+                "detail": "; ".join(missing_stats_matches),
+            })
+    except Exception as e:
+        log.warning(f"Error checking missing stats: {e}")
+    return alerts
+
+
+def _check_post_finalizado_rows() -> List[Dict[str, Any]]:
+    """Detect CSVs where non-finalizado rows appear after a finalizado row."""
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    import time
+    try:
+        cutoff = time.time() - 7200
+        csv_files = [f for f in DATA_DIR.glob("partido_*.csv") if f.stat().st_mtime > cutoff]
+
+        broken_matches = []
+        for csv_path in csv_files:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))
+
+                first_final_idx = next(
+                    (i for i, r in enumerate(rows) if r.get("estado_partido") == "finalizado"), None
+                )
+                if first_final_idx is None:
+                    continue
+
+                post_bad = [
+                    r for r in rows[first_final_idx + 1:]
+                    if r.get("estado_partido") not in ("finalizado", "")
+                ]
+                if post_bad:
+                    broken_matches.append(
+                        f"{csv_path.stem.replace('partido_', '')[:40]} ({len(post_bad)} filas post-final)"
+                    )
+            except Exception:
+                pass
+
+        if broken_matches:
+            alerts.append({
+                "level": "warning",
+                "category": "state_corruption",
+                "message": f"{len(broken_matches)} partido(s) con filas activas tras estado finalizado",
+                "detail": "; ".join(broken_matches),
+            })
+    except Exception as e:
+        log.warning(f"Error checking post-finalizado rows: {e}")
+    return alerts
+
+
+def _check_frozen_odds_general() -> List[Dict[str, Any]]:
+    """Detect any main market / OU odds column frozen for 10+ consecutive live rows."""
+    WATCHED_COLS = [
+        "back_home", "lay_home", "back_draw", "lay_draw",
+        "back_over25", "lay_over25", "back_over15", "back_over35",
+    ]
+    FREEZE_THRESHOLD = 10
+
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    import time
+    try:
+        cutoff = time.time() - 7200
+        csv_files = [f for f in DATA_DIR.glob("partido_*.csv") if f.stat().st_mtime > cutoff]
+
+        frozen_details = []
+        for csv_path in csv_files:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))
+
+                # Skip finished/halftime — collapsed or suspended odds are not frozen
+                last_state = rows[-1].get("estado_partido", "") if rows else ""
+                if last_state in ("finalizado", "descanso"):
+                    continue
+
+                live_rows = [r for r in rows if r.get("estado_partido") == "en_juego"]
+                if len(live_rows) < FREEZE_THRESHOLD:
+                    continue
+
+                recent = live_rows[-FREEZE_THRESHOLD:]
+                frozen_cols = []
+                for col in WATCHED_COLS:
+                    vals = [r.get(col, "") for r in recent]
+                    non_empty = [v for v in vals if v]
+                    if len(non_empty) == FREEZE_THRESHOLD and len(set(non_empty)) == 1:
+                        frozen_cols.append(col)
+
+                if frozen_cols:
+                    match_name = csv_path.stem.replace("partido_", "")[:40]
+                    frozen_details.append(f"{match_name} [{', '.join(frozen_cols)}]")
+            except Exception:
+                pass
+
+        if frozen_details:
+            alerts.append({
+                "level": "warning",
+                "category": "frozen_odds",
+                "message": f"Cuotas congeladas ({FREEZE_THRESHOLD}+ filas iguales) en {len(frozen_details)} partido(s)",
+                "detail": "; ".join(frozen_details),
+            })
+    except Exception as e:
+        log.warning(f"Error checking frozen general odds: {e}")
+    return alerts
+
+
+def _check_duplicate_minutes() -> List[Dict[str, Any]]:
+    """Detect matches where the same minute appears 10+ times (scraper stuck at same minute)."""
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    import time
+    from collections import Counter
+    try:
+        cutoff = time.time() - 3600
+        csv_files = [f for f in DATA_DIR.glob("partido_*.csv") if f.stat().st_mtime > cutoff]
+
+        stuck_matches = []
+        for csv_path in csv_files:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))
+
+                live_rows = [r for r in rows if r.get("estado_partido") == "en_juego"]
+                if not live_rows:
+                    continue
+
+                counts = Counter(r.get("minuto", "") for r in live_rows if r.get("minuto", "").strip())
+                worst = counts.most_common(1)
+                if worst and worst[0][1] >= 10:
+                    match_name = csv_path.stem.replace("partido_", "")[:40]
+                    stuck_matches.append(f"{match_name} (min {worst[0][0]}: {worst[0][1]}x)")
+            except Exception:
+                pass
+
+        if stuck_matches:
+            alerts.append({
+                "level": "warning",
+                "category": "stuck_minute",
+                "message": f"{len(stuck_matches)} partido(s) con scraper atascado en mismo minuto",
+                "detail": "; ".join(stuck_matches),
+            })
+    except Exception as e:
+        log.warning(f"Error checking duplicate minutes: {e}")
+    return alerts
+
+
+def _check_long_running_match() -> List[Dict[str, Any]]:
+    """Detect matches still in en_juego after 130+ minutes of data."""
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    import time
+    try:
+        cutoff = time.time() - 600
+        csv_files = [f for f in DATA_DIR.glob("partido_*.csv") if f.stat().st_mtime > cutoff]
+
+        long_matches = []
+        for csv_path in csv_files:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))
+
+                live_rows = [r for r in rows if r.get("estado_partido") == "en_juego"]
+                if not live_rows:
+                    continue
+
+                # Check if last row is still en_juego
+                last = rows[-1]
+                if last.get("estado_partido") != "en_juego":
+                    continue
+
+                # Check max minute reached
+                minutes = []
+                for r in live_rows:
+                    try:
+                        minutes.append(int(r.get("minuto", "0") or "0"))
+                    except ValueError:
+                        pass
+
+                if minutes and max(minutes) > 130:
+                    match_name = csv_path.stem.replace("partido_", "")[:40]
+                    long_matches.append(f"{match_name} (min {max(minutes)})")
+            except Exception:
+                pass
+
+        if long_matches:
+            alerts.append({
+                "level": "warning",
+                "category": "long_match",
+                "message": f"{len(long_matches)} partido(s) en_juego con >130 minutos — ¿no detectó finalizado?",
+                "detail": "; ".join(long_matches),
+            })
+    except Exception as e:
+        log.warning(f"Error checking long running matches: {e}")
+    return alerts
+
+
+def _check_odds_outliers() -> List[Dict[str, Any]]:
+    """Detect clearly invalid odds values (0, negative, or >500) in recent live rows."""
+    ODDS_COLS = ["back_home", "back_draw", "back_away", "back_over25", "back_over15"]
+    alerts = []
+    if not DATA_DIR.exists():
+        return alerts
+
+    import time
+    try:
+        cutoff = time.time() - 3600
+        csv_files = [f for f in DATA_DIR.glob("partido_*.csv") if f.stat().st_mtime > cutoff]
+
+        outlier_details = []
+        for csv_path in csv_files:
+            try:
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))
+
+                live_rows = [r for r in rows if r.get("estado_partido") == "en_juego"]
+                if not live_rows:
+                    continue
+
+                bad_cols = []
+                for col in ODDS_COLS:
+                    for r in live_rows[-20:]:
+                        v = r.get(col, "")
+                        if not v:
+                            continue
+                        try:
+                            f_val = float(v)
+                            if f_val <= 1.0 or f_val > 500:
+                                bad_cols.append(f"{col}={v}")
+                                break
+                        except ValueError:
+                            bad_cols.append(f"{col}='{v}'")
+                            break
+
+                if bad_cols:
+                    match_name = csv_path.stem.replace("partido_", "")[:35]
+                    outlier_details.append(f"{match_name} [{'; '.join(bad_cols[:3])}]")
+            except Exception:
+                pass
+
+        if outlier_details:
+            alerts.append({
+                "level": "warning",
+                "category": "odds_outlier",
+                "message": f"Cuotas con valores imposibles en {len(outlier_details)} partido(s)",
+                "detail": "; ".join(outlier_details),
+            })
+    except Exception as e:
+        log.warning(f"Error checking odds outliers: {e}")
+    return alerts
+
+
+def _check_games_without_csv() -> List[Dict[str, Any]]:
+    """Detect games in games.csv that have no data CSV after 10+ minutes past start time."""
+    alerts = []
+    if not GAMES_CSV.exists() or not DATA_DIR.exists():
+        return alerts
+
+    try:
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        with open(GAMES_CSV, "r", encoding="utf-8") as f:
+            games = list(csv.DictReader(f))
+
+        missing = []
+        for g in games:
+            url = g.get("url", "")
+            m = re.search(r"([^/]+-apuestas-\d+)", url)
+            if not m:
+                continue
+            match_id = m.group(1)
+            csv_path = DATA_DIR / f"partido_{match_id}.csv"
+            if csv_path.exists():
+                continue
+
+            # Only alert if start time is at least 10 min ago
+            start_str = g.get("fecha_hora_inicio", "")
+            if start_str:
+                try:
+                    start = datetime.strptime(start_str.strip(), "%Y-%m-%d %H:%M")
+                    if (now - start).total_seconds() < 600:
+                        continue  # Not started yet or just started
+                except Exception:
+                    pass
+
+            missing.append(g.get("Game", match_id)[:40])
+
+        if missing:
+            alerts.append({
+                "level": "warning",
+                "category": "missing_csv",
+                "message": f"{len(missing)} partido(s) en games.csv sin archivo de datos",
+                "detail": "; ".join(missing),
+            })
+    except Exception as e:
+        log.warning(f"Error checking games without CSV: {e}")
     return alerts
 
 
@@ -366,6 +765,15 @@ def run_alert_checks(include_stats_api: bool = True) -> Dict[str, Any]:
     alerts.extend(_check_pending_bets())
     alerts.extend(_check_data_quality())
     alerts.extend(_check_scraper_log())
+    alerts.extend(_check_frozen_rc_odds())
+    alerts.extend(_check_frozen_odds_general())
+    alerts.extend(_check_onedrive_conflicts())
+    alerts.extend(_check_missing_stats())
+    alerts.extend(_check_post_finalizado_rows())
+    alerts.extend(_check_duplicate_minutes())
+    alerts.extend(_check_long_running_match())
+    alerts.extend(_check_odds_outliers())
+    alerts.extend(_check_games_without_csv())
     # Stats API check is slow (~2s), only run if no other critical alerts
     if include_stats_api and not any(a["level"] == "critical" for a in alerts):
         alerts.extend(_check_stats_api())

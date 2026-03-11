@@ -136,6 +136,11 @@ def _check_would_win(recommendation: str, gl: float, gv: float) -> bool:
     if "DRAW" in rec:
         return int(gl) == int(gv)
 
+    # BACK CS X-Y (Correct Score)
+    m_cs = re.search(r"CS\s+(\d+)-(\d+)", rec)
+    if m_cs:
+        return int(gl) == int(m_cs.group(1)) and int(gv) == int(m_cs.group(2))
+
     # BACK Over X.5
     m = re.search(r"OVER\s+(\d+\.?\d*)", rec)
     if m:

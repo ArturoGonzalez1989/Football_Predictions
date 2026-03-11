@@ -287,7 +287,8 @@ def run_paper_auto_place() -> dict:
         cfg = load_config()
         v   = cfg.get("versions", {})
         s   = cfg.get("strategies", {})
-        md  = cfg.get("min_duration", {})
+        md      = cfg.get("min_duration", {})
+        md_live = cfg.get("min_duration_live", {})
         adj = cfg.get("adjustments", {})
         risk_filter = cfg.get("risk_filter", "all")
         flat_stake  = float(cfg.get("flat_stake", 10.0))
@@ -318,13 +319,13 @@ def run_paper_auto_place() -> dict:
             "pressure":   _ver("pressure",   "pressure",   "v1"),
             "momentum":   _ver("momentum_xg", "momentum_xg", "off"),
             "tarde_asia": _ver("tarde_asia", "tarde_asia", "off"),
-            "draw_min_dur":          str(md.get("draw", 1)),
-            "xg_min_dur":            str(md.get("xg", 2)),
-            "drift_min_dur":         str(md.get("drift", 2)),
-            "clustering_min_dur":    str(md.get("clustering", 4)),
-            "pressure_min_dur":      str(md.get("pressure", 2)),
-            "tarde_asia_min_dur":    str(md.get("tarde_asia", 1)),
-            "momentum_min_dur":      str(md.get("momentum", 1)),
+            "draw_min_dur":          str(md_live.get("draw",       md.get("draw", 1))),
+            "xg_min_dur":            str(md_live.get("xg",         md.get("xg", 2))),
+            "drift_min_dur":         str(md_live.get("drift",      md.get("drift", 2))),
+            "clustering_min_dur":    str(md_live.get("clustering", md.get("clustering", 4))),
+            "pressure_min_dur":      str(md_live.get("pressure",   md.get("pressure", 2))),
+            "tarde_asia_min_dur":    str(md_live.get("tarde_asia", md.get("tarde_asia", 1))),
+            "momentum_min_dur":      str(md_live.get("momentum",   md.get("momentum", 1))),
             "drift_threshold":       str(drift_s.get("driftMin", 30)),
             "drift_odds_max":        str(drift_s.get("oddsMax", 999)),
             "drift_goal_diff_min":   str(drift_s.get("goalDiffMin", 0)),
@@ -346,6 +347,7 @@ def run_paper_auto_place() -> dict:
             "clustering_minute_min": str(clustering_s.get("minuteMin", 0)),
             "pressure_minute_min":   str(pressure_s.get("minuteMin", 0)),
             "pressure_minute_max":   str(pressure_s.get("minuteMax", 90)),
+            "pressure_xg_sum_min":   str(pressure_s.get("xg_sum_min", 0)),
             "momentum_minute_min":   str(momentum_s.get("minuteMin", 0)),
             "momentum_minute_max":   str(momentum_s.get("minuteMax", 90)),
         }
@@ -554,7 +556,8 @@ async def get_betting_signals(
     cfg = load_config()
     v = cfg.get("versions", {})       # formato antiguo (puede estar vacío)
     s = cfg.get("strategies", {})     # formato nuevo (enabled + params)
-    md = cfg.get("min_duration", {})
+    md      = cfg.get("min_duration", {})
+    md_live = cfg.get("min_duration_live", {})
     adj = cfg.get("adjustments", {})
     risk_filter = cfg.get("risk_filter", "all")
     flat_stake = float(cfg.get("flat_stake", 10.0))
@@ -590,13 +593,13 @@ async def get_betting_signals(
         "pressure":   _ver(pressure,    "pressure",   "pressure",   "v1"),
         "momentum":   _ver(momentum,    "momentum_xg", "momentum_xg", "off"),
         "tarde_asia": _ver(None,        "tarde_asia", "tarde_asia", "off"),
-        "draw_min_dur":       str(draw_min_dur       if draw_min_dur       is not None else md.get("draw", 1)),
-        "xg_min_dur":         str(xg_min_dur         if xg_min_dur         is not None else md.get("xg", 2)),
-        "drift_min_dur":      str(drift_min_dur      if drift_min_dur      is not None else md.get("drift", 2)),
-        "clustering_min_dur": str(clustering_min_dur if clustering_min_dur is not None else md.get("clustering", 4)),
-        "pressure_min_dur":   str(pressure_min_dur   if pressure_min_dur   is not None else md.get("pressure", 2)),
-        "tarde_asia_min_dur": str(md.get("tarde_asia", 1)),
-        "momentum_min_dur":   str(md.get("momentum", 1)),
+        "draw_min_dur":       str(draw_min_dur       if draw_min_dur       is not None else md_live.get("draw",       md.get("draw", 1))),
+        "xg_min_dur":         str(xg_min_dur         if xg_min_dur         is not None else md_live.get("xg",         md.get("xg", 2))),
+        "drift_min_dur":      str(drift_min_dur      if drift_min_dur      is not None else md_live.get("drift",      md.get("drift", 2))),
+        "clustering_min_dur": str(clustering_min_dur if clustering_min_dur is not None else md_live.get("clustering", md.get("clustering", 4))),
+        "pressure_min_dur":   str(pressure_min_dur   if pressure_min_dur   is not None else md_live.get("pressure",   md.get("pressure", 2))),
+        "tarde_asia_min_dur": str(md_live.get("tarde_asia", md.get("tarde_asia", 1))),
+        "momentum_min_dur":   str(md_live.get("momentum",   md.get("momentum", 1))),
         # ── Strategy thresholds (from cartera_config.json strategies block) ──
         # These make the live detector use the SAME params as the historical analysis.
         "drift_threshold":      str(drift_s.get("driftMin", 30)),
@@ -620,6 +623,7 @@ async def get_betting_signals(
         "clustering_minute_min": str(clustering_s.get("minuteMin", 0)),
         "pressure_minute_min":  str(pressure_s.get("minuteMin", 0)),
         "pressure_minute_max":  str(pressure_s.get("minuteMax", 90)),
+        "pressure_xg_sum_min":  str(pressure_s.get("xg_sum_min", 0)),
         "momentum_minute_min":  str(momentum_s.get("minuteMin", 0)),
         "momentum_minute_max":  str(momentum_s.get("minuteMax", 90)),
     }

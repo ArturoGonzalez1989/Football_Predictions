@@ -42,7 +42,7 @@ Informa: `[FASE 1/4] Ejecutando scan global sobre todos los CSVs...`
 Escribe y ejecuta un script Python que recorra TODOS los ficheros y genere métricas agregadas.
 El script debe ser eficiente: leer headers + filas clave, no cargar todo en memoria.
 
-Guarda el script en `aux/mqa_scan_global.py`.
+Guarda el script en `auxiliar/mqa_scan_global.py`.
 
 ### Métricas a calcular por fichero
 
@@ -147,8 +147,8 @@ Flaggear ficheros para deep-dive si cumplen CUALQUIERA de:
 - `stats_coverage[estrategia] < 20%` para alguna estrategia activa (consultar config)
 - `odds_null_pct[mercado] > 40%` para mercados críticos
 
-Guardar resultados en `aux/mqa_scan_results.json` (array de dicts, un dict por fichero).
-Guardar lista de flaggeados en `aux/mqa_flagged.json`.
+Guardar resultados en `auxiliar/mqa_scan_results.json` (array de dicts, un dict por fichero).
+Guardar lista de flaggeados en `auxiliar/mqa_flagged.json`.
 
 ---
 
@@ -198,12 +198,12 @@ Devuelve los resultados como JSON array con esta estructura:
   }]
 }]
 
-Guarda el resultado en aux/mqa_deepdive_batch{N}.json
+Guarda el resultado en auxiliar/mqa_deepdive_batch{N}.json
 ```
 
 ### Recolección
 
-Tras recoger todos los sub-agentes, consolida los resultados en `aux/mqa_deepdive_all.json`.
+Tras recoger todos los sub-agentes, consolida los resultados en `auxiliar/mqa_deepdive_all.json`.
 
 ---
 
@@ -221,8 +221,8 @@ Issues donde la corrección es determinista y segura:
 |-----------|-----------|--------|
 | Eliminar filas pre_partido intercaladas post-reset | CP1 | Borrar filas donde `estado_partido == "pre_partido"` que aparecen después de filas `en_juego` |
 | Interpolar score transient (1 fila corrupta) | CP2-A | Si `score[i-1] == score[i+1]` y `score[i] != score[i-1]`, reemplazar `score[i]` con `score[i-1]` |
-| Eliminar duplicado DESKTOP (conservar versión con más filas live) | CP6 | Comparar ambas versiones, mover la peor a `aux/mqa_removed/` |
-| Mover ghost matches | CP8 | Mover ficheros con < 10 filas live a `aux/mqa_removed/` |
+| Eliminar duplicado DESKTOP (conservar versión con más filas live) | CP6 | Comparar ambas versiones, mover la peor a `auxiliar/mqa_removed/` |
+| Mover ghost matches | CP8 | Mover ficheros con < 10 filas live a `auxiliar/mqa_removed/` |
 
 ### Categoría B: Correcciones manuales (requieren investigación)
 
@@ -326,10 +326,10 @@ Informa: `[FASE 4/4] Aplicando correcciones aprobadas...`
 
 ### Protocolo de seguridad
 
-1. **Backup**: Antes de tocar cualquier fichero, copiarlo a `aux/mqa_backup/`
+1. **Backup**: Antes de tocar cualquier fichero, copiarlo a `auxiliar/mqa_backup/`
    ```bash
-   mkdir -p aux/mqa_backup
-   cp betfair_scraper/data/partido_xxx.csv aux/mqa_backup/
+   mkdir -p auxiliar/mqa_backup
+   cp betfair_scraper/data/partido_xxx.csv auxiliar/mqa_backup/
    ```
 
 2. **Aplicar correcciones**: Ejecutar un script que aplique SOLO las correcciones aprobadas
@@ -344,7 +344,7 @@ Informa: `[FASE 4/4] Aplicando correcciones aprobadas...`
    Ficheros modificados:    {N}
    Filas eliminadas:        {M}
    Filas corregidas:        {K}
-   Ficheros movidos a aux/: {J}
+   Ficheros movidos a auxiliar/: {J}
 
    Verificación post-fix:
    - CP1 resets resueltos:  {N}/{total} ✅
@@ -409,7 +409,7 @@ Informa: `[FASE 4/4] Aplicando correcciones aprobadas...`
 - **Detección**: Fichero con sufijo `-DESKTOP-*` en el nombre
 - **Verificación**: ¿Existe `partido_<match_id_base>.csv` sin sufijo DESKTOP?
 - **Corrección auto**: Comparar filas live de ambos, conservar el que tenga más filas live,
-  mover el otro a `aux/mqa_removed/`
+  mover el otro a `auxiliar/mqa_removed/`
 - **Severidad**: warning (si tiene counterpart), info (si es único)
 
 ### CP7 — Odds Coverage en Ventanas de Estrategia
@@ -423,7 +423,7 @@ Informa: `[FASE 4/4] Aplicando correcciones aprobadas...`
 
 ### CP8 — Ghost Matches
 - **Detección**: < 10 filas con `estado_partido == "en_juego"`
-- **Corrección auto**: Mover a `aux/mqa_removed/`
+- **Corrección auto**: Mover a `auxiliar/mqa_removed/`
 - **Severidad**: info
 
 ### CP9 — Encoding (País, Liga)
@@ -454,10 +454,10 @@ Informa: `[FASE 4/4] Aplicando correcciones aprobadas...`
 ## REGLAS
 
 1. **NUNCA modificar CSVs sin aprobación** — Fase 4 solo se ejecuta si el usuario lo pide
-2. **Backup SIEMPRE antes de modificar** — copiar a `aux/mqa_backup/` antes de tocar
-3. **Scripts de análisis van a `aux/`** — `aux/mqa_*.py`, `aux/mqa_*.json`
+2. **Backup SIEMPRE antes de modificar** — copiar a `auxiliar/mqa_backup/` antes de tocar
+3. **Scripts de análisis van a `auxiliar/`** — `auxiliar/mqa_*.py`, `auxiliar/mqa_*.json`
 4. **Informe final va a `analisis/`** — `analisis/match_quality_audit_YYYYMMDD.md`
-5. **Ficheros eliminados van a `aux/mqa_removed/`** — nunca borrar, solo mover
+5. **Ficheros eliminados van a `auxiliar/mqa_removed/`** — nunca borrar, solo mover
 6. **Halftime NO es un bug** — el salto de minuto 47→45 es comportamiento esperado del scraper
 7. **Stats 100% null = liga sin proveedor** — no es un error, es una limitación. Clasificar como `info`
 8. **Cuantificar siempre** — no "muchos ficheros afectados" sino "{N} ficheros ({pct}%)"

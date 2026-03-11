@@ -18,6 +18,22 @@ export function Dashboard() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [error, setError] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState(isSoundEnabled)
+  const [alertCounts, setAlertCounts] = useState<{ critical: number; warning: number } | null>(null)
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const r = await fetch("/api/alerts")
+        if (r.ok) {
+          const d = await r.json()
+          setAlertCounts({ critical: d.critical ?? 0, warning: d.warning ?? 0 })
+        }
+      } catch { /* ignore */ }
+    }
+    fetchAlerts()
+    const interval = setInterval(fetchAlerts, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
 
   const refresh = useCallback(async () => {
@@ -135,7 +151,12 @@ export function Dashboard() {
               </svg>
             }
             label="Alertas"
-            badgeColor="red"
+            badge={
+              (alertCounts?.critical ?? 0) > 0 ? alertCounts!.critical :
+              (alertCounts?.warning ?? 0) > 0 ? alertCounts!.warning :
+              undefined
+            }
+            badgeColor={(alertCounts?.critical ?? 0) > 0 ? "red" : "amber"}
           />
         </nav>
 

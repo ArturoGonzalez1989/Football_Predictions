@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIVE — Betfair Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#111827; color:#f3f4f6; font-family:system-ui,-apple-system,sans-serif; padding:1.5rem; }
+h1 { font-size:1.5rem; margin-bottom:0.25rem; }
+h2 { font-size:1.1rem; color:#9ca3af; margin-bottom:1.5rem; font-weight:400; }
+h3 { font-size:0.95rem; color:#d1d5db; margin-bottom:0.75rem; }
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:0.75rem; margin-bottom:1.5rem; }
+.card { background:#1a2233; border:1px solid #1f2937; border-radius:8px; padding:1rem; }
+.kpi-label { font-size:0.7rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem; }
+.kpi-value { font-size:1.5rem; font-weight:700; }
+.chart-card { background:#1a2233; border:1px solid #1f2937; border-radius:8px; padding:1rem; margin-bottom:1.5rem; }
+.row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+@media(max-width:768px) { .row { grid-template-columns:1fr; } }
+table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+th { color:#6b7280; font-size:0.7rem; text-transform:uppercase; border-bottom:1px solid #374151; padding:6px 8px; text-align:left; }
+td { padding:6px 8px; border-bottom:1px solid #1f2937; }
+tr:hover { background:#1f2937; }
+.footer { margin-top:2rem; padding-top:1rem; border-top:1px solid #1f2937; color:#6b7280; font-size:0.75rem; }
+canvas { max-height:300px; }
+.nav { display:flex; gap:0.5rem; margin-bottom:1rem; }
+.nav a { color:#d1d5db; text-decoration:none; padding:0.4rem 1rem; border-radius:6px; background:#1f2937; font-size:0.85rem; }
+.nav a.active { background:#3b82f6; color:#fff; }
+.nav a:hover { background:#374151; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="dashboard_bt.html" >BackTest</a>
+  <a href="dashboard_live.html" class="active">LIVE</a>
+</div>
+<h1>LIVE — Paper Trading</h1>
+<h2>Generado: 2026-03-08 14:49 — Apuestas paper desde placed_bets.csv</h2>
+
+<div class="kpi-grid"><div class="card">
+          <div class="kpi-label">Total Partidos</div>
+          <div class="kpi-value" style="color:#3b82f6">1083</div>
+        </div><div class="card">
+          <div class="kpi-label">Total Apuestas</div>
+          <div class="kpi-value" style="color:#3b82f6">56</div>
+        </div><div class="card">
+          <div class="kpi-label">Win Rate</div>
+          <div class="kpi-value" style="color:#10b981">62.5%</div>
+        </div><div class="card">
+          <div class="kpi-label">ROI</div>
+          <div class="kpi-value" style="color:#10b981">19.3%</div>
+        </div><div class="card">
+          <div class="kpi-label">Flat P/L</div>
+          <div class="kpi-value" style="color:#10b981">+10.83 €</div>
+        </div><div class="card">
+          <div class="kpi-label">Max Drawdown</div>
+          <div class="kpi-value" style="color:#ef4444">4.34 €</div>
+        </div><div class="card">
+          <div class="kpi-label">Mejor Racha</div>
+          <div class="kpi-value" style="color:#10b981">11 W</div>
+        </div><div class="card">
+          <div class="kpi-label">Peor Racha</div>
+          <div class="kpi-value" style="color:#ef4444">3 L</div>
+        </div><div class="card">
+          <div class="kpi-label">Sharpe Ratio</div>
+          <div class="kpi-value" style="color:#10b981">1.18</div>
+        </div><div class="card">
+          <div class="kpi-label">Profit Factor</div>
+          <div class="kpi-value" style="color:#10b981">1.52</div>
+        </div></div>
+
+<div class="chart-card">
+  <h3>P/L Acumulado (€)</h3>
+  <canvas id="cumChart"></canvas>
+</div>
+
+<div class="row">
+  <div class="card"><h3>Rendimiento por Estrategia</h3><table id="tbl1"><thead><tr><th></th><th onclick="sortTable('tbl1',1)" style="cursor:pointer;user-select:none">N <span class="sort-arrow"></span></th><th onclick="sortTable('tbl1',2)" style="cursor:pointer;user-select:none">WR% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl1',3)" style="cursor:pointer;user-select:none">ROI% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl1',4)" style="cursor:pointer;user-select:none">P/L € <span class="sort-arrow"></span></th></tr></thead><tbody><tr>
+              <td data-val="pressure_cooker_v1">pressure_cooker_v1</td>
+              <td data-val="15">15</td>
+              <td data-val="66.7" style="color:#10b981">66.7%</td>
+              <td data-val="5.0" style="color:#10b981">5.0%</td>
+              <td data-val="0.75" style="color:#10b981">+0.75</td>
+            </tr><tr>
+              <td data-val="SD Underdog Leading">SD Underdog Leading</td>
+              <td data-val="14">14</td>
+              <td data-val="50.0" style="color:#f59e0b">50.0%</td>
+              <td data-val="-16.2" style="color:#ef4444">-16.2%</td>
+              <td data-val="-2.27" style="color:#ef4444">-2.27</td>
+            </tr><tr>
+              <td data-val="SD CS One-Goal (1-0/0-1)">SD CS One-Goal (1-0/0-1)</td>
+              <td data-val="8">8</td>
+              <td data-val="75.0" style="color:#10b981">75.0%</td>
+              <td data-val="106.1" style="color:#10b981">106.1%</td>
+              <td data-val="8.49" style="color:#10b981">+8.49</td>
+            </tr><tr>
+              <td data-val="SD Home Fav Leading">SD Home Fav Leading</td>
+              <td data-val="8">8</td>
+              <td data-val="87.5" style="color:#10b981">87.5%</td>
+              <td data-val="74.8" style="color:#10b981">74.8%</td>
+              <td data-val="5.98" style="color:#10b981">+5.98</td>
+            </tr><tr>
+              <td data-val="SD CS Close (2-1/1-2)">SD CS Close (2-1/1-2)</td>
+              <td data-val="5">5</td>
+              <td data-val="60.0" style="color:#10b981">60.0%</td>
+              <td data-val="14.6" style="color:#10b981">14.6%</td>
+              <td data-val="0.73" style="color:#10b981">+0.73</td>
+            </tr><tr>
+              <td data-val="SD Over 2.5 (2-goal lead)">SD Over 2.5 (2-goal lead)</td>
+              <td data-val="2">2</td>
+              <td data-val="50.0" style="color:#f59e0b">50.0%</td>
+              <td data-val="-18.5" style="color:#ef4444">-18.5%</td>
+              <td data-val="-0.37" style="color:#ef4444">-0.37</td>
+            </tr><tr>
+              <td data-val="SD CS 2-0/0-2">SD CS 2-0/0-2</td>
+              <td data-val="1">1</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-1.0" style="color:#ef4444">-1.00</td>
+            </tr><tr>
+              <td data-val="odds_drift_contrarian_v1">odds_drift_contrarian_v1</td>
+              <td data-val="1">1</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-1.0" style="color:#ef4444">-1.00</td>
+            </tr><tr>
+              <td data-val="SD CS Big Lead">SD CS Big Lead</td>
+              <td data-val="1">1</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-1.0" style="color:#ef4444">-1.00</td>
+            </tr><tr>
+              <td data-val="SD Longshot">SD Longshot</td>
+              <td data-val="1">1</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="52.0" style="color:#10b981">52.0%</td>
+              <td data-val="0.52" style="color:#10b981">+0.52</td>
+            </tr></tbody></table>
+    <div style="margin-top:1rem;">
+      <canvas id="stratChart" style="min-height:320px;max-height:320px;"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>P/L Mensual (€)</h3>
+    <canvas id="monthlyChart"></canvas>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card"><h3>Distribución por País</h3><table id="tbl2"><thead><tr><th></th><th onclick="sortTable('tbl2',1)" style="cursor:pointer;user-select:none">N <span class="sort-arrow"></span></th><th onclick="sortTable('tbl2',2)" style="cursor:pointer;user-select:none">WR% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl2',3)" style="cursor:pointer;user-select:none">ROI% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl2',4)" style="cursor:pointer;user-select:none">P/L € <span class="sort-arrow"></span></th></tr></thead><tbody><tr>
+              <td data-val="Inglaterra">Inglaterra</td>
+              <td data-val="12">12</td>
+              <td data-val="41.7" style="color:#ef4444">41.7%</td>
+              <td data-val="12.0" style="color:#10b981">12.0%</td>
+              <td data-val="1.44" style="color:#10b981">+1.44</td>
+            </tr><tr>
+              <td data-val="Suiza">Suiza</td>
+              <td data-val="4">4</td>
+              <td data-val="25.0" style="color:#ef4444">25.0%</td>
+              <td data-val="-68.0" style="color:#ef4444">-68.0%</td>
+              <td data-val="-2.72" style="color:#ef4444">-2.72</td>
+            </tr><tr>
+              <td data-val="España">España</td>
+              <td data-val="3">3</td>
+              <td data-val="33.3" style="color:#ef4444">33.3%</td>
+              <td data-val="-43.7" style="color:#ef4444">-43.7%</td>
+              <td data-val="-1.31" style="color:#ef4444">-1.31</td>
+            </tr><tr>
+              <td data-val="Japón">Japón</td>
+              <td data-val="3">3</td>
+              <td data-val="66.7" style="color:#10b981">66.7%</td>
+              <td data-val="59.0" style="color:#10b981">59.0%</td>
+              <td data-val="1.77" style="color:#10b981">+1.77</td>
+            </tr><tr>
+              <td data-val="Alemania">Alemania</td>
+              <td data-val="3">3</td>
+              <td data-val="66.7" style="color:#10b981">66.7%</td>
+              <td data-val="9.3" style="color:#10b981">9.3%</td>
+              <td data-val="0.28" style="color:#10b981">+0.28</td>
+            </tr><tr>
+              <td data-val="Holanda">Holanda</td>
+              <td data-val="3">3</td>
+              <td data-val="66.7" style="color:#10b981">66.7%</td>
+              <td data-val="62.7" style="color:#10b981">62.7%</td>
+              <td data-val="1.88" style="color:#10b981">+1.88</td>
+            </tr><tr>
+              <td data-val="Portugal">Portugal</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="49.0" style="color:#10b981">49.0%</td>
+              <td data-val="0.98" style="color:#10b981">+0.98</td>
+            </tr><tr>
+              <td data-val="Francia">Francia</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="112.0" style="color:#10b981">112.0%</td>
+              <td data-val="2.24" style="color:#10b981">+2.24</td>
+            </tr><tr>
+              <td data-val="Chile">Chile</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="79.0" style="color:#10b981">79.0%</td>
+              <td data-val="1.58" style="color:#10b981">+1.58</td>
+            </tr><tr>
+              <td data-val="Ecuador">Ecuador</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="122.5" style="color:#10b981">122.5%</td>
+              <td data-val="2.45" style="color:#10b981">+2.45</td>
+            </tr><tr>
+              <td data-val="USA">USA</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="62.0" style="color:#10b981">62.0%</td>
+              <td data-val="1.24" style="color:#10b981">+1.24</td>
+            </tr><tr>
+              <td data-val="México">México</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="79.0" style="color:#10b981">79.0%</td>
+              <td data-val="1.58" style="color:#10b981">+1.58</td>
+            </tr><tr>
+              <td data-val="Corea del Sur">Corea del Sur</td>
+              <td data-val="2">2</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-2.0" style="color:#ef4444">-2.00</td>
+            </tr><tr>
+              <td data-val="Arabia Saudita">Arabia Saudita</td>
+              <td data-val="1">1</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="37.0" style="color:#10b981">37.0%</td>
+              <td data-val="0.37" style="color:#10b981">+0.37</td>
+            </tr><tr>
+              <td data-val="Turquía">Turquía</td>
+              <td data-val="1">1</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="32.0" style="color:#10b981">32.0%</td>
+              <td data-val="0.32" style="color:#10b981">+0.32</td>
+            </tr><tr>
+              <td data-val="Bélgica">Bélgica</td>
+              <td data-val="1">1</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-1.0" style="color:#ef4444">-1.00</td>
+            </tr><tr>
+              <td data-val="Brasil">Brasil</td>
+              <td data-val="1">1</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="82.0" style="color:#10b981">82.0%</td>
+              <td data-val="0.82" style="color:#10b981">+0.82</td>
+            </tr><tr>
+              <td data-val="China">China</td>
+              <td data-val="1">1</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-1.0" style="color:#ef4444">-1.00</td>
+            </tr><tr>
+              <td data-val="Italia">Italia</td>
+              <td data-val="1">1</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="28.0" style="color:#10b981">28.0%</td>
+              <td data-val="0.28" style="color:#10b981">+0.28</td>
+            </tr><tr>
+              <td data-val="Desconocido">Desconocido</td>
+              <td data-val="8">8</td>
+              <td data-val="75.0" style="color:#10b981">75.0%</td>
+              <td data-val="20.4" style="color:#10b981">20.4%</td>
+              <td data-val="1.63" style="color:#10b981">+1.63</td>
+            </tr></tbody></table></div>
+  <div class="card"><h3>Distribución por Liga</h3><table id="tbl3"><thead><tr><th></th><th onclick="sortTable('tbl3',1)" style="cursor:pointer;user-select:none">N <span class="sort-arrow"></span></th><th onclick="sortTable('tbl3',2)" style="cursor:pointer;user-select:none">WR% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl3',3)" style="cursor:pointer;user-select:none">ROI% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl3',4)" style="cursor:pointer;user-select:none">P/L € <span class="sort-arrow"></span></th></tr></thead><tbody><tr>
+              <td data-val="League One">League One</td>
+              <td data-val="5">5</td>
+              <td data-val="60.0" style="color:#10b981">60.0%</td>
+              <td data-val="105.2" style="color:#10b981">105.2%</td>
+              <td data-val="5.26" style="color:#10b981">+5.26</td>
+            </tr><tr>
+              <td data-val="League Two">League Two</td>
+              <td data-val="4">4</td>
+              <td data-val="25.0" style="color:#ef4444">25.0%</td>
+              <td data-val="-62.3" style="color:#ef4444">-62.3%</td>
+              <td data-val="-2.49" style="color:#ef4444">-2.49</td>
+            </tr><tr>
+              <td data-val="Super League">Super League</td>
+              <td data-val="4">4</td>
+              <td data-val="25.0" style="color:#ef4444">25.0%</td>
+              <td data-val="-68.0" style="color:#ef4444">-68.0%</td>
+              <td data-val="-2.72" style="color:#ef4444">-2.72</td>
+            </tr><tr>
+              <td data-val="La Liga">La Liga</td>
+              <td data-val="3">3</td>
+              <td data-val="33.3" style="color:#ef4444">33.3%</td>
+              <td data-val="-43.7" style="color:#ef4444">-43.7%</td>
+              <td data-val="-1.31" style="color:#ef4444">-1.31</td>
+            </tr><tr>
+              <td data-val="J-League">J-League</td>
+              <td data-val="3">3</td>
+              <td data-val="66.7" style="color:#10b981">66.7%</td>
+              <td data-val="59.0" style="color:#10b981">59.0%</td>
+              <td data-val="1.77" style="color:#10b981">+1.77</td>
+            </tr><tr>
+              <td data-val="Bundesliga">Bundesliga</td>
+              <td data-val="3">3</td>
+              <td data-val="66.7" style="color:#10b981">66.7%</td>
+              <td data-val="9.3" style="color:#10b981">9.3%</td>
+              <td data-val="0.28" style="color:#10b981">+0.28</td>
+            </tr><tr>
+              <td data-val="Eredivisie">Eredivisie</td>
+              <td data-val="3">3</td>
+              <td data-val="66.7" style="color:#10b981">66.7%</td>
+              <td data-val="62.7" style="color:#10b981">62.7%</td>
+              <td data-val="1.88" style="color:#10b981">+1.88</td>
+            </tr><tr>
+              <td data-val="Serie A">Serie A</td>
+              <td data-val="3">3</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="91.0" style="color:#10b981">91.0%</td>
+              <td data-val="2.73" style="color:#10b981">+2.73</td>
+            </tr><tr>
+              <td data-val="Primeira Liga">Primeira Liga</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="49.0" style="color:#10b981">49.0%</td>
+              <td data-val="0.98" style="color:#10b981">+0.98</td>
+            </tr><tr>
+              <td data-val="Ligue 1">Ligue 1</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="112.0" style="color:#10b981">112.0%</td>
+              <td data-val="2.24" style="color:#10b981">+2.24</td>
+            </tr><tr>
+              <td data-val="FA Cup">FA Cup</td>
+              <td data-val="2">2</td>
+              <td data-val="50.0" style="color:#f59e0b">50.0%</td>
+              <td data-val="-16.5" style="color:#ef4444">-16.5%</td>
+              <td data-val="-0.33" style="color:#ef4444">-0.33</td>
+            </tr><tr>
+              <td data-val="Primera División">Primera División</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="79.0" style="color:#10b981">79.0%</td>
+              <td data-val="1.58" style="color:#10b981">+1.58</td>
+            </tr><tr>
+              <td data-val="MLS">MLS</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="62.0" style="color:#10b981">62.0%</td>
+              <td data-val="1.24" style="color:#10b981">+1.24</td>
+            </tr><tr>
+              <td data-val="Liga MX">Liga MX</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="79.0" style="color:#10b981">79.0%</td>
+              <td data-val="1.58" style="color:#10b981">+1.58</td>
+            </tr><tr>
+              <td data-val="K1 League">K1 League</td>
+              <td data-val="2">2</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-2.0" style="color:#ef4444">-2.00</td>
+            </tr><tr>
+              <td data-val="Saudi Pro League">Saudi Pro League</td>
+              <td data-val="1">1</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="37.0" style="color:#10b981">37.0%</td>
+              <td data-val="0.37" style="color:#10b981">+0.37</td>
+            </tr><tr>
+              <td data-val="Championship">Championship</td>
+              <td data-val="1">1</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-1.0" style="color:#ef4444">-1.00</td>
+            </tr><tr>
+              <td data-val="Süper Lig">Süper Lig</td>
+              <td data-val="1">1</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="32.0" style="color:#10b981">32.0%</td>
+              <td data-val="0.32" style="color:#10b981">+0.32</td>
+            </tr><tr>
+              <td data-val="Jupiler Pro League">Jupiler Pro League</td>
+              <td data-val="1">1</td>
+              <td data-val="0.0" style="color:#ef4444">0.0%</td>
+              <td data-val="-100.0" style="color:#ef4444">-100.0%</td>
+              <td data-val="-1.0" style="color:#ef4444">-1.00</td>
+            </tr><tr>
+              <td data-val="Desconocida">Desconocida</td>
+              <td data-val="5">5</td>
+              <td data-val="80.0" style="color:#10b981">80.0%</td>
+              <td data-val="20.2" style="color:#10b981">20.2%</td>
+              <td data-val="1.01" style="color:#10b981">+1.01</td>
+            </tr></tbody></table></div>
+</div>
+
+<div class="row">
+  <div class="card"><h3>Distribución por Tipo de Torneo</h3><table id="tbl5"><thead><tr><th></th><th onclick="sortTable('tbl5',1)" style="cursor:pointer;user-select:none">N <span class="sort-arrow"></span></th><th onclick="sortTable('tbl5',2)" style="cursor:pointer;user-select:none">WR% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl5',3)" style="cursor:pointer;user-select:none">ROI% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl5',4)" style="cursor:pointer;user-select:none">P/L € <span class="sort-arrow"></span></th></tr></thead><tbody><tr>
+              <td data-val="Liga Top">Liga Top</td>
+              <td data-val="11">11</td>
+              <td data-val="72.7" style="color:#10b981">72.7%</td>
+              <td data-val="35.8" style="color:#10b981">35.8%</td>
+              <td data-val="3.94" style="color:#10b981">+3.94</td>
+            </tr><tr>
+              <td data-val="Liga 2ª/3ª">Liga 2ª/3ª</td>
+              <td data-val="10">10</td>
+              <td data-val="40.0" style="color:#ef4444">40.0%</td>
+              <td data-val="17.7" style="color:#10b981">17.7%</td>
+              <td data-val="1.77" style="color:#10b981">+1.77</td>
+            </tr><tr>
+              <td data-val="Liga Internacional">Liga Internacional</td>
+              <td data-val="25">25</td>
+              <td data-val="64.0" style="color:#10b981">64.0%</td>
+              <td data-val="15.3" style="color:#10b981">15.3%</td>
+              <td data-val="3.82" style="color:#10b981">+3.82</td>
+            </tr><tr>
+              <td data-val="Copa Nacional">Copa Nacional</td>
+              <td data-val="2">2</td>
+              <td data-val="50.0" style="color:#f59e0b">50.0%</td>
+              <td data-val="-16.5" style="color:#ef4444">-16.5%</td>
+              <td data-val="-0.33" style="color:#ef4444">-0.33</td>
+            </tr><tr>
+              <td data-val="Otros">Otros</td>
+              <td data-val="8">8</td>
+              <td data-val="75.0" style="color:#10b981">75.0%</td>
+              <td data-val="20.4" style="color:#10b981">20.4%</td>
+              <td data-val="1.63" style="color:#10b981">+1.63</td>
+            </tr></tbody></table></div>
+  <div class="card"></div>
+</div>
+
+<div class="row">
+  <div class="card"><h3>Rendimiento por Nivel de Liga</h3><table id="tbl6"><thead><tr><th></th><th onclick="sortTable('tbl6',1)" style="cursor:pointer;user-select:none">N <span class="sort-arrow"></span></th><th onclick="sortTable('tbl6',2)" style="cursor:pointer;user-select:none">WR% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl6',3)" style="cursor:pointer;user-select:none">ROI% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl6',4)" style="cursor:pointer;user-select:none">P/L € <span class="sort-arrow"></span></th></tr></thead><tbody><tr>
+              <td data-val="Top 5 Ligas">Top 5 Ligas</td>
+              <td data-val="11">11</td>
+              <td data-val="72.7" style="color:#10b981">72.7%</td>
+              <td data-val="35.8" style="color:#10b981">35.8%</td>
+              <td data-val="3.94" style="color:#10b981">+3.94</td>
+            </tr><tr>
+              <td data-val="Ligas Secundarias">Ligas Secundarias</td>
+              <td data-val="24">24</td>
+              <td data-val="58.3" style="color:#f59e0b">58.3%</td>
+              <td data-val="4.5" style="color:#10b981">4.5%</td>
+              <td data-val="1.09" style="color:#10b981">+1.09</td>
+            </tr><tr>
+              <td data-val="Ligas Menores">Ligas Menores</td>
+              <td data-val="21">21</td>
+              <td data-val="61.9" style="color:#10b981">61.9%</td>
+              <td data-val="27.6" style="color:#10b981">27.6%</td>
+              <td data-val="5.8" style="color:#10b981">+5.80</td>
+            </tr></tbody></table>
+    <div style="margin-top:1rem;">
+      <canvas id="tierPLChart" style="max-height:200px;"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Distribución de Apuestas por Nivel</h3>
+    <canvas id="tierDonutChart" style="max-height:260px;"></canvas>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card"><h3>Top/Peor Equipos (resumen)</h3>
+    <table><thead><tr><th>Equipo</th><th>N</th><th>P/L €</th></tr></thead><tbody></tbody></table>
+    </div>
+  <div class="card"></div>
+</div>
+
+<div class="row">
+  <div class="chart-card">
+    <h3>Distribución por Minuto de Trigger</h3>
+    <canvas id="minuteChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>Distribución de Odds</h3>
+    <canvas id="oddsChart"></canvas>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card"><h3>Día de la Semana</h3><table id="tbl4"><thead><tr><th></th><th onclick="sortTable('tbl4',1)" style="cursor:pointer;user-select:none">N <span class="sort-arrow"></span></th><th onclick="sortTable('tbl4',2)" style="cursor:pointer;user-select:none">WR% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl4',3)" style="cursor:pointer;user-select:none">ROI% <span class="sort-arrow"></span></th><th onclick="sortTable('tbl4',4)" style="cursor:pointer;user-select:none">P/L € <span class="sort-arrow"></span></th></tr></thead><tbody><tr>
+              <td data-val="Lun">Lun</td>
+              <td data-val="0">0</td>
+              <td data-val="0" style="color:#ef4444">0%</td>
+              <td data-val="0" style="color:#9ca3af">0%</td>
+              <td data-val="0" style="color:#9ca3af">+0.00</td>
+            </tr><tr>
+              <td data-val="Mar">Mar</td>
+              <td data-val="0">0</td>
+              <td data-val="0" style="color:#ef4444">0%</td>
+              <td data-val="0" style="color:#9ca3af">0%</td>
+              <td data-val="0" style="color:#9ca3af">+0.00</td>
+            </tr><tr>
+              <td data-val="Mié">Mié</td>
+              <td data-val="0">0</td>
+              <td data-val="0" style="color:#ef4444">0%</td>
+              <td data-val="0" style="color:#9ca3af">0%</td>
+              <td data-val="0" style="color:#9ca3af">+0.00</td>
+            </tr><tr>
+              <td data-val="Jue">Jue</td>
+              <td data-val="0">0</td>
+              <td data-val="0" style="color:#ef4444">0%</td>
+              <td data-val="0" style="color:#9ca3af">0%</td>
+              <td data-val="0" style="color:#9ca3af">+0.00</td>
+            </tr><tr>
+              <td data-val="Vie">Vie</td>
+              <td data-val="2">2</td>
+              <td data-val="100.0" style="color:#10b981">100.0%</td>
+              <td data-val="53.0" style="color:#10b981">53.0%</td>
+              <td data-val="1.06" style="color:#10b981">+1.06</td>
+            </tr><tr>
+              <td data-val="Sáb">Sáb</td>
+              <td data-val="40">40</td>
+              <td data-val="60.0" style="color:#10b981">60.0%</td>
+              <td data-val="20.4" style="color:#10b981">20.4%</td>
+              <td data-val="8.15" style="color:#10b981">+8.15</td>
+            </tr><tr>
+              <td data-val="Dom">Dom</td>
+              <td data-val="14">14</td>
+              <td data-val="64.3" style="color:#10b981">64.3%</td>
+              <td data-val="11.6" style="color:#10b981">11.6%</td>
+              <td data-val="1.62" style="color:#10b981">+1.62</td>
+            </tr></tbody></table>
+    <div style="margin-top:1rem;">
+      <canvas id="dowChart" style="max-height:200px;"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>P/L por Hora del Día (€)</h3>
+    <canvas id="hourChart"></canvas>
+  </div>
+</div>
+
+<div class="footer">
+  Dashboard de cartera Betfair — 1083 partidos analizados, 56 apuestas filtradas
+</div>
+
+<script>
+const D = {"kpis": {"n_matches": 1083, "n_bets": 56, "wr": 62.5, "roi": 19.3, "pl": 10.83, "max_dd": 4.34, "best_streak": 11, "worst_streak": 3, "sharpe": 1.18, "profit_factor": 1.52, "cumulative": [0.37, 1.06, 0.06, -0.94, -1.94, 3.95, 2.95, 3.76, 4.1, 4.7, 3.7, 4.02, 4.66, 4.92, 5.95, 4.95, 3.95, 2.95, 3.61, 4.32, 4.83, 3.83, 6.35, 7.32, 6.32, 5.32, 5.6, 4.6, 3.6, 4.7, 5.37, 5.73, 4.73, 3.73, 3.98, 2.98, 4.25, 5.07, 6.13, 7.99, 8.58, 9.21, 10.09, 10.61, 11.13, 11.83, 12.44, 11.44, 10.44, 10.98, 13.21, 12.21, 11.21, 11.55, 10.55, 10.83]}, "strategy_table": [{"label": "pressure_cooker_v1", "n": 15, "wins": 10, "wr": 66.7, "roi": 5.0, "pl": 0.75}, {"label": "SD Underdog Leading", "n": 14, "wins": 7, "wr": 50.0, "roi": -16.2, "pl": -2.27}, {"label": "SD CS One-Goal (1-0/0-1)", "n": 8, "wins": 6, "wr": 75.0, "roi": 106.1, "pl": 8.49}, {"label": "SD Home Fav Leading", "n": 8, "wins": 7, "wr": 87.5, "roi": 74.8, "pl": 5.98}, {"label": "SD CS Close (2-1/1-2)", "n": 5, "wins": 3, "wr": 60.0, "roi": 14.6, "pl": 0.73}, {"label": "SD Over 2.5 (2-goal lead)", "n": 2, "wins": 1, "wr": 50.0, "roi": -18.5, "pl": -0.37}, {"label": "SD CS 2-0/0-2", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0}, {"label": "odds_drift_contrarian_v1", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0}, {"label": "SD CS Big Lead", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0}, {"label": "SD Longshot", "n": 1, "wins": 1, "wr": 100.0, "roi": 52.0, "pl": 0.52}], "country_table": [{"label": "Inglaterra", "n": 12, "wins": 5, "wr": 41.7, "roi": 12.0, "pl": 1.44}, {"label": "Suiza", "n": 4, "wins": 1, "wr": 25.0, "roi": -68.0, "pl": -2.72}, {"label": "España", "n": 3, "wins": 1, "wr": 33.3, "roi": -43.7, "pl": -1.31}, {"label": "Japón", "n": 3, "wins": 2, "wr": 66.7, "roi": 59.0, "pl": 1.77}, {"label": "Alemania", "n": 3, "wins": 2, "wr": 66.7, "roi": 9.3, "pl": 0.28}, {"label": "Holanda", "n": 3, "wins": 2, "wr": 66.7, "roi": 62.7, "pl": 1.88}, {"label": "Portugal", "n": 2, "wins": 2, "wr": 100.0, "roi": 49.0, "pl": 0.98}, {"label": "Francia", "n": 2, "wins": 2, "wr": 100.0, "roi": 112.0, "pl": 2.24}, {"label": "Chile", "n": 2, "wins": 2, "wr": 100.0, "roi": 79.0, "pl": 1.58}, {"label": "Ecuador", "n": 2, "wins": 2, "wr": 100.0, "roi": 122.5, "pl": 2.45}, {"label": "USA", "n": 2, "wins": 2, "wr": 100.0, "roi": 62.0, "pl": 1.24}, {"label": "México", "n": 2, "wins": 2, "wr": 100.0, "roi": 79.0, "pl": 1.58}, {"label": "Corea del Sur", "n": 2, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -2.0}, {"label": "Arabia Saudita", "n": 1, "wins": 1, "wr": 100.0, "roi": 37.0, "pl": 0.37}, {"label": "Turquía", "n": 1, "wins": 1, "wr": 100.0, "roi": 32.0, "pl": 0.32}, {"label": "Bélgica", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0}, {"label": "Brasil", "n": 1, "wins": 1, "wr": 100.0, "roi": 82.0, "pl": 0.82}, {"label": "China", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0}, {"label": "Italia", "n": 1, "wins": 1, "wr": 100.0, "roi": 28.0, "pl": 0.28}, {"label": "Desconocido", "n": 8, "wins": 6, "wr": 75.0, "roi": 20.4, "pl": 1.63}], "league_table": [{"label": "League One", "n": 5, "wins": 3, "wr": 60.0, "roi": 105.2, "pl": 5.26}, {"label": "League Two", "n": 4, "wins": 1, "wr": 25.0, "roi": -62.3, "pl": -2.49}, {"label": "Super League", "n": 4, "wins": 1, "wr": 25.0, "roi": -68.0, "pl": -2.72}, {"label": "La Liga", "n": 3, "wins": 1, "wr": 33.3, "roi": -43.7, "pl": -1.31}, {"label": "J-League", "n": 3, "wins": 2, "wr": 66.7, "roi": 59.0, "pl": 1.77}, {"label": "Bundesliga", "n": 3, "wins": 2, "wr": 66.7, "roi": 9.3, "pl": 0.28}, {"label": "Eredivisie", "n": 3, "wins": 2, "wr": 66.7, "roi": 62.7, "pl": 1.88}, {"label": "Serie A", "n": 3, "wins": 3, "wr": 100.0, "roi": 91.0, "pl": 2.73}, {"label": "Primeira Liga", "n": 2, "wins": 2, "wr": 100.0, "roi": 49.0, "pl": 0.98}, {"label": "Ligue 1", "n": 2, "wins": 2, "wr": 100.0, "roi": 112.0, "pl": 2.24}, {"label": "FA Cup", "n": 2, "wins": 1, "wr": 50.0, "roi": -16.5, "pl": -0.33}, {"label": "Primera División", "n": 2, "wins": 2, "wr": 100.0, "roi": 79.0, "pl": 1.58}, {"label": "MLS", "n": 2, "wins": 2, "wr": 100.0, "roi": 62.0, "pl": 1.24}, {"label": "Liga MX", "n": 2, "wins": 2, "wr": 100.0, "roi": 79.0, "pl": 1.58}, {"label": "K1 League", "n": 2, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -2.0}, {"label": "Saudi Pro League", "n": 1, "wins": 1, "wr": 100.0, "roi": 37.0, "pl": 0.37}, {"label": "Championship", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0}, {"label": "Süper Lig", "n": 1, "wins": 1, "wr": 100.0, "roi": 32.0, "pl": 0.32}, {"label": "Jupiler Pro League", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0}, {"label": "Desconocida", "n": 5, "wins": 4, "wr": 80.0, "roi": 20.2, "pl": 1.01}], "league_tiers": [{"label": "Top 5 Ligas", "tier": 1, "n": 11, "wr": 72.7, "roi": 35.8, "pl": 3.94}, {"label": "Ligas Secundarias", "tier": 2, "n": 24, "wr": 58.3, "roi": 4.5, "pl": 1.09}, {"label": "Ligas Menores", "tier": 3, "n": 21, "wr": 61.9, "roi": 27.6, "pl": 5.8}], "tournament_type": [{"label": "Liga Top", "n": 11, "wr": 72.7, "roi": 35.8, "pl": 3.94}, {"label": "Liga 2ª/3ª", "n": 10, "wr": 40.0, "roi": 17.7, "pl": 1.77}, {"label": "Liga Internacional", "n": 25, "wr": 64.0, "roi": 15.3, "pl": 3.82}, {"label": "Copa Nacional", "n": 2, "wr": 50.0, "roi": -16.5, "pl": -0.33}, {"label": "Otros", "n": 8, "wr": 75.0, "roi": 20.4, "pl": 1.63}], "team_yield": [{"label": "Al Khaleej Saihat", "pais": "Arabia Saudita", "liga": "Saudi Pro League", "n": 1, "wins": 1, "wr": 100.0, "roi": 37.0, "pl": 0.37, "n_home": 1, "pl_home": 0.37, "wr_home": 100.0, "n_away": 0, "pl_away": 0, "wr_away": 0, "n_draw": 0, "pl_draw": 0, "n_home_win": 0, "pl_home_win": 0, "n_away_win": 0, "pl_away_win": 0}, {"label": "Al Hazm Ksa", "pais": "Arabia Saudita", "liga": "Saudi Pro League", "n": 1, "wins": 1, "wr": 100.0, "roi": 37.0, "pl": 0.37, "n_home": 0, "pl_home": 0, "wr_home": 0, "n_away": 1, "pl_away": 0.37, "wr_away": 100.0, "n_draw": 0, "pl_draw": 0, "n_home_win": 0, "pl_home_win": 0, "n_away_win": 0, "pl_away_win": 0}, {"label": "Celta De Vigo", "pais": "España", "liga": "La Liga", "n": 1, "wins": 1, "wr": 100.0, "roi": 69.0, "pl": 0.69, "n_home": 1, "pl_home": 0.69, "wr_home": 100.0, "n_away": 0, "pl_away": 0, "wr_away": 0, "n_draw": 0, "pl_draw": 0, "n_home_win": 0, "pl_home_win": 0, "n_away_win": 0, "pl_away_win": 0}, {"label": "Real Madrid", "pais": "España", "liga": "La Liga", "n": 1, "wins": 1, "wr": 100.0, "roi": 69.0, "pl": 0.69, "n_home": 0, "pl_home": 0, "wr_home": 0, "n_away": 1, "pl_away": 0.69, "wr_away": 100.0, "n_draw": 0, "pl_draw": 0, "n_home_win": 0, "pl_home_win": 0, "n_away_win": 0, "pl_away_win": 0}, {"label": "Fujieda Myfc", "pais": "Japón", "liga": "J-League", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0, "n_home": 1, "pl_home": -1.0, "wr_home": 0.0, "n_away": 0, "pl_away": 0, "wr_away": 0, "n_draw": 0, "pl_draw": 0, "n_home_win": 0, "pl_home_win": 0, "n_away_win": 0, "pl_away_win": 0}, {"label": "Iwata", "pais": "Japón", "liga": "J-League", "n": 1, "wins": 0, "wr": 0.0, "roi": -100.0, "pl": -1.0, "n_home": 0, "pl_home": 0, "wr_home": 0, "n_away": 1, "pl_away": -1.0, "wr_away": 0.0, "n_draw": 0, "pl_draw": 0, "n_home_win": 0, "pl_home_win": 0, "n_away_win": 0, "pl_away_win": 0}], "day_of_week": [{"label": "Lun", "n": 0, "wr": 0, "roi": 0, "pl": 0}, {"label": "Mar", "n": 0, "wr": 0, "roi": 0, "pl": 0}, {"label": "Mié", "n": 0, "wr": 0, "roi": 0, "pl": 0}, {"label": "Jue", "n": 0, "wr": 0, "roi": 0, "pl": 0}, {"label": "Vie", "n": 2, "wr": 100.0, "roi": 53.0, "pl": 1.06}, {"label": "Sáb", "n": 40, "wr": 60.0, "roi": 20.4, "pl": 8.15}, {"label": "Dom", "n": 14, "wr": 64.3, "roi": 11.6, "pl": 1.62}], "hour_of_day": [{"label": "00h", "n": 2, "wr": 100.0, "pl": 1.4}, {"label": "01h", "n": 0, "wr": 0, "pl": 0}, {"label": "02h", "n": 2, "wr": 100.0, "pl": 1.22}, {"label": "03h", "n": 0, "wr": 0, "pl": 0}, {"label": "04h", "n": 1, "wr": 100.0, "pl": 0.61}, {"label": "05h", "n": 0, "wr": 0, "pl": 0}, {"label": "06h", "n": 3, "wr": 0.0, "pl": -3.0}, {"label": "07h", "n": 2, "wr": 100.0, "pl": 2.77}, {"label": "08h", "n": 0, "wr": 0, "pl": 0}, {"label": "09h", "n": 0, "wr": 0, "pl": 0}, {"label": "10h", "n": 0, "wr": 0, "pl": 0}, {"label": "11h", "n": 0, "wr": 0, "pl": 0}, {"label": "12h", "n": 3, "wr": 33.3, "pl": -1.66}, {"label": "13h", "n": 2, "wr": 50.0, "pl": -0.72}, {"label": "14h", "n": 9, "wr": 55.6, "pl": 3.96}, {"label": "15h", "n": 1, "wr": 100.0, "pl": 0.64}, {"label": "16h", "n": 9, "wr": 55.6, "pl": -0.83}, {"label": "17h", "n": 3, "wr": 66.7, "pl": 2.49}, {"label": "18h", "n": 4, "wr": 25.0, "pl": -2.72}, {"label": "19h", "n": 2, "wr": 100.0, "pl": 1.77}, {"label": "20h", "n": 3, "wr": 66.7, "pl": -0.27}, {"label": "21h", "n": 6, "wr": 66.7, "pl": 1.03}, {"label": "22h", "n": 2, "wr": 100.0, "pl": 2.92}, {"label": "23h", "n": 2, "wr": 100.0, "pl": 1.22}], "monthly_pl": [{"label": "2026-03", "pl": 10.83, "n": 56, "wr": 62.5}], "minute_hist": [{"label": "0-5", "n": 0, "wr": 0}, {"label": "5-10", "n": 0, "wr": 0}, {"label": "10-15", "n": 0, "wr": 0}, {"label": "15-20", "n": 0, "wr": 0}, {"label": "20-25", "n": 0, "wr": 0}, {"label": "25-30", "n": 0, "wr": 0}, {"label": "30-35", "n": 0, "wr": 0}, {"label": "35-40", "n": 0, "wr": 0}, {"label": "40-45", "n": 0, "wr": 0}, {"label": "45-50", "n": 0, "wr": 0}, {"label": "50-55", "n": 0, "wr": 0}, {"label": "55-60", "n": 12, "wr": 41.7}, {"label": "60-65", "n": 0, "wr": 0}, {"label": "65-70", "n": 15, "wr": 73.3}, {"label": "70-75", "n": 24, "wr": 66.7}, {"label": "75-80", "n": 1, "wr": 100.0}, {"label": "80-85", "n": 4, "wr": 50.0}, {"label": "85-90", "n": 0, "wr": 0}, {"label": "90-95", "n": 0, "wr": 0}], "odds_hist": [{"label": "1.0-1.5", "n": 14, "wr": 64.3}, {"label": "1.5-2.0", "n": 27, "wr": 63.0}, {"label": "2.0-2.5", "n": 8, "wr": 62.5}, {"label": "2.5-3.0", "n": 2, "wr": 50.0}, {"label": "3.0-4.0", "n": 2, "wr": 100.0}, {"label": "4.0-5.0", "n": 1, "wr": 0.0}, {"label": "5.0+", "n": 2, "wr": 50.0}], "cum_labels": ["2026-03-06", "2026-03-06", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-07", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08", "2026-03-08"], "generated_at": "2026-03-08T14:49:15.668838", "config_summary": {"adjustments": {}, "risk_filter": "live", "preset": "live"}};
+
+const chartDefaults = {
+  color: '#9ca3af',
+  borderColor: '#374151',
+  font: { family: 'system-ui' }
+};
+Chart.defaults.color = '#9ca3af';
+Chart.defaults.borderColor = '#1f2937';
+
+// 1. Cumulative P/L
+new Chart(document.getElementById('cumChart'), {
+  type: 'line',
+  data: {
+    labels: D.cum_labels,
+    datasets: [{
+      data: D.kpis.cumulative,
+      borderColor: '#10b981',
+      backgroundColor: 'rgba(16,185,129,0.08)',
+      fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      annotation: undefined,
+    },
+    scales: {
+      x: {
+        display: true,
+        grid: { display: false },
+        ticks: {
+          maxTicksLimit: 10,
+          callback: function(val, idx) { return D.cum_labels[idx]; }
+        }
+      },
+      y: {
+        grid: { color: '#1f2937' },
+        ticks: { callback: v => v + '€' },
+      }
+    }
+  }
+});
+
+// 1b. Strategy P/L bar
+new Chart(document.getElementById('stratChart'), {
+  type: 'bar',
+  data: {
+    labels: ["pressure_cooker_v1", "SD Underdog Leading", "SD CS One-Goal (1-0/0-1)", "SD Home Fav Leading", "SD CS Close (2-1/1-2)", "SD Over 2.5 (2-goal lead)", "SD CS 2-0/0-2", "odds_drift_contrarian_v1", "SD CS Big Lead", "SD Longshot"],
+    datasets: [{
+      data: [0.75, -2.27, 8.49, 5.98, 0.73, -0.37, -1.0, -1.0, -1.0, 0.52],
+      backgroundColor: ["#10b981", "#ef4444", "#10b981", "#10b981", "#10b981", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#10b981"],
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.x.toFixed(2) + '€' } }
+    },
+    scales: {
+      x: { grid: { color: '#1f2937' }, ticks: { callback: v => v + '€' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// 2. Monthly P/L
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: D.monthly_pl.map(m => m.label),
+    datasets: [{
+      data: D.monthly_pl.map(m => m.pl),
+      backgroundColor: D.monthly_pl.map(m => m.pl >= 0 ? '#10b981' : '#ef4444'),
+      borderRadius: 4,
+      maxBarThickness: 80,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '€ (' + D.monthly_pl[ctx.dataIndex].n + ' bets, WR ' + D.monthly_pl[ctx.dataIndex].wr + '%)' } }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: '#1f2937' }, ticks: { callback: v => v + '€' } }
+    }
+  }
+});
+
+// 3. Minute histogram
+new Chart(document.getElementById('minuteChart'), {
+  type: 'bar',
+  data: {
+    labels: D.minute_hist.map(m => m.label),
+    datasets: [{
+      label: 'N bets',
+      data: D.minute_hist.map(m => m.n),
+      backgroundColor: D.minute_hist.map(m => m.n === 0 ? '#374151' : m.wr >= 60 ? '#10b981' : m.wr >= 50 ? '#f59e0b' : '#ef4444'),
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' bets — WR ' + D.minute_hist[ctx.dataIndex].wr + '%' } }
+    },
+    scales: {
+      x: { grid: { display: false }, title: { display: true, text: 'Minuto', color: '#6b7280' } },
+      y: { grid: { color: '#1f2937' } }
+    }
+  }
+});
+
+// 4. Odds histogram
+new Chart(document.getElementById('oddsChart'), {
+  type: 'bar',
+  data: {
+    labels: D.odds_hist.map(m => m.label),
+    datasets: [{
+      label: 'N bets',
+      data: D.odds_hist.map(m => m.n),
+      backgroundColor: D.odds_hist.map(m => m.wr >= 60 ? '#10b981' : m.wr >= 50 ? '#f59e0b' : '#ef4444'),
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' bets — WR ' + D.odds_hist[ctx.dataIndex].wr + '%' } }
+    },
+    scales: {
+      x: { grid: { display: false }, title: { display: true, text: 'Odds', color: '#6b7280' } },
+      y: { grid: { color: '#1f2937' } }
+    }
+  }
+});
+
+// 5. Day of week (P/L bars)
+new Chart(document.getElementById('dowChart'), {
+  type: 'bar',
+  data: {
+    labels: D.day_of_week.map(d => d.label),
+    datasets: [{
+      data: D.day_of_week.map(d => d.pl),
+      backgroundColor: D.day_of_week.map(d => d.pl >= 0 ? '#10b981' : '#ef4444'),
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '€ — ' + D.day_of_week[ctx.dataIndex].n + ' bets — WR ' + D.day_of_week[ctx.dataIndex].wr + '%' } }
+    },
+    scales: { x: { grid: { display: false } }, y: { grid: { color: '#1f2937' }, ticks: { callback: v => v + '€' } } }
+  }
+});
+
+// 5b. League tier P/L bar
+new Chart(document.getElementById('tierPLChart'), {
+  type: 'bar',
+  data: {
+    labels: ["Top 5 Ligas", "Ligas Secundarias", "Ligas Menores"],
+    datasets: [{
+      data: [3.94, 1.09, 5.8],
+      backgroundColor: ["#3b82f6", "#f59e0b", "#8b5cf6"],
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => {
+        const i = ctx.dataIndex;
+        const tiers = D.league_tiers;
+        return ctx.parsed.x.toFixed(2) + '€ — ' + tiers[i].n + ' bets — WR ' + tiers[i].wr + '%';
+      } } }
+    },
+    scales: {
+      x: { grid: { color: '#1f2937' }, ticks: { callback: v => v + '€' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// 5c. League tier donut
+new Chart(document.getElementById('tierDonutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ["Top 5 Ligas", "Ligas Secundarias", "Ligas Menores"],
+    datasets: [{
+      data: [11, 24, 21],
+      backgroundColor: ["#3b82f6", "#f59e0b", "#8b5cf6"],
+      borderColor: '#111827',
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#d1d5db', padding: 16 } },
+      tooltip: { callbacks: { label: ctx => {
+        const i = ctx.dataIndex;
+        const tiers = D.league_tiers;
+        const pct = (tiers[i].n / D.kpis.n_bets * 100).toFixed(1);
+        return tiers[i].label + ': ' + tiers[i].n + ' bets (' + pct + '%) — WR ' + tiers[i].wr + '% — P/L ' + tiers[i].pl.toFixed(2) + '€';
+      } } }
+    },
+  }
+});
+
+// 6. Hour of day (P/L bars)
+new Chart(document.getElementById('hourChart'), {
+  type: 'bar',
+  data: {
+    labels: D.hour_of_day.map(h => h.label),
+    datasets: [{
+      data: D.hour_of_day.map(h => h.pl),
+      backgroundColor: D.hour_of_day.map(h => h.pl >= 0 ? '#10b981' : '#ef4444'),
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '€ — ' + D.hour_of_day[ctx.dataIndex].n + ' bets — WR ' + D.hour_of_day[ctx.dataIndex].wr + '%' } }
+    },
+    scales: { x: { grid: { display: false } }, y: { grid: { color: '#1f2937' }, ticks: { callback: v => v + '€' } } }
+  }
+});
+
+// ── Table sorting ─────────────────────────────────────────────────────────────
+const _tblSort = {};
+function sortTable(id, col) {
+  const tbl = document.getElementById(id);
+  if (!tbl) return;
+  const prev = _tblSort[id] || {col: -1, asc: false};
+  const asc = prev.col === col ? !prev.asc : false;
+  _tblSort[id] = {col, asc};
+  const rows = Array.from(tbl.tBodies[0].rows);
+  rows.sort((a, b) => {
+    const av = a.cells[col].dataset.val, bv = b.cells[col].dataset.val;
+    const an = parseFloat(av), bn = parseFloat(bv);
+    const cmp = isNaN(an) ? av.localeCompare(bv) : an - bn;
+    return asc ? cmp : -cmp;
+  });
+  rows.forEach(r => tbl.tBodies[0].appendChild(r));
+  tbl.querySelectorAll('th .sort-arrow').forEach(s => s.textContent = '');
+  const arrow = tbl.tHead.rows[0].cells[col].querySelector('.sort-arrow');
+  if (arrow) arrow.textContent = asc ? ' ▲' : ' ▼';
+}
+</script>
+</body>
+</html>

@@ -1096,6 +1096,102 @@ def extraer_over_under_via_mercado(driver) -> dict:
     return resultado
 
 
+def extraer_resultado_correcto_via_mercado(driver) -> dict:
+    """
+    Extrae cuotas Resultado Correcto navegando a la URL del mercado individual.
+    Esto obtiene cuotas en vivo reales, a diferencia de la página del evento
+    que puede tener datos congelados.
+
+    Flujo:
+    1. Guarda la URL actual (página del evento)
+    2. Busca el link del mercado Resultado Correcto en el sidebar
+    3. Navega a esa URL
+    4. Extrae cuotas de todos los runners con formato de marcador
+    5. Navega de vuelta a la página del evento
+    """
+    marcadores = [
+        "0-0", "1-0", "0-1", "1-1",
+        "2-0", "0-2", "2-1", "1-2", "2-2",
+        "3-0", "0-3", "3-1", "1-3", "3-2", "2-3"
+    ]
+    resultado = {}
+    for marcador in marcadores:
+        marcador_key = marcador.replace("-", "_")
+        resultado[f"back_rc_{marcador_key}"] = ""
+        resultado[f"lay_rc_{marcador_key}"] = ""
+
+    original_url = driver.current_url
+
+    try:
+        # 1. Buscar link del mercado Resultado Correcto en el sidebar
+        rc_market_url = None
+        all_links = driver.find_elements(By.CSS_SELECTOR, "a")
+        for link in all_links:
+            try:
+                href = link.get_attribute("href") or ""
+                text = link.text.strip().lower()
+                if "football/market/" in href and ("resultado" in text or "correct" in text):
+                    rc_market_url = href
+                    break
+            except StaleElementReferenceException:
+                continue
+
+        if not rc_market_url:
+            log.debug("No se encontró link del mercado Resultado Correcto en sidebar")
+            return resultado
+
+        # 2. Navegar a la URL del mercado Resultado Correcto
+        log.debug(f"Navegando a mercado RC: {rc_market_url}")
+        driver.get(rc_market_url)
+        time.sleep(2)
+
+        # 3. Extraer runners con formato de marcador
+        tables = driver.find_elements(By.CSS_SELECTOR, "table tbody")
+        for tbody in tables:
+            rows = tbody.find_elements(By.CSS_SELECTOR, "tr")
+            for row in rows:
+                try:
+                    h3_elements = row.find_elements(By.TAG_NAME, "h3")
+                    if not h3_elements:
+                        continue
+
+                    runner_name = h3_elements[0].text.strip()
+                    marcador_match = re.search(r"(\d+)\s*-\s*(\d+)", runner_name)
+                    if not marcador_match:
+                        continue
+
+                    marcador = f"{marcador_match.group(1)}-{marcador_match.group(2)}"
+                    if marcador not in marcadores:
+                        continue
+
+                    marcador_key = marcador.replace("-", "_")
+                    back_price, lay_price = _extraer_best_back_lay(row)
+                    if back_price:
+                        resultado[f"back_rc_{marcador_key}"] = back_price
+                    if lay_price:
+                        resultado[f"lay_rc_{marcador_key}"] = lay_price
+
+                except (NoSuchElementException, StaleElementReferenceException):
+                    continue
+
+    except WebDriverException as e:
+        log.debug(f"Error navegando a mercado RC: {e}")
+
+    finally:
+        # 4. SIEMPRE volver a la página del evento
+        try:
+            driver.get(original_url)
+            time.sleep(1)
+        except WebDriverException:
+            log.warning(f"No se pudo volver a URL original: {original_url}")
+
+    rc_count = sum(1 for v in resultado.values() if v)
+    if rc_count > 0:
+        log.info(f"✓ RC via mercado: {rc_count} valores capturados")
+
+    return resultado
+
+
 def extraer_info_partido(driver) -> dict:
     """Extrae información del estado del partido: minuto, marcador, nombre evento, hora comienzo, estado."""
     info = {
@@ -2200,8 +2296,12 @@ class MatchDriver:
                         if v:
                             odds_ou[k] = v
 
-                log.debug(f"[{self.match_id}] → Extrayendo cuotas Resultado Correcto...")
-                odds_rc = extraer_resultado_correcto(self.driver)
+                log.debug(f"[{self.match_id}] → Extrayendo cuotas Resultado Correcto (via mercado, cuotas live)...")
+                odds_rc = extraer_resultado_correcto_via_mercado(self.driver)
+                rc_count_check = sum(1 for v in odds_rc.values() if v)
+                if rc_count_check == 0:
+                    log.debug(f"[{self.match_id}] RC via mercado sin datos (mercado no encontrado/suspendido), fallback a página evento...")
+                    odds_rc = extraer_resultado_correcto(self.driver)
 
                 log.debug(f"[{self.match_id}] → Extrayendo estadísticas del partido...")
                 stats = extraer_estadisticas(self.driver, cached_event_id=self._opta_event_id)
@@ -2556,9 +2656,13 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
         ou_count = sum(1 for v in odds_ou.values() if v)
     log.info(f"[Tab {tab_info['index']}]   ✓ Over/Under: {ou_count}/28 valores capturados")
 
-    log.info(f"[Tab {tab_info['index']}] → Extrayendo cuotas Resultado Correcto...")
-    odds_rc = extraer_resultado_correcto(driver)
+    log.info(f"[Tab {tab_info['index']}] → Extrayendo cuotas Resultado Correcto (via mercado, cuotas live)...")
+    odds_rc = extraer_resultado_correcto_via_mercado(driver)
     rc_count = sum([1 for k, v in odds_rc.items() if v])
+    if rc_count == 0:
+        log.info(f"[Tab {tab_info['index']}]   RC via mercado sin datos (mercado no encontrado/suspendido), fallback a página evento...")
+        odds_rc = extraer_resultado_correcto(driver)
+        rc_count = sum([1 for k, v in odds_rc.items() if v])
     log.info(f"[Tab {tab_info['index']}]   ✓ Resultado Correcto: {rc_count}/30 valores capturados")
 
     # Saltar estadísticas en partidos pre_partido para acelerar ciclos

@@ -45,13 +45,13 @@ PARAM_GRID:
 
 ### Paso 1 — Escribir el script
 
-Crea el script en `aux/sd_bt_{hypothesis_name}.py` basandote en el template de abajo.
+Crea el script en `auxiliar/sd_bt_{hypothesis_name}.py` basandote en el template de abajo.
 Adapta las condiciones de trigger, win condition, y grid de parametros segun el input.
 
 ### Paso 2 — Ejecutar
 
 ```bash
-cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python aux/sd_bt_{hypothesis_name}.py
+cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python auxiliar/sd_bt_{hypothesis_name}.py
 ```
 
 Si el script falla, diagnostica el error (typo en columna, datos inesperados, etc.),
@@ -68,15 +68,15 @@ No intentes calcular slippage/dedup manualmente — DEBES usar el script oficial
 # Al final del script, después de encontrar best_by_roi:
 if best_by_roi:
     best_bets = run_backtest(matches, best_by_roi["params"])
-    with open(f"aux/sd_bt_{HYPOTHESIS_NAME}_bets.json", "w") as f:
+    with open(f"auxiliar/sd_bt_{HYPOTHESIS_NAME}_bets.json", "w") as f:
         json.dump(best_bets, f, ensure_ascii=False)
-    print(f"Exported {len(best_bets)} bets to aux/sd_bt_{HYPOTHESIS_NAME}_bets.json", file=sys.stderr)
+    print(f"Exported {len(best_bets)} bets to auxiliar/sd_bt_{HYPOTHESIS_NAME}_bets.json", file=sys.stderr)
 ```
 
 **2.5b) Ejecutar el validador realista:**
 
 ```bash
-cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python strategies/sd_validate_realistic.py --file aux/sd_bt_{hypothesis_name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l) 2>&1
+cd /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo && python strategies/sd_validate_realistic.py --file auxiliar/sd_bt_{hypothesis_name}_bets.json --n-matches $(ls betfair_scraper/data/partido_*.csv | wc -l) 2>&1
 ```
 
 **2.5c) Capturar el output COMPLETO** (stderr + stdout). Lo necesitas para el Paso 3.
@@ -420,7 +420,7 @@ if __name__ == "__main__":
     # Export best bets for realistic validation (Paso 2.5)
     if best_roi:
         best_bets = run_backtest(matches, best_roi["params"])
-        bets_file = f"aux/sd_bt_HYPOTHESIS_NAME_bets.json"  # REPLACE name
+        bets_file = f"auxiliar/sd_bt_HYPOTHESIS_NAME_bets.json"  # REPLACE name
         with open(bets_file, "w", encoding="utf-8") as f:
             json.dump(best_bets, f, ensure_ascii=False)
         print(f"Exported {len(best_bets)} bets to {bets_file}", file=sys.stderr)
@@ -430,7 +430,7 @@ if __name__ == "__main__":
 
 ## REGLAS
 
-1. **Scripts en `aux/`** — nombre: `aux/sd_bt_{hypothesis_name}.py`
+1. **Scripts en `auxiliar/`** — nombre: `auxiliar/sd_bt_{hypothesis_name}.py`
 2. **No evaluar calidad** — solo reportar numeros. El agente padre decide si pasa o no
 3. **Si el script falla**, diagnosticar error, corregir UNA vez, y reportar si persiste
 4. **Incluir match_ids** en el output — el padre los necesita para overlap analysis

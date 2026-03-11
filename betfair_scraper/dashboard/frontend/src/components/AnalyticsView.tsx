@@ -4,6 +4,8 @@ import { api, type PlacedBetsResponse, type PlacedBet } from "../lib/api"
 export function AnalyticsView() {
   const [data, setData] = useState<PlacedBetsResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [bankrollInit, setBankrollInit] = useState(100)
+  const [stakePercent, setStakePercent] = useState(2)
 
   useEffect(() => {
     const fetch = async () => {
@@ -36,6 +38,7 @@ export function AnalyticsView() {
 
   // Calculate metrics
   const stats = calculateStats(sortedBets)
+  const bankrollSim = calculateBankrollSim(sortedBets, bankrollInit, stakePercent)
   const strategyPerf = calculateStrategyPerformance(sortedBets)
   const marketPerf = calculateMarketPerformance(sortedBets)
   const riskMetrics = calculateRiskMetrics(sortedBets)
@@ -167,6 +170,98 @@ export function AnalyticsView() {
         </div>
       </section>
 
+      {/* Bankroll Simulation */}
+      <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+        <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
+          💰 Simulación de Bankroll
+        </h2>
+
+        {/* Controls */}
+        <div className="flex flex-wrap gap-4 mb-4">
+          <label className="flex items-center gap-2 text-sm text-zinc-400">
+            Bankroll inicial
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={10}
+                step={10}
+                value={bankrollInit}
+                onChange={e => setBankrollInit(Math.max(10, Number(e.target.value)))}
+                className="w-24 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-100 text-sm text-right focus:outline-none focus:border-zinc-500"
+              />
+              <span className="text-zinc-500">€</span>
+            </div>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-400">
+            Stake por apuesta
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0.5}
+                max={25}
+                step={0.5}
+                value={stakePercent}
+                onChange={e => setStakePercent(Math.min(25, Math.max(0.5, Number(e.target.value))))}
+                className="w-16 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-100 text-sm text-right focus:outline-none focus:border-zinc-500"
+              />
+              <span className="text-zinc-500">%</span>
+            </div>
+          </label>
+          <span className="text-xs text-zinc-600 self-center">
+            Stake inicial: {((bankrollInit * stakePercent) / 100).toFixed(2)}€
+          </span>
+        </div>
+
+        {/* Results */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">Bankroll Final</div>
+            <div className={`text-xl font-bold ${bankrollSim.finalBankroll >= bankrollInit ? "text-green-400" : "text-red-400"}`}>
+              {bankrollSim.finalBankroll.toFixed(2)}€
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">P/L Total</div>
+            <div className={`text-xl font-bold ${bankrollSim.totalPL >= 0 ? "text-green-400" : "text-red-400"}`}>
+              {bankrollSim.totalPL >= 0 ? "+" : ""}{bankrollSim.totalPL.toFixed(2)}€
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">ROI</div>
+            <div className={`text-xl font-bold ${bankrollSim.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+              {bankrollSim.roi >= 0 ? "+" : ""}{bankrollSim.roi.toFixed(1)}%
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">Max Drawdown</div>
+            <div className="text-xl font-bold text-red-400">
+              -{bankrollSim.maxDrawdown.toFixed(2)}€
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3 pt-3 border-t border-zinc-800">
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">Stake promedio</div>
+            <div className="text-sm font-semibold text-zinc-200">
+              {bankrollSim.avgStake.toFixed(2)}€
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">Mejor apuesta</div>
+            <div className="text-sm font-semibold text-green-400">
+              +{bankrollSim.bestBet.toFixed(2)}€
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">Peor apuesta</div>
+            <div className="text-sm font-semibold text-red-400">
+              {bankrollSim.worstBet.toFixed(2)}€
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Summary Stats */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
         <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
@@ -212,6 +307,48 @@ export function AnalyticsView() {
 }
 
 // Utility functions
+function calculateBankrollSim(bets: PlacedBet[], bankrollInit: number, stakePercent: number) {
+  let bankroll = bankrollInit
+  let peak = bankrollInit
+  let maxDrawdown = 0
+  let totalStaked = 0
+  let bestBet = 0
+  let worstBet = 0
+  const stakesUsed: number[] = []
+
+  for (const bet of bets) {
+    const stake = (bankroll * stakePercent) / 100
+    stakesUsed.push(stake)
+    totalStaked += stake
+
+    const odds = Number(bet.back_odds) || 0
+    let pl = 0
+    if (bet.result === "won") {
+      pl = stake * (odds - 1) * 0.95
+    } else if (bet.result === "lost") {
+      pl = -stake
+    } else if (bet.result === "cashout") {
+      // scale paper cashout P/L proportionally
+      const paperStake = Number(bet.stake) || 1
+      const paperPL = Number(bet.pl) || 0
+      pl = paperStake > 0 ? (paperPL / paperStake) * stake : 0
+    }
+
+    bankroll += pl
+    if (bankroll > peak) peak = bankroll
+    const dd = peak - bankroll
+    if (dd > maxDrawdown) maxDrawdown = dd
+    if (pl > bestBet) bestBet = pl
+    if (pl < worstBet) worstBet = pl
+  }
+
+  const totalPL = bankroll - bankrollInit
+  const roi = (totalPL / bankrollInit) * 100
+  const avgStake = stakesUsed.length > 0 ? stakesUsed.reduce((a, b) => a + b, 0) / stakesUsed.length : 0
+
+  return { finalBankroll: bankroll, totalPL, roi, maxDrawdown, avgStake, bestBet, worstBet }
+}
+
 function calculateStats(bets: PlacedBet[]) {
   const totalBets = bets.length
   const totalStake = bets.reduce((sum, b) => sum + Number(b.stake), 0)
@@ -389,10 +526,15 @@ function parseBetType(recommendation: string): string {
     const match = rec.match(/OVER\s+(\d+\.?\d*)/)
     return match ? `Over ${match[1]}` : "Over"
   }
-  if (rec.includes("UNDER")) return "Under"
+  if (rec.includes("UNDER")) {
+    const match = rec.match(/UNDER\s+(\d+\.?\d*)/)
+    return match ? `Under ${match[1]}` : "Under"
+  }
   if (rec.includes("HOME") || rec.includes("LOCAL")) return "Local"
   if (rec.includes("AWAY") || rec.includes("VISITANTE")) return "Visitante"
-  return "Other"
+  const csMatch = rec.match(/\bCS\s+(\d+-\d+)/)
+  if (csMatch) return `CS ${csMatch[1]}`
+  return recommendation.replace(/^BACK\s+/i, "").replace(/\s*@\s*[\d.]+$/, "").trim()
 }
 
 // Components
