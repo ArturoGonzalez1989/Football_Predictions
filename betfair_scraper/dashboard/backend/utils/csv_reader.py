@@ -64,6 +64,149 @@ from .strategy_triggers import (
 )
 
 
+def _sd_fixed(odds_field: str, rec: str, entry_keys: list) -> callable:
+    """Factory for SD strategies with a fixed odds column."""
+    def _ex(t):
+        o = t.get(odds_field)
+        if not o:
+            return None
+        entry = {k: (round(t[k], 2) if isinstance(t.get(k), float) else t.get(k)) for k in entry_keys}
+        entry["odds"] = round(o, 2)
+        return (o, f"{rec} @ {o:.2f}", entry)
+    return _ex
+
+
+def _sd_score(rec_prefix: str, entry_keys: list) -> callable:
+    """Factory for CS-score-based SD strategies."""
+    def _ex(t):
+        score = t.get("trigger_score")
+        if not score:
+            return None
+        col = f"back_rc_{score.replace('-', '_')}"
+        o = t.get(col)
+        if not o:
+            return None
+        entry = {k: (round(t[k], 2) if isinstance(t.get(k), float) else t.get(k)) for k in entry_keys}
+        entry["odds"] = round(o, 2)
+        return (o, f"{rec_prefix} {score} @ {o:.2f}", entry)
+    return _ex
+
+
+def _sd_team(home_field: str, away_field: str, team_field: str,
+             rec_prefix: str, entry_keys: list) -> callable:
+    """Factory for team-based SD strategies (home OR away)."""
+    def _ex(t):
+        o = t.get(home_field) or t.get(away_field)
+        if not o:
+            return None
+        team = t.get(team_field)
+        label = "HOME" if team == "local" else "AWAY"
+        entry = {k: (round(t[k], 2) if isinstance(t.get(k), float) else t.get(k)) for k in entry_keys}
+        entry["odds"] = round(o, 2)
+        return (o, f"{rec_prefix} {label} @ {o:.2f}", entry)
+    return _ex
+
+
+# Registry for SD live detection — one entry per strategy, evaluated in order.
+# Each entry: key, display name, trigger fn, description, extractor fn.
+_SD_LIVE_REGISTRY = [
+    ("sd_over25_2goal",    "SD BACK O2.5 2-Goal Lead",
+     _detect_over25_2goal_trigger,
+     "Back Over 2.5 when a team leads by 2+ goals with SoT activity",
+     _sd_fixed("back_over25", "BACK OVER 2.5", ["goal_diff", "sot_total"])),
+
+    ("sd_under35_late",    "SD BACK U3.5 Late",
+     _detect_under35_late_trigger,
+     "Back Under 3.5 when exactly 3 goals scored and xG is low",
+     _sd_fixed("back_under35", "BACK UNDER 3.5", ["total_goals_trigger", "xg_total"])),
+
+    ("sd_longshot",        "SD BACK Longshot Leading",
+     _detect_longshot_trigger,
+     "Back the pre-match longshot when they are leading late",
+     _sd_team("back_home", "back_away", "longshot_team", "BACK", ["longshot_team", "xg_longshot"])),
+
+    ("sd_cs_close",        "SD BACK CS Close",
+     _detect_cs_close_trigger,
+     "Back current Correct Score at close game (2-1 / 1-2)",
+     _sd_score("BACK CS", ["score"])),
+
+    ("sd_cs_one_goal",     "SD BACK CS One-Goal",
+     _detect_cs_one_goal_trigger,
+     "Back current Correct Score at 1-0 / 0-1",
+     _sd_score("BACK CS", ["score"])),
+
+    ("sd_ud_leading",      "SD BACK Underdog Leading",
+     _detect_ud_leading_trigger,
+     "Back the underdog when they are leading late",
+     _sd_team("back_home", "back_away", "ud_team", "BACK", ["ud_team", "ud_pre_odds"])),
+
+    ("sd_home_fav_leading","SD BACK Home Fav Leading",
+     _detect_home_fav_leading_trigger,
+     "Back home favourite when leading late",
+     _sd_fixed("back_home", "BACK HOME", ["home_pre_odds", "lead"])),
+
+    ("sd_cs_20",           "SD BACK CS 2-0/0-2",
+     _detect_cs_20_trigger,
+     "Back current Correct Score at 2-0 / 0-2",
+     _sd_score("BACK CS", ["score"])),
+
+    ("sd_cs_big_lead",     "SD BACK CS Big Lead",
+     _detect_cs_big_lead_trigger,
+     "Back current Correct Score at big lead (3-0/0-3/3-1/1-3)",
+     _sd_score("BACK CS", ["score"])),
+
+    ("sd_lay_over45_v3",   "SD LAY Over 4.5 V3",
+     _detect_lay_over45_v3_trigger,
+     "Lay Over 4.5 tight: goals<=1, tight minute window",
+     _sd_fixed("lay_over45", "LAY OVER 4.5", ["total_goals_trigger"])),
+
+    ("sd_draw_xg_conv",    "SD BACK Draw xG Convergence",
+     _detect_draw_xg_conv_trigger,
+     "Back Draw when xG converges in tied match",
+     _sd_fixed("back_draw", "BACK DRAW", ["xg_diff", "score_at_trigger"])),
+
+    ("sd_poss_extreme",    "SD BACK Over 0.5 Poss Extreme",
+     _detect_poss_extreme_trigger,
+     "Back Over 0.5 when possession is extremely one-sided at 0-0",
+     _sd_fixed("back_over05", "BACK OVER 0.5", ["poss_max"])),
+
+    ("sd_cs_00",           "SD BACK CS 0-0 Early",
+     _detect_cs_00_trigger,
+     "Back CS 0-0 in early window with low xG and SoT",
+     _sd_fixed("back_rc_0_0", "BACK CS 0-0", ["xg_total", "sot_total"])),
+
+    ("sd_over25_2goals",   "SD BACK O2.5 Two Goals",
+     _detect_over25_2goals_trigger,
+     "Back Over 2.5 when exactly 2 goals scored in stable row",
+     _sd_fixed("back_over25", "BACK OVER 2.5", ["total_goals_trigger"])),
+
+    ("sd_draw_11",         "SD BACK Draw 1-1",
+     _detect_draw_11_trigger,
+     "Back Draw when score is exactly 1-1 late",
+     _sd_fixed("back_draw", "BACK DRAW", [])),
+
+    ("sd_under35_3goals",  "SD BACK U3.5 3-Goal Lid",
+     _detect_under35_3goals_trigger,
+     "Back Under 3.5 when exactly 3 goals and low xG",
+     _sd_fixed("back_under35", "BACK UNDER 3.5", ["xg_total"])),
+
+    ("sd_away_fav_leading","SD BACK Away Fav Leading",
+     _detect_away_fav_leading_trigger,
+     "Back away favourite when leading late",
+     _sd_fixed("back_away", "BACK AWAY", ["away_pre_odds", "lead"])),
+
+    ("sd_under45_3goals",  "SD BACK U4.5 3-Goals Low xG",
+     _detect_under45_3goals_trigger,
+     "Back Under 4.5 when exactly 3 goals and xG < threshold",
+     _sd_fixed("back_under45", "BACK UNDER 4.5", ["xg_total"])),
+
+    ("sd_cs_11",           "SD BACK CS 1-1 Late",
+     _detect_cs_11_trigger,
+     "Back CS 1-1 late in the game",
+     _sd_fixed("back_rc_1_1", "BACK CS 1-1", [])),
+]
+
+
 @_cached_result("quality_distribution")
 def analyze_quality_distribution() -> dict:
     """Aggregate quality metrics across all finished matches."""
@@ -2739,235 +2882,19 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     _log_signal_to_csv(sig)
                     _register_outcome(match_id, sig["recommendation"], match_outcomes)
 
-        # --- SD: BACK Over 2.5 from 2-Goal Lead ---
-        _sd_cfg = sd_configs.get("sd_over25_2goal", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_over25_2goal_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _sd_signal("sd_over25_2goal", "SD BACK O2.5 2-Goal Lead",
-                           f"BACK OVER 2.5 @ {_trig['back_over25']:.2f}", _trig["back_over25"],
-                           "Back Over 2.5 when a team leads by 2+ goals with SoT activity",
-                           {"goal_diff": _trig.get("goal_diff"), "sot_total": _trig.get("sot_total"),
-                            "odds": round(_trig["back_over25"], 2)})
-
-        # --- SD: BACK Under 3.5 Late ---
-        _sd_cfg = sd_configs.get("sd_under35_late", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_under35_late_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _sd_signal("sd_under35_late", "SD BACK U3.5 Late",
-                           f"BACK UNDER 3.5 @ {_trig['back_under35']:.2f}", _trig["back_under35"],
-                           "Back Under 3.5 when exactly 3 goals scored and xG is low",
-                           {"total_goals": _trig.get("total_goals_trigger"),
-                            "xg_total": round(_trig["xg_total"], 2) if _trig.get("xg_total") is not None else None})
-
-        # --- SD: BACK Longshot Leading ---
-        _sd_cfg = sd_configs.get("sd_longshot", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_longshot_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _ls_odds = _trig.get("back_home") or _trig.get("back_away")
-                _ls_team = _trig.get("longshot_team")
-                _team_label = "HOME" if _ls_team == "local" else "AWAY"
-                _sd_signal("sd_longshot", "SD BACK Longshot Leading",
-                           f"BACK {_team_label} @ {_ls_odds:.2f}", _ls_odds,
-                           "Back the pre-match longshot when they are leading late",
-                           {"longshot_team": _ls_team, "odds": round(_ls_odds, 2),
-                            "xg_longshot": round(_trig["xg_longshot"], 2) if _trig.get("xg_longshot") is not None else None})
-
-        # --- SD: BACK CS 2-1/1-2 (Close Game) ---
-        _sd_cfg = sd_configs.get("sd_cs_close", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_cs_close_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _score = _trig["trigger_score"]
-                _col = f"back_rc_{_score.replace('-', '_')}"
-                _cs_odds = _trig.get(_col)
-                if _cs_odds:
-                    _sd_signal("sd_cs_close", "SD BACK CS Close",
-                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
-                               "Back current Correct Score at close game (2-1 / 1-2)",
-                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
-
-        # --- SD: BACK CS 1-0/0-1 (One Goal) ---
-        _sd_cfg = sd_configs.get("sd_cs_one_goal", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_cs_one_goal_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _score = _trig["trigger_score"]
-                _col = f"back_rc_{_score.replace('-', '_')}"
-                _cs_odds = _trig.get(_col)
-                if _cs_odds:
-                    _sd_signal("sd_cs_one_goal", "SD BACK CS One-Goal",
-                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
-                               "Back current Correct Score at 1-0 / 0-1",
-                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
-
-        # --- SD: BACK Underdog Leading Late ---
-        _sd_cfg = sd_configs.get("sd_ud_leading", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_ud_leading_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _ud_odds = _trig.get("back_home") or _trig.get("back_away")
-                _ud_team = _trig.get("ud_team")
-                _sd_signal("sd_ud_leading", "SD BACK Underdog Leading",
-                           f"BACK {'HOME' if _ud_team == 'local' else 'AWAY'} @ {_ud_odds:.2f}", _ud_odds,
-                           "Back the underdog when they are leading late",
-                           {"ud_team": _ud_team, "pre_odds": round(_trig["ud_pre_odds"], 2),
-                            "current_odds": round(_ud_odds, 2)})
-
-        # --- SD: BACK Home Favourite Leading Late ---
-        _sd_cfg = sd_configs.get("sd_home_fav_leading", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_home_fav_leading_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _home_odds = _trig["back_home"]
-                _sd_signal("sd_home_fav_leading", "SD BACK Home Fav Leading",
-                           f"BACK HOME @ {_home_odds:.2f}", _home_odds,
-                           "Back home favourite when leading late",
-                           {"home_pre_odds": round(_trig["home_pre_odds"], 2),
-                            "current_odds": round(_home_odds, 2), "lead": _trig.get("lead")})
-
-        # --- SD: BACK CS 2-0/0-2 Late ---
-        _sd_cfg = sd_configs.get("sd_cs_20", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_cs_20_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _score = _trig["trigger_score"]
-                _col = f"back_rc_{_score.replace('-', '_')}"
-                _cs_odds = _trig.get(_col)
-                if _cs_odds:
-                    _sd_signal("sd_cs_20", "SD BACK CS 2-0/0-2",
-                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
-                               "Back current Correct Score at 2-0 / 0-2",
-                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
-
-        # --- SD: BACK CS Big Lead (3-0/0-3/3-1/1-3) ---
-        _sd_cfg = sd_configs.get("sd_cs_big_lead", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_cs_big_lead_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _score = _trig["trigger_score"]
-                _col = f"back_rc_{_score.replace('-', '_')}"
-                _cs_odds = _trig.get(_col)
-                if _cs_odds:
-                    _sd_signal("sd_cs_big_lead", "SD BACK CS Big Lead",
-                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
-                               "Back current Correct Score at big lead (3-0/0-3/3-1/1-3)",
-                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
-
-        # --- SD (disabled): LAY Over 4.5 V3 ---
-        _sd_cfg = sd_configs.get("sd_lay_over45_v3", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_lay_over45_v3_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _lay_odds = _trig["lay_over45"]
-                _sd_signal("sd_lay_over45_v3", "SD LAY Over 4.5 V3",
-                           f"LAY OVER 4.5 @ {_lay_odds:.2f}", _lay_odds,
-                           "Lay Over 4.5 tight: goals<=1, tight minute window",
-                           {"total_goals": _trig.get("total_goals_trigger"), "odds": round(_lay_odds, 2)})
-
-        # --- SD (disabled): BACK Draw xG Convergence ---
-        _sd_cfg = sd_configs.get("sd_draw_xg_conv", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_draw_xg_conv_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _draw_odds = _trig["back_draw"]
-                _sd_signal("sd_draw_xg_conv", "SD BACK Draw xG Convergence",
-                           f"BACK DRAW @ {_draw_odds:.2f}", _draw_odds,
-                           "Back Draw when xG converges in tied match",
-                           {"xg_diff": _trig.get("xg_diff"), "score": _trig.get("score_at_trigger"),
-                            "odds": round(_draw_odds, 2)})
-
-        # --- SD (disabled): BACK Over 0.5 Possession Extreme ---
-        _sd_cfg = sd_configs.get("sd_poss_extreme", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_poss_extreme_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _over05_odds = _trig["back_over05"]
-                _sd_signal("sd_poss_extreme", "SD BACK Over 0.5 Poss Extreme",
-                           f"BACK OVER 0.5 @ {_over05_odds:.2f}", _over05_odds,
-                           "Back Over 0.5 when possession is extremely one-sided at 0-0",
-                           {"poss_max": _trig.get("poss_max"), "odds": round(_over05_odds, 2)})
-
-        # --- SD (disabled): BACK CS 0-0 Early ---
-        _sd_cfg = sd_configs.get("sd_cs_00", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_cs_00_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _cs00_odds = _trig["back_rc_0_0"]
-                _sd_signal("sd_cs_00", "SD BACK CS 0-0 Early",
-                           f"BACK CS 0-0 @ {_cs00_odds:.2f}", _cs00_odds,
-                           "Back CS 0-0 in early window with low xG and SoT",
-                           {"xg_total": _trig.get("xg_total"), "sot_total": _trig.get("sot_total"),
-                            "odds": round(_cs00_odds, 2)})
-
-        # --- SD (disabled): BACK Over 2.5 from Two Goals ---
-        _sd_cfg = sd_configs.get("sd_over25_2goals", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_over25_2goals_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _o25_odds = _trig["back_over25"]
-                _sd_signal("sd_over25_2goals", "SD BACK O2.5 Two Goals",
-                           f"BACK OVER 2.5 @ {_o25_odds:.2f}", _o25_odds,
-                           "Back Over 2.5 when exactly 2 goals scored in stable row",
-                           {"total_goals": _trig.get("total_goals_trigger"), "odds": round(_o25_odds, 2)})
-
-        # --- SD (disabled): BACK Draw at 1-1 ---
-        _sd_cfg = sd_configs.get("sd_draw_11", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_draw_11_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _draw11_odds = _trig["back_draw"]
-                _sd_signal("sd_draw_11", "SD BACK Draw 1-1",
-                           f"BACK DRAW @ {_draw11_odds:.2f}", _draw11_odds,
-                           "Back Draw when score is exactly 1-1 late",
-                           {"odds": round(_draw11_odds, 2)})
-
-        # --- SD (disabled): BACK Under 3.5 Three-Goal Lid ---
-        _sd_cfg = sd_configs.get("sd_under35_3goals", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_under35_3goals_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _u35_odds = _trig["back_under35"]
-                _sd_signal("sd_under35_3goals", "SD BACK U3.5 3-Goal Lid",
-                           f"BACK UNDER 3.5 @ {_u35_odds:.2f}", _u35_odds,
-                           "Back Under 3.5 when exactly 3 goals and low xG",
-                           {"xg_total": _trig.get("xg_total"), "odds": round(_u35_odds, 2)})
-
-        # --- SD (disabled): BACK Away Favourite Leading Late ---
-        _sd_cfg = sd_configs.get("sd_away_fav_leading", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_away_fav_leading_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _away_odds = _trig["back_away"]
-                _sd_signal("sd_away_fav_leading", "SD BACK Away Fav Leading",
-                           f"BACK AWAY @ {_away_odds:.2f}", _away_odds,
-                           "Back away favourite when leading late",
-                           {"away_pre_odds": round(_trig["away_pre_odds"], 2),
-                            "lead": _trig.get("lead"), "odds": round(_away_odds, 2)})
-
-        # --- SD (disabled): BACK Under 4.5 Three Goals Low xG ---
-        _sd_cfg = sd_configs.get("sd_under45_3goals", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_under45_3goals_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _u45_odds = _trig["back_under45"]
-                _sd_signal("sd_under45_3goals", "SD BACK U4.5 3-Goals Low xG",
-                           f"BACK UNDER 4.5 @ {_u45_odds:.2f}", _u45_odds,
-                           "Back Under 4.5 when exactly 3 goals and xG < threshold",
-                           {"xg_total": _trig.get("xg_total"), "odds": round(_u45_odds, 2)})
-
-        # --- SD (disabled): BACK CS 1-1 Late ---
-        _sd_cfg = sd_configs.get("sd_cs_11", {})
-        if _sd_cfg.get("enabled") and goals_data_ok:
-            _trig = _detect_cs_11_trigger(rows, len(rows) - 1, _sd_cfg)
-            if _trig:
-                _cs11_odds = _trig["back_rc_1_1"]
-                _sd_signal("sd_cs_11", "SD BACK CS 1-1 Late",
-                           f"BACK CS 1-1 @ {_cs11_odds:.2f}", _cs11_odds,
-                           "Back CS 1-1 late in the game",
-                           {"odds": round(_cs11_odds, 2)})
+        # --- SD strategies: loop over registry (replaces 19 identical if-blocks) ---
+        for (_sd_key, _sd_name, _sd_fn, _sd_desc, _sd_extract) in _SD_LIVE_REGISTRY:
+            _sd_cfg = sd_configs.get(_sd_key, {})
+            if not (_sd_cfg.get("enabled") and goals_data_ok):
+                continue
+            _trig = _sd_fn(rows, len(rows) - 1, _sd_cfg)
+            if not _trig:
+                continue
+            _extracted = _sd_extract(_trig)
+            if _extracted is None:
+                continue
+            _odds_val, _rec_str, _entry_cond = _extracted
+            _sd_signal(_sd_key, _sd_name, _rec_str, _odds_val, _sd_desc, _entry_cond)
 
     # --- Enrich signals with age and maturity info ---
     _now = datetime.utcnow()
