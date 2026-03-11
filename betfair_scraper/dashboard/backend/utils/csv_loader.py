@@ -946,21 +946,24 @@ def load_match_full(match_id: str) -> dict:
 # ==================== ANALYTICS FUNCTIONS ====================
 
 # Cache for analytics: finished matches don't change, so cache aggressively
+import threading as _threading
 _analytics_cache: dict = {}
 _analytics_cache_time: float = 0
 _ANALYTICS_CACHE_TTL = 300  # 5 minutes
 # Result cache: stores computed results of analytics functions
 _result_cache: dict = {}
 _result_cache_time: float = 0
+_cache_lock = _threading.Lock()
 
 
 def clear_analytics_cache():
     """Clear analytics cache to force reload of data."""
     global _analytics_cache, _analytics_cache_time, _result_cache, _result_cache_time
-    _analytics_cache = {}
-    _analytics_cache_time = 0
-    _result_cache = {}
-    _result_cache_time = 0
+    with _cache_lock:
+        _analytics_cache = {}
+        _analytics_cache_time = 0
+        _result_cache = {}
+        _result_cache_time = 0
 
 
 def _get_cached_finished_data() -> list[dict]:
@@ -969,13 +972,12 @@ def _get_cached_finished_data() -> list[dict]:
     import time as _time
 
     now = _time.time()
-    if _analytics_cache and (now - _analytics_cache_time) < _ANALYTICS_CACHE_TTL:
-        return _analytics_cache.get("finished", [])
+    # Fast path: check under lock, return immediately if still valid
+    with _cache_lock:
+        if _analytics_cache and (now - _analytics_cache_time) < _ANALYTICS_CACHE_TTL:
+            return _analytics_cache.get("finished", [])
 
-    # Rebuild cache - also invalidate result cache
-    _result_cache = {}
-    _result_cache_time = now
-
+    # Slow path: rebuild outside the lock (CSV loading can take seconds)
     # Load URL mapping from games.csv
     url_map = {}
     try:
@@ -1043,20 +1045,25 @@ def _get_cached_finished_data() -> list[dict]:
                     "avg_gap_size": avg_gap_size,
                 })
 
-    _analytics_cache = {"finished": finished}
-    _analytics_cache_time = now
+    # Write under lock; invalidate result cache at the same time
+    with _cache_lock:
+        _analytics_cache = {"finished": finished}
+        _analytics_cache_time = now
+        _result_cache = {}
+        _result_cache_time = now
     return finished
 
 
 def _cached_result(key: str):
-    """Decorator to cache the result of an analytics function."""
+    """Decorator to cache the result of an analytics function (thread-safe)."""
     def decorator(fn):
         def wrapper(*args, **kwargs):
-            global _result_cache
-            if key in _result_cache:
-                return _result_cache[key]
+            with _cache_lock:
+                if key in _result_cache:
+                    return _result_cache[key]
             result = fn(*args, **kwargs)
-            _result_cache[key] = result
+            with _cache_lock:
+                _result_cache[key] = result
             return result
         return wrapper
     return decorator

@@ -28,6 +28,41 @@ from .csv_loader import (
     load_momentum_data, load_all_stats, load_match_full,
 )
 
+# ── GR8: Shared trigger-detection helpers (in strategy_triggers.py) ─────────
+from .strategy_triggers import (
+    _detect_tarde_asia_liga,
+    _detect_momentum_dominant,
+    _detect_draw_filters,
+    _detect_xg_underperf_candidates,
+    _detect_odds_drift_trigger,
+    _detect_goal_clustering_trigger,
+    _detect_pressure_cooker_trigger,
+    _detect_back_draw_00_trigger,
+    _detect_xg_underperformance_trigger,
+    _detect_momentum_xg_trigger,
+    _detect_tarde_asia_trigger,
+    _detect_over25_2goal_trigger,
+    _detect_under35_late_trigger,
+    _detect_lay_over45_v3_trigger,
+    _detect_draw_xg_conv_trigger,
+    _detect_poss_extreme_trigger,
+    _detect_longshot_trigger,
+    _detect_cs_00_trigger,
+    _detect_over25_2goals_trigger,
+    _detect_cs_close_trigger,
+    _detect_cs_one_goal_trigger,
+    _detect_draw_11_trigger,
+    _detect_ud_leading_trigger,
+    _detect_under35_3goals_trigger,
+    _detect_away_fav_leading_trigger,
+    _detect_home_fav_leading_trigger,
+    _detect_under45_3goals_trigger,
+    _detect_cs_11_trigger,
+    _detect_cs_20_trigger,
+    _detect_cs_big_lead_trigger,
+    _get_over_odds_field,
+)
+
 
 @_cached_result("quality_distribution")
 def analyze_quality_distribution() -> dict:
@@ -193,34 +228,6 @@ def analyze_stats_coverage() -> dict:
     fields.sort(key=lambda x: x["coverage_pct"])
 
     return {"fields": fields}
-
-
-def get_low_quality_matches(threshold: int = 50) -> list[dict]:
-    """Return matches below quality threshold (for display only)."""
-    finished_matches = _get_all_finished_matches()
-
-    low_quality = []
-    for match in finished_matches:
-        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
-        quality = _calculate_match_quality(rows)
-        gaps = _calculate_match_gaps(rows)
-
-        if quality < threshold:
-            low_quality.append({
-                "match_id": match["match_id"],
-                "name": match["name"],
-                "quality": quality,
-                "total_captures": len(rows),
-                "gap_count": gaps
-            })
-
-    # Sort by quality (worst first)
-    low_quality.sort(key=lambda x: x["quality"])
-
-    return low_quality
-
-
-@_cached_result("odds_coverage")
 def analyze_odds_coverage() -> dict:
     """Analyze odds scraping coverage across all finished matches."""
     finished_matches = _get_all_finished_matches()
@@ -305,364 +312,6 @@ def analyze_odds_coverage() -> dict:
 
 
 @_cached_result("momentum_patterns")
-def analyze_momentum_patterns() -> dict:
-    """Find momentum comeback and swing patterns."""
-    finished_matches = _get_all_finished_matches()
-
-    if not finished_matches:
-        return {
-            "avg_swing": 0,
-            "comeback_frequency": 0,
-            "top_swings": []
-        }
-
-    all_swings = []
-    top_swings = []
-
-    for match in finished_matches:
-        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
-        if not rows:
-            continue
-
-        # Extract momentum values
-        home_momentum_vals = []
-        away_momentum_vals = []
-        for row in rows:
-            home_mom = _to_float(row.get("momentum_local", ""))
-            away_mom = _to_float(row.get("momentum_visitante", ""))
-            if home_mom is not None:
-                home_momentum_vals.append(home_mom)
-            if away_mom is not None:
-                away_momentum_vals.append(away_mom)
-
-        # Calculate max swing (difference between consecutive momentum values)
-        max_swing = 0
-        if home_momentum_vals and len(home_momentum_vals) > 1:
-            for i in range(1, len(home_momentum_vals)):
-                prev_home = home_momentum_vals[i-1]
-                curr_home = home_momentum_vals[i]
-                prev_away = away_momentum_vals[i-1] if i-1 < len(away_momentum_vals) else 0
-                curr_away = away_momentum_vals[i] if i < len(away_momentum_vals) else 0
-
-                delta_home = abs(curr_home - prev_home)
-                delta_away = abs(curr_away - prev_away)
-                swing = max(delta_home, delta_away)
-                max_swing = max(max_swing, swing)
-
-        all_swings.append(max_swing)
-        top_swings.append({
-            "match_id": match["match_id"],
-            "name": match["name"],
-            "swing": round(max_swing, 1)
-        })
-
-    avg_swing = round(sum(all_swings) / len(all_swings), 1) if all_swings else 0
-
-    # Sort top swings
-    top_swings.sort(key=lambda x: x["swing"], reverse=True)
-
-    return {
-        "avg_swing": avg_swing,
-        "comeback_frequency": 0,  # Would need HT score data to calculate properly
-        "top_swings": top_swings[:10]
-    }
-
-
-@_cached_result("xg_accuracy")
-def analyze_xg_accuracy() -> dict:
-    """Correlate xG with actual goal outcomes."""
-    finished_matches = _get_all_finished_matches()
-
-    if not finished_matches:
-        return {
-            "correlation": 0,
-            "avg_accuracy": 0,
-            "scatter_data": []
-        }
-
-    scatter_data = []
-
-    for match in finished_matches:
-        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
-        if not rows:
-            continue
-
-        last_row = rows[-1]
-        xg_home = _to_float(last_row.get("xg_local", ""))
-        xg_away = _to_float(last_row.get("xg_visitante", ""))
-        goals_home_str = last_row.get("goles_local", "").strip()
-        goals_away_str = last_row.get("goles_visitante", "").strip()
-
-        try:
-            goals_home = int(goals_home_str) if goals_home_str else None
-            goals_away = int(goals_away_str) if goals_away_str else None
-        except ValueError:
-            goals_home = None
-            goals_away = None
-
-        if xg_home is not None and goals_home is not None:
-            scatter_data.append({
-                "xg": xg_home,
-                "actual": goals_home,
-                "match_id": match["match_id"],
-                "team": "home"
-            })
-
-        if xg_away is not None and goals_away is not None:
-            scatter_data.append({
-                "xg": xg_away,
-                "actual": goals_away,
-                "match_id": match["match_id"],
-                "team": "away"
-            })
-
-    # Calculate Pearson correlation
-    correlation = 0
-    if len(scatter_data) > 1:
-        xg_vals = [d["xg"] for d in scatter_data]
-        actual_vals = [d["actual"] for d in scatter_data]
-
-        # Simple Pearson correlation
-        n = len(xg_vals)
-        sum_xg = sum(xg_vals)
-        sum_actual = sum(actual_vals)
-        sum_xg_sq = sum(x**2 for x in xg_vals)
-        sum_actual_sq = sum(a**2 for a in actual_vals)
-        sum_xg_actual = sum(xg_vals[i] * actual_vals[i] for i in range(n))
-
-        numerator = n * sum_xg_actual - sum_xg * sum_actual
-        denominator_xg = n * sum_xg_sq - sum_xg**2
-        denominator_actual = n * sum_actual_sq - sum_actual**2
-
-        if denominator_xg > 0 and denominator_actual > 0:
-            correlation = numerator / (denominator_xg * denominator_actual)**0.5
-            correlation = round(correlation, 3)
-
-    # Average accuracy (absolute difference)
-    accuracies = [abs(d["xg"] - d["actual"]) for d in scatter_data]
-    avg_accuracy = round(sum(accuracies) / len(accuracies), 2) if accuracies else 0
-
-    return {
-        "correlation": correlation,
-        "avg_accuracy": avg_accuracy,
-        "scatter_data": scatter_data
-    }
-
-
-@_cached_result("odds_movements")
-def analyze_odds_movements() -> dict:
-    """Analyze betting odds drift and contraction patterns."""
-    finished_matches = _get_all_finished_matches()
-
-    if not finished_matches:
-        return {
-            "avg_drift": 0,
-            "drift_by_minute": [],
-            "top_movements": []
-        }
-
-    top_movements = []
-
-    for match in finished_matches:
-        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
-        if not rows or len(rows) < 2:
-            continue
-
-        first_row = rows[0]
-        last_row = rows[-1]
-
-        # Calculate drift for back_home odds
-        opening_home = _to_float(first_row.get("back_home", ""))
-        closing_home = _to_float(last_row.get("back_home", ""))
-
-        if opening_home and closing_home and opening_home > 0:
-            drift_pct = round(((closing_home - opening_home) / opening_home) * 100, 1)
-            movement = abs(drift_pct)
-
-            top_movements.append({
-                "match_id": match["match_id"],
-                "name": match["name"],
-                "movement": movement,
-                "drift_pct": drift_pct
-            })
-
-    # Sort by movement magnitude
-    top_movements.sort(key=lambda x: x["movement"], reverse=True)
-
-    avg_drift = round(sum(m["movement"] for m in top_movements) / len(top_movements), 1) if top_movements else 0
-
-    return {
-        "avg_drift": avg_drift,
-        "drift_by_minute": [],  # Would need minute-by-minute aggregation
-        "top_movements": top_movements[:10]
-    }
-
-
-@_cached_result("over_under_patterns")
-def analyze_over_under_patterns() -> dict:
-    """Analyze Over/Under line hit rates."""
-    finished_matches = _get_all_finished_matches()
-
-    if not finished_matches:
-        return {
-            "hit_rates": [],
-            "minute_probabilities": []
-        }
-
-    lines = [0.5, 1.5, 2.5, 3.5, 4.5]
-    line_hits = {line: 0 for line in lines}
-    total_matches = 0
-
-    for match in finished_matches:
-        rows = match.get("rows") or _read_csv_rows(match["csv_path"])
-        if not rows:
-            continue
-
-        last_row = rows[-1]
-        goals_home_str = last_row.get("goles_local", "").strip()
-        goals_away_str = last_row.get("goles_visitante", "").strip()
-
-        # Skip matches with missing goal data (don't treat as 0-0)
-        if not goals_home_str or not goals_away_str:
-            continue
-
-        try:
-            goals_home = int(goals_home_str)
-            goals_away = int(goals_away_str)
-            total_goals = goals_home + goals_away
-
-            for line in lines:
-                if total_goals > line:
-                    line_hits[line] += 1
-
-            total_matches += 1
-        except ValueError:
-            continue
-
-    # Calculate hit rates
-    hit_rates = []
-    for line in lines:
-        hit_rate = round(line_hits[line] / total_matches * 100, 1) if total_matches > 0 else 0
-        hit_rates.append({
-            "line": f"Over {line}",
-            "hit_rate": hit_rate
-        })
-
-    return {
-        "hit_rates": hit_rates,
-        "minute_probabilities": []  # Would need minute-by-minute analysis
-    }
-
-
-@_cached_result("stat_correlations")
-def calculate_stat_correlations() -> dict:
-    """Calculate correlations between key match statistics."""
-    finished_matches = _get_all_finished_matches()
-
-    if not finished_matches:
-        return {
-            "matrix": [],
-            "top_correlations": []
-        }
-
-    # Stat pairs to analyze
-    stat_pairs = [
-        ("posesion_local", "xg_local"),
-        ("corners_local", "xg_local"),
-        ("tiros_local", "xg_local"),
-        ("momentum_local", "xg_local"),
-        ("dangerous_attacks_local", "xg_local"),
-    ]
-
-    correlations = []
-
-    for stat1, stat2 in stat_pairs:
-        values1 = []
-        values2 = []
-
-        for match in finished_matches:
-            rows = match.get("rows") or _read_csv_rows(match["csv_path"])
-            if not rows:
-                continue
-
-            last_row = rows[-1]
-            val1 = _to_float(last_row.get(stat1, ""))
-            val2 = _to_float(last_row.get(stat2, ""))
-
-            if val1 is not None and val2 is not None:
-                values1.append(val1)
-                values2.append(val2)
-
-        # Calculate correlation
-        if len(values1) > 1:
-            n = len(values1)
-            sum1 = sum(values1)
-            sum2 = sum(values2)
-            sum1_sq = sum(x**2 for x in values1)
-            sum2_sq = sum(x**2 for x in values2)
-            sum_product = sum(values1[i] * values2[i] for i in range(n))
-
-            numerator = n * sum_product - sum1 * sum2
-            denom1 = n * sum1_sq - sum1**2
-            denom2 = n * sum2_sq - sum2**2
-
-            if denom1 > 0 and denom2 > 0:
-                corr = numerator / (denom1 * denom2)**0.5
-                correlations.append({
-                    "stat1": stat1,
-                    "stat2": stat2,
-                    "correlation": round(corr, 3)
-                })
-
-    # Top correlations (by absolute value)
-    top_correlations = sorted(
-        [{"pair": f"{c['stat1']} vs {c['stat2']}", "value": c["correlation"]} for c in correlations],
-        key=lambda x: abs(x["value"]),
-        reverse=True
-    )
-
-    return {
-        "matrix": correlations,
-        "top_correlations": top_correlations
-    }
-
-
-# ── GR8: Shared trigger-detection helpers (in strategy_triggers.py) ─────────
-from .strategy_triggers import (
-    _detect_tarde_asia_liga,
-    _detect_momentum_dominant,
-    _detect_draw_filters,
-    _detect_xg_underperf_candidates,
-    _detect_odds_drift_trigger,
-    _detect_goal_clustering_trigger,
-    _detect_pressure_cooker_trigger,
-    _detect_back_draw_00_trigger,
-    _detect_xg_underperformance_trigger,
-    _detect_momentum_xg_trigger,
-    _detect_tarde_asia_trigger,
-    _detect_over25_2goal_trigger,
-    _detect_under35_late_trigger,
-    _detect_lay_over45_v3_trigger,
-    _detect_draw_xg_conv_trigger,
-    _detect_poss_extreme_trigger,
-    _detect_longshot_trigger,
-    _detect_cs_00_trigger,
-    _detect_over25_2goals_trigger,
-    _detect_cs_close_trigger,
-    _detect_cs_one_goal_trigger,
-    _detect_draw_11_trigger,
-    _detect_ud_leading_trigger,
-    _detect_under35_3goals_trigger,
-    _detect_away_fav_leading_trigger,
-    _detect_home_fav_leading_trigger,
-    _detect_under45_3goals_trigger,
-    _detect_cs_11_trigger,
-    _detect_cs_20_trigger,
-    _detect_cs_big_lead_trigger,
-    _get_over_odds_field,
-)
-
-
 def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
     """Analyze the 'Back Draw at 0-0 from min 30' strategy across all finished matches."""
     finished_matches = _get_all_finished_matches()

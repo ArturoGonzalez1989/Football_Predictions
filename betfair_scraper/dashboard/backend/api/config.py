@@ -82,9 +82,30 @@ async def get_cartera_config() -> Dict[str, Any]:
     return load_config()
 
 
+def _validate_config(config: Dict[str, Any]) -> None:
+    """Raise ValueError if config contains values that would silently break the system."""
+    if "strategies" in config and not isinstance(config["strategies"], dict):
+        raise ValueError("'strategies' must be an object")
+    if "bankroll_mode" in config and config["bankroll_mode"] not in ("fixed", "fractional"):
+        raise ValueError(f"'bankroll_mode' must be 'fixed' or 'fractional', got {config['bankroll_mode']!r}")
+    flat_stake = config.get("flat_stake")
+    if flat_stake is not None and (not isinstance(flat_stake, (int, float)) or flat_stake <= 0):
+        raise ValueError(f"'flat_stake' must be a positive number, got {flat_stake!r}")
+    min_dur = config.get("min_duration", {})
+    if not isinstance(min_dur, dict):
+        raise ValueError("'min_duration' must be an object")
+    for k, v in min_dur.items():
+        if not isinstance(v, (int, float)) or v < 0:
+            raise ValueError(f"'min_duration.{k}' must be a non-negative number, got {v!r}")
+
+
 @router.put("/config/cartera")
 async def save_cartera_config(config: Dict[str, Any]) -> Dict[str, Any]:
     """Persist the cartera configuration to disk."""
+    try:
+        _validate_config(config)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     try:
         _CONFIG_PATH.write_text(
             json.dumps(config, indent=2, ensure_ascii=False),
