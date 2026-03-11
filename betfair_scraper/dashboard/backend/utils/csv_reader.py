@@ -2349,6 +2349,995 @@ def _detect_pressure_trigger(
 
 # ── End GR9 shared helpers ────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# UNIFIED STRATEGY TRIGGER FUNCTIONS
+# Each function: _detect_<strategy_name>_trigger(rows, curr_idx, cfg) -> dict | None
+# Single source of truth for "should I bet?" logic — called identically by:
+#   LIVE: detect_betting_signals()  → curr_idx = len(rows) - 1
+#   BT:   analyze_strategy_*()      → curr_idx = idx (iterating all rows)
+#   BT:   gen_*() generators        → curr_idx = idx (iterating all rows)
+# Contract: only reads rows[0..curr_idx] — never looks at future rows.
+#           No internal state — caller handles one-shot, min_dur, persistence.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _detect_back_draw_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """Unified Back Draw 0-0 trigger (rows, curr_idx, cfg) interface.
+
+    Checks basic entry conditions (0-0 score, minute in range) then evaluates
+    all version-specific filter flags via the internal ``_detect_draw_filters``
+    helper.
+
+    ``cfg`` keys used:
+        minute_min      : float  — minimum minute (default 30)
+        minute_max      : float  — maximum minute (default 90, no upper limit)
+        xg_max          : float  — max total xG (sentinel >= 1.0 = off)
+        poss_max        : float  — max possession diff (sentinel >= 100 = off)
+        shots_max       : float  — max total shots (sentinel >= 20 = off)
+        _synth_pressure_v : float | None  — precomputed pressure index (optional)
+
+    Returns dict with flags + raw stats, or None if basic conditions not met:
+        {minuto, xg_total, poss_diff, shots_total, back_draw,
+         passes_v15, passes_v2r, passes_v2, passes_v3, passes_v4}
+    """
+    row = rows[curr_idx]
+    minuto = _to_float(row.get("minuto", ""))
+    if minuto is None:
+        return None
+    if minuto < float(cfg.get("minute_min", 30)):
+        return None
+    if float(cfg.get("minute_max", 90)) < 90 and minuto >= float(cfg.get("minute_max", 90)):
+        return None
+
+    gl = _to_float(row.get("goles_local", ""))
+    gv = _to_float(row.get("goles_visitante", ""))
+    if gl is None or gv is None or int(gl) != 0 or int(gv) != 0:
+        return None
+
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    xg_total = ((xg_l or 0) + (xg_v or 0)) if (xg_l is not None or xg_v is not None) else None
+
+    poss_l = _to_float(row.get("posesion_local", ""))
+    poss_v = _to_float(row.get("posesion_visitante", ""))
+    poss_diff = abs((poss_l or 50) - (poss_v or 50)) if (poss_l is not None or poss_v is not None) else None
+
+    shots_l = _to_float(row.get("tiros_local", ""))
+    shots_v = _to_float(row.get("tiros_visitante", ""))
+    shots_total = ((shots_l or 0) + (shots_v or 0)) if (shots_l is not None or shots_v is not None) else None
+
+    xg_dom = (xg_l / xg_total) if xg_total and xg_total > 0 else None
+
+    opta_l = _to_float(row.get("opta_points_local", ""))
+    opta_v = _to_float(row.get("opta_points_visitante", ""))
+    opta_gap = abs(opta_l - opta_v) if (opta_l is not None and opta_v is not None) else None
+
+    # synth_pressure_v: optionally precomputed by caller (BT uses _compute_synthetic_at_trigger)
+    synth_pressure_v = cfg.get("_synth_pressure_v")
+
+    flags = _detect_draw_filters(
+        xg_total=xg_total, poss_diff=poss_diff,
+        shots_total=float(shots_total) if shots_total is not None else None,
+        opta_gap=opta_gap, xg_dom=xg_dom, synth_pressure_v=synth_pressure_v,
+        cfg=cfg,
+    )
+
+    return {
+        "minuto":       minuto,
+        "xg_total":     xg_total,
+        "poss_diff":    poss_diff,
+        "shots_total":  shots_total,
+        "back_draw":    _to_float(row.get("back_draw", "")),
+        **flags,
+    }
+
+
+def _detect_xg_underperformance_trigger(rows: list, curr_idx: int, cfg: dict) -> list:
+    """Unified xG Underperformance trigger (rows, curr_idx, cfg) interface.
+
+    Thin wrapper over ``_detect_xg_underperf_candidates`` that extracts all
+    required values from ``rows[curr_idx]`` before calling the internal helper.
+
+    Returns a list of qualifying candidate dicts (same format as
+    ``_detect_xg_underperf_candidates``), empty list if no candidates qualify.
+    """
+    row = rows[curr_idx]
+    return _detect_xg_underperf_candidates(
+        xg_local=_to_float(row.get("xg_local", "")),
+        xg_visitante=_to_float(row.get("xg_visitante", "")),
+        goals_local=int(_to_float(row.get("goles_local", "")) or 0),
+        goals_visitante=int(_to_float(row.get("goles_visitante", "")) or 0),
+        sot_local=_to_float(row.get("tiros_puerta_local", "")) or 0,
+        sot_visitante=_to_float(row.get("tiros_puerta_visitante", "")) or 0,
+        minuto=_to_float(row.get("minuto", "")) or 0,
+        rows=rows,
+        row=row,
+        cfg=cfg,
+    )
+
+
+def _detect_momentum_xg_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """Unified Momentum Dominante xG trigger (rows, curr_idx, cfg) interface.
+
+    Extracts row values, checks minute range, then delegates to the internal
+    ``_detect_momentum_dominant`` helper.
+
+    ``cfg`` keys used (same as ``_detect_momentum_dominant`` plus):
+        min_m : float  — minimum minute (default 10)
+        max_m : float  — maximum minute (default 80)
+
+    Returns dict or None:
+        {dominant_team, back_odds, sot_ratio_used, minuto,
+         xg_underperf_local, xg_underperf_visitante}
+    """
+    row = rows[curr_idx]
+    minuto = _to_float(row.get("minuto", ""))
+    if minuto is None:
+        return None
+
+    min_m = float(cfg.get("min_m", 10))
+    max_m = float(cfg.get("max_m", 80))
+    if not (min_m <= minuto <= max_m):
+        return None
+
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    if xg_l is None or xg_v is None:
+        return None
+
+    gl = _to_float(row.get("goles_local", "")) or 0
+    gv = _to_float(row.get("goles_visitante", "")) or 0
+    xg_underperf_local = xg_l - gl
+    xg_underperf_visitante = xg_v - gv
+
+    dominant_team, back_odds, sot_ratio_used = _detect_momentum_dominant(
+        sot_local=_to_float(row.get("tiros_puerta_local", "")) or 0,
+        sot_visitante=_to_float(row.get("tiros_puerta_visitante", "")) or 0,
+        xg_underperf_local=xg_underperf_local,
+        xg_underperf_visitante=xg_underperf_visitante,
+        back_home=_to_float(row.get("back_home", "")),
+        back_away=_to_float(row.get("back_away", "")),
+        cfg=cfg,
+    )
+
+    if dominant_team is None:
+        return None
+
+    return {
+        "dominant_team":           dominant_team,
+        "back_odds":               back_odds,
+        "sot_ratio_used":          sot_ratio_used,
+        "minuto":                  minuto,
+        "xg_underperf_local":      xg_underperf_local,
+        "xg_underperf_visitante":  xg_underperf_visitante,
+    }
+
+
+def _detect_tarde_asia_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """Unified Tarde Asia trigger (rows, curr_idx, cfg) interface.
+
+    Checks minute <= 15, valid goals data, available Over 2.5 odds, and
+    delegates league detection to the internal ``_detect_tarde_asia_liga``
+    helper.
+
+    ``cfg`` keys used:
+        match_name : str  — display name of the match (from match metadata)
+        match_url  : str  — Betfair URL of the match (from match metadata)
+        match_id   : str  — match identifier (from match metadata)
+
+    Returns dict or None:
+        {liga, back_over25, minuto}
+    """
+    row = rows[curr_idx]
+    minuto = _to_float(row.get("minuto", ""))
+    if minuto is None or minuto > 15:
+        return None
+
+    gl = _to_float(row.get("goles_local", ""))
+    gv = _to_float(row.get("goles_visitante", ""))
+    if gl is None or gv is None:
+        return None
+
+    back_over25 = _to_float(row.get("back_over25", ""))
+    if back_over25 is None or back_over25 <= 1.0:
+        return None
+
+    liga = _detect_tarde_asia_liga(
+        match_name=cfg.get("match_name", ""),
+        match_url=cfg.get("match_url", ""),
+        match_id=cfg.get("match_id", ""),
+    )
+    if liga == "Unknown":
+        return None
+
+    return {
+        "liga":        liga,
+        "back_over25": back_over25,
+        "minuto":      minuto,
+    }
+
+
+
+# ── SD Strategy trigger functions ────────────────────────────────────────────
+
+def _detect_over25_2goal_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Over 2.5 when a team leads by 2+ goals after stable odds.
+
+    cfg keys: m_min, m_max, goal_diff_min, sot_total_min, odds_min, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    if curr_idx < 1:
+        return None
+    m_min = float(cfg.get("m_min", 55))
+    m_max = float(cfg.get("m_max", 81))
+    goal_diff_min = int(cfg.get("goal_diff_min", 2))
+    sot_total_min = int(cfg.get("sot_total_min", 3))
+    odds_min = float(cfg.get("odds_min", 1.5))
+    odds_max = float(cfg.get("odds_max", 10.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+    goal_diff = abs(gl - gv)
+    if goal_diff < goal_diff_min:
+        return None
+    # Skip goal-transition row (odds may be stale)
+    prev_row = rows[curr_idx - 1]
+    prev_gl_f = _to_float(prev_row.get("goles_local", ""))
+    prev_gv_f = _to_float(prev_row.get("goles_visitante", ""))
+    if prev_gl_f is not None and prev_gv_f is not None:
+        prev_diff = abs(int(prev_gl_f) - int(prev_gv_f))
+        if prev_diff < goal_diff_min and goal_diff >= goal_diff_min:
+            return None  # just_reached_lead — stale odds
+    sot_l = int(_to_float(row.get("tiros_puerta_local", "")) or 0)
+    sot_v = int(_to_float(row.get("tiros_puerta_visitante", "")) or 0)
+    sot_total = sot_l + sot_v
+    if sot_total < sot_total_min:
+        return None
+    odds = _to_float(row.get("back_over25", ""))
+    if odds is None or odds <= 1.0 or not (odds_min <= odds <= odds_max):
+        return None
+    return {
+        "minuto": m,
+        "back_over25": odds,
+        "goal_diff": goal_diff,
+        "sot_total": sot_total,
+        "total_goals_trigger": gl + gv,
+    }
+
+
+def _detect_under35_late_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Under 3.5 when goals at m_min-m_max, low xG.
+
+    cfg keys: m_min, m_max, goals_exact (exact count), goals_min/goals_max (range), xg_max, odds_min, odds_max
+    If goals_exact is set, checks total_now == goals_exact.
+    Otherwise checks goals_min <= total_now <= goals_max (defaults: 2-4, superset mode).
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 65))
+    m_max = float(cfg.get("m_max", 81))
+    xg_max = float(cfg.get("xg_max", 3.0))
+    odds_min = float(cfg.get("odds_min", 1.0))
+    odds_max = float(cfg.get("odds_max", 8.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    total_now = int(gl_f) + int(gv_f)
+    if "goals_exact" in cfg:
+        if total_now != int(cfg["goals_exact"]):
+            return None
+    else:
+        goals_min = int(cfg.get("goals_min", 2))
+        goals_max = int(cfg.get("goals_max", 4))
+        if not (goals_min <= total_now <= goals_max):
+            return None
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    if xg_l is None and xg_v is None:
+        return None
+    xg_total = (xg_l or 0) + (xg_v or 0)
+    if xg_total > xg_max:
+        return None
+    odds = _to_float(row.get("back_under35", ""))
+    if odds is None or odds <= 1.0 or not (odds_min <= odds <= odds_max):
+        return None
+    return {
+        "minuto": m,
+        "back_under35": odds,
+        "xg_total": xg_total,
+        "total_goals_trigger": total_now,
+    }
+
+
+def _detect_lay_over45_v3_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """LAY Over 4.5 V3 tight: goals<=goals_max, min m_min-m_max, odds <= odds_max.
+
+    cfg keys: m_min, m_max, goals_max, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 55))
+    m_max = float(cfg.get("m_max", 78))
+    goals_max = int(cfg.get("goals_max", 2))
+    odds_max = float(cfg.get("odds_max", 20.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    total_now = int(gl_f) + int(gv_f)
+    if total_now > goals_max:
+        return None
+    odds = _to_float(row.get("lay_over45", ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    return {
+        "minuto": m,
+        "lay_over45": odds,
+        "total_goals_trigger": total_now,
+    }
+
+
+def _detect_draw_xg_conv_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Draw when xG converges (both teams similar xG) in tied match.
+
+    cfg keys: m_min, m_max, xg_diff_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 60))
+    m_max = float(cfg.get("m_max", 83))
+    xg_diff_max = float(cfg.get("xg_diff_max", 1.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) != int(gv_f):
+        return None
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    if xg_l is None or xg_v is None:
+        return None
+    xg_diff = abs(xg_l - xg_v)
+    xg_total = xg_l + xg_v
+    if xg_diff > xg_diff_max:
+        return None
+    if xg_total > 4.0:
+        return None
+    odds = _to_float(row.get("back_draw", ""))
+    if odds is None or odds <= 1.0 or odds > 15:
+        return None
+    return {
+        "minuto": m,
+        "back_draw": odds,
+        "xg_diff": round(xg_diff, 2),
+        "xg_total": xg_total,
+        "score_at_trigger": f"{int(gl_f)}-{int(gv_f)}",
+    }
+
+
+def _detect_poss_extreme_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Over 0.5 when possession is extremely one-sided at 0-0.
+
+    cfg keys: m_min, m_max, poss_min
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 30))
+    m_max = float(cfg.get("m_max", 53))
+    poss_min = float(cfg.get("poss_min", 55))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) != 0 or int(gv_f) != 0:
+        return None
+    poss_l = _to_float(row.get("posesion_local", ""))
+    poss_v = _to_float(row.get("posesion_visitante", ""))
+    if poss_l is None or poss_v is None:
+        return None
+    poss_max = max(poss_l, poss_v)
+    if poss_max < poss_min:
+        return None
+    odds = _to_float(row.get("back_over05", ""))
+    if odds is None or odds <= 1.0 or odds > 5:
+        return None
+    return {
+        "minuto": m,
+        "back_over05": odds,
+        "poss_max": poss_max,
+    }
+
+
+def _detect_longshot_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK the longshot team when they go winning (stable, not just-scored row).
+
+    Pre-match odds are read from rows[:5] to identify the longshot team.
+    cfg keys: m_min, m_max, xg_min, odds_min, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    if curr_idx < 1:
+        return None
+    m_min = float(cfg.get("m_min", 65))
+    m_max = float(cfg.get("m_max", 88))
+    xg_min = float(cfg.get("xg_min", 0.0))  # 0.0 = no xg filter by default (superset)
+    odds_min = float(cfg.get("odds_min", 1.3))
+    odds_max = float(cfg.get("odds_max", 10.0))
+    # Determine longshot team from first valid pre-match odds
+    ls_team = None
+    for r in rows[:5]:
+        bh = _to_float(r.get("back_home", ""))
+        ba = _to_float(r.get("back_away", ""))
+        if bh and ba and bh > 1 and ba > 1:
+            ls_team = "local" if bh >= ba else "visitante"
+            break
+    if ls_team is None:
+        return None
+
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+
+    # Check longshot is currently winning
+    ls_winning = (ls_team == "local" and gl > gv) or (ls_team == "visitante" and gv > gl)
+    if not ls_winning:
+        return None
+
+    # Skip goal-transition row (prev row longshot was not winning)
+    prev_row = rows[curr_idx - 1]
+    prev_gl_f = _to_float(prev_row.get("goles_local", ""))
+    prev_gv_f = _to_float(prev_row.get("goles_visitante", ""))
+    if prev_gl_f is not None and prev_gv_f is not None:
+        prev_gl = int(prev_gl_f)
+        prev_gv = int(prev_gv_f)
+        prev_ls_winning = (ls_team == "local" and prev_gl > prev_gv) or \
+                          (ls_team == "visitante" and prev_gv > prev_gl)
+        if not prev_ls_winning:
+            return None  # just_went_winning — stale odds
+
+    if ls_team == "local":
+        odds = _to_float(row.get("back_home", ""))
+    else:
+        odds = _to_float(row.get("back_away", ""))
+    if odds is None or odds <= 1.0 or not (odds_min <= odds <= odds_max):
+        return None
+
+    xg_ls = _to_float(row.get(f"xg_{ls_team}", ""))
+    if (xg_ls or 0) < xg_min:
+        return None
+    return {
+        "minuto": m,
+        "back_home" if ls_team == "local" else "back_away": odds,
+        "longshot_team": ls_team,
+        "xg_longshot": xg_ls or 0,
+    }
+
+
+def _detect_cs_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Correct Score 0-0 at m_min-m_max, low xG/SoT, odds odds_min-odds_max.
+
+    cfg keys: m_min, m_max, xg_max, odds_min, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 28))
+    m_max = float(cfg.get("m_max", 33))
+    xg_max = float(cfg.get("xg_max", 1.5))
+    odds_min = float(cfg.get("odds_min", 5.0))
+    odds_max = float(cfg.get("odds_max", 12.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) != 0 or int(gv_f) != 0:
+        return None
+    xg_l = _to_float(row.get("xg_local", "")) or 0
+    xg_v = _to_float(row.get("xg_visitante", "")) or 0
+    xg_total = xg_l + xg_v
+    if xg_total > xg_max:
+        return None
+    sot_l = int(_to_float(row.get("tiros_puerta_local", "")) or 0)
+    sot_v = int(_to_float(row.get("tiros_puerta_visitante", "")) or 0)
+    sot_total = sot_l + sot_v
+    if sot_total > 3:
+        return None
+    odds = _to_float(row.get("back_rc_0_0", ""))
+    if odds is None or not (odds_min <= odds <= odds_max):
+        return None
+    return {
+        "minuto": m,
+        "back_rc_0_0": odds,
+        "xg_total": xg_total,
+        "sot_total": sot_total,
+    }
+
+
+def _detect_over25_2goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Over 2.5 when exactly 2 goals scored at m_min-m_max, not a goal-transition row.
+
+    cfg keys: m_min, m_max, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    if curr_idx < 1:
+        return None
+    m_min = float(cfg.get("m_min", 48))
+    m_max = float(cfg.get("m_max", 63))
+    odds_max = float(cfg.get("odds_max", 5.0))
+    row = rows[curr_idx]
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    total_now = int(gl_f) + int(gv_f)
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    if total_now != 2:
+        return None
+    # Skip goal-transition row
+    prev_row = rows[curr_idx - 1]
+    prev_gl_f = _to_float(prev_row.get("goles_local", ""))
+    prev_gv_f = _to_float(prev_row.get("goles_visitante", ""))
+    if prev_gl_f is not None and prev_gv_f is not None:
+        prev_total = int(prev_gl_f) + int(prev_gv_f)
+        if prev_total < total_now:
+            return None
+    odds = _to_float(row.get("back_over25", ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    return {
+        "minuto": m,
+        "back_over25": odds,
+        "total_goals_trigger": total_now,
+    }
+
+
+def _detect_cs_close_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Correct Score 2-1 or 1-2 at m_min-m_max.
+
+    cfg keys: m_min, m_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 67))
+    m_max = float(cfg.get("m_max", 83))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+    if not ((gl == 2 and gv == 1) or (gl == 1 and gv == 2)):
+        return None
+    col = f"back_rc_{gl}_{gv}"
+    odds = _to_float(row.get(col, ""))
+    if odds is None or odds <= 1.0:
+        return None
+    return {
+        "minuto": m,
+        col: odds,
+        "trigger_score": f"{gl}-{gv}",
+    }
+
+
+def _detect_cs_one_goal_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Correct Score 1-0 or 0-1 at m_min-m_max.
+
+    cfg keys: m_min, m_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 65))
+    m_max = float(cfg.get("m_max", 88))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+    if not ((gl == 1 and gv == 0) or (gl == 0 and gv == 1)):
+        return None
+    col = f"back_rc_{gl}_{gv}"
+    odds = _to_float(row.get(col, ""))
+    if odds is None or odds <= 1.0:
+        return None
+    return {
+        "minuto": m,
+        col: odds,
+        "trigger_score": f"{gl}-{gv}",
+    }
+
+
+def _detect_draw_11_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Draw when score is exactly 1-1 at m_min-m_max.
+
+    cfg keys: m_min, m_max, odds_min
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 68))
+    m_max = float(cfg.get("m_max", 88))
+    odds_min = float(cfg.get("odds_min", 1.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) != 1 or int(gv_f) != 1:
+        return None
+    odds = _to_float(row.get("back_draw", ""))
+    if odds is None or odds <= 1.0 or odds < odds_min:
+        return None
+    return {
+        "minuto": m,
+        "back_draw": odds,
+    }
+
+
+def _detect_ud_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK the underdog who is leading at m_min-m_max.
+
+    Pre-match odds are read from rows[:5] to identify the underdog team.
+    cfg keys: m_min, m_max, ud_min_pre_odds, max_lead
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 53))
+    m_max = float(cfg.get("m_max", 83))
+    ud_min_pre_odds = float(cfg.get("ud_min_pre_odds", 1.5))
+    max_lead = int(cfg.get("max_lead", 2))
+    # Determine underdog from first valid pre-match odds
+    first_home = None
+    first_away = None
+    for r in rows[:5]:
+        bh = _to_float(r.get("back_home", ""))
+        ba = _to_float(r.get("back_away", ""))
+        if bh and ba and bh > 1 and ba > 1:
+            first_home = bh
+            first_away = ba
+            break
+    if first_home is None or first_away is None:
+        return None
+    if first_home > first_away:
+        ud_team = "local"
+        ud_pre_odds = first_home
+    else:
+        ud_team = "visitante"
+        ud_pre_odds = first_away
+    if ud_pre_odds < ud_min_pre_odds:
+        return None
+
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+
+    if ud_team == "local":
+        lead = gl - gv
+        odds = _to_float(row.get("back_home", ""))
+    else:
+        lead = gv - gl
+        odds = _to_float(row.get("back_away", ""))
+    if lead <= 0 or lead > max_lead:
+        return None
+    if odds is None or odds <= 1.0:
+        return None
+    return {
+        "minuto": m,
+        "back_home" if ud_team == "local" else "back_away": odds,
+        "ud_team": ud_team,
+        "ud_pre_odds": ud_pre_odds,
+        "lead": lead,
+    }
+
+
+def _detect_under35_3goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Under 3.5 when exactly 3 goals scored, m_min-m_max, xG < xg_max.
+
+    cfg keys: m_min, m_max, xg_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 60))
+    m_max = float(cfg.get("m_max", 88))
+    xg_max = float(cfg.get("xg_max", 10.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) + int(gv_f) != 3:
+        return None
+    xg_total = (_to_float(row.get("xg_local", "")) or 0) + (_to_float(row.get("xg_visitante", "")) or 0)
+    if xg_total > xg_max:
+        return None
+    odds = _to_float(row.get("back_under35", ""))
+    if odds is None or odds <= 1.01 or odds > 10:
+        return None
+    return {
+        "minuto": m,
+        "back_under35": odds,
+        "xg_total": xg_total,
+    }
+
+
+def _detect_away_fav_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK away team when they are pre-match favourite and leading, m_min-m_max.
+
+    Pre-match odds are read from rows[0] to determine if away is favourite.
+    cfg keys: m_min, m_max, max_lead, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    if not rows:
+        return None
+    m_min = float(cfg.get("m_min", 55))
+    m_max = float(cfg.get("m_max", 90))
+    max_lead = int(cfg.get("max_lead", 3))
+    odds_max = float(cfg.get("odds_max", 50.0))
+    # Determine if away is favourite from first row pre-match odds
+    first_home = _to_float(rows[0].get("back_home", ""))
+    first_away = _to_float(rows[0].get("back_away", ""))
+    if first_home is None or first_away is None:
+        return None
+    if first_away >= first_home:
+        return None  # away is NOT favourite
+
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+    if gv <= gl:
+        return None  # away not leading
+    lead = gv - gl
+    if lead > max_lead:
+        return None
+    odds = _to_float(row.get("back_away", ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    return {
+        "minuto": m,
+        "back_away": odds,
+        "lead": lead,
+        "away_pre_odds": first_away,
+    }
+
+
+def _detect_home_fav_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK home team when they are pre-match favourite and leading, m_min-m_max.
+
+    Pre-match odds are read from rows[:5] to determine if home is favourite.
+    cfg keys: m_min, m_max, max_lead, fav_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    if not rows:
+        return None
+    m_min = float(cfg.get("m_min", 62))
+    m_max = float(cfg.get("m_max", 88))
+    max_lead = int(cfg.get("max_lead", 3))
+    fav_max = float(cfg.get("fav_max", 2.50))
+    first_home = None
+    first_away = None
+    for r in rows[:5]:
+        bh = _to_float(r.get("back_home", ""))
+        ba = _to_float(r.get("back_away", ""))
+        if bh and ba and bh > 1 and ba > 1:
+            first_home = bh
+            first_away = ba
+            break
+    if first_home is None or first_away is None:
+        return None
+    if first_home >= first_away:
+        return None  # home is NOT favourite
+    if first_home > fav_max:
+        return None  # fav odds too high
+
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+    if gl <= gv:
+        return None  # home not leading
+    lead = gl - gv
+    if lead > max_lead:
+        return None
+    odds = _to_float(row.get("back_home", ""))
+    if odds is None or odds <= 1.0 or odds > 10:
+        return None
+    return {
+        "minuto": m,
+        "back_home": odds,
+        "lead": lead,
+        "home_pre_odds": first_home,
+    }
+
+
+def _detect_under45_3goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Under 4.5 when exactly 3 goals scored and xG < xg_max, m_min-m_max.
+
+    cfg keys: m_min, m_max, xg_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 62))
+    m_max = float(cfg.get("m_max", 88))
+    xg_max = float(cfg.get("xg_max", 2.5))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) + int(gv_f) != 3:
+        return None
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    if xg_l is None or xg_v is None:
+        return None
+    xg_total = xg_l + xg_v
+    if xg_total >= xg_max:
+        return None
+    odds = _to_float(row.get("back_under45", ""))
+    if odds is None or odds <= 1.01 or odds > 10:
+        return None
+    return {
+        "minuto": m,
+        "back_under45": odds,
+        "xg_total": xg_total,
+    }
+
+
+def _detect_cs_11_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK CS 1-1 when score is exactly 1-1 at m_min-m_max.
+
+    cfg keys: m_min, m_max, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 72))
+    m_max = float(cfg.get("m_max", 92))
+    odds_max = float(cfg.get("odds_max", 999.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) != 1 or int(gv_f) != 1:
+        return None
+    odds = _to_float(row.get("back_rc_1_1", ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    return {
+        "minuto": m,
+        "back_rc_1_1": odds,
+        "trigger_score": "1-1",
+    }
+
+
+def _detect_cs_20_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK CS 2-0 or 0-2 when that exact score at m_min-m_max.
+
+    cfg keys: m_min, m_max, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 72))
+    m_max = float(cfg.get("m_max", 92))
+    odds_max = float(cfg.get("odds_max", 999.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+    if not ((gl == 2 and gv == 0) or (gl == 0 and gv == 2)):
+        return None
+    col = f"back_rc_{gl}_{gv}"
+    odds = _to_float(row.get(col, ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    return {
+        "minuto": m,
+        col: odds,
+        "trigger_score": f"{gl}-{gv}",
+    }
+
+
+def _detect_cs_big_lead_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK CS 3-0/0-3/3-1/1-3 when that exact score at m_min-m_max.
+
+    cfg keys: m_min, m_max, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 67))
+    m_max = float(cfg.get("m_max", 88))
+    odds_max = float(cfg.get("odds_max", 999.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+    valid_scores = {(3, 0), (0, 3), (3, 1), (1, 3)}
+    if (gl, gv) not in valid_scores:
+        return None
+    col = f"back_rc_{gl}_{gv}"
+    odds = _to_float(row.get(col, ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    return {
+        "minuto": m,
+        col: odds,
+        "trigger_score": f"{gl}-{gv}",
+    }
+
+
+# ── End unified strategy trigger functions ───────────────────────────────────
+
 
 def analyze_strategy_back_draw_00(min_dur: int = 1) -> dict:
     """Analyze the 'Back Draw at 0-0 from min 30' strategy across all finished matches."""
@@ -4805,188 +5794,232 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         # --- SD: BACK Over 2.5 from 2-Goal Lead ---
         _sd_cfg = sd_configs.get("sd_over25_2goal", {})
         if _sd_cfg.get("enabled") and goals_data_ok:
-            _sd_m_min = _sd_cfg.get("m_min", 55)
-            _sd_m_max = _sd_cfg.get("m_max", 78)
-            _sd_gd_min = _sd_cfg.get("goal_diff_min", 2)
-            _sd_sot_min = _sd_cfg.get("sot_total_min", 3)
-            _sd_odds_min = _sd_cfg.get("odds_min", 1.5)
-            _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
-            _sd_odds = _to_float(latest.get("back_over25", ""))
-            if (_sd_m_min <= _m < _sd_m_max and _goal_diff >= _sd_gd_min
-                    and _sot_total >= _sd_sot_min and _sd_odds and _sd_odds > 1.0
-                    and _sd_odds_min <= _sd_odds <= _sd_odds_max):
+            _trig = _detect_over25_2goal_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
                 _sd_signal("sd_over25_2goal", "SD BACK O2.5 2-Goal Lead",
-                           f"BACK OVER 2.5 @ {_sd_odds:.2f}", _sd_odds,
+                           f"BACK OVER 2.5 @ {_trig['back_over25']:.2f}", _trig["back_over25"],
                            "Back Over 2.5 when a team leads by 2+ goals with SoT activity",
-                           {"goal_diff": _goal_diff, "sot_total": _sot_total, "odds": round(_sd_odds, 2)})
+                           {"goal_diff": _trig.get("goal_diff"), "sot_total": _trig.get("sot_total"),
+                            "odds": round(_trig["back_over25"], 2)})
 
         # --- SD: BACK Under 3.5 Late ---
         _sd_cfg = sd_configs.get("sd_under35_late", {})
         if _sd_cfg.get("enabled") and goals_data_ok:
-            _sd_m_min = _sd_cfg.get("m_min", 65)
-            _sd_m_max = _sd_cfg.get("m_max", 78)
-            _sd_goals_exact = _sd_cfg.get("goals_exact", 3)
-            _sd_xg_max = _sd_cfg.get("xg_max", 2.0)
-            _sd_odds_min = _sd_cfg.get("odds_min", 1.1)
-            _sd_odds_max = _sd_cfg.get("odds_max", 5.0)
-            _sd_odds = _to_float(latest.get("back_under35", ""))
-            if (_sd_m_min <= _m < _sd_m_max and _total_goals == _sd_goals_exact
-                    and _sd_odds and _sd_odds_min <= _sd_odds <= _sd_odds_max
-                    and (_xg_total is not None and _xg_total <= _sd_xg_max)):
+            _trig = _detect_under35_late_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
                 _sd_signal("sd_under35_late", "SD BACK U3.5 Late",
-                           f"BACK UNDER 3.5 @ {_sd_odds:.2f}", _sd_odds,
+                           f"BACK UNDER 3.5 @ {_trig['back_under35']:.2f}", _trig["back_under35"],
                            "Back Under 3.5 when exactly 3 goals scored and xG is low",
-                           {"total_goals": _total_goals, "xg_total": round(_xg_total, 2) if _xg_total else None})
+                           {"total_goals": _trig.get("total_goals_trigger"),
+                            "xg_total": round(_trig["xg_total"], 2) if _trig.get("xg_total") is not None else None})
 
         # --- SD: BACK Longshot Leading ---
         _sd_cfg = sd_configs.get("sd_longshot", {})
-        if _sd_cfg.get("enabled") and goals_data_ok and _gl != _gv:
-            _sd_m_min = _sd_cfg.get("m_min", 65)
-            _sd_m_max = _sd_cfg.get("m_max", 90)
-            _sd_xg_min = _sd_cfg.get("xg_min", 0.2)
-            _sd_odds_min = _sd_cfg.get("odds_min", 1.3)
-            _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
-            if _sd_m_min <= _m < _sd_m_max:
-                # Determine pre-match longshot from first row with valid odds
-                _ls_team = None
-                for _r in rows[:5]:  # check first few rows for pre-match odds
-                    _bh0 = _to_float(_r.get("back_home", ""))
-                    _ba0 = _to_float(_r.get("back_away", ""))
-                    if _bh0 and _ba0 and _bh0 > 1 and _ba0 > 1:
-                        _ls_team = "local" if _bh0 >= _ba0 else "visitante"
-                        break
-                if _ls_team:
-                    _ls_winning = (_ls_team == "local" and _gl > _gv) or (_ls_team == "visitante" and _gv > _gl)
-                    if _ls_winning:
-                        _ls_odds = _to_float(latest.get("back_home" if _ls_team == "local" else "back_away", ""))
-                        _ls_xg = _to_float(latest.get(f"xg_{_ls_team}", ""))
-                        if (_ls_odds and _ls_odds > 1.0 and _sd_odds_min <= _ls_odds <= _sd_odds_max
-                                and (_ls_xg is not None and _ls_xg >= _sd_xg_min)):
-                            _sd_signal("sd_longshot", "SD BACK Longshot Leading",
-                                       f"BACK {'HOME' if _ls_team == 'local' else 'AWAY'} @ {_ls_odds:.2f}", _ls_odds,
-                                       "Back the pre-match longshot when they are leading late",
-                                       {"longshot_team": _ls_team, "odds": round(_ls_odds, 2),
-                                        "xg_longshot": round(_ls_xg, 2) if _ls_xg else None})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_longshot_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _ls_odds = _trig.get("back_home") or _trig.get("back_away")
+                _ls_team = _trig.get("longshot_team")
+                _team_label = "HOME" if _ls_team == "local" else "AWAY"
+                _sd_signal("sd_longshot", "SD BACK Longshot Leading",
+                           f"BACK {_team_label} @ {_ls_odds:.2f}", _ls_odds,
+                           "Back the pre-match longshot when they are leading late",
+                           {"longshot_team": _ls_team, "odds": round(_ls_odds, 2),
+                            "xg_longshot": round(_trig["xg_longshot"], 2) if _trig.get("xg_longshot") is not None else None})
 
         # --- SD: BACK CS 2-1/1-2 (Close Game) ---
         _sd_cfg = sd_configs.get("sd_cs_close", {})
         if _sd_cfg.get("enabled") and goals_data_ok:
-            _sd_m_min = _sd_cfg.get("m_min", 70)
-            _sd_m_max = _sd_cfg.get("m_max", 80)
-            if _sd_m_min <= _m < _sd_m_max and _total_goals >= 2 and _goal_diff == 1:
-                # Only 2-1 / 1-2 scorelines
-                if (_gl, _gv) in ((2, 1), (1, 2)):
-                    _cs_col = f"back_rc_{_gl}_{_gv}"
-                    _cs_odds = _to_float(latest.get(_cs_col, ""))
-                    if _cs_odds and _cs_odds > 1.0:
-                        _sd_signal("sd_cs_close", "SD BACK CS Close",
-                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
-                                   "Back current Correct Score at close game (2-1 / 1-2)",
-                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
+            _trig = _detect_cs_close_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _score = _trig["trigger_score"]
+                _col = f"back_rc_{_score.replace('-', '_')}"
+                _cs_odds = _trig.get(_col)
+                if _cs_odds:
+                    _sd_signal("sd_cs_close", "SD BACK CS Close",
+                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
+                               "Back current Correct Score at close game (2-1 / 1-2)",
+                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
 
         # --- SD: BACK CS 1-0/0-1 (One Goal) ---
         _sd_cfg = sd_configs.get("sd_cs_one_goal", {})
         if _sd_cfg.get("enabled") and goals_data_ok:
-            _sd_m_min = _sd_cfg.get("m_min", 68)
-            _sd_m_max = _sd_cfg.get("m_max", 85)
-            if _sd_m_min <= _m < _sd_m_max and _total_goals == 1:
-                if (_gl, _gv) in ((1, 0), (0, 1)):
-                    _cs_col = f"back_rc_{_gl}_{_gv}"
-                    _cs_odds = _to_float(latest.get(_cs_col, ""))
-                    if _cs_odds and _cs_odds > 1.0:
-                        _sd_signal("sd_cs_one_goal", "SD BACK CS One-Goal",
-                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
-                                   "Back current Correct Score at 1-0 / 0-1",
-                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
+            _trig = _detect_cs_one_goal_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _score = _trig["trigger_score"]
+                _col = f"back_rc_{_score.replace('-', '_')}"
+                _cs_odds = _trig.get(_col)
+                if _cs_odds:
+                    _sd_signal("sd_cs_one_goal", "SD BACK CS One-Goal",
+                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
+                               "Back current Correct Score at 1-0 / 0-1",
+                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
 
         # --- SD: BACK Underdog Leading Late ---
         _sd_cfg = sd_configs.get("sd_ud_leading", {})
-        if _sd_cfg.get("enabled") and goals_data_ok and _gl != _gv:
-            _sd_m_min = _sd_cfg.get("m_min", 55)
-            _sd_m_max = _sd_cfg.get("m_max", 80)
-            _sd_ud_pre = _sd_cfg.get("ud_min_pre_odds", 2.0)
-            _sd_max_lead = _sd_cfg.get("max_lead", 1)
-            if _sd_m_min <= _m < _sd_m_max and _goal_diff <= _sd_max_lead:
-                # Determine pre-match underdog from first rows
-                _ud_team = None
-                for _r in rows[:5]:
-                    _bh0 = _to_float(_r.get("back_home", ""))
-                    _ba0 = _to_float(_r.get("back_away", ""))
-                    if _bh0 and _ba0 and _bh0 > 1 and _ba0 > 1:
-                        # Pick the higher-odds team as underdog (matching BT logic)
-                        if _bh0 > _ba0 and _bh0 >= _sd_ud_pre:
-                            _ud_team = "local"
-                            _ud_pre_odds = _bh0
-                        elif _ba0 >= _bh0 and _ba0 >= _sd_ud_pre:
-                            _ud_team = "visitante"
-                            _ud_pre_odds = _ba0
-                        break
-                if _ud_team:
-                    _ud_winning = (_ud_team == "local" and _gl > _gv) or (_ud_team == "visitante" and _gv > _gl)
-                    if _ud_winning:
-                        _ud_odds = _to_float(latest.get("back_home" if _ud_team == "local" else "back_away", ""))
-                        if _ud_odds and _ud_odds > 1.0:
-                            _sd_signal("sd_ud_leading", "SD BACK Underdog Leading",
-                                       f"BACK {'HOME' if _ud_team == 'local' else 'AWAY'} @ {_ud_odds:.2f}", _ud_odds,
-                                       "Back the underdog when they are leading late",
-                                       {"ud_team": _ud_team, "pre_odds": round(_ud_pre_odds, 2),
-                                        "current_odds": round(_ud_odds, 2)})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_ud_leading_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _ud_odds = _trig.get("back_home") or _trig.get("back_away")
+                _ud_team = _trig.get("ud_team")
+                _sd_signal("sd_ud_leading", "SD BACK Underdog Leading",
+                           f"BACK {'HOME' if _ud_team == 'local' else 'AWAY'} @ {_ud_odds:.2f}", _ud_odds,
+                           "Back the underdog when they are leading late",
+                           {"ud_team": _ud_team, "pre_odds": round(_trig["ud_pre_odds"], 2),
+                            "current_odds": round(_ud_odds, 2)})
 
         # --- SD: BACK Home Favourite Leading Late ---
         _sd_cfg = sd_configs.get("sd_home_fav_leading", {})
-        if _sd_cfg.get("enabled") and goals_data_ok and _gl > _gv:
-            _sd_m_min = _sd_cfg.get("m_min", 65)
-            _sd_m_max = _sd_cfg.get("m_max", 85)
-            _sd_max_lead = _sd_cfg.get("max_lead", 3)
-            _sd_fav_max = _sd_cfg.get("fav_max", 2.5)
-            if _sd_m_min <= _m < _sd_m_max and _goal_diff <= _sd_max_lead:
-                # Check if home was pre-match favourite (odds <= fav_max)
-                _home_pre = None
-                for _r in rows[:5]:
-                    _bh0 = _to_float(_r.get("back_home", ""))
-                    if _bh0 and _bh0 > 1:
-                        _home_pre = _bh0
-                        break
-                if _home_pre and _home_pre <= _sd_fav_max:
-                    _home_odds = _to_float(latest.get("back_home", ""))
-                    if _home_odds and _home_odds > 1.0:
-                        _sd_signal("sd_home_fav_leading", "SD BACK Home Fav Leading",
-                                   f"BACK HOME @ {_home_odds:.2f}", _home_odds,
-                                   "Back home favourite when leading late",
-                                   {"home_pre_odds": round(_home_pre, 2),
-                                    "current_odds": round(_home_odds, 2), "lead": _goal_diff})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_home_fav_leading_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _home_odds = _trig["back_home"]
+                _sd_signal("sd_home_fav_leading", "SD BACK Home Fav Leading",
+                           f"BACK HOME @ {_home_odds:.2f}", _home_odds,
+                           "Back home favourite when leading late",
+                           {"home_pre_odds": round(_trig["home_pre_odds"], 2),
+                            "current_odds": round(_home_odds, 2), "lead": _trig.get("lead")})
 
         # --- SD: BACK CS 2-0/0-2 Late ---
         _sd_cfg = sd_configs.get("sd_cs_20", {})
         if _sd_cfg.get("enabled") and goals_data_ok:
-            _sd_m_min = _sd_cfg.get("m_min", 75)
-            _sd_m_max = _sd_cfg.get("m_max", 90)
-            _sd_odds_max = _sd_cfg.get("odds_max", 10.0)
-            if _sd_m_min <= _m < _sd_m_max:
-                if (_gl, _gv) in ((2, 0), (0, 2)):
-                    _cs_col = f"back_rc_{_gl}_{_gv}"
-                    _cs_odds = _to_float(latest.get(_cs_col, ""))
-                    if _cs_odds and _cs_odds > 1.0 and _cs_odds <= _sd_odds_max:
-                        _sd_signal("sd_cs_20", "SD BACK CS 2-0/0-2",
-                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
-                                   "Back current Correct Score at 2-0 / 0-2",
-                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
+            _trig = _detect_cs_20_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _score = _trig["trigger_score"]
+                _col = f"back_rc_{_score.replace('-', '_')}"
+                _cs_odds = _trig.get(_col)
+                if _cs_odds:
+                    _sd_signal("sd_cs_20", "SD BACK CS 2-0/0-2",
+                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
+                               "Back current Correct Score at 2-0 / 0-2",
+                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
 
         # --- SD: BACK CS Big Lead (3-0/0-3/3-1/1-3) ---
         _sd_cfg = sd_configs.get("sd_cs_big_lead", {})
         if _sd_cfg.get("enabled") and goals_data_ok:
-            _sd_m_min = _sd_cfg.get("m_min", 70)
-            _sd_m_max = _sd_cfg.get("m_max", 85)
-            _sd_odds_max = _sd_cfg.get("odds_max", 8.0)
-            if _sd_m_min <= _m < _sd_m_max:
-                if (_gl, _gv) in ((3, 0), (0, 3), (3, 1), (1, 3)):
-                    _cs_col = f"back_rc_{_gl}_{_gv}"
-                    _cs_odds = _to_float(latest.get(_cs_col, ""))
-                    if _cs_odds and _cs_odds > 1.0 and _cs_odds <= _sd_odds_max:
-                        _sd_signal("sd_cs_big_lead", "SD BACK CS Big Lead",
-                                   f"BACK CS {_gl}-{_gv} @ {_cs_odds:.2f}", _cs_odds,
-                                   "Back current Correct Score at big lead (3-0/0-3/3-1/1-3)",
-                                   {"score": f"{_gl}-{_gv}", "cs_odds": round(_cs_odds, 2)})
+            _trig = _detect_cs_big_lead_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _score = _trig["trigger_score"]
+                _col = f"back_rc_{_score.replace('-', '_')}"
+                _cs_odds = _trig.get(_col)
+                if _cs_odds:
+                    _sd_signal("sd_cs_big_lead", "SD BACK CS Big Lead",
+                               f"BACK CS {_score} @ {_cs_odds:.2f}", _cs_odds,
+                               "Back current Correct Score at big lead (3-0/0-3/3-1/1-3)",
+                               {"score": _score, "cs_odds": round(_cs_odds, 2)})
+
+        # --- SD (disabled): LAY Over 4.5 V3 ---
+        _sd_cfg = sd_configs.get("sd_lay_over45_v3", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_lay_over45_v3_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _lay_odds = _trig["lay_over45"]
+                _sd_signal("sd_lay_over45_v3", "SD LAY Over 4.5 V3",
+                           f"LAY OVER 4.5 @ {_lay_odds:.2f}", _lay_odds,
+                           "Lay Over 4.5 tight: goals<=1, tight minute window",
+                           {"total_goals": _trig.get("total_goals_trigger"), "odds": round(_lay_odds, 2)})
+
+        # --- SD (disabled): BACK Draw xG Convergence ---
+        _sd_cfg = sd_configs.get("sd_draw_xg_conv", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_draw_xg_conv_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _draw_odds = _trig["back_draw"]
+                _sd_signal("sd_draw_xg_conv", "SD BACK Draw xG Convergence",
+                           f"BACK DRAW @ {_draw_odds:.2f}", _draw_odds,
+                           "Back Draw when xG converges in tied match",
+                           {"xg_diff": _trig.get("xg_diff"), "score": _trig.get("score_at_trigger"),
+                            "odds": round(_draw_odds, 2)})
+
+        # --- SD (disabled): BACK Over 0.5 Possession Extreme ---
+        _sd_cfg = sd_configs.get("sd_poss_extreme", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_poss_extreme_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _over05_odds = _trig["back_over05"]
+                _sd_signal("sd_poss_extreme", "SD BACK Over 0.5 Poss Extreme",
+                           f"BACK OVER 0.5 @ {_over05_odds:.2f}", _over05_odds,
+                           "Back Over 0.5 when possession is extremely one-sided at 0-0",
+                           {"poss_max": _trig.get("poss_max"), "odds": round(_over05_odds, 2)})
+
+        # --- SD (disabled): BACK CS 0-0 Early ---
+        _sd_cfg = sd_configs.get("sd_cs_00", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_cs_00_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _cs00_odds = _trig["back_rc_0_0"]
+                _sd_signal("sd_cs_00", "SD BACK CS 0-0 Early",
+                           f"BACK CS 0-0 @ {_cs00_odds:.2f}", _cs00_odds,
+                           "Back CS 0-0 in early window with low xG and SoT",
+                           {"xg_total": _trig.get("xg_total"), "sot_total": _trig.get("sot_total"),
+                            "odds": round(_cs00_odds, 2)})
+
+        # --- SD (disabled): BACK Over 2.5 from Two Goals ---
+        _sd_cfg = sd_configs.get("sd_over25_2goals", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_over25_2goals_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _o25_odds = _trig["back_over25"]
+                _sd_signal("sd_over25_2goals", "SD BACK O2.5 Two Goals",
+                           f"BACK OVER 2.5 @ {_o25_odds:.2f}", _o25_odds,
+                           "Back Over 2.5 when exactly 2 goals scored in stable row",
+                           {"total_goals": _trig.get("total_goals_trigger"), "odds": round(_o25_odds, 2)})
+
+        # --- SD (disabled): BACK Draw at 1-1 ---
+        _sd_cfg = sd_configs.get("sd_draw_11", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_draw_11_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _draw11_odds = _trig["back_draw"]
+                _sd_signal("sd_draw_11", "SD BACK Draw 1-1",
+                           f"BACK DRAW @ {_draw11_odds:.2f}", _draw11_odds,
+                           "Back Draw when score is exactly 1-1 late",
+                           {"odds": round(_draw11_odds, 2)})
+
+        # --- SD (disabled): BACK Under 3.5 Three-Goal Lid ---
+        _sd_cfg = sd_configs.get("sd_under35_3goals", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_under35_3goals_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _u35_odds = _trig["back_under35"]
+                _sd_signal("sd_under35_3goals", "SD BACK U3.5 3-Goal Lid",
+                           f"BACK UNDER 3.5 @ {_u35_odds:.2f}", _u35_odds,
+                           "Back Under 3.5 when exactly 3 goals and low xG",
+                           {"xg_total": _trig.get("xg_total"), "odds": round(_u35_odds, 2)})
+
+        # --- SD (disabled): BACK Away Favourite Leading Late ---
+        _sd_cfg = sd_configs.get("sd_away_fav_leading", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_away_fav_leading_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _away_odds = _trig["back_away"]
+                _sd_signal("sd_away_fav_leading", "SD BACK Away Fav Leading",
+                           f"BACK AWAY @ {_away_odds:.2f}", _away_odds,
+                           "Back away favourite when leading late",
+                           {"away_pre_odds": round(_trig["away_pre_odds"], 2),
+                            "lead": _trig.get("lead"), "odds": round(_away_odds, 2)})
+
+        # --- SD (disabled): BACK Under 4.5 Three Goals Low xG ---
+        _sd_cfg = sd_configs.get("sd_under45_3goals", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_under45_3goals_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _u45_odds = _trig["back_under45"]
+                _sd_signal("sd_under45_3goals", "SD BACK U4.5 3-Goals Low xG",
+                           f"BACK UNDER 4.5 @ {_u45_odds:.2f}", _u45_odds,
+                           "Back Under 4.5 when exactly 3 goals and xG < threshold",
+                           {"xg_total": _trig.get("xg_total"), "odds": round(_u45_odds, 2)})
+
+        # --- SD (disabled): BACK CS 1-1 Late ---
+        _sd_cfg = sd_configs.get("sd_cs_11", {})
+        if _sd_cfg.get("enabled") and goals_data_ok:
+            _trig = _detect_cs_11_trigger(rows, len(rows) - 1, _sd_cfg)
+            if _trig:
+                _cs11_odds = _trig["back_rc_1_1"]
+                _sd_signal("sd_cs_11", "SD BACK CS 1-1 Late",
+                           f"BACK CS 1-1 @ {_cs11_odds:.2f}", _cs11_odds,
+                           "Back CS 1-1 late in the game",
+                           {"odds": round(_cs11_odds, 2)})
 
     # --- Enrich signals with age and maturity info ---
     _now = datetime.utcnow()
