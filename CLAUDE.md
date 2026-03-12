@@ -23,10 +23,10 @@ La carpeta `/auxiliar` puede borrarse en cualquier momento sin afectar al sistem
 1. **NO ASUMIR** como funciona algo. Verificar siempre en el codigo fuente antes de hacer afirmaciones.
 
 2. **CAPA UNICA (BACKTEST)**:
-   - El backtest se ejecuta via notebook (`analisis/strategies_designer.ipynb`) o `optimizer_cli.py`.
+   - El backtest se ejecuta via `scripts/bt_optimizer.py` (nuevo, preferido) o el notebook legacy `analisis/strategies_designer.ipynb`.
+   - `scripts/bt_optimizer.py` ejecuta grid search completo via `_analyze_strategy_simple()` directamente (no usa analyze_cartera()). Fases: 0=carga datos, 1=grid search individual, 2=build config optima, 3=presets via optimizer_cli, 4=apply, 5=export.
    - Backend (`csv_reader.py:analyze_cartera()`) genera bets con condiciones basicas + version flags.
    - Ya no existe capa de filtrado frontend (cartera.ts fue eliminado en limpieza 2026-03-08).
-   - El notebook aplica su propia logica de filtrado y quality gates.
    - `analyze_cartera()` solo recibe `min_dur` de config. Cache key solo incluye min_duration.
 
 3. **CAPA UNICA (LIVE)**:
@@ -60,7 +60,7 @@ betfair_scraper/
   placed_bets.csv        → Apuestas paper
   data/                  → CSVs partido_*.csv + .heartbeat
   logs/                  → Logs scraper (gitignored)
-  scripts/               → 8 scripts (find_matches, clean_games, etc.)
+  scripts/               → 9 scripts (find_matches, clean_games, bt_optimizer, etc.)
   dashboard/
     backend/
       main.py            → FastAPI app + 5 background tasks (417 lineas)
@@ -137,11 +137,26 @@ Configs de evaluacion de calidad en `betfair_scraper/dashboard/backend/utils/sd_
 
 ## Quality Gates (aplicados a TODAS las estrategias)
 
-1. **N >= G_MIN_BETS**: `max(15, n_partidos // 25)` (~33 con 800+ partidos)
-2. **ROI >= G_MIN_ROI** (10%)
+1. **N >= G_MIN_BETS**: `max(15, n_partidos // 25)` (~46 con 1166 partidos)
+2. **ROI >= G_MIN_ROI** (10%): ROI calculado como `sum(pl) / N * 100` donde pl es profit por £1 stake
 3. **IC95_lower >= IC95_MIN_LOW** (40%): intervalo Wilson al 95%
 
-Implementados en `_eval_combo()` (notebook) y `eval_sd()` (`sd_strategies.py`).
+Implementados en `_eval_bets()` (`scripts/bt_optimizer.py`), `_eval_combo()` (notebook) y `eval_sd()` (`sd_strategies.py`).
+
+### bt_optimizer.py — resultados con 1168 partidos (2026-03-12)
+
+16/25 estrategias pasan quality gates (N>=46, ROI>=10%, IC95>=40%). Aprobadas: `goal_clustering`, `pressure_cooker`, `over25_2goal`, `under35_late`, `longshot`, `cs_one_goal`, `ud_leading`, `home_fav_leading`, `lay_over45_v3`, `poss_extreme`, `draw_11`, `under35_3goals`, `away_fav_leading`, `under45_3goals`, `xg_underperformance_base`, `odds_drift_v1`.
+No pasan: `back_draw_00`, `momentum_xg`, `cs_close`, `cs_20`, `cs_big_lead`, `tarde_asia`, `draw_xg_conv`, `cs_00`, `over25_2goals`, `cs_11`.
+
+**cartera_config.json actual** (post phase2): 24 estrategias, 18 enabled con params optimizados del grid search. El portfolio optimizer (phase3) genera 4 presets con N=32, WR=78.1%, IC=[61.2-89.0%], ROI=142%.
+
+### phase4_apply — merge inteligente (fix 2026-03-12)
+
+`phase4_apply()` en `scripts/bt_optimizer.py` ya NO copia el preset verbatim (lo que destruia las 11 estrategias nuevas). Ahora hace merge:
+- Estrategias que el preset ACTIVA: aplica todos los params del preset (portfolio-optimizados).
+- Estrategias que el preset DESACTIVA: solo cambia `enabled=False`, preserva params optimizados.
+- Estrategias no conocidas por el preset (las 11 nuevas): sin cambios.
+- No re-añade claves obsoletas (lay_over15, lay_draw_asym, etc.) al config.
 
 ## Sistema de Presets
 
@@ -187,9 +202,9 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ### Match rate
 
-- **78.2% MATCH**, 81.1% MATCH+MIN_DIFF (medido con `tests/reconcile.py` en 1162 partidos, todas las estrategias unificadas)
+- **96.9% MATCH**, 97.4% MATCH+MIN_DIFF (medido con `tests/reconcile.py` en 1166 partidos, tras unificacion completa + `_trigger_first_data` cache)
 - **LIVE P/L >= BT P/L** confirmado (BT es conservador)
-- Discrepancias restantes son por timing (BT muestrea en filas discretas vs LIVE en instante actual)
+- Discrepancias restantes (3.1%): BT_ONLY por null goals en filas intermedias (scores oscilantes en CSVs historicos), LIVE_ONLY por FT score null, MINUTE_DIFF por timing
 
 ### Post-filtros (Filtros Realistas) — ALINEADOS
 
@@ -206,6 +221,9 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
 2. **Cache key parcial**: analyze_cartera() cache incluye min_duration + enabled states de las 19 estrategias adicionales. Cambios de parametros config distintos de enabled/min_duration requieren invalidacion manual (limpiar _result_cache).
 3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
+4. **bt_optimizer.py lento para odds_drift/back_draw_00**: 5760 combos x6 versiones (~36 min) y 9000 combos x6 versiones (~15 min). Reducir search space o paralelizar a nivel combo para acelerar.
+5. **10 estrategias sin config en cartera_config.json** (RESUELTO 2026-03-12): Tras ejecutar bt_optimizer.py --phase all, cartera_config.json tiene 24 estrategias con params optimizados del grid search. Las que no pasaron quality gates tienen enabled=False.
+6. **Portfolio optimizer auto-desactiva xg/drift**: El optimizer_cli decide que el portfolio optimo no incluye xg_underperformance y odds_drift (mejoran WR y ROI excluyendolos). Es comportamiento correcto del optimizer, no un bug.
 
 ## Limpieza 2026-03-08
 

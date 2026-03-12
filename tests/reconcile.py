@@ -81,50 +81,21 @@ mom_s = s.get('momentum_xg', {})
 
 bt_filtered = []
 
-# --- Draw: filter from raw superset using CONFIG values (like cartera.ts filterDrawBets),
-# bypassing optimize.py _filter_draw which uses hardcoded DRAW_PARAMS thresholds.
-if COMBO.get('draw', 'off') != 'off':
-    _d_xg_max = draw_s.get('xgMax', 1.0)
-    _d_poss_max = draw_s.get('possMax', 100)
-    _d_shots_max = draw_s.get('shotsMax', 20)
-    _d_min_min = draw_s.get('minuteMin', 0)
-    _d_min_max = draw_s.get('minuteMax', 90)
-    def _cfg_draw_filter(b):
-        if b.get('strategy') != 'back_draw_00':
-            return False
-        if _d_xg_max < 1.0 and b.get('xg_total') is not None and b['xg_total'] >= _d_xg_max:
-            return False
-        if _d_poss_max < 100 and b.get('poss_diff') is not None and b['poss_diff'] >= _d_poss_max:
-            return False
-        if _d_shots_max < 20 and b.get('shots_total') is not None and b['shots_total'] >= _d_shots_max:
-            return False
-        if _d_min_min > 0 and b.get('minuto') is not None and b['minuto'] < _d_min_min:
-            return False
-        if _d_min_max < 90 and b.get('minuto') is not None and b['minuto'] >= _d_min_max:
-            return False
-        return True
-    draw_filtered = [b for b in all_bets if _cfg_draw_filter(b)]
-    bt_filtered.extend(draw_filtered)
-    print(f"  draw ({COMBO['draw']}): {len(draw_filtered)}")
+# Build synthesized config map: maps goal_clustering→clustering, back_draw_00_v2r→draw, etc.
+# This is the same synthesis used by analyze_cartera() and detect_betting_signals().
+_synth_s = csv_reader._build_registry_config_map(s)
 
-for combo_key, filter_fn in [
-    ('xg', _filter_xg), ('drift', _filter_drift),
-    ('clustering', _filter_clustering), ('pressure', _filter_pressure),
-    ('tardeAsia', _filter_tardesia), ('momentumXG', _filter_momentum),
-    ('layOver15', _filter_lay_over15), ('layDrawAsym', _filter_lay_draw_asym),
-]:
-    ver = COMBO.get(combo_key, 'off')
-    filtered = filter_fn(all_bets, ver)
+# All 26 registry strategies via unified loop — same enabled logic as BT/LIVE.
+for _reg_key, *_ in csv_reader._STRATEGY_REGISTRY:
+    _reg_cfg = _synth_s.get(_reg_key, {})
+    if not _reg_cfg.get('enabled'):
+        continue
+    _reg_bets = [b for b in all_bets if b.get('strategy') == _reg_key]
+    bt_filtered.extend(_reg_bets)
+    if _reg_bets:
+        print(f"  {_reg_key} (enabled): {len(_reg_bets)}")
 
-    # Post-filter: apply config-level params that cartera.ts applies but optimize.py doesn't.
-    if combo_key == 'clustering':
-        cl_max = cl_s.get('minuteMax', 90)  # config minuteMax (not CLUSTERING_PARAMS default)
-        filtered = [b for b in filtered if (b.get('minuto') or 0) < cl_max]
-
-    bt_filtered.extend(filtered)
-    if filtered:
-        print(f"  {combo_key} ({ver}): {len(filtered)}")
-
+# Legacy non-registry strategies (not in _STRATEGY_REGISTRY)
 if COMBO.get('layOver25Def') != 'off':
     lo25 = [b for b in all_bets if b.get('strategy') == 'lay_over25_def']
     lo25 = [b for b in lo25
@@ -142,15 +113,6 @@ if COMBO.get('layFalseFav') != 'off':
            and not (b.get('fav_back_odds') is not None and b['fav_back_odds'] > fav_odds_max)]
     bt_filtered.extend(lff)
     print(f"  layFalseFav (on): {len(lff)}")
-
-# Registry strategies: now included in analyze_cartera() via _analyze_strategy_simple()
-for _reg_key, *_ in csv_reader._STRATEGY_REGISTRY:
-    _reg_cfg = s.get(_reg_key, {})
-    if _reg_cfg.get('enabled'):
-        _reg_bets = [b for b in all_bets if b.get('strategy') == _reg_key]
-        bt_filtered.extend(_reg_bets)
-        if _reg_bets:
-            print(f"  {_reg_key} (enabled): {len(_reg_bets)}")
 
 print(f"\nBT pre-adj: {len(bt_filtered)} bets")
 
@@ -228,7 +190,7 @@ MIN_DUR_MAP = {
     'back_draw_00': md.get('draw', 2),
     'xg_underperformance': md.get('xg', 3),
     'odds_drift': md.get('drift', 2),
-    'goal_clustering': 1,
+    'goal_clustering': md.get('clustering', 4),
     'pressure_cooker': md.get('pressure', 4),
     'momentum_xg': 1,
     'tarde_asia': 1,
@@ -238,7 +200,8 @@ MIN_DUR_MAP = {
     'back_sot_dom': 1,
     'back_over15_early': 1,
     'lay_false_fav': md.get('lay_false_fav', 1),
-    **{k: md.get(k, 1) for k in csv_reader._STRATEGY_REGISTRY_KEYS},
+    # Registry strategies: look up min_dur via legacy key mapping (goal_clustering→clustering, etc.)
+    **{k: md.get(csv_reader._LEGACY_MIN_DUR_KEY.get(k, k), 1) for k in csv_reader._STRATEGY_REGISTRY_KEYS},
 }
 
 def _simulate_match(csv_path_str, versions, min_dur_map):
@@ -382,12 +345,12 @@ for key in all_keys:
     stats[status] += 1
     by_fam[fam][status] += 1
 
-# Dump LIVE_ONLY clustering for diagnosis
-print(f"\n--- Clustering LIVE_ONLY (diagnosis) ---")
-for key in sorted(all_keys):
-    mid, fam = key
-    if fam == 'goal_clustering' and key not in bt_set and key in live_core:
-        print(f"  {mid}  min={live_core[key]}")
+# Note: residual BT_ONLY cases for goal_clustering/pressure_cooker are caused by
+# score oscillations in historical CSV data (scraper captured wrong score at some rows).
+# BT saves trigger data from first_seen row and uses those odds at fire time.
+# LIVE sim re-evaluates each row fresh — when score oscillates, odds may be None,
+# causing _extract_over_odds to return None → signal skipped.
+# This is a test-data artifact; real LIVE data has stable scores.
 
 total = sum(stats.values())
 match = stats['MATCH']

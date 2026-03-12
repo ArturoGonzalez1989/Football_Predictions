@@ -352,7 +352,37 @@ def run_paper_auto_place() -> dict:
             "momentum_minute_max":   str(momentum_s.get("minuteMax", 90)),
         }
 
-        versions["_strategy_configs"] = s  # all strategy configs, no grouping
+        # Synthesize per-version registry entries for the 7 original strategies
+        _s_configs = dict(s)
+        _ORIG_MAP = {
+            "draw": [
+                ("back_draw_00_v1", "v1"), ("back_draw_00_v15", "v15"),
+                ("back_draw_00_v2", "v2"), ("back_draw_00_v2r", "v2r"),
+                ("back_draw_00_v3", "v3"), ("back_draw_00_v4",  "v4"),
+            ],
+            "drift": [
+                ("odds_drift_v1", "v1"), ("odds_drift_v2", "v2"), ("odds_drift_v3", "v3"),
+                ("odds_drift_v4", "v4"), ("odds_drift_v5", "v5"), ("odds_drift_v6", "v6"),
+            ],
+            "clustering":  [("goal_clustering",            None)],
+            "pressure":    [("pressure_cooker",             None)],
+            "xg": [
+                ("xg_underperformance_base", "base"),
+                ("xg_underperformance_v2",   "v2"),
+                ("xg_underperformance_v3",   "v3"),
+            ],
+            "momentum_xg": [("momentum_xg_v1", "v1"), ("momentum_xg_v2", "v2")],
+            "tarde_asia":  [("tarde_asia",                 None)],
+        }
+        _VER_LOOKUP = {"momentum_xg": "momentum"}
+        for _legacy_key, _entries in _ORIG_MAP.items():
+            _old_cfg = s.get(_legacy_key, {})
+            _ver_key = _VER_LOOKUP.get(_legacy_key, _legacy_key)
+            _active_ver = versions.get(_ver_key, "off")
+            for (_reg_key, _ver) in _entries:
+                _is_active = _active_ver != "off" and (_ver is None or _active_ver == _ver)
+                _s_configs[_reg_key] = {**_old_cfg, "enabled": _is_active}
+        versions["_strategy_configs"] = _s_configs
         versions["_min_duration"] = md
 
         # ── Audit: contar partidos live para log de ciclo ──
@@ -623,7 +653,37 @@ async def get_betting_signals(
         "momentum_minute_max":  str(momentum_s.get("minuteMax", 90)),
     }
 
-    versions["_strategy_configs"] = s  # all strategy configs, no grouping
+    # Synthesize per-version registry entries for the 7 original strategies
+    _s_configs = dict(s)
+    _ORIG_MAP = {
+        "draw": [
+            ("back_draw_00_v1", "v1"), ("back_draw_00_v15", "v15"),
+            ("back_draw_00_v2", "v2"), ("back_draw_00_v2r", "v2r"),
+            ("back_draw_00_v3", "v3"), ("back_draw_00_v4",  "v4"),
+        ],
+        "drift": [
+            ("odds_drift_v1", "v1"), ("odds_drift_v2", "v2"), ("odds_drift_v3", "v3"),
+            ("odds_drift_v4", "v4"), ("odds_drift_v5", "v5"), ("odds_drift_v6", "v6"),
+        ],
+        "clustering":  [("goal_clustering",            None)],
+        "pressure":    [("pressure_cooker",             None)],
+        "xg": [
+            ("xg_underperformance_base", "base"),
+            ("xg_underperformance_v2",   "v2"),
+            ("xg_underperformance_v3",   "v3"),
+        ],
+        "momentum_xg": [("momentum_xg_v1", "v1"), ("momentum_xg_v2", "v2")],
+        "tarde_asia":  [("tarde_asia",                 None)],
+    }
+    _VER_LOOKUP = {"momentum_xg": "momentum"}
+    for _legacy_key, _entries in _ORIG_MAP.items():
+        _old_cfg = s.get(_legacy_key, {})
+        _ver_key = _VER_LOOKUP.get(_legacy_key, _legacy_key)
+        _active_ver = versions.get(_ver_key, "off")
+        for (_reg_key, _ver) in _entries:
+            _is_active = _active_ver != "off" and (_ver is None or _active_ver == _ver)
+            _s_configs[_reg_key] = {**_old_cfg, "enabled": _is_active}
+    versions["_strategy_configs"] = _s_configs
     versions["_min_duration"] = md
 
     result = csv_reader.detect_betting_signals(versions=versions)

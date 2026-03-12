@@ -280,7 +280,7 @@ def _filter_xg(bets: List[Dict], v: str) -> List[Dict]:
     p = XG_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "xg_underperformance":
+        if b.get("strategy") not in ("xg_underperformance", "xg_underperformance_base"):
             continue
         xe = _fv(b, "xg_excess")
         if p["xg_excess_min"] > 0 and xe is not None and xe < p["xg_excess_min"]:
@@ -303,7 +303,7 @@ def _filter_drift(bets: List[Dict], v: str) -> List[Dict]:
     p = DRIFT_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "odds_drift":
+        if b.get("strategy") not in ("odds_drift", "odds_drift_v1"):
             continue
         gd = _fv(b, "goal_diff")
         if p["goal_diff_min"] > 0 and gd is not None and gd < p["goal_diff_min"]:
@@ -689,7 +689,7 @@ def _bet_market_key(b: Dict) -> str:
     match_id = b.get("match_id", "")
     if strategy == "back_draw_00":
         return f"{match_id}:draw"
-    if strategy in ("odds_drift", "momentum_xg_v1", "momentum_xg_v2"):
+    if strategy in ("odds_drift", "odds_drift_v1", "momentum_xg_v1", "momentum_xg_v2"):
         return f"{match_id}:back:{b.get('team') or 'unknown'}"
     # Goal Clustering: deduplicate at strategy level — only the first trigger per match fires.
     # Each goal changes over_line but we only want the first clustering signal per match.
@@ -724,7 +724,7 @@ def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
     if drift_min is not None:
         result = [
             b for b in result
-            if b.get("strategy") != "odds_drift" or (_fv(b, "minuto") or 0) >= drift_min
+            if b.get("strategy") not in ("odds_drift", "odds_drift_v1") or (_fv(b, "minuto") or 0) >= drift_min
         ]
 
     # 2. Max odds filter
@@ -751,7 +751,7 @@ def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
 
     # 5. Conflict filter: remove MomXG bets from matches that also have xG Underperf
     if adj.get("conflictFilter"):
-        xg_matches = {b.get("match_id") for b in result if b.get("strategy") == "xg_underperformance"}
+        xg_matches = {b.get("match_id") for b in result if b.get("strategy") in ("xg_underperformance", "xg_underperformance_base")}
         result = [
             b for b in result
             if b.get("strategy") not in ("momentum_xg_v1", "momentum_xg_v2")
@@ -764,7 +764,7 @@ def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
         new2: List[Dict] = []
         for b in result:
             strategy = b.get("strategy", "")
-            is_match_odds = strategy in ("back_draw_00", "odds_drift", "momentum_xg_v1", "momentum_xg_v2")
+            is_match_odds = strategy in ("back_draw_00", "odds_drift", "odds_drift_v1", "momentum_xg_v1", "momentum_xg_v2")
             if not is_match_odds:
                 new2.append(b)
                 continue
@@ -880,9 +880,9 @@ def _simulate_cartera_py(bets: List[Dict], bankroll_init: float, mode: str, flat
                 stake_pct = 0.02
         elif mode == "variable":
             strategy = b.get("strategy", "")
-            if strategy == "odds_drift":
+            if strategy in ("odds_drift", "odds_drift_v1"):
                 stake_pct = 0.025
-            elif strategy == "xg_underperformance":
+            elif strategy in ("xg_underperformance", "xg_underperformance_base"):
                 stake_pct = 0.03
             elif strategy == "pressure_cooker":
                 stake_pct = 0.02

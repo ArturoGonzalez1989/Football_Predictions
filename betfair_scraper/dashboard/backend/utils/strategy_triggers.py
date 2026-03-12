@@ -520,11 +520,13 @@ def _detect_goal_clustering_trigger(
     if not over_field:
         return None
 
+    over_odds = _to_float(curr_row.get(over_field, ""))
     return {
         "goal_minute": goal_minute,
         "sot_max":     sot_max,
         "total_goals": total_goals,
         "over_field":  over_field,
+        "over_odds":   over_odds,
     }
 
 
@@ -597,9 +599,11 @@ def _detect_pressure_cooker_trigger(
     if not over_field:
         return None
 
+    over_odds = _to_float(curr_row.get(over_field, ""))
     return {
         "total_goals": total_goals,
         "over_field":  over_field,
+        "over_odds":   over_odds,
         "gl":          gl_i,
         "gv":          gv_i,
         "minuto":      minuto,
@@ -664,7 +668,7 @@ def _detect_back_draw_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Option
     shots_v = _to_float(row.get("tiros_visitante", ""))
     shots_total = ((shots_l or 0) + (shots_v or 0)) if (shots_l is not None or shots_v is not None) else None
 
-    xg_dom = (xg_l / xg_total) if xg_total and xg_total > 0 else None
+    xg_dom = (xg_l / xg_total) if (xg_l is not None and xg_total and xg_total > 0) else None
 
     opta_l = _to_float(row.get("opta_points_local", ""))
     opta_v = _to_float(row.get("opta_points_visitante", ""))
@@ -690,17 +694,18 @@ def _detect_back_draw_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Option
     }
 
 
-def _detect_xg_underperformance_trigger(rows: list, curr_idx: int, cfg: dict) -> list:
+def _detect_xg_underperformance_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
     """Unified xG Underperformance trigger (rows, curr_idx, cfg) interface.
 
     Thin wrapper over ``_detect_xg_underperf_candidates`` that extracts all
     required values from ``rows[curr_idx]`` before calling the internal helper.
 
-    Returns a list of qualifying candidate dicts (same format as
-    ``_detect_xg_underperf_candidates``), empty list if no candidates qualify.
+    Returns the first qualifying candidate dict, or None if no candidates qualify.
+    At most one team can qualify at any row (a team must be LOSING, so home and
+    away cannot both qualify simultaneously).
     """
     row = rows[curr_idx]
-    return _detect_xg_underperf_candidates(
+    candidates = _detect_xg_underperf_candidates(
         xg_local=_to_float(row.get("xg_local", "")),
         xg_visitante=_to_float(row.get("xg_visitante", "")),
         goals_local=int(_to_float(row.get("goles_local", "")) or 0),
@@ -712,6 +717,7 @@ def _detect_xg_underperformance_trigger(rows: list, curr_idx: int, cfg: dict) ->
         row=row,
         cfg=cfg,
     )
+    return candidates[0] if candidates else None
 
 
 def _detect_momentum_xg_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:

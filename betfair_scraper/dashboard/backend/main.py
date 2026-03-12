@@ -32,7 +32,7 @@ from api.alerts import router as alerts_router, run_alert_checks
 try:
     from utils import csv_reader as _csv_reader_mod
     importlib.reload(_csv_reader_mod)
-    print(f"[STARTUP] csv_reader reloaded OK — has momentum_xg: {hasattr(_csv_reader_mod, 'analyze_strategy_momentum_xg')}")
+    print(f"[STARTUP] csv_reader reloaded OK — has analyze_cartera: {hasattr(_csv_reader_mod, 'analyze_cartera')}")
 except Exception as _reload_err:
     print(f"[STARTUP] csv_reader reload FAILED: {_reload_err}")
 
