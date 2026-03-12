@@ -97,7 +97,7 @@ def _filter_sd_lay_over45(bets, v):
     p = LAY_OVER45_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "sd_lay_over45":
+        if b.get("strategy") != "lay_over45":
             continue
         mn = _fv(b, "minuto")
         if mn is not None and mn < p["min_min"]:
@@ -125,7 +125,7 @@ def _filter_sd_leader_dom(bets, v):
     p = LEADER_DOM_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "sd_back_leader_dom":
+        if b.get("strategy") != "back_leader_dom":
             continue
         mn = _fv(b, "minuto")
         if mn is not None and mn < p["min_min"]:
@@ -149,7 +149,7 @@ def _filter_sd_over25_2goal(bets, v):
     p = OVER25_2GOAL_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "sd_over25_2goal":
+        if b.get("strategy") != "over25_2goal":
             continue
         mn = _fv(b, "minuto")
         if mn is not None and mn < p["min_min"]:
@@ -180,91 +180,91 @@ def _filter_sd_over25_2goal(bets, v):
 def _filter_sd_confluence(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_confluence_over25"]
+    return [b for b in bets if b.get("strategy") == "confluence_over25"]
 
 
 # #5 — Draw After Equalizer (on/off)
 def _filter_sd_draw_eq(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_draw_equalizer"]
+    return [b for b in bets if b.get("strategy") == "draw_equalizer"]
 
 
 # #6 — Under 2.5 Scoreless (on/off)
 def _filter_sd_under25_scl(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_under25_scoreless"]
+    return [b for b in bets if b.get("strategy") == "under25_scoreless"]
 
 
 # #7 — Under 3.5 Late (on/off)
 def _filter_sd_under35_late(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_under35_late"]
+    return [b for b in bets if b.get("strategy") == "under35_late"]
 
 
 # #8 — Draw Late Stalemate (on/off)
 def _filter_sd_draw_stl(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_draw_stalemate"]
+    return [b for b in bets if b.get("strategy") == "draw_stalemate"]
 
 
 # #12 — Draw xG Convergence (on/off)
 def _filter_sd_draw_xg_conv(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_draw_xg_conv"]
+    return [b for b in bets if b.get("strategy") == "draw_xg_conv"]
 
 
 # #13 — Corner+SoT Over 2.5 (on/off)
 def _filter_sd_corner_sot(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_corner_sot_over25"]
+    return [b for b in bets if b.get("strategy") == "corner_sot_over25"]
 
 
 # #14 — Over 2.5 2-Goal V4 (on/off — variant uses separate superset)
 def _filter_sd_over25_2g_v4(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_over25_2goal_v4"]
+    return [b for b in bets if b.get("strategy") == "over25_2goal_v4"]
 
 
 # #15 — Over 3.5 First Half Goals (on/off)
 def _filter_sd_over35_fh(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_over35_fh_goals"]
+    return [b for b in bets if b.get("strategy") == "over35_fh_goals"]
 
 
 # #16 — Over 2.5 from 1-1 (on/off)
 def _filter_sd_over25_11(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_over25_from_11"]
+    return [b for b in bets if b.get("strategy") == "over25_from_11"]
 
 
 # #17 — Possession Extreme (on/off)
 def _filter_sd_poss_extreme(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_poss_extreme"]
+    return [b for b in bets if b.get("strategy") == "poss_extreme"]
 
 
 # #18 — Back Longshot (on/off)
 def _filter_sd_back_longshot(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_back_longshot"]
+    return [b for b in bets if b.get("strategy") == "back_longshot"]
 
 
 # #19 — CS 0-0 (on/off)
 def _filter_sd_cs_00(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_cs_00"]
+    return [b for b in bets if b.get("strategy") == "cs_00"]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -280,7 +280,7 @@ def _apply_sd_lay_over45(bets, cfg):
     gmax = cfg.get('goals_max', 2)
     omax = cfg.get('odds_max', 15)
     xgmax = cfg.get('xg_max', 999)
-    return [b for b in bets if b.get('strategy') == 'sd_lay_over45'
+    return [b for b in bets if b.get('strategy') == 'lay_over45'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('total_goals_trigger') or 0) <= gmax
             and (b.get('lay_over45_odds') or 99) <= omax
@@ -288,21 +288,21 @@ def _apply_sd_lay_over45(bets, cfg):
 
 
 def _apply_sd_lay_over45_v3(bets, cfg):
-    """Filter LAY Over 4.5 V3 bets (strategy='sd_lay_over45_v3') with grid params."""
+    """Filter LAY Over 4.5 V3 bets (strategy='lay_over45_v3') with grid params."""
     if not cfg or cfg == 'off':
         return []
     mm = cfg.get('m_min', 55)
     mx = cfg.get('m_max', 75)
     gmax = cfg.get('goals_max', 1)
     omax = cfg.get('odds_max', 15)
-    return [b for b in bets if b.get('strategy') == 'sd_lay_over45_v3'
+    return [b for b in bets if b.get('strategy') == 'lay_over45_v3'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('total_goals_trigger') or 0) <= gmax
             and (b.get('lay_over45_odds') or 99) <= omax]
 
 
 def _apply_sd_lay_over45_v2v4(bets, cfg):
-    """Filter LAY Over 4.5 V2+V4 bets (strategy='sd_lay_over45_v2v4') with grid params."""
+    """Filter LAY Over 4.5 V2+V4 bets (strategy='lay_over45_v2v4') with grid params."""
     if not cfg or cfg == 'off':
         return []
     mm = cfg.get('m_min', 55)
@@ -310,7 +310,7 @@ def _apply_sd_lay_over45_v2v4(bets, cfg):
     gmax = cfg.get('goals_max', 2)
     omax = cfg.get('odds_max', 15)
     xgmax = cfg.get('xg_max', 2.0)
-    return [b for b in bets if b.get('strategy') == 'sd_lay_over45_v2v4'
+    return [b for b in bets if b.get('strategy') == 'lay_over45_v2v4'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('total_goals_trigger') or 0) <= gmax
             and (b.get('lay_over45_odds') or 99) <= omax
@@ -318,14 +318,14 @@ def _apply_sd_lay_over45_v2v4(bets, cfg):
 
 
 def _apply_sd_lay_over45_late(bets, cfg):
-    """Filter LAY Over 4.5 Late bets (strategy='sd_lay_over45_late') with grid params."""
+    """Filter LAY Over 4.5 Late bets (strategy='lay_over45_late') with grid params."""
     if not cfg or cfg == 'off':
         return []
     mm = cfg.get('m_min', 68)
     mx = cfg.get('m_max', 78)
     gmax = cfg.get('goals_max', 2)
     omax = cfg.get('odds_max', 15)
-    return [b for b in bets if b.get('strategy') == 'sd_lay_over45_late'
+    return [b for b in bets if b.get('strategy') == 'lay_over45_late'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('total_goals_trigger') or 0) <= gmax
             and (b.get('lay_over45_odds') or 99) <= omax]
@@ -338,7 +338,7 @@ def _apply_sd_leader_dom(bets, cfg):
     mx = cfg.get('m_max', 70)
     smin = cfg.get('sot_min', 4)
     sriv = cfg.get('sot_max_rival', 1)
-    return [b for b in bets if b.get('strategy') == 'sd_back_leader_dom'
+    return [b for b in bets if b.get('strategy') == 'back_leader_dom'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('leader_sot') or 0) >= smin
             and (b.get('rival_sot') or 99) <= sriv]
@@ -354,7 +354,7 @@ def _apply_sd_over25_2goal(bets, cfg):
     omin = cfg.get('odds_min', 1.5)
     omax = cfg.get('odds_max', 8.0)
     xgmin = cfg.get('xg_min', 0)
-    return [b for b in bets if b.get('strategy') == 'sd_over25_2goal'
+    return [b for b in bets if b.get('strategy') == 'over25_2goal'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('goal_diff') or 0) >= gd
             and (b.get('sot_total') or 0) >= smin
@@ -369,7 +369,7 @@ def _apply_sd_confluence(bets, cfg):
     mx = cfg.get('m_max', 70)
     smin = cfg.get('sot_total_min', 4)
     lb = cfg.get('lookback', 4)
-    return [b for b in bets if b.get('strategy') == 'sd_confluence_over25'
+    return [b for b in bets if b.get('strategy') == 'confluence_over25'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('sot_total') or 0) >= smin]
 
@@ -381,7 +381,7 @@ def _apply_sd_draw_eq(bets, cfg):
     mx = cfg.get('m_max', 85)
     omin = cfg.get('odds_min', 2.0)
     omax = cfg.get('odds_max', 15.0)
-    return [b for b in bets if b.get('strategy') == 'sd_draw_equalizer'
+    return [b for b in bets if b.get('strategy') == 'draw_equalizer'
             and mm <= (b.get('minuto') or 0) < mx
             and omin <= (b.get('back_draw_eq_odds') or 0) <= omax]
 
@@ -392,7 +392,7 @@ def _apply_sd_under25_scl(bets, cfg):
     mm = cfg.get('m_min', 64)
     mx = cfg.get('m_max', 80)
     xgmax = cfg.get('xg_max', 2.0)
-    return [b for b in bets if b.get('strategy') == 'sd_under25_scoreless'
+    return [b for b in bets if b.get('strategy') == 'under25_scoreless'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('xg_total') or 0) < xgmax]
 
@@ -406,7 +406,7 @@ def _apply_sd_under35_late(bets, cfg):
     xgmax = cfg.get('xg_max', 2.0)
     omin = cfg.get('odds_min', 1.1)
     omax = cfg.get('odds_max', 5.0)
-    return [b for b in bets if b.get('strategy') == 'sd_under35_late'
+    return [b for b in bets if b.get('strategy') == 'under35_late'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('total_goals_trigger') or 0) == gexact
             and (b.get('xg_total') or 0) < xgmax
@@ -421,7 +421,7 @@ def _apply_sd_draw_stl(bets, cfg):
     xg_res_min = cfg.get('xg_res_min', -0.5)
     omin = cfg.get('odds_min', 1.5)
     omax = cfg.get('odds_max', 10.0)
-    return [b for b in bets if b.get('strategy') == 'sd_draw_stalemate'
+    return [b for b in bets if b.get('strategy') == 'draw_stalemate'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('xg_residual') or -99) >= xg_res_min
             and omin <= (b.get('back_draw_stl_odds') or 0) <= omax]
@@ -433,7 +433,7 @@ def _apply_sd_draw_xg_conv(bets, cfg):
     mm = cfg.get('m_min', 60)
     mx = cfg.get('m_max', 80)
     xg_diff_max = cfg.get('xg_diff_max', 0.5)
-    return [b for b in bets if b.get('strategy') == 'sd_draw_xg_conv'
+    return [b for b in bets if b.get('strategy') == 'draw_xg_conv'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('xg_diff') or 99) <= xg_diff_max]
 
@@ -445,7 +445,7 @@ def _apply_sd_corner_sot(bets, cfg):
     mx = cfg.get('m_max', 75)
     smin = cfg.get('sot_min', 4)
     cmin = cfg.get('corners_min', 5)
-    return [b for b in bets if b.get('strategy') == 'sd_corner_sot_over25'
+    return [b for b in bets if b.get('strategy') == 'corner_sot_over25'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('sot_total') or 0) >= smin
             and (b.get('corners_total') or 0) >= cmin]
@@ -459,7 +459,7 @@ def _apply_sd_over25_2g_v4(bets, cfg):
     gd = cfg.get('goal_diff_min', 2)
     smin = cfg.get('sot_total_min', 3)
     xgmin = cfg.get('xg_min', 0.5)
-    return [b for b in bets if b.get('strategy') == 'sd_over25_2goal_v4'
+    return [b for b in bets if b.get('strategy') == 'over25_2goal_v4'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('goal_diff') or 0) >= gd
             and (b.get('sot_total') or 0) >= smin
@@ -472,7 +472,7 @@ def _apply_sd_over35_fh(bets, cfg):
     mm = cfg.get('m_min', 45)
     mx = cfg.get('m_max', 60)
     gmin = cfg.get('goals_min', 2)
-    return [b for b in bets if b.get('strategy') == 'sd_over35_fh_goals'
+    return [b for b in bets if b.get('strategy') == 'over35_fh_goals'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('total_goals_trigger') or 0) >= gmin]
 
@@ -483,7 +483,7 @@ def _apply_sd_over25_11(bets, cfg):
     mm = cfg.get('m_min', 50)
     mx = cfg.get('m_max', 70)
     smin = cfg.get('sot_total_min', 4)
-    return [b for b in bets if b.get('strategy') == 'sd_over25_from_11'
+    return [b for b in bets if b.get('strategy') == 'over25_from_11'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('sot_total') or 0) >= smin]
 
@@ -494,7 +494,7 @@ def _apply_sd_poss_extreme(bets, cfg):
     mm = cfg.get('m_min', 30)
     mx = cfg.get('m_max', 50)
     poss_min = cfg.get('poss_min', 58)
-    return [b for b in bets if b.get('strategy') == 'sd_poss_extreme'
+    return [b for b in bets if b.get('strategy') == 'poss_extreme'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('poss_max') or 0) >= poss_min]
 
@@ -507,7 +507,7 @@ def _apply_sd_back_longshot(bets, cfg):
     xg_min = cfg.get('xg_min', 0.2)
     omin = cfg.get('odds_min', 1.3)
     omax = cfg.get('odds_max', 8.0)
-    return [b for b in bets if b.get('strategy') == 'sd_back_longshot'
+    return [b for b in bets if b.get('strategy') == 'back_longshot'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('xg_longshot') or 0) >= xg_min
             and omin <= (b.get('back_longshot_odds') or 0) <= omax]
@@ -522,7 +522,7 @@ def _apply_sd_cs_00(bets, cfg):
     smax = cfg.get('sot_max', 3)
     omin = cfg.get('odds_min', 5.0)
     omax = cfg.get('odds_max', 12.0)
-    return [b for b in bets if b.get('strategy') == 'sd_cs_00'
+    return [b for b in bets if b.get('strategy') == 'cs_00'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('xg_total') or 0) <= xgmax
             and (b.get('sot_total') or 0) <= smax
@@ -537,7 +537,7 @@ def _apply_sd_cs_00(bets, cfg):
 def _filter_sd_over25_2goals(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_over25_2goals"]
+    return [b for b in bets if b.get("strategy") == "over25_2goals"]
 
 
 def _apply_sd_over25_2goals(bets, cfg):
@@ -546,7 +546,7 @@ def _apply_sd_over25_2goals(bets, cfg):
     mm = cfg.get('m_min', 50)
     mx = cfg.get('m_max', 60)
     omax = cfg.get('odds_max', 4.0)
-    return [b for b in bets if b.get('strategy') == 'sd_over25_2goals'
+    return [b for b in bets if b.get('strategy') == 'over25_2goals'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('back_over25_odds') or 99) <= omax]
 
@@ -555,7 +555,7 @@ def _apply_sd_over25_2goals(bets, cfg):
 def _filter_sd_lay_over25_scl(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_lay_over25_scoreless"]
+    return [b for b in bets if b.get("strategy") == "lay_over25_scoreless"]
 
 
 def _apply_sd_lay_over25_scl(bets, cfg):
@@ -564,7 +564,7 @@ def _apply_sd_lay_over25_scl(bets, cfg):
     mm = cfg.get('m_min', 60)
     mx = cfg.get('m_max', 70)
     lmax = cfg.get('lay_max', 20.0)
-    return [b for b in bets if b.get('strategy') == 'sd_lay_over25_scoreless'
+    return [b for b in bets if b.get('strategy') == 'lay_over25_scoreless'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('lay_over25_odds') or 99) <= lmax]
 
@@ -573,7 +573,7 @@ def _apply_sd_lay_over25_scl(bets, cfg):
 def _filter_sd_lay_over15_scl(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_lay_over15_scoreless"]
+    return [b for b in bets if b.get("strategy") == "lay_over15_scoreless"]
 
 
 def _apply_sd_lay_over15_scl(bets, cfg):
@@ -582,7 +582,7 @@ def _apply_sd_lay_over15_scl(bets, cfg):
     mm = cfg.get('m_min', 68)
     mx = cfg.get('m_max', 78)
     lmax = cfg.get('lay_max', 8.0)
-    return [b for b in bets if b.get('strategy') == 'sd_lay_over15_scoreless'
+    return [b for b in bets if b.get('strategy') == 'lay_over15_scoreless'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('lay_over15_odds') or 99) <= lmax]
 
@@ -591,7 +591,7 @@ def _apply_sd_lay_over15_scl(bets, cfg):
 def _filter_sd_under25_1goal(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_under25_one_goal"]
+    return [b for b in bets if b.get("strategy") == "under25_one_goal"]
 
 
 def _apply_sd_under25_1goal(bets, cfg):
@@ -601,7 +601,7 @@ def _apply_sd_under25_1goal(bets, cfg):
     mx = cfg.get('m_max', 85)
     xgmax = cfg.get('xg_max', 2.0)
     smax = cfg.get('sot_max', 6)
-    return [b for b in bets if b.get('strategy') == 'sd_under25_one_goal'
+    return [b for b in bets if b.get('strategy') == 'under25_one_goal'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('xg_total') or 0) <= xgmax
             and (b.get('sot_total') or 0) <= smax]
@@ -611,7 +611,7 @@ def _apply_sd_under25_1goal(bets, cfg):
 def _filter_sd_lay_under25_11(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_lay_under25_tied"]
+    return [b for b in bets if b.get("strategy") == "lay_under25_tied"]
 
 
 def _apply_sd_lay_under25_11(bets, cfg):
@@ -620,7 +620,7 @@ def _apply_sd_lay_under25_11(bets, cfg):
     mm = cfg.get('m_min', 55)
     mx = cfg.get('m_max', 65)
     lmax = cfg.get('lay_max', 2.5)
-    return [b for b in bets if b.get('strategy') == 'sd_lay_under25_tied'
+    return [b for b in bets if b.get('strategy') == 'lay_under25_tied'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('lay_under25_odds') or 99) <= lmax]
 
@@ -629,7 +629,7 @@ def _apply_sd_lay_under25_11(bets, cfg):
 def _filter_sd_cs_close(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_cs_close"]
+    return [b for b in bets if b.get("strategy") == "cs_close"]
 
 
 def _apply_sd_cs_close(bets, cfg):
@@ -637,7 +637,7 @@ def _apply_sd_cs_close(bets, cfg):
         return []
     mm = cfg.get('m_min', 70)
     mx = cfg.get('m_max', 80)
-    return [b for b in bets if b.get('strategy') == 'sd_cs_close'
+    return [b for b in bets if b.get('strategy') == 'cs_close'
             and mm <= (b.get('minuto') or 0) < mx]
 
 
@@ -645,7 +645,7 @@ def _apply_sd_cs_close(bets, cfg):
 def _filter_sd_cs_one_goal(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_cs_one_goal"]
+    return [b for b in bets if b.get("strategy") == "cs_one_goal"]
 
 
 def _apply_sd_cs_one_goal(bets, cfg):
@@ -653,7 +653,7 @@ def _apply_sd_cs_one_goal(bets, cfg):
         return []
     mm = cfg.get('m_min', 68)
     mx = cfg.get('m_max', 85)
-    return [b for b in bets if b.get('strategy') == 'sd_cs_one_goal'
+    return [b for b in bets if b.get('strategy') == 'cs_one_goal'
             and mm <= (b.get('minuto') or 0) < mx]
 
 
@@ -661,7 +661,7 @@ def _apply_sd_cs_one_goal(bets, cfg):
 def _filter_sd_draw_11(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_draw_11"]
+    return [b for b in bets if b.get("strategy") == "draw_11"]
 
 
 def _apply_sd_draw_11(bets, cfg):
@@ -670,7 +670,7 @@ def _apply_sd_draw_11(bets, cfg):
     mm = cfg.get('m_min', 70)
     mx = cfg.get('m_max', 85)
     omin = cfg.get('odds_min', 1.5)
-    return [b for b in bets if b.get('strategy') == 'sd_draw_11'
+    return [b for b in bets if b.get('strategy') == 'draw_11'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('back_draw_11_odds') or 0) >= omin]
 
@@ -679,7 +679,7 @@ def _apply_sd_draw_11(bets, cfg):
 def _filter_sd_ud_leading(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_ud_leading"]
+    return [b for b in bets if b.get("strategy") == "ud_leading"]
 
 
 def _apply_sd_ud_leading(bets, cfg):
@@ -689,7 +689,7 @@ def _apply_sd_ud_leading(bets, cfg):
     mx = cfg.get('m_max', 80)
     ud_pre_min = cfg.get('ud_min_pre_odds', 2.0)
     max_lead = cfg.get('max_lead', 1)
-    return [b for b in bets if b.get('strategy') == 'sd_ud_leading'
+    return [b for b in bets if b.get('strategy') == 'ud_leading'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('ud_pre_odds') or 0) >= ud_pre_min
             and (b.get('lead') or 99) <= max_lead]
@@ -699,7 +699,7 @@ def _apply_sd_ud_leading(bets, cfg):
 def _filter_sd_under35_3goals(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_under35_3goals"]
+    return [b for b in bets if b.get("strategy") == "under35_3goals"]
 
 
 def _apply_sd_under35_3goals(bets, cfg):
@@ -708,7 +708,7 @@ def _apply_sd_under35_3goals(bets, cfg):
     mm = cfg.get('m_min', 65)
     mx = cfg.get('m_max', 82)
     xgmax = cfg.get('xg_max', 99.0)
-    return [b for b in bets if b.get('strategy') == 'sd_under35_3goals'
+    return [b for b in bets if b.get('strategy') == 'under35_3goals'
             and mm <= (b.get('minuto') or 0) < mx
             and (xgmax >= 90 or (b.get('xg_total') or 0) < xgmax)]
 
@@ -717,7 +717,7 @@ def _apply_sd_under35_3goals(bets, cfg):
 def _filter_sd_away_fav_leading(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_away_fav_leading"]
+    return [b for b in bets if b.get("strategy") == "away_fav_leading"]
 
 
 def _apply_sd_away_fav_leading(bets, cfg):
@@ -727,7 +727,7 @@ def _apply_sd_away_fav_leading(bets, cfg):
     mx = cfg.get('m_max', 85)
     max_lead = cfg.get('max_lead', 1)
     odds_max = cfg.get('odds_max', 5.0)
-    return [b for b in bets if b.get('strategy') == 'sd_away_fav_leading'
+    return [b for b in bets if b.get('strategy') == 'away_fav_leading'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('lead') or 99) <= max_lead
             and (b.get('back_away_odds') or 99) <= odds_max]
@@ -737,7 +737,7 @@ def _apply_sd_away_fav_leading(bets, cfg):
 def _filter_sd_home_fav_leading(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_home_fav_leading"]
+    return [b for b in bets if b.get("strategy") == "home_fav_leading"]
 
 
 def _apply_sd_home_fav_leading(bets, cfg):
@@ -747,7 +747,7 @@ def _apply_sd_home_fav_leading(bets, cfg):
     mx = cfg.get('m_max', 85)
     max_lead = cfg.get('max_lead', 3)
     fav_max = cfg.get('fav_max', 2.5)
-    return [b for b in bets if b.get('strategy') == 'sd_home_fav_leading'
+    return [b for b in bets if b.get('strategy') == 'home_fav_leading'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('lead') or 99) <= max_lead
             and (b.get('home_pre_odds') or 99) <= fav_max]
@@ -757,7 +757,7 @@ def _apply_sd_home_fav_leading(bets, cfg):
 def _filter_sd_under45_3goals(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_under45_3goals"]
+    return [b for b in bets if b.get("strategy") == "under45_3goals"]
 
 
 def _apply_sd_under45_3goals(bets, cfg):
@@ -766,7 +766,7 @@ def _apply_sd_under45_3goals(bets, cfg):
     mm = cfg.get('m_min', 65)
     mx = cfg.get('m_max', 85)
     xgmax = cfg.get('xg_max', 2.0)
-    return [b for b in bets if b.get('strategy') == 'sd_under45_3goals'
+    return [b for b in bets if b.get('strategy') == 'under45_3goals'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('xg_total') or 0) < xgmax]
 
@@ -775,7 +775,7 @@ def _apply_sd_under45_3goals(bets, cfg):
 def _filter_sd_cs_11(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_cs_11"]
+    return [b for b in bets if b.get("strategy") == "cs_11"]
 
 
 def _apply_sd_cs_11(bets, cfg):
@@ -784,7 +784,7 @@ def _apply_sd_cs_11(bets, cfg):
     mm = cfg.get('m_min', 75)
     mx = cfg.get('m_max', 90)
     odds_max = cfg.get('odds_max', 8.0)
-    return [b for b in bets if b.get('strategy') == 'sd_cs_11'
+    return [b for b in bets if b.get('strategy') == 'cs_11'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('back_cs_odds') or 99) <= odds_max]
 
@@ -793,7 +793,7 @@ def _apply_sd_cs_11(bets, cfg):
 def _filter_sd_cs_20(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_cs_20"]
+    return [b for b in bets if b.get("strategy") == "cs_20"]
 
 
 def _apply_sd_cs_20(bets, cfg):
@@ -802,7 +802,7 @@ def _apply_sd_cs_20(bets, cfg):
     mm = cfg.get('m_min', 75)
     mx = cfg.get('m_max', 90)
     odds_max = cfg.get('odds_max', 10.0)
-    return [b for b in bets if b.get('strategy') == 'sd_cs_20'
+    return [b for b in bets if b.get('strategy') == 'cs_20'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('back_cs_odds') or 99) <= odds_max]
 
@@ -811,7 +811,7 @@ def _apply_sd_cs_20(bets, cfg):
 def _filter_sd_cs_big_lead(bets, v):
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_cs_big_lead"]
+    return [b for b in bets if b.get("strategy") == "cs_big_lead"]
 
 
 def _apply_sd_cs_big_lead(bets, cfg):
@@ -820,6 +820,6 @@ def _apply_sd_cs_big_lead(bets, cfg):
     mm = cfg.get('m_min', 70)
     mx = cfg.get('m_max', 85)
     odds_max = cfg.get('odds_max', 8.0)
-    return [b for b in bets if b.get('strategy') == 'sd_cs_big_lead'
+    return [b for b in bets if b.get('strategy') == 'cs_big_lead'
             and mm <= (b.get('minuto') or 0) < mx
             and (b.get('back_cs_odds') or 99) <= odds_max]

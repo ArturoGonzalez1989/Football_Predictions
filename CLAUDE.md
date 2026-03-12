@@ -84,8 +84,8 @@ betfair_scraper/
       components/        → 19 componentes React (Dashboard, BettingSignalsView, etc.)
 
 auxiliar/                     → Archivos auxiliares de analisis (tracked en git)
-  sd_generators.py       → 19 generadores SD (wrappers sobre triggers de csv_reader)
-  sd_filters.py          → Filtros realistas SD
+  sd_generators.py       → Generadores auxiliares para las 19 estrategias adicionales (wrappers sobre triggers de csv_reader, usados en notebooks)
+  sd_filters.py          → Filtros auxiliares para las 19 estrategias adicionales
   compare_bt_live.py     → Comparacion rendimiento BT vs LIVE
   data_quality_analysis.py → Analisis calidad datos
   data_quality_deep.py   → Analisis profundo calidad datos
@@ -100,7 +100,7 @@ analisis/                → 2 notebooks (strategies_designer + reconcile_bt_liv
 borrar/                  → Archivos movidos durante limpieza (red de seguridad)
 ```
 
-## 7 Estrategias Core (cartera_config.json)
+## 7 Estrategias Base (cartera_config.json)
 
 Estrategias de produccion con deteccion live + backtest. Configuradas en `cartera_config.json`. Solo las que pasan quality gates (N minimo, ROI >= 10%, IC95_lower >= 40%) se activan.
 
@@ -114,11 +114,11 @@ Estrategias de produccion con deteccion live + backtest. Configuradas en `carter
 | Momentum xG | momentum_xg | Depende de datos (2 versiones: v1/v2) |
 | Tarde Asia | tarde_asia | Inactiva (solo tracking backtest) |
 
-## 19 Estrategias SD (backtest + live)
+## 19 Estrategias Adicionales (backtest + live)
 
-Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). Tienen entradas en `cartera_config.json` para sus parametros. **Tienen deteccion live** via `detect_betting_signals()` cuando `enabled: true` en config.
+Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). Tienen entradas en `cartera_config.json` para sus parametros. **Tienen deteccion live** via `detect_betting_signals()` cuando `enabled: true` en config. **Incluidas en BT** via `_analyze_strategy_simple()` dentro de `analyze_cartera()`.
 
-Configs en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores en `auxiliar/sd_generators.py` (wrappers sobre triggers de csv_reader), filtros en `auxiliar/sd_filters.py`.
+Configs de evaluacion en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores auxiliares en `auxiliar/sd_generators.py` (wrappers sobre triggers de csv_reader), filtros auxiliares en `auxiliar/sd_filters.py`.
 
 ## Quality Gates (aplicados a TODAS las estrategias)
 
@@ -149,7 +149,7 @@ Los presets se computan offline via `optimizer_cli.py` o el notebook `strategies
 
 ## Alineamiento BT↔LIVE (completado 2026-03-11)
 
-Las **26 estrategias** (7 core + 19 SD) usan **helpers compartidos** (GR8/GR9 compliant). BT y LIVE ejecutan el mismo codigo de deteccion.
+Las **26 estrategias** (7 base + 19 adicionales) usan **helpers compartidos** (GR8/GR9 compliant). BT y LIVE ejecutan el mismo codigo de deteccion. Todas las estrategias son entidades independientes sin distincion de origen.
 
 ### Arquitectura de helpers compartidos
 
@@ -158,7 +158,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 - **LIVE** llama con `curr_idx=len(rows)-1` (ultima fila)
 - Solo mira `rows[:curr_idx+1]` — nunca filas futuras
 
-**7 triggers core:**
+**7 triggers base:**
 
 | Helper | Estrategia |
 |--------|-----------|
@@ -170,7 +170,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 | `_detect_momentum_xg_trigger` | Momentum xG |
 | `_detect_tardesia_trigger` | Tarde Asia |
 
-**19 triggers SD** (en csv_reader.py, usados por LIVE loop y por `auxiliar/sd_generators.py`):
+**19 triggers adicionales** (en csv_reader.py, usados por LIVE loop, `analyze_cartera()` BT, y por `auxiliar/sd_generators.py`):
 `_detect_over25_2goal_trigger`, `_detect_under35_late_trigger`, `_detect_lay_over45_v3_trigger`,
 `_detect_draw_xg_conv_trigger`, `_detect_poss_extreme_trigger`, `_detect_longshot_trigger`,
 `_detect_cs_00_trigger`, `_detect_over25_2goals_trigger`, `_detect_cs_close_trigger`,
@@ -197,7 +197,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 ## Problemas conocidos
 
 1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
-2. **Cache key incompleto**: analyze_cartera() cache solo por min_duration. Correcto para patron actual pero fragil si se mueven filtros al backend.
+2. **Cache key parcial**: analyze_cartera() cache incluye min_duration + enabled states de las 19 estrategias adicionales. Cambios de parametros config distintos de enabled/min_duration requieren invalidacion manual (limpiar _result_cache).
 3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
 
 ## Limpieza 2026-03-08

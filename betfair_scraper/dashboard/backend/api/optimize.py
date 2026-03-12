@@ -98,8 +98,8 @@ BR_OPTS           = ["fixed", "half_kelly", "dd_protection", "anti_racha"]
 RISK_OPTS         = ["all", "no_risk", "with_risk", "medium"]
 
 # ── SD (Strategy Designer) PARAMS + OPTS ─────────────────────────────────────
-# 19 new strategies from sd_strategy_tracker.  Generators in aux/sd_generators.py,
-# filters in aux/sd_filters.py.  Here we add the versioned PARAMS + OPTS for
+# 19 new strategies from sd_strategy_tracker.  Generators in auxiliar/sd_generators.py,
+# filters in auxiliar/sd_filters.py.  Here we add the versioned PARAMS + OPTS for
 # Phase 1, plus on/off toggles for the simpler strategies.
 
 SD_LAY_O45_PARAMS: Dict[str, Dict] = {
@@ -500,7 +500,7 @@ def _filter_lay_false_fav(bets: List[Dict], v: str) -> List[Dict]:
     return result
 
 
-# ── SD filter functions (mirrors aux/sd_filters.py) ───────────────────────────
+# ── SD filter functions (mirrors auxiliar/sd_filters.py) ───────────────────────────
 # These are available for future integration into the optimizer or for ad-hoc use.
 # Currently NOT called from _phase1_worker (see note above _PHASE1_TOTAL).
 
@@ -510,7 +510,7 @@ def _filter_sd_lay_over45(bets: List[Dict], v: str) -> List[Dict]:
     p = SD_LAY_O45_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "sd_lay_over45":
+        if b.get("strategy") != "lay_over45":
             continue
         mn = _fv(b, "minuto")
         if mn is not None and mn < p["min_min"]:
@@ -537,7 +537,7 @@ def _filter_sd_leader_dom(bets: List[Dict], v: str) -> List[Dict]:
     p = SD_LEADER_DOM_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "sd_back_leader_dom":
+        if b.get("strategy") != "back_leader_dom":
             continue
         mn = _fv(b, "minuto")
         if mn is not None and mn < p["min_min"]:
@@ -560,7 +560,7 @@ def _filter_sd_over25_2goal(bets: List[Dict], v: str) -> List[Dict]:
     p = SD_OVER25_2G_PARAMS[v]
     result = []
     for b in bets:
-        if b.get("strategy") != "sd_over25_2goal":
+        if b.get("strategy") != "over25_2goal":
             continue
         mn = _fv(b, "minuto")
         if mn is not None and mn < p["min_min"]:
@@ -590,79 +590,79 @@ def _filter_sd_over25_2goal(bets: List[Dict], v: str) -> List[Dict]:
 def _filter_sd_confluence(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_confluence_over25"]
+    return [b for b in bets if b.get("strategy") == "confluence_over25"]
 
 
 def _filter_sd_draw_eq(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_draw_equalizer"]
+    return [b for b in bets if b.get("strategy") == "draw_equalizer"]
 
 
 def _filter_sd_under25_scl(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_under25_scoreless"]
+    return [b for b in bets if b.get("strategy") == "under25_scoreless"]
 
 
 def _filter_sd_under35_late(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_under35_late"]
+    return [b for b in bets if b.get("strategy") == "under35_late"]
 
 
 def _filter_sd_draw_stl(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_draw_stalemate"]
+    return [b for b in bets if b.get("strategy") == "draw_stalemate"]
 
 
 def _filter_sd_draw_xg_conv(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_draw_xg_conv"]
+    return [b for b in bets if b.get("strategy") == "draw_xg_conv"]
 
 
 def _filter_sd_corner_sot(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_corner_sot_over25"]
+    return [b for b in bets if b.get("strategy") == "corner_sot_over25"]
 
 
 def _filter_sd_over25_2g_v4(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_over25_2goal_v4"]
+    return [b for b in bets if b.get("strategy") == "over25_2goal_v4"]
 
 
 def _filter_sd_over35_fh(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_over35_fh_goals"]
+    return [b for b in bets if b.get("strategy") == "over35_fh_goals"]
 
 
 def _filter_sd_over25_11(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_over25_from_11"]
+    return [b for b in bets if b.get("strategy") == "over25_from_11"]
 
 
 def _filter_sd_poss_extreme(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_poss_extreme"]
+    return [b for b in bets if b.get("strategy") == "poss_extreme"]
 
 
 def _filter_sd_back_longshot(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_back_longshot"]
+    return [b for b in bets if b.get("strategy") == "back_longshot"]
 
 
 def _filter_sd_cs_00(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    return [b for b in bets if b.get("strategy") == "sd_cs_00"]
+    return [b for b in bets if b.get("strategy") == "cs_00"]
 
 
 def _filter_by_risk(bets: List[Dict], risk: str) -> List[Dict]:

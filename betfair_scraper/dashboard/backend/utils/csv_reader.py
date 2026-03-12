@@ -107,104 +107,197 @@ def _sd_team(home_field: str, away_field: str, team_field: str,
     return _ex
 
 
-# Registry for SD live detection — one entry per strategy, evaluated in order.
-# Each entry: key, display name, trigger fn, description, extractor fn.
-_SD_LIVE_REGISTRY = [
-    ("sd_over25_2goal",    "SD BACK O2.5 2-Goal Lead",
+def _match_score(trigger_score: str, ft_gl: int, ft_gv: int) -> bool:
+    """Check if FT score matches trigger_score string (e.g. '2-1')."""
+    try:
+        tgl, tgv = (int(x) for x in trigger_score.split("-"))
+        return ft_gl == tgl and ft_gv == tgv
+    except Exception:
+        return False
+
+
+# Registry of strategies using the simple trigger+extract pattern.
+# Each entry: key, display name, trigger fn, description, extractor fn, win fn.
+# win_fn(trig_dict, ft_gl, ft_gv) -> bool used for BT; ignored in LIVE.
+_STRATEGY_REGISTRY = [
+    ("over25_2goal",    "BACK O2.5 2-Goal Lead",
      _detect_over25_2goal_trigger,
      "Back Over 2.5 when a team leads by 2+ goals with SoT activity",
-     _sd_fixed("back_over25", "BACK OVER 2.5", ["goal_diff", "sot_total"])),
+     _sd_fixed("back_over25", "BACK OVER 2.5", ["goal_diff", "sot_total"]),
+     lambda t, gl, gv: (gl + gv) >= 3),
 
-    ("sd_under35_late",    "SD BACK U3.5 Late",
+    ("under35_late",    "BACK U3.5 Late",
      _detect_under35_late_trigger,
      "Back Under 3.5 when exactly 3 goals scored and xG is low",
-     _sd_fixed("back_under35", "BACK UNDER 3.5", ["total_goals_trigger", "xg_total"])),
+     _sd_fixed("back_under35", "BACK UNDER 3.5", ["total_goals_trigger", "xg_total"]),
+     lambda t, gl, gv: (gl + gv) <= 3),
 
-    ("sd_longshot",        "SD BACK Longshot Leading",
+    ("longshot",        "BACK Longshot Leading",
      _detect_longshot_trigger,
      "Back the pre-match longshot when they are leading late",
-     _sd_team("back_home", "back_away", "longshot_team", "BACK", ["longshot_team", "xg_longshot"])),
+     _sd_team("back_home", "back_away", "longshot_team", "BACK", ["longshot_team", "xg_longshot"]),
+     lambda t, gl, gv: (gl > gv) if t.get("longshot_team") == "local" else (gv > gl)),
 
-    ("sd_cs_close",        "SD BACK CS Close",
+    ("cs_close",        "BACK CS Close",
      _detect_cs_close_trigger,
      "Back current Correct Score at close game (2-1 / 1-2)",
-     _sd_score("BACK CS", ["score"])),
+     _sd_score("BACK CS", ["score"]),
+     lambda t, gl, gv: _match_score(t.get("trigger_score", ""), gl, gv)),
 
-    ("sd_cs_one_goal",     "SD BACK CS One-Goal",
+    ("cs_one_goal",     "BACK CS One-Goal",
      _detect_cs_one_goal_trigger,
      "Back current Correct Score at 1-0 / 0-1",
-     _sd_score("BACK CS", ["score"])),
+     _sd_score("BACK CS", ["score"]),
+     lambda t, gl, gv: _match_score(t.get("trigger_score", ""), gl, gv)),
 
-    ("sd_ud_leading",      "SD BACK Underdog Leading",
+    ("ud_leading",      "BACK Underdog Leading",
      _detect_ud_leading_trigger,
      "Back the underdog when they are leading late",
-     _sd_team("back_home", "back_away", "ud_team", "BACK", ["ud_team", "ud_pre_odds"])),
+     _sd_team("back_home", "back_away", "ud_team", "BACK", ["ud_team", "ud_pre_odds"]),
+     lambda t, gl, gv: (gl > gv) if t.get("ud_team") == "local" else (gv > gl)),
 
-    ("sd_home_fav_leading","SD BACK Home Fav Leading",
+    ("home_fav_leading","BACK Home Fav Leading",
      _detect_home_fav_leading_trigger,
      "Back home favourite when leading late",
-     _sd_fixed("back_home", "BACK HOME", ["home_pre_odds", "lead"])),
+     _sd_fixed("back_home", "BACK HOME", ["home_pre_odds", "lead"]),
+     lambda t, gl, gv: gl > gv),
 
-    ("sd_cs_20",           "SD BACK CS 2-0/0-2",
+    ("cs_20",           "BACK CS 2-0/0-2",
      _detect_cs_20_trigger,
      "Back current Correct Score at 2-0 / 0-2",
-     _sd_score("BACK CS", ["score"])),
+     _sd_score("BACK CS", ["score"]),
+     lambda t, gl, gv: _match_score(t.get("trigger_score", ""), gl, gv)),
 
-    ("sd_cs_big_lead",     "SD BACK CS Big Lead",
+    ("cs_big_lead",     "BACK CS Big Lead",
      _detect_cs_big_lead_trigger,
      "Back current Correct Score at big lead (3-0/0-3/3-1/1-3)",
-     _sd_score("BACK CS", ["score"])),
+     _sd_score("BACK CS", ["score"]),
+     lambda t, gl, gv: _match_score(t.get("trigger_score", ""), gl, gv)),
 
-    ("sd_lay_over45_v3",   "SD LAY Over 4.5 V3",
+    ("lay_over45_v3",   "LAY Over 4.5 V3",
      _detect_lay_over45_v3_trigger,
      "Lay Over 4.5 tight: goals<=1, tight minute window",
-     _sd_fixed("lay_over45", "LAY OVER 4.5", ["total_goals_trigger"])),
+     _sd_fixed("lay_over45", "LAY OVER 4.5", ["total_goals_trigger"]),
+     lambda t, gl, gv: (gl + gv) <= 4),
 
-    ("sd_draw_xg_conv",    "SD BACK Draw xG Convergence",
+    ("draw_xg_conv",    "BACK Draw xG Convergence",
      _detect_draw_xg_conv_trigger,
      "Back Draw when xG converges in tied match",
-     _sd_fixed("back_draw", "BACK DRAW", ["xg_diff", "score_at_trigger"])),
+     _sd_fixed("back_draw", "BACK DRAW", ["xg_diff", "score_at_trigger"]),
+     lambda t, gl, gv: gl == gv),
 
-    ("sd_poss_extreme",    "SD BACK Over 0.5 Poss Extreme",
+    ("poss_extreme",    "BACK Over 0.5 Poss Extreme",
      _detect_poss_extreme_trigger,
      "Back Over 0.5 when possession is extremely one-sided at 0-0",
-     _sd_fixed("back_over05", "BACK OVER 0.5", ["poss_max"])),
+     _sd_fixed("back_over05", "BACK OVER 0.5", ["poss_max"]),
+     lambda t, gl, gv: (gl + gv) >= 1),
 
-    ("sd_cs_00",           "SD BACK CS 0-0 Early",
+    ("cs_00",           "BACK CS 0-0 Early",
      _detect_cs_00_trigger,
      "Back CS 0-0 in early window with low xG and SoT",
-     _sd_fixed("back_rc_0_0", "BACK CS 0-0", ["xg_total", "sot_total"])),
+     _sd_fixed("back_rc_0_0", "BACK CS 0-0", ["xg_total", "sot_total"]),
+     lambda t, gl, gv: gl == 0 and gv == 0),
 
-    ("sd_over25_2goals",   "SD BACK O2.5 Two Goals",
+    ("over25_2goals",   "BACK O2.5 Two Goals",
      _detect_over25_2goals_trigger,
      "Back Over 2.5 when exactly 2 goals scored in stable row",
-     _sd_fixed("back_over25", "BACK OVER 2.5", ["total_goals_trigger"])),
+     _sd_fixed("back_over25", "BACK OVER 2.5", ["total_goals_trigger"]),
+     lambda t, gl, gv: (gl + gv) >= 3),
 
-    ("sd_draw_11",         "SD BACK Draw 1-1",
+    ("draw_11",         "BACK Draw 1-1",
      _detect_draw_11_trigger,
      "Back Draw when score is exactly 1-1 late",
-     _sd_fixed("back_draw", "BACK DRAW", [])),
+     _sd_fixed("back_draw", "BACK DRAW", []),
+     lambda t, gl, gv: gl == gv),
 
-    ("sd_under35_3goals",  "SD BACK U3.5 3-Goal Lid",
+    ("under35_3goals",  "BACK U3.5 3-Goal Lid",
      _detect_under35_3goals_trigger,
      "Back Under 3.5 when exactly 3 goals and low xG",
-     _sd_fixed("back_under35", "BACK UNDER 3.5", ["xg_total"])),
+     _sd_fixed("back_under35", "BACK UNDER 3.5", ["xg_total"]),
+     lambda t, gl, gv: (gl + gv) <= 3),
 
-    ("sd_away_fav_leading","SD BACK Away Fav Leading",
+    ("away_fav_leading","BACK Away Fav Leading",
      _detect_away_fav_leading_trigger,
      "Back away favourite when leading late",
-     _sd_fixed("back_away", "BACK AWAY", ["away_pre_odds", "lead"])),
+     _sd_fixed("back_away", "BACK AWAY", ["away_pre_odds", "lead"]),
+     lambda t, gl, gv: gv > gl),
 
-    ("sd_under45_3goals",  "SD BACK U4.5 3-Goals Low xG",
+    ("under45_3goals",  "BACK U4.5 3-Goals Low xG",
      _detect_under45_3goals_trigger,
      "Back Under 4.5 when exactly 3 goals and xG < threshold",
-     _sd_fixed("back_under45", "BACK UNDER 4.5", ["xg_total"])),
+     _sd_fixed("back_under45", "BACK UNDER 4.5", ["xg_total"]),
+     lambda t, gl, gv: (gl + gv) <= 4),
 
-    ("sd_cs_11",           "SD BACK CS 1-1 Late",
+    ("cs_11",           "BACK CS 1-1 Late",
      _detect_cs_11_trigger,
      "Back CS 1-1 late in the game",
-     _sd_fixed("back_rc_1_1", "BACK CS 1-1", [])),
+     _sd_fixed("back_rc_1_1", "BACK CS 1-1", []),
+     lambda t, gl, gv: gl == 1 and gv == 1),
 ]
+
+_STRATEGY_REGISTRY_KEYS = {e[0] for e in _STRATEGY_REGISTRY}
+
+
+def _analyze_strategy_simple(key: str, trigger_fn, extractor_fn, win_fn,
+                              cfg: dict, min_dur: int) -> list:
+    """Generic BT runner for registry-based strategies.
+
+    Iterates all finished matches, applies trigger_fn with min_dur persistence,
+    extracts odds via extractor_fn, and evaluates win_fn against FT score.
+    """
+    finished = _get_all_finished_matches()
+    bets = []
+    for match_data in finished:
+        rows = match_data.get("rows") or _read_csv_rows(match_data["csv_path"])
+        if not rows:
+            continue
+        match_id = match_data["match_id"]
+        last = rows[-1]
+        try:
+            ft_gl = int(float(last.get("goles_local") or ""))
+            ft_gv = int(float(last.get("goles_visitante") or ""))
+        except (ValueError, TypeError):
+            continue
+
+        first_seen = None
+        trig_data = None
+        for curr_idx in range(len(rows)):
+            trig = trigger_fn(rows, curr_idx, cfg)
+            if trig:
+                if first_seen is None:
+                    first_seen = curr_idx
+                    trig_data = trig
+                if curr_idx >= first_seen + min_dur - 1:
+                    extracted = extractor_fn(trig_data)
+                    if extracted is None:
+                        break
+                    odds, rec, entry_cond = extracted
+                    won = win_fn(trig_data, ft_gl, ft_gv)
+                    is_lay = rec.upper().startswith("LAY")
+                    if is_lay:
+                        pl = round(0.95 if won else -(odds - 1), 2)
+                    else:
+                        pl = round((odds - 1) * 0.95 if won else -1.0, 2)
+                    try:
+                        minuto = int(float(rows[first_seen].get("minuto") or 0))
+                    except (ValueError, TypeError):
+                        minuto = 0
+                    bets.append({
+                        "match_id": match_id,
+                        "strategy": key,
+                        "minuto": minuto,
+                        "back_odds": round(odds, 2),
+                        "won": won,
+                        "pl": pl,
+                        "País": rows[first_seen].get("País", "Desconocido"),
+                        "Liga": rows[first_seen].get("Liga", "Desconocida"),
+                        "timestamp_utc": rows[first_seen].get("timestamp_utc", ""),
+                    })
+                    break
+            else:
+                first_seen = None
+                trig_data = None
+    return bets
 
 
 @_cached_result("quality_distribution")
@@ -1137,8 +1230,9 @@ def analyze_cartera() -> dict:
     cfg = _load_config()
     md = cfg.get("min_duration", {})
 
-    # Manual cache key including min_duration values
-    cache_key = f"cartera_{_json.dumps(md, sort_keys=True)}"
+    # Manual cache key including min_duration values and registry strategy enabled states
+    _reg_enabled = {e[0]: cfg.get("strategies", {}).get(e[0], {}).get("enabled", False) for e in _STRATEGY_REGISTRY}
+    cache_key = f"cartera_{_json.dumps(md, sort_keys=True)}_{_json.dumps(_reg_enabled, sort_keys=True)}"
     if cache_key in _result_cache:
         return _result_cache[cache_key]
 
@@ -1168,6 +1262,15 @@ def analyze_cartera() -> dict:
         all_bets.append({**b, "strategy": "momentum_xg_v1", "strategy_label": "Momentum x xG V1"})
     for b in momentum_xg_v2_data.get("bets", []):
         all_bets.append({**b, "strategy": "momentum_xg_v2", "strategy_label": "Momentum x xG V2"})
+
+    # Add registry strategies to BT
+    _reg_cfg = cfg.get("strategies", {})
+    for (_key, _name, _trigger_fn, _desc, _extract_fn, _win_fn) in _STRATEGY_REGISTRY:
+        _s_cfg = _reg_cfg.get(_key, {})
+        _min_dur = md.get(_key, 1)
+        _s_bets = _analyze_strategy_simple(_key, _trigger_fn, _extract_fn, _win_fn, _s_cfg, _min_dur)
+        for b in _s_bets:
+            all_bets.append({**b, "strategy_label": _name})
 
     all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))
 
@@ -1231,6 +1334,7 @@ def analyze_cartera() -> dict:
             "pressure_cooker": _strat_summary([b for b in all_bets if b["strategy"] == "pressure_cooker"]),
             "tarde_asia": _strat_summary([b for b in all_bets if b["strategy"] == "tarde_asia"]),
             "momentum_xg": _strat_summary([b for b in all_bets if b["strategy"] in ("momentum_xg_v1", "momentum_xg_v2")]),
+            **{_key: _strat_summary([b for b in all_bets if b["strategy"] == _key]) for _key, *_ in _STRATEGY_REGISTRY},
         },
         "bets": all_bets,
     }
@@ -2837,11 +2941,10 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                             _log_signal_to_csv(signal)
                             _register_outcome(match_id, signal["recommendation"], match_outcomes)
 
-        # === SD STRATEGIES (from strategy-designer agent) ===
-        # Each SD strategy is a one-shot trigger: check current state, emit signal if conditions met.
-        # Config lives in cartera_config.json under strategies.sd_*
-        # SD strategies use versions dict keys: sd_<name>_enabled, sd_<name>_m_min, etc.
-        sd_configs = versions.get("_sd_configs", {})
+        # === REGISTRY STRATEGIES (trigger-based, one-shot detection) ===
+        # Each strategy is a one-shot trigger: check current state, emit signal if conditions met.
+        # Config lives in cartera_config.json under strategies.<key>
+        strategy_configs = versions.get("_strategy_configs", {})
         _gl = int(goles_local)
         _gv = int(goles_visitante)
         _total_goals = _gl + _gv
@@ -2882,19 +2985,19 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     _log_signal_to_csv(sig)
                     _register_outcome(match_id, sig["recommendation"], match_outcomes)
 
-        # --- SD strategies: loop over registry (replaces 19 identical if-blocks) ---
-        for (_sd_key, _sd_name, _sd_fn, _sd_desc, _sd_extract) in _SD_LIVE_REGISTRY:
-            _sd_cfg = sd_configs.get(_sd_key, {})
-            if not (_sd_cfg.get("enabled") and goals_data_ok):
+        # --- Registry strategies: loop (replaces 19 identical if-blocks) ---
+        for (_key, _name, _fn, _desc, _extract, _win_fn) in _STRATEGY_REGISTRY:
+            _cfg_entry = strategy_configs.get(_key, {})
+            if not (_cfg_entry.get("enabled") and goals_data_ok):
                 continue
-            _trig = _sd_fn(rows, len(rows) - 1, _sd_cfg)
+            _trig = _fn(rows, len(rows) - 1, _cfg_entry)
             if not _trig:
                 continue
-            _extracted = _sd_extract(_trig)
+            _extracted = _extract(_trig)
             if _extracted is None:
                 continue
             _odds_val, _rec_str, _entry_cond = _extracted
-            _sd_signal(_sd_key, _sd_name, _rec_str, _odds_val, _sd_desc, _entry_cond)
+            _sd_signal(_key, _name, _rec_str, _odds_val, _desc, _entry_cond)
 
     # --- Enrich signals with age and maturity info ---
     _now = datetime.utcnow()

@@ -8,7 +8,7 @@ Each generator returns a list of bet dicts with fields:
   risk_level, <strategy-specific fields like odds, xg, etc.>
 
 Usage (from notebook):
-    from aux.sd_generators import generate_all_new_bets
+    from auxiliar.sd_generators import generate_all_new_bets
     _NEW_BETS = generate_all_new_bets(data_dir)
 """
 import csv
@@ -160,7 +160,7 @@ def gen_lay_over45(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -(odds - 1)
         bets.append(_make_bet(
-            'sd_lay_over45', match_id, row, won, pl_val, 'lay', odds,
+            'lay_over45', match_id, row, won, pl_val, 'lay', odds,
             {'lay_over45_odds': odds, 'total_goals_trigger': total_now,
              'xg_total': (_safe_float(row.get('xg_local')) or 0) + (_safe_float(row.get('xg_visitante')) or 0)}
         ))
@@ -226,7 +226,7 @@ def gen_back_leader_dom(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_back_leader_dom', match_id, row, won, pl_val, 'back', odds,
+            'back_leader_dom', match_id, row, won, pl_val, 'back', odds,
             {'back_leader_odds': odds, 'leader_sot': leader_sot,
              'rival_sot': rival_sot, 'backed_team': leader,
              'goal_diff': abs(gl - gv)}
@@ -251,7 +251,7 @@ def gen_over25_2goal(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft >= 3
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_over25_2goal', match_id, rows[idx], won, pl_val, 'back', odds,
+            'over25_2goal', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_over25_odds': odds, 'sot_total': r['sot_total'],
              'goal_diff': r['goal_diff'], 'total_goals_trigger': r['total_goals_trigger']}
         )]
@@ -320,7 +320,7 @@ def gen_confluence_over25(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_confluence_over25', match_id, row, won, pl_val, 'back', odds,
+            'confluence_over25', match_id, row, won, pl_val, 'back', odds,
             {'back_over25_odds': odds, 'sot_total': sot_total,
              'total_goals_trigger': total_now, 'recent_goal_lookback': lookback}
         ))
@@ -381,7 +381,7 @@ def gen_draw_equalizer(rows: List[Dict], match_id: str) -> List[Dict]:
             won = (ft_gl == ft_gv)
             pl_val = (odds - 1) * 0.95 if won else -1.0
             bets.append(_make_bet(
-                'sd_draw_equalizer', match_id, row, won, pl_val, 'back', odds,
+                'draw_equalizer', match_id, row, won, pl_val, 'back', odds,
                 {'back_draw_eq_odds': odds, 'eq_minute': m,
                  'score_at_eq': f'{gl}-{gv}'}
             ))
@@ -431,7 +431,7 @@ def gen_under25_scoreless(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_under25_scoreless', match_id, row, won, pl_val, 'back', odds,
+            'under25_scoreless', match_id, row, won, pl_val, 'back', odds,
             {'back_under25_odds': odds, 'xg_total': xg_total}
         ))
     return bets
@@ -454,7 +454,7 @@ def gen_under35_late(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft <= 3
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_under35_late', match_id, rows[idx], won, pl_val, 'back', odds,
+            'under35_late', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_under35_odds': odds, 'xg_total': r['xg_total'],
              'total_goals_trigger': r['total_goals_trigger']}
         )]
@@ -511,7 +511,7 @@ def gen_draw_stalemate(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_draw_stalemate', match_id, row, won, pl_val, 'back', odds,
+            'draw_stalemate', match_id, row, won, pl_val, 'back', odds,
             {'back_draw_stl_odds': odds, 'xg_total': xg_total,
              'xg_residual': round(xg_residual, 2), 'score_at_trigger': f'{gl}-{gv}'}
         ))
@@ -535,7 +535,7 @@ def gen_lay_over45_v3(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft <= 4
         pl_val = 0.95 if won else -(odds - 1)
         return [_make_bet(
-            'sd_lay_over45_v3', match_id, rows[idx], won, pl_val, 'lay', odds,
+            'lay_over45_v3', match_id, rows[idx], won, pl_val, 'lay', odds,
             {'lay_over45_odds': odds, 'total_goals_trigger': r['total_goals_trigger']}
         )]
     return []
@@ -582,7 +582,7 @@ def gen_lay_over45_v2v4(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -(odds - 1)
         bets.append(_make_bet(
-            'sd_lay_over45_v2v4', match_id, row, won, pl_val, 'lay', odds,
+            'lay_over45_v2v4', match_id, row, won, pl_val, 'lay', odds,
             {'lay_over45_odds': odds, 'total_goals_trigger': total_now,
              'xg_total': xg_total}
         ))
@@ -627,7 +627,7 @@ def gen_lay_over45_late(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -(odds - 1)
         bets.append(_make_bet(
-            'sd_lay_over45_late', match_id, row, won, pl_val, 'lay', odds,
+            'lay_over45_late', match_id, row, won, pl_val, 'lay', odds,
             {'lay_over45_odds': odds, 'total_goals_trigger': total_now}
         ))
     return bets
@@ -650,7 +650,7 @@ def gen_draw_xg_convergence(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == ft_gv)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_draw_xg_conv', match_id, rows[idx], won, pl_val, 'back', odds,
+            'draw_xg_conv', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_draw_conv_odds': odds, 'xg_diff': r['xg_diff'],
              'xg_total': r['xg_total'], 'score_at_trigger': r['score_at_trigger']}
         )]
@@ -703,7 +703,7 @@ def gen_corner_sot_over25(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_corner_sot_over25', match_id, row, won, pl_val, 'back', odds,
+            'corner_sot_over25', match_id, row, won, pl_val, 'back', odds,
             {'back_over25_odds': odds, 'sot_total': sot_total,
              'corners_total': crn_total, 'total_goals_trigger': total_now}
         ))
@@ -762,7 +762,7 @@ def gen_over25_2goal_v4(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_over25_2goal_v4', match_id, row, won, pl_val, 'back', odds,
+            'over25_2goal_v4', match_id, row, won, pl_val, 'back', odds,
             {'back_over25_odds': odds, 'sot_total': sot_total,
              'goal_diff': goal_diff, 'xg_total': xg_total,
              'total_goals_trigger': gl + gv}
@@ -808,7 +808,7 @@ def gen_over35_fh_goals(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_over35_fh_goals', match_id, row, won, pl_val, 'back', odds,
+            'over35_fh_goals', match_id, row, won, pl_val, 'back', odds,
             {'back_over35_odds': odds, 'total_goals_trigger': total_now}
         ))
     return bets
@@ -862,7 +862,7 @@ def gen_over25_from_11(rows: List[Dict], match_id: str) -> List[Dict]:
         else:
             pl_val = -1.0
         bets.append(_make_bet(
-            'sd_over25_from_11', match_id, row, won, pl_val, 'back', odds,
+            'over25_from_11', match_id, row, won, pl_val, 'back', odds,
             {'back_over25_odds': odds, 'sot_total': sot_total,
              'total_goals_trigger': gl + gv, 'score_at_trigger': f'{gl}-{gv}'}
         ))
@@ -886,7 +886,7 @@ def gen_poss_extreme(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft >= 1
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_poss_extreme', match_id, rows[idx], won, pl_val, 'back', odds,
+            'poss_extreme', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_over05_odds': odds, 'poss_max': r['poss_max']}
         )]
     return []
@@ -913,7 +913,7 @@ def gen_back_longshot(rows: List[Dict], match_id: str) -> List[Dict]:
             won = ft_gv > ft_gl
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_back_longshot', match_id, rows[idx], won, pl_val, 'back', odds,
+            'back_longshot', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_longshot_odds': odds, 'longshot_team': ls_team,
              'xg_longshot': r['xg_longshot']}
         )]
@@ -937,7 +937,7 @@ def gen_cs_00(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == 0 and ft_gv == 0)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_cs_00', match_id, rows[idx], won, pl_val, 'back', odds,
+            'cs_00', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_cs_00_odds': odds, 'xg_total': r['xg_total'],
              'sot_total': r['sot_total']}
         )]
@@ -961,7 +961,7 @@ def gen_over25_2goals(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft >= 3
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_over25_2goals', match_id, rows[idx], won, pl_val, 'back', odds,
+            'over25_2goals', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_over25_odds': odds, 'total_goals_trigger': r['total_goals_trigger']}
         )]
     return []
@@ -996,7 +996,7 @@ def gen_lay_over25_scoreless(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft <= 2
         pl_val = 0.95 if won else -(odds - 1)
         bets.append(_make_bet(
-            'sd_lay_over25_scoreless', match_id, row, won, pl_val, 'lay', odds,
+            'lay_over25_scoreless', match_id, row, won, pl_val, 'lay', odds,
             {'lay_over25_odds': odds, 'total_goals_trigger': 0}
         ))
     return bets
@@ -1031,7 +1031,7 @@ def gen_lay_over15_scoreless(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft <= 1
         pl_val = 0.95 if won else -(odds - 1)
         bets.append(_make_bet(
-            'sd_lay_over15_scoreless', match_id, row, won, pl_val, 'lay', odds,
+            'lay_over15_scoreless', match_id, row, won, pl_val, 'lay', odds,
             {'lay_over15_odds': odds, 'total_goals_trigger': 0}
         ))
     return bets
@@ -1077,7 +1077,7 @@ def gen_under25_one_goal(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft <= 2
         pl_val = (odds - 1) * 0.95 if won else -1.0
         bets.append(_make_bet(
-            'sd_under25_one_goal', match_id, row, won, pl_val, 'back', odds,
+            'under25_one_goal', match_id, row, won, pl_val, 'back', odds,
             {'back_under25_odds': odds, 'total_goals_trigger': total_now,
              'xg_total': xg_total, 'sot_total': sot_total}
         ))
@@ -1113,7 +1113,7 @@ def gen_lay_under25_tied(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft >= 3  # LAY Under wins when Over happens
         pl_val = 0.95 if won else -(odds - 1)
         bets.append(_make_bet(
-            'sd_lay_under25_tied', match_id, row, won, pl_val, 'lay', odds,
+            'lay_under25_tied', match_id, row, won, pl_val, 'lay', odds,
             {'lay_under25_odds': odds, 'total_goals_trigger': 2}
         ))
     return bets
@@ -1139,7 +1139,7 @@ def gen_cs_close(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == gl and ft_gv == gv)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_cs_close', match_id, rows[idx], won, pl_val, 'back', odds,
+            'cs_close', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_cs_odds': odds, 'trigger_score': ts}
         )]
     return []
@@ -1165,7 +1165,7 @@ def gen_cs_one_goal(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == gl and ft_gv == gv)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_cs_one_goal', match_id, rows[idx], won, pl_val, 'back', odds,
+            'cs_one_goal', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_cs_odds': odds, 'trigger_score': ts}
         )]
     return []
@@ -1188,7 +1188,7 @@ def gen_draw_11(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == ft_gv)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_draw_11', match_id, rows[idx], won, pl_val, 'back', odds,
+            'draw_11', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_draw_11_odds': odds}
         )]
     return []
@@ -1215,7 +1215,7 @@ def gen_ud_leading(rows: List[Dict], match_id: str) -> List[Dict]:
             won = ft_gv > ft_gl
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_ud_leading', match_id, rows[idx], won, pl_val, 'back', odds,
+            'ud_leading', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_ud_odds': odds, 'ud_team': ud_team,
              'ud_pre_odds': r['ud_pre_odds'], 'lead': r['lead']}
         )]
@@ -1238,7 +1238,7 @@ def gen_under35_3goals(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft <= 3
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_under35_3goals', match_id, rows[idx], won, pl_val, 'back', odds,
+            'under35_3goals', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_under35_odds': odds,
              'xg_total': (_safe_float(rows[idx].get('xg_local')) or 0) + (_safe_float(rows[idx].get('xg_visitante')) or 0)}
         )]
@@ -1261,7 +1261,7 @@ def gen_away_fav_leading(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft_gv > ft_gl
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_away_fav_leading', match_id, rows[idx], won, pl_val, 'back', odds,
+            'away_fav_leading', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_away_odds': odds, 'lead': r['lead'],
              'away_pre_odds': r['away_pre_odds']}
         )]
@@ -1284,7 +1284,7 @@ def gen_home_fav_leading(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft_gl > ft_gv
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_home_fav_leading', match_id, rows[idx], won, pl_val, 'back', odds,
+            'home_fav_leading', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_home_odds': odds, 'lead': r['lead'],
              'home_pre_odds': r['home_pre_odds']}
         )]
@@ -1307,7 +1307,7 @@ def gen_under45_3goals(rows: List[Dict], match_id: str) -> List[Dict]:
         won = ft <= 4
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_under45_3goals', match_id, rows[idx], won, pl_val, 'back', odds,
+            'under45_3goals', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_under45_odds': odds, 'xg_total': r['xg_total']}
         )]
     return []
@@ -1329,7 +1329,7 @@ def gen_cs_11(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == 1 and ft_gv == 1)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_cs_11', match_id, rows[idx], won, pl_val, 'back', odds,
+            'cs_11', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_cs_odds': odds, 'trigger_score': '1-1'}
         )]
     return []
@@ -1354,7 +1354,7 @@ def gen_cs_20(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == gl and ft_gv == gv)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_cs_20', match_id, rows[idx], won, pl_val, 'back', odds,
+            'cs_20', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_cs_odds': odds, 'trigger_score': ts}
         )]
     return []
@@ -1379,7 +1379,7 @@ def gen_cs_big_lead(rows: List[Dict], match_id: str) -> List[Dict]:
         won = (ft_gl == gl and ft_gv == gv)
         pl_val = (odds - 1) * 0.95 if won else -1.0
         return [_make_bet(
-            'sd_cs_big_lead', match_id, rows[idx], won, pl_val, 'back', odds,
+            'cs_big_lead', match_id, rows[idx], won, pl_val, 'back', odds,
             {'back_cs_odds': odds, 'trigger_score': ts}
         )]
     return []

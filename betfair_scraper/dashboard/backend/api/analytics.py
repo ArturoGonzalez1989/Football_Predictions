@@ -352,12 +352,7 @@ def run_paper_auto_place() -> dict:
             "momentum_minute_max":   str(momentum_s.get("minuteMax", 90)),
         }
 
-        # SD strategies: pass full config dicts for each sd_* strategy
-        _sd_configs = {}
-        for _sk, _sv in s.items():
-            if _sk.startswith("sd_") and isinstance(_sv, dict):
-                _sd_configs[_sk] = _sv
-        versions["_sd_configs"] = _sd_configs
+        versions["_strategy_configs"] = s  # all strategy configs, no grouping
         versions["_min_duration"] = md
 
         # ── Audit: contar partidos live para log de ciclo ──
@@ -628,12 +623,7 @@ async def get_betting_signals(
         "momentum_minute_max":  str(momentum_s.get("minuteMax", 90)),
     }
 
-    # SD strategies: pass full config dicts + min_duration (mirrors auto_paper_trading)
-    _sd_configs = {}
-    for _sk, _sv in s.items():
-        if _sk.startswith("sd_") and isinstance(_sv, dict):
-            _sd_configs[_sk] = _sv
-    versions["_sd_configs"] = _sd_configs
+    versions["_strategy_configs"] = s  # all strategy configs, no grouping
     versions["_min_duration"] = md
 
     result = csv_reader.detect_betting_signals(versions=versions)
