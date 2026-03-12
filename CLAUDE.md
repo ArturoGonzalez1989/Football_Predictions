@@ -100,25 +100,40 @@ analisis/                → 2 notebooks (strategies_designer + reconcile_bt_liv
 borrar/                  → Archivos movidos durante limpieza (red de seguridad)
 ```
 
-## 7 Estrategias Base (cartera_config.json)
+## Estrategias (cartera_config.json)
 
-Estrategias de produccion con deteccion live + backtest. Configuradas en `cartera_config.json`. Solo las que pasan quality gates (N minimo, ROI >= 10%, IC95_lower >= 40%) se activan.
+26 estrategias independientes. Cada una tiene su propia clave en `cartera_config.json`, su propio trigger `_detect_<name>_trigger()` en csv_reader.py, deteccion live via `detect_betting_signals()` y backtest via `analyze_cartera()`. No hay categorias ni jerarquias.
 
 | Estrategia | Clave config | Estado |
 |------------|-------------|--------|
-| Back Empate 0-0 | draw | Desactivada por IC95 gate (6 versiones: v1/v15/v2/v2r/v3/v4) |
-| xG Underperformance | xg | Activa (3 versiones: base/v2/v3) |
-| Odds Drift Contrarian | drift | Depende de datos (6 versiones: v1-v6) |
-| Goal Clustering | clustering | Activa (3 versiones: v2/v3/v4) |
-| Pressure Cooker | pressure | Activa (2 versiones: v1/v2) |
-| Momentum xG | momentum_xg | Depende de datos (2 versiones: v1/v2) |
-| Tarde Asia | tarde_asia | Inactiva (solo tracking backtest) |
+| Back Empate 0-0 | draw | Desactivada por IC95 gate |
+| xG Underperformance | xg | Activa |
+| Odds Drift Contrarian | drift | Activa |
+| Goal Clustering | clustering | Activa |
+| Pressure Cooker | pressure | Activa |
+| Momentum xG | momentum_xg | Config-dependiente |
+| Tarde Asia | tarde_asia | Inactiva |
+| BACK Over 2.5 2-Goal Lead | over25_2goal | Activa |
+| BACK Under 3.5 Late | under35_late | Activa |
+| BACK Longshot Leading | longshot | Activa |
+| BACK Correct Score Close | cs_close | Activa |
+| BACK CS 1-0/0-1 | cs_one_goal | Activa |
+| BACK Underdog Leading | ud_leading | Activa |
+| BACK Home Fav Leading | home_fav_leading | Activa |
+| BACK CS 2-0/0-2 | cs_20 | Activa |
+| BACK CS Big Lead | cs_big_lead | Activa |
+| LAY Over 4.5 v3 | lay_over45_v3 | Activa |
+| BACK Draw xG Conv | draw_xg_conv | Activa |
+| BACK Poss Extreme | poss_extreme | Activa |
+| BACK CS 0-0 | cs_00 | Activa |
+| BACK Over 2.5 2 Goals | over25_2goals | Activa |
+| BACK Draw 1-1 | draw_11 | Activa |
+| BACK Under 3.5 3 Goals | under35_3goals | Activa |
+| BACK Away Fav Leading | away_fav_leading | Activa |
+| BACK Under 4.5 3 Goals | under45_3goals | Activa |
+| BACK CS 1-1 | cs_11 | Activa |
 
-## 19 Estrategias Adicionales (backtest + live)
-
-Descubiertas por el agente strategy-designer. Evaluadas en `analisis/strategies_designer.ipynb`. Se integran en presets via `_STRATEGY_PARAMS` (notebook) y `_build_preset_config()` (`optimizer_cli.py`). Tienen entradas en `cartera_config.json` para sus parametros. **Tienen deteccion live** via `detect_betting_signals()` cuando `enabled: true` en config. **Incluidas en BT** via `_analyze_strategy_simple()` dentro de `analyze_cartera()`.
-
-Configs de evaluacion en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores auxiliares en `auxiliar/sd_generators.py` (wrappers sobre triggers de csv_reader), filtros auxiliares en `auxiliar/sd_filters.py`.
+Configs de evaluacion de calidad en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`, generadores auxiliares en `auxiliar/sd_generators.py`, filtros auxiliares en `auxiliar/sd_filters.py`.
 
 ## Quality Gates (aplicados a TODAS las estrategias)
 
@@ -149,7 +164,7 @@ Los presets se computan offline via `optimizer_cli.py` o el notebook `strategies
 
 ## Alineamiento BT↔LIVE (completado 2026-03-11)
 
-Las **26 estrategias** (7 base + 19 adicionales) usan **helpers compartidos** (GR8/GR9 compliant). BT y LIVE ejecutan el mismo codigo de deteccion. Todas las estrategias son entidades independientes sin distincion de origen.
+Las **26 estrategias** usan **helpers compartidos** (GR8/GR9 compliant). BT y LIVE ejecutan el mismo codigo de deteccion.
 
 ### Arquitectura de helpers compartidos
 
@@ -158,29 +173,21 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 - **LIVE** llama con `curr_idx=len(rows)-1` (ultima fila)
 - Solo mira `rows[:curr_idx+1]` — nunca filas futuras
 
-**7 triggers base:**
+**26 triggers** en csv_reader.py, todos con la misma interfaz `_detect_<name>_trigger(rows, curr_idx, cfg)`:
 
-| Helper | Estrategia |
-|--------|-----------|
-| `_detect_back_draw_00_trigger` + `_detect_draw_filters` | Back Empate 0-0 |
-| `_detect_xg_underperformance_trigger` | xG Underperformance |
-| `_detect_odds_drift_trigger` | Odds Drift Contrarian |
-| `_detect_goal_clustering_trigger` | Goal Clustering |
-| `_detect_pressure_cooker_trigger` | Pressure Cooker |
-| `_detect_momentum_xg_trigger` | Momentum xG |
-| `_detect_tardesia_trigger` | Tarde Asia |
-
-**19 triggers adicionales** (en csv_reader.py, usados por LIVE loop, `analyze_cartera()` BT, y por `auxiliar/sd_generators.py`):
-`_detect_over25_2goal_trigger`, `_detect_under35_late_trigger`, `_detect_lay_over45_v3_trigger`,
-`_detect_draw_xg_conv_trigger`, `_detect_poss_extreme_trigger`, `_detect_longshot_trigger`,
-`_detect_cs_00_trigger`, `_detect_over25_2goals_trigger`, `_detect_cs_close_trigger`,
-`_detect_cs_one_goal_trigger`, `_detect_draw_11_trigger`, `_detect_ud_leading_trigger`,
-`_detect_under35_3goals_trigger`, `_detect_away_fav_leading_trigger`, `_detect_home_fav_leading_trigger`,
-`_detect_under45_3goals_trigger`, `_detect_cs_11_trigger`, `_detect_cs_20_trigger`, `_detect_cs_big_lead_trigger`
+`_detect_back_draw_00_trigger`, `_detect_xg_underperformance_trigger`, `_detect_odds_drift_trigger`,
+`_detect_goal_clustering_trigger`, `_detect_pressure_cooker_trigger`, `_detect_momentum_xg_trigger`,
+`_detect_tardesia_trigger`, `_detect_over25_2goal_trigger`, `_detect_under35_late_trigger`,
+`_detect_lay_over45_v3_trigger`, `_detect_draw_xg_conv_trigger`, `_detect_poss_extreme_trigger`,
+`_detect_longshot_trigger`, `_detect_cs_00_trigger`, `_detect_over25_2goals_trigger`,
+`_detect_cs_close_trigger`, `_detect_cs_one_goal_trigger`, `_detect_draw_11_trigger`,
+`_detect_ud_leading_trigger`, `_detect_under35_3goals_trigger`, `_detect_away_fav_leading_trigger`,
+`_detect_home_fav_leading_trigger`, `_detect_under45_3goals_trigger`, `_detect_cs_11_trigger`,
+`_detect_cs_20_trigger`, `_detect_cs_big_lead_trigger`
 
 ### Match rate
 
-- **71.3% MATCH**, 80.4% MATCH+MIN_DIFF (medido con `tests/reconcile.py` en 1136 partidos)
+- **78.2% MATCH**, 81.1% MATCH+MIN_DIFF (medido con `tests/reconcile.py` en 1162 partidos, todas las estrategias unificadas)
 - **LIVE P/L >= BT P/L** confirmado (BT es conservador)
 - Discrepancias restantes son por timing (BT muestrea en filas discretas vs LIVE en instante actual)
 
