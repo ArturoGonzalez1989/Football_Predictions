@@ -16,7 +16,7 @@ Usage:
   python scripts/bt_optimizer.py --phase individual   # only phase 1+2
   python scripts/bt_optimizer.py --phase presets      # only phase 3
   python scripts/bt_optimizer.py --phase apply --criterion max_pl
-  python scripts/bt_optimizer.py --export
+  python scripts/bt_optimizer.py --phase export
   python scripts/bt_optimizer.py --dry-run            # never writes cartera_config.json
   python scripts/bt_optimizer.py --workers 8
 """
@@ -36,7 +36,6 @@ import itertools
 import time
 from pathlib import Path
 from datetime import datetime
-from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent.parent
@@ -51,6 +50,7 @@ from utils.csv_reader import (
     _LEGACY_MIN_DUR_KEY,
     _analyze_strategy_simple,
     _cfg_add_snake_keys,
+    _build_registry_config_map,
 )
 from utils.csv_loader import _get_all_finished_matches
 from api import optimizer_cli
@@ -69,8 +69,8 @@ IC95_MIN_LOW = 40.0   # minimum Wilson CI lower bound
 
 # ── Selector ──────────────────────────────────────────────────────────────────
 CRITERIA = ["max_roi", "max_pl", "max_wr", "min_dd"]
-DEFAULT_SELECTOR = "confident_roi"   # ci_low × roi — same as notebook
-MIN_PRESET_N     = 20   # portfolio optimizer is very selective; N=32 is already excellent
+DEFAULT_SELECTOR = "robust"          # ci_low × wr × sqrt(N) — rewards quality + sample size
+MIN_PRESET_N     = 200  # real stats from analyze_cartera-equivalent; N<200 signals something odd
 
 # ── Min-duration defaults (same as cartera_config.json) ──────────────────────
 DEFAULT_MIN_DUR = {
@@ -106,11 +106,11 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "minute_max":    [60, 65, 70, 75, 80, 90],
     },
     "odds_drift": {   # applies to versions v1/v2/v3/v4/v5/v6
-        "drift_min_pct": [15, 20, 25, 30, 35, 40],
-        "max_odds":      [3.0, 5.0, 7.0, 10.0, 999],
+        "drift_min_pct": [15, 20, 30],
+        "max_odds":      [5.0, 999],
         "goal_diff_min": [0, 1],
-        "min_minute":    [0, 15, 30, 45],
-        "max_minute":    [75, 80, 85, 90],
+        "min_minute":    [0, 30],
+        "max_minute":    [85, 90],
     },
     "goal_clustering": {
         "sot_min":    [0, 2, 3, 4],
@@ -419,10 +419,9 @@ def phase1_individual(n_fin: int, workers: int = 4,
     md    = cfg.get("min_duration", {})
     results: dict[str, dict] = {}
 
-    _log(f"Phase 1 — grid search ({n_fin} partidos, {workers} workers)…")
+    _log(f"Phase 1 — grid search ({n_fin} partidos)…")
     tasks = []
 
-    # Single strategies
     for key in SINGLE_STRATEGIES:
         if only and key not in only:
             continue
@@ -430,10 +429,8 @@ def phase1_individual(n_fin: int, workers: int = 4,
         if space is None:
             _log(f"  WARN: {key} — sin search space definido, skip")
             continue
-        min_dur = _get_min_dur(key, md)
-        tasks.append(("single", key, space, min_dur))
+        tasks.append(("single", key, space, _get_min_dur(key, md)))
 
-    # Versioned families
     for family, ver_keys in VERSIONED_FAMILIES.items():
         if only and family not in only:
             continue
@@ -441,36 +438,13 @@ def phase1_individual(n_fin: int, workers: int = 4,
         if space is None:
             _log(f"  WARN: {family} — sin search space definido, skip")
             continue
-        # min_dur from first version's legacy key
-        min_dur = _get_min_dur(ver_keys[0], md)
-        tasks.append(("versioned", family, ver_keys, space, min_dur))
+        tasks.append(("versioned", family, ver_keys, space, _get_min_dur(ver_keys[0], md)))
 
     n_total = len(tasks)
-    n_done  = 0
     t0      = time.time()
 
-    # Calculate combo counts for progress info
-    def _combo_count(space):
-        c = 1
-        for v in space.values():
-            c *= len(v)
-        return c
-
-    for t in tasks:
-        kind = t[0]
-        if kind == "single":
-            _, key, space, min_dur = t
-            n_combos = _combo_count(space)
-        else:
-            _, family, ver_keys, space, min_dur = t
-            n_combos = len(ver_keys) * _combo_count(space)
-        _log(f"  >> {t[1]}: {n_combos} combos...")
-
-    _log(f"  Iniciando {n_total} búsquedas…")
-
-    # Run sequentially (ProcessPoolExecutor requires picklable functions; trigger
-    # lambdas in the registry are not picklable, so we use sequential execution.
-    # Each call is fast (~0.3-0.5s) because match data is in the module cache.)
+    # Sequential execution — trigger lambdas in the registry are not picklable.
+    # Match data is in module cache so each call is fast (~0.3-0.5 s).
     for t in tasks:
         kind = t[0]
         if kind == "single":
@@ -493,7 +467,6 @@ def phase1_individual(n_fin: int, workers: int = 4,
                      f"params={best['params']}")
             else:
                 _log(f"  ✗ {family}: no pasó quality gates (todas las versiones)")
-        n_done += 1
 
     elapsed = time.time() - t0
     _log(f"Phase 1 completada en {elapsed:.1f}s — "
@@ -657,6 +630,64 @@ def phase3_presets(new_strategies: dict, workers: int = 4,
 # PHASE 4 — Select best preset and apply
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _merge_preset_strategies(preset_cfg: dict, base_cfg: dict) -> dict:
+    """
+    Return merged strategies dict applying preset on top of base config.
+    - Preset enables  a strategy → apply all preset params.
+    - Preset disables a strategy → only set enabled=False, keep base params.
+    - Strategies not in base config → skipped (prevents re-adding obsolete keys).
+    """
+    merged = dict(base_cfg.get("strategies", {}))
+    for k, v in preset_cfg.get("strategies", {}).items():
+        if k not in merged:
+            continue
+        if v.get("enabled"):
+            merged[k] = {**merged.get(k, {}),
+                         **{pk: pv for pk, pv in v.items() if pv is not None}}
+        else:
+            merged[k] = {**merged.get(k, {}), "enabled": False}
+    return merged
+
+
+def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
+    """
+    Evaluate a preset using analyze_cartera-equivalent logic.
+    Returns real stats (n, wr, roi, pl, ci_low) reflecting what the live system
+    would actually produce — not the portfolio optimizer's internal cherry-pick.
+    """
+    strategy_configs = _build_registry_config_map(
+        _merge_preset_strategies(preset_cfg, base_cfg)
+    )
+    md = base_cfg.get("min_duration", {})
+
+    all_bets = []
+    for (_key, _name, _trigger_fn, _desc, _extract_fn, _win_fn) in _STRATEGY_REGISTRY:
+        s_cfg = strategy_configs.get(_key, {})
+        if not s_cfg.get("enabled"):
+            continue
+        min_dur_key = _LEGACY_MIN_DUR_KEY.get(_key, _key)
+        min_dur = md.get(min_dur_key, md.get(_key, 1))
+        bets = _analyze_strategy_simple(
+            _key, _trigger_fn, _extract_fn, _win_fn,
+            _cfg_add_snake_keys(s_cfg), min_dur,
+        )
+        all_bets.extend(bets)
+
+    n = len(all_bets)
+    if n == 0:
+        return {"n": 0, "wr": 0.0, "roi": 0.0, "pl": 0.0, "ci_low": 0.0}
+    wins = sum(1 for b in all_bets if b["won"])
+    pl   = sum(b["pl"] for b in all_bets)
+    ci_l, _ = _wilson_ci(wins, n)
+    return {
+        "n":      n,
+        "wr":     round(wins / n * 100, 1),
+        "roi":    round(pl / n * 100, 1),
+        "pl":     round(pl, 2),
+        "ci_low": ci_l,
+    }
+
+
 def phase4_apply(preset_paths: dict[str, Path],
                  selector: str = DEFAULT_SELECTOR,
                  dry_run: bool = False) -> str | None:
@@ -666,19 +697,19 @@ def phase4_apply(preset_paths: dict[str, Path],
     """
     _log(f"Phase 4 — seleccionando mejor preset (criterio={selector})…")
 
+    base_cfg = json.loads(CARTERA_CFG.read_text(encoding="utf-8"))
+
     candidates = []
     for crit, path in preset_paths.items():
         try:
-            data  = json.loads(path.read_text(encoding="utf-8"))
-            stats = data.get("_optimizer_stats", {})
-            n     = stats.get("n", 0)
-            wr    = stats.get("wr", 0.0)
-            roi   = stats.get("roi", 0.0)
-            ci_l  = stats.get("ci_low", 0.0)
-            pl    = stats.get("pl", data.get("flat_pl", 0.0))
-            dd    = stats.get("max_dd", 9999.0)
+            preset_cfg = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
             continue
+
+        _log(f"  Evaluando {crit} con stats reales…")
+        rs = _eval_preset_real_stats(preset_cfg, base_cfg)
+        n, wr, roi, ci_l, pl = rs["n"], rs["wr"], rs["roi"], rs["ci_low"], rs["pl"]
+        _log(f"    {crit}: N={n} WR={wr}% ROI={roi}% IC={ci_l} P/L={pl}")
 
         if n < MIN_PRESET_N or ci_l < IC95_MIN_LOW:
             _log(f"  SKIP {crit}: N={n} ci_low={ci_l} — no pasa quality gate")
@@ -689,7 +720,11 @@ def phase4_apply(preset_paths: dict[str, Path],
             "max_wr":        wr,
             "max_roi":       roi,
             "max_pl":        pl,
-            "min_dd":        -dd,
+            "min_dd":        pl,   # no max_dd available in real stats; use pl as proxy
+            # Balances statistical quality (ci_low, wr) with sample size (sqrt(N)).
+            # Penalizes low-N presets even if they have high ROI.
+            # Formula: ci_low × wr × sqrt(N)
+            "robust":        ci_l * wr * math.sqrt(max(n, 1)),
         }
         score = score_map.get(selector, ci_l * roi / 100)
         candidates.append({
@@ -713,32 +748,13 @@ def phase4_apply(preset_paths: dict[str, Path],
             f".json.bak_{datetime.now().strftime('%Y%m%d_%H%M%S')}_final")
         shutil.copy2(CARTERA_CFG, bak)
 
-        # Merge preset into current config instead of replacing entirely.
-        # The preset only covers ~13 strategies; this preserves all others.
-        base_cfg   = json.loads(CARTERA_CFG.read_text(encoding="utf-8"))
         preset_cfg = json.loads(src.read_text(encoding="utf-8"))
-
         merged = dict(base_cfg)
-        # Apply top-level portfolio settings from preset
         for key in ("flat_stake", "initial_bankroll", "bankroll_mode",
                     "active_preset", "risk_filter", "adjustments"):
             if key in preset_cfg:
                 merged[key] = preset_cfg[key]
-        # Merge strategies: update only strategies that already exist in base config.
-        # - When preset enables a strategy: apply all preset params (portfolio-optimized).
-        # - When preset disables a strategy: only update enabled=False, keep base params
-        #   (so optimized params are preserved for when the strategy is re-enabled).
-        # This also prevents re-adding removed/obsolete strategy keys from old presets.
-        merged_strats = dict(base_cfg.get("strategies", {}))
-        for k, v in preset_cfg.get("strategies", {}).items():
-            if k not in merged_strats:
-                continue  # Skip obsolete strategies not in current config
-            if v.get("enabled"):
-                v_clean = {pk: pv for pk, pv in v.items() if pv is not None}
-                merged_strats[k] = {**merged_strats.get(k, {}), **v_clean}
-            else:
-                merged_strats[k] = {**merged_strats.get(k, {}), "enabled": False}
-        merged["strategies"] = merged_strats
+        merged["strategies"] = _merge_preset_strategies(preset_cfg, base_cfg)
 
         CARTERA_CFG.write_text(json.dumps(merged, indent=2, ensure_ascii=False),
                                encoding="utf-8")

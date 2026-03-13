@@ -461,6 +461,20 @@ _STRATEGY_REGISTRY = [
 
 _STRATEGY_REGISTRY_KEYS = {e[0] for e in _STRATEGY_REGISTRY}
 
+# Market group for same-market deduplication in analyze_cartera().
+# Strategies that share a market group → only the earliest bet (by minuto) per
+# (match_id, market_group) pair is kept.  Strategies not listed here are treated
+# as having a unique market (i.e. no deduplication applied).
+_STRATEGY_MARKET: dict[str, str] = {
+    "under35_late":   "under_3.5",
+    "under35_3goals": "under_3.5",
+    "draw_11":        "draw",
+    "draw_xg_conv":   "draw",
+    "over25_2goal":   "over_2.5",
+    "goal_clustering":"over_2.5",
+    "pressure_cooker":"over_2.5",
+}
+
 # Mapping from registry keys that use legacy config keys to their legacy key.
 # Used for both min_duration lookup and config synthesis.
 _LEGACY_MIN_DUR_KEY: dict[str, str] = {
@@ -512,16 +526,19 @@ _ORIG_DEFAULT_VERS = {"draw": "v2r", "drift": "v1", "xg": "base", "momentum_xg":
 # Each value is a list because some camelCase keys map to multiple snake_case aliases
 # used by different trigger functions (e.g. minuteMin → min_minute AND minute_min).
 _CAMEL_TO_SNAKE_ALIASES: dict[str, list[str]] = {
-    "minuteMin":   ["min_minute", "minute_min"],
-    "minuteMax":   ["max_minute", "minute_max"],
+    "minuteMin":   ["min_minute", "minute_min", "m_min", "min_m"],
+    "minuteMax":   ["max_minute", "minute_max", "m_max", "max_m"],
     "sotMin":      ["sot_min"],
+    "sotRatioMin": ["sot_ratio_min"],
     "xgRemMin":    ["xg_rem_min"],
     "xgExcessMin": ["xg_excess_min"],
+    "xgUnderperfMin": ["xg_underperf_min"],
     "xgMax":       ["xg_max"],
     "possMax":     ["poss_max"],
     "shotsMax":    ["shots_max"],
     "driftMin":    ["drift_min_pct"],
     "oddsMax":     ["max_odds"],
+    "oddsMin":     ["min_odds", "odds_min"],
     "goalDiffMin": ["goal_diff_min"],
     "momGapMin":   ["drift_mom_gap_min"],
 }
@@ -1012,6 +1029,25 @@ def analyze_cartera() -> dict:
             all_bets.append({**b, "strategy_label": _name})
 
     all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))
+
+    # Deduplicate: one bet per market per match (take earliest by minuto).
+    # Strategies sharing a market group (e.g. under35_late + under35_3goals → under_3.5)
+    # compete for the same slot; only the first trigger wins.
+    _seen_market: dict = {}
+    _deduped: list = []
+    for _b in sorted(all_bets, key=lambda x: x.get("minuto", 0) or 0):
+        _mid = _b.get("match_id", "")
+        _mkt = _STRATEGY_MARKET.get(_b.get("strategy", ""), None)
+        if _mkt is None:
+            _deduped.append(_b)  # not in a shared-market group → always keep
+        else:
+            _mkey = (_mid, _mkt)
+            if _mkey not in _seen_market:
+                _seen_market[_mkey] = True
+                _deduped.append(_b)
+            # else: drop — duplicate market bet on the same match
+    all_bets = _deduped
+    all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))  # re-sort after dedup
 
     # Flat staking: 10 EUR per bet
     flat_cum = []
@@ -2107,7 +2143,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
         # --- Registry strategies: loop — all 39 strategies, uniform path ---
         for (_key, _name, _fn, _desc, _extract, _win_fn) in _STRATEGY_REGISTRY:
-            _cfg_entry = strategy_configs.get(_key, {})
+            _cfg_entry = _cfg_add_snake_keys(strategy_configs.get(_key, {}))
             if not (_cfg_entry.get("enabled") and goals_data_ok):
                 _trigger_first_data.pop((match_id, _key), None)
                 continue

@@ -262,89 +262,95 @@ def _build_preset_config(combo: dict, adj: dict, risk_filter: str,
     })
     cashout_minute = base_cfg.get("adjustments", {}).get("cashout_minute", None)
 
-    return {
-        "strategies": {
-            "draw": {
-                "enabled": draw_ver != "off",
-                "xgMax":    dp["xg_max"],
-                "possMax":  dp["poss_max"],
-                "shotsMax": dp["shots_max"],
-                "xgDomAsym": dp["xg_dom_asym"],
-                "minuteMin": dp["min_min"],
-                "minuteMax": dp["min_max"],
-            },
-            "xg": {
-                "enabled":      xg_ver != "off",
-                "sotMin":       xp["sot_min"],
-                "xgExcessMin":  xp["xg_excess_min"],
-                "minuteMin":    xp["min_min"],
-                "minuteMax":    xp["min_max"],
-            },
-            "drift": {
-                "enabled":      drift_ver != "off",
-                "goalDiffMin":  drp["goal_diff_min"],
-                "driftMin":     drp["drift_min"],
-                "oddsMax":      drp["odds_max"] if drp["odds_max"] < 1e8 else 999,
-                "minuteMin":    drp["min_min"],
-                "minuteMax":    drp["min_max"],
-                "momGapMin":    drp["mom_gap_min"],
-            },
-            "clustering": {
-                "enabled":   clust_ver != "off",
-                "sotMin":    cp["sot_min"],
-                "minuteMin": cp["min_min"],
-                "minuteMax": cp["min_max"],
-                "xgRemMin":  cp["xg_rem_min"],
-            },
-            "pressure":   {"enabled": press_ver != "off", "minuteMin": 0, "minuteMax": 90},
-            "tarde_asia": {"enabled": ta_ver    != "off", "minuteMin": 0, "minuteMax": 90},
-            "momentum_xg": {"version": mom_ver,  "minuteMin": m_min, "minuteMax": m_max},
-            "lay_over15": {
-                "enabled": lay15_ver != "off",
-                "version":  lay15_ver if lay15_ver != "off" else "v1",
-                "minuteMin": 75, "minuteMax": 85,
-                "xgMin": 0.5, "possMax": 30, "shotsMin": 12,
-            },
-            "lay_draw_asym": {
-                "enabled": lay_da_ver != "off",
-                "minuteMin": _sp_lda.get("m_min", 65),
-                "minuteMax": _sp_lda.get("m_max", 75),
-                "xgRatioMin": _sp_lda.get("xg_ratio_min", 2.5),
-                "xgDomMin": 0.5,
-            },
-            "lay_over25_def": {
-                "enabled": lay25_ver != "off",
-                "minuteMin": _sp_l25.get("m_min", 70),
-                "minuteMax": _sp_l25.get("m_max", 80),
-                "xgMax": _sp_l25.get("xg_max", 1.2),
-                "goalsMax": _sp_l25.get("goals_max", 1),
-            },
-            "back_sot_dom": {
-                "enabled": bsd_ver != "off",
-                "minuteMin": _sp_bsd.get("m_min", 60),
-                "minuteMax": _sp_bsd.get("m_max", 80),
-                "sotMin": _sp_bsd.get("sot_min", 4),
-                "sotMaxRival": _sp_bsd.get("sot_max_rival", 1),
-            },
-            "back_over15_early": {
-                "enabled": bo15e_ver != "off",
-                "minuteMin": _sp_o15.get("m_min", 25),
-                "minuteMax": _sp_o15.get("m_max", 45),
-                "xgMin": _sp_o15.get("xg_min", 1.0),
-                "sotMin": _sp_o15.get("sot_min", 4),
-                "goalsMax": _sp_o15.get("goals_max", 1),
-            },
-            "lay_false_fav": {
-                "enabled": lff_ver != "off",
-                "minuteMin": _sp_lff.get("m_min", 65),
-                "minuteMax": _sp_lff.get("m_max", 85),
-                "xgRatioMin": _sp_lff.get("xg_ratio_min", 2.0),
-                "favOddsMax": _sp_lff.get("fav_odds_max", 1.7),
-            },
-            # Registry strategies — passed quality gates in notebook, persisted here
-            **{k: {"enabled": True, **v}
-               for k, v in _sp.items() if k in csv_reader._STRATEGY_REGISTRY_KEYS},
+    _strategies_core = {
+        "draw": {
+            "enabled": draw_ver != "off",
+            "xgMax":    dp["xg_max"],
+            "possMax":  dp["poss_max"],
+            "shotsMax": dp["shots_max"],
+            "xgDomAsym": dp["xg_dom_asym"],
+            "minuteMin": dp["min_min"],
+            "minuteMax": dp["min_max"],
         },
+        "xg": {
+            "enabled":      xg_ver != "off",
+            "sotMin":       xp["sot_min"],
+            "xgExcessMin":  xp["xg_excess_min"],
+            "minuteMin":    xp["min_min"],
+            "minuteMax":    xp["min_max"],
+        },
+        "drift": {
+            "enabled":      drift_ver != "off",
+            "goalDiffMin":  drp["goal_diff_min"],
+            "driftMin":     drp["drift_min"],
+            "oddsMax":      drp["odds_max"] if drp["odds_max"] < 1e8 else 999,
+            "minuteMin":    drp["min_min"],
+            "minuteMax":    drp["min_max"],
+            "momGapMin":    drp["mom_gap_min"],
+        },
+        "clustering": {
+            "enabled":   clust_ver != "off",
+            "sotMin":    cp["sot_min"],
+            "minuteMin": cp["min_min"],
+            "minuteMax": cp["min_max"],
+            "xgRemMin":  cp["xg_rem_min"],
+        },
+        "pressure":   {"enabled": press_ver != "off", "minuteMin": 0, "minuteMax": 90},
+        "tarde_asia": {"enabled": ta_ver    != "off", "minuteMin": 0, "minuteMax": 90},
+        "momentum_xg": {"version": mom_ver,  "minuteMin": m_min, "minuteMax": m_max},
+        "lay_over15": {
+            "enabled": lay15_ver != "off",
+            "version":  lay15_ver if lay15_ver != "off" else "v1",
+            "minuteMin": 75, "minuteMax": 85,
+            "xgMin": 0.5, "possMax": 30, "shotsMin": 12,
+        },
+        "lay_draw_asym": {
+            "enabled": lay_da_ver != "off",
+            "minuteMin": _sp_lda.get("m_min", 65),
+            "minuteMax": _sp_lda.get("m_max", 75),
+            "xgRatioMin": _sp_lda.get("xg_ratio_min", 2.5),
+            "xgDomMin": 0.5,
+        },
+        "lay_over25_def": {
+            "enabled": lay25_ver != "off",
+            "minuteMin": _sp_l25.get("m_min", 70),
+            "minuteMax": _sp_l25.get("m_max", 80),
+            "xgMax": _sp_l25.get("xg_max", 1.2),
+            "goalsMax": _sp_l25.get("goals_max", 1),
+        },
+        "back_sot_dom": {
+            "enabled": bsd_ver != "off",
+            "minuteMin": _sp_bsd.get("m_min", 60),
+            "minuteMax": _sp_bsd.get("m_max", 80),
+            "sotMin": _sp_bsd.get("sot_min", 4),
+            "sotMaxRival": _sp_bsd.get("sot_max_rival", 1),
+        },
+        "back_over15_early": {
+            "enabled": bo15e_ver != "off",
+            "minuteMin": _sp_o15.get("m_min", 25),
+            "minuteMax": _sp_o15.get("m_max", 45),
+            "xgMin": _sp_o15.get("xg_min", 1.0),
+            "sotMin": _sp_o15.get("sot_min", 4),
+            "goalsMax": _sp_o15.get("goals_max", 1),
+        },
+        "lay_false_fav": {
+            "enabled": lff_ver != "off",
+            "minuteMin": _sp_lff.get("m_min", 65),
+            "minuteMax": _sp_lff.get("m_max", 85),
+            "xgRatioMin": _sp_lff.get("xg_ratio_min", 2.0),
+            "favOddsMax": _sp_lff.get("fav_odds_max", 1.7),
+        },
+        # Registry strategies - passed quality gates in notebook, persisted here
+        **{k: {"enabled": True, **v}
+           for k, v in _sp.items() if k in csv_reader._STRATEGY_REGISTRY_KEYS},
+    }
+
+    _known_keys = set(_strategies_core.keys())
+    _base_strategies = base_cfg.get("strategies", {}) or {}
+    _extra_strategies = {k: v for k, v in _base_strategies.items() if k not in _known_keys}
+
+    return {
+        "strategies": {**_strategies_core, **_extra_strategies},
         "bankroll_mode":    br_mode,
         "flat_stake":       flat_stake,
         "initial_bankroll": initial_bankroll,

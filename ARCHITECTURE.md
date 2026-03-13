@@ -9,10 +9,10 @@
 El sistema captura cuotas y estadisticas de partidos de futbol en vivo desde Betfair Exchange, las almacena en CSVs, y proporciona un dashboard web para:
 
 1. **Monitorizar partidos en vivo** (cuotas, stats, momentum)
-2. **Detectar senales de apuesta** en tiempo real (7 estrategias core + 19 SD backtest-only)
+2. **Detectar senales de apuesta** en tiempo real (26 estrategias independientes, todas activas en BT y LIVE)
 3. **Paper trading automatico** (colocacion automatica de apuestas simuladas)
-4. **Analisis historico** (backtest via notebook/CLI sobre datos pasados)
-5. **Optimizacion de cartera** (busqueda de la mejor combinacion de versiones y ajustes via notebook/CLI)
+4. **Analisis historico** (backtest via `scripts/bt_optimizer.py` CLI o notebook legacy)
+5. **Optimizacion de cartera** (grid search individual + portfolio optimizer via `bt_optimizer.py`)
 6. **Strategy Designer** (descubrimiento automatizado de nuevas estrategias via agentes)
 
 ---
@@ -32,14 +32,16 @@ betfair_scraper/
 ├── supervisor_workflow.py     # Orquestador de 7 scripts de mantenimiento
 ├── data/                      # CSVs individuales: partido_*.csv + .heartbeat
 ├── logs/                      # Logs del scraper (scraper_YYYYMMDD_HHMMSS.log)
-├── scripts/                   # 7 scripts de utilidad
+├── scripts/                   # 9 scripts de utilidad
+│   ├── bt_optimizer.py        # Pipeline BT completo: grid search + presets + apply + export
 │   ├── start_scraper.py       # Monitor de proceso, auto-restart
 │   ├── find_matches.py        # Descubrimiento de partidos (Playwright)
 │   ├── clean_games.py         # Eliminar partidos terminados de games.csv
 │   ├── check_urls.py          # Eliminar URLs 404
 │   ├── generate_report.py     # Informes de salud del sistema
 │   ├── validate_stats.py      # Comparar stats capturadas vs disponibles
-│   └── unify_data.py          # Combinar CSVs en unificado.csv
+│   ├── unify_data.py          # Combinar CSVs en unificado.csv
+│   └── strategy_triggers.py   # Triggers legacy (algunos triggers estan aqui)
 │
 └── dashboard/
     ├── start.bat              # Lanza backend + frontend
@@ -56,8 +58,8 @@ betfair_scraper/
     │   │   ├── optimize.py    # Optimizacion presets Phase 1+2 (1329 lineas)
     │   │   └── optimizer_cli.py # CLI para optimizacion paralela (691 lineas)
     │   └── utils/
-    │       ├── csv_reader.py      # ~5761 lineas. EL fichero critico. Helpers compartidos BT↔LIVE.
-    │       ├── sd_strategies.py   # 19 SD strategies: configs + evaluator (205 lineas)
+    │       ├── csv_reader.py      # ~6200 lineas. EL fichero critico. Registry de 26 estrategias + BT + LIVE.
+    │       ├── sd_strategies.py   # eval_sd() evaluador legacy para notebook (205 lineas)
     │       ├── scraper_status.py  # Estado del scraper via psutil + log parsing (231 lineas)
     │       └── signals_audit_logger.py  # Audit log rotativo 50MB x 10 (214 lineas)
     │
@@ -85,13 +87,17 @@ betfair_scraper/
                      StatsBar, GapAnalysis, CaptureTable, OddsChart,
                      MomentumChart, MomentumSwings, PriceVsReality)
 
-aux/                           # Archivos auxiliares de analisis (tracked en git)
-├── sd_generators.py           # 19 generadores de estrategias SD (1816 lineas)
-├── sd_filters.py              # Filtros realistas para SD backtests (825 lineas)
-├── run_reconcile.py           # Verificacion BT↔LIVE fila a fila
+auxiliar/                      # Archivos auxiliares de analisis (tracked en git, borrable sin riesgo)
+├── sd_generators.py           # Generadores legacy de estrategias SD (wrappers sobre triggers)
+├── sd_filters.py              # Filtros legacy para backtests SD
 ├── compare_bt_live.py         # Comparacion rendimiento BT vs LIVE
 ├── data_quality_analysis.py   # Analisis de calidad de datos
-└── data_quality_deep.py       # Analisis profundo de calidad de datos
+├── data_quality_deep.py       # Analisis profundo de calidad de datos
+├── bt_optimizer_results.json  # Resultados del ultimo grid search (phases 1+2)
+└── PENDING_TASKS.md           # Tareas pendientes con contexto tecnico completo
+
+tests/                         # Herramientas de verificacion permanentes
+└── reconcile.py               # Simula LIVE fila a fila y mide match rate vs BT
 
 strategies/                    # Reportes y tracker del strategy-designer agent
 ├── sd_strategy_tracker.md     # Estado de investigacion de todas las rondas
@@ -177,48 +183,73 @@ borrar/                        # Archivos movidos durante limpieza, pendientes d
   5. **`_paper_trading_watchdog()`** — reinicia `auto_paper_trading()` si crashea.
 - **`/api/health`** endpoint: estado comprensivo del sistema (scraper, paper trading, auto-refresh, config).
 
-### 3.5 csv_reader.py — El fichero critico (~5761 lineas)
+### 3.5 csv_reader.py — El fichero critico (~6200 lineas)
 
 Este fichero contiene TODA la logica de:
 1. Carga y limpieza de datos CSV
-2. Analisis historico de cada estrategia (funciones `analyze_strategy_*()`)
-3. Orquestacion de cartera (`analyze_cartera()`)
-4. Deteccion de senales live (`detect_betting_signals()`)
-5. Watchlist (condiciones parciales: `detect_watchlist()`)
-6. Cashout simulation y optimizacion
-7. Calidad de datos, correlaciones, gap analysis
+2. **Registry de las 26 estrategias** (`_STRATEGY_REGISTRY`): lista de tuplas `(key, name, trigger_fn, desc, extract_fn, win_fn)`
+3. **Runner BT generico** (`_analyze_strategy_simple()`): ejecuta cualquier estrategia del registry
+4. **Orquestacion de cartera** (`analyze_cartera()`): itera el registry y llama `_analyze_strategy_simple` para cada una
+5. **Deteccion de senales live** (`detect_betting_signals()`): usa los mismos triggers del registry
+6. Watchlist (condiciones parciales: `detect_watchlist()`)
+7. Cashout simulation y optimizacion
+8. Calidad de datos, correlaciones, gap analysis
 
-**Funciones principales y sus lineas:**
+#### Arquitectura de helpers compartidos BT↔LIVE
 
-| Funcion | Linea | Proposito |
-|---------|-------|-----------|
-| `_resolve_csv_path()` | 42 | Resuelve ruta a CSV de partido |
-| `_to_float()` | ~50 | Conversion segura str→float |
-| `_compute_synthetic_at_trigger()` | ~130 | Calcula campos sinteticos (pressure_index, xg_remaining, match_openness, momentum_gap) en el momento del trigger |
-| `load_games()` | 237 | Carga games.csv + escanea data/ para CSV huerfanos |
-| `_normalize_halftime_minutes()` | 404 | Corrige minutos de descanso (>45 en 1T → cap a 45) |
-| `delete_match()` | 481 | Elimina de games.csv + borra CSV de datos |
-| `load_all_captures()` | 526 | Todas las capturas con ~50 campos de stats |
-| `load_match_detail()` | 606 | Ultimas 10 capturas + quality score + gap analysis |
-| `load_momentum_data()` | 723 | Series temporales para graficos de momentum |
-| `load_all_stats()` | 762 | Ultimo row con todos los STAT_COLUMNS |
-| `_clean_odds_outliers()` | 816 | Elimina outliers de cuotas (>median*5 o <median/5) |
-| `load_match_full()` | 853 | Stats finales + cuotas apertura/cierre + odds timeline |
-| `_get_cached_finished_data()` | 950 | Cache 5 min de partidos terminados con rows preprocesados |
-| `analyze_strategy_back_draw_00()` | 1747 | Backtest Back Empate |
-| `analyze_strategy_xg_underperformance()` | 2026 | Backtest xG Underperf |
-| `analyze_strategy_odds_drift()` | 2207 | Backtest Odds Drift |
-| **`analyze_cartera()`** | **2423** | **Orquestador de backtest (llama 7 estrategias)** |
-| `_co_market_cols()` | 2542 | Mapea estrategia a columnas back/lay para cashout |
-| `_simulate_config()` | 2634 | Bucle interno de simulacion cashout |
-| `optimize_cashout_cartera()` | 2730 | Grid search sobre modos de cashout |
-| `simulate_cashout_cartera()` | 2818 | Simulacion cashout con config especifica |
-| **`detect_betting_signals()`** | **3253** | **Deteccion live de senales (6 estrategias)** |
-| `detect_watchlist()` | 4116 | Partidos cerca de trigger (condiciones parciales) |
-| `analyze_strategy_goal_clustering()` | 4335 | Backtest Goal Clustering |
-| `analyze_strategy_pressure_cooker()` | 4528 | Backtest Pressure Cooker |
-| `analyze_strategy_tarde_asia()` | 4718 | Backtest Tarde Asia (inactiva) |
-| `analyze_strategy_momentum_xg()` | 4924 | Backtest Momentum xG |
+**26 triggers** con interfaz identica `_detect_<name>_trigger(rows, curr_idx, cfg)`:
+- **BT** (`_analyze_strategy_simple`): itera todas las filas, `curr_idx=idx`
+- **LIVE** (`detect_betting_signals`): `curr_idx=len(rows)-1` (ultima fila)
+- Solo leen `rows[:curr_idx+1]` — nunca filas futuras
+
+#### Estructuras de datos clave en csv_reader.py
+
+```python
+# Registry: una entrada por version de estrategia (38 entradas para 26 estrategias)
+_STRATEGY_REGISTRY = [
+    ("over25_2goal", "BACK Over 2.5...", _detect_over25_2goal_trigger, ...),
+    ("xg_underperformance_base", "xG Underperf (Base)", _detect_xg_underperformance_trigger(...), ...),
+    ...
+]
+_STRATEGY_REGISTRY_KEYS = {e[0] for e in _STRATEGY_REGISTRY}
+
+# Mapeo de claves registry a claves legacy de cartera_config.json
+_LEGACY_MIN_DUR_KEY = {
+    "xg_underperformance_base": "xg",
+    "odds_drift_v1": "drift",
+    ...
+}
+
+# Mapeo de config legacy a claves registry (usado por _build_registry_config_map)
+_ORIG_REGISTRY_MAP = [
+    ("xg", [("xg_underperformance_base","base"), ...]),
+    ("drift", [("odds_drift_v1","v1"), ...]),
+    ...
+]
+
+# Cache de primer trigger (garantiza mismos datos en BT y LIVE)
+_trigger_first_data: dict  # keyed by (match_id, strategy_key)
+```
+
+#### Funciones principales
+
+| Funcion | Proposito |
+|---------|-----------|
+| `_analyze_strategy_simple(key, trigger_fn, extract_fn, win_fn, cfg, min_dur)` | Runner BT generico — itera partidos e invoca trigger |
+| `_build_registry_config_map(strategies_cfg)` | Mapea claves legacy config a claves registry con enabled state |
+| `analyze_cartera()` | Orquestador BT: itera `_STRATEGY_REGISTRY` → `_analyze_strategy_simple` por cada estrategia activa |
+| `detect_betting_signals(versions)` | Deteccion live: mismos triggers, `curr_idx=ultimo` |
+| `_detect_<name>_trigger(rows, curr_idx, cfg)` | 26 triggers, uno por estrategia |
+| `load_games()` | Carga games.csv + escanea data/ para CSV huerfanos |
+| `load_all_captures()` | Todas las capturas con ~50 campos de stats |
+| `load_match_detail()` | Ultimas 10 capturas + quality score + gap analysis |
+| `_get_cached_finished_data()` | Cache 5 min de partidos terminados con rows preprocesados |
+| `_co_market_cols()` | Mapea estrategia a columnas back/lay para cashout |
+| `_simulate_config()` | Bucle interno de simulacion cashout |
+| `optimize_cashout_cartera()` | Grid search sobre modos de cashout |
+| `detect_watchlist()` | Partidos cerca de trigger (condiciones parciales) |
+
+**NOTA:** Los numeros de linea cambian frecuentemente. Usar `grep` para localizar funciones especificas.
 
 ### 3.6 Frontend React (`dashboard/frontend/src/`)
 
@@ -236,43 +267,44 @@ Este fichero contiene TODA la logica de:
 
 ## 4. Backtest (Cartera)
 
-El backtest se ejecuta desde el notebook (`strategies_designer.ipynb`) o desde la CLI (`optimizer_cli.py`). El frontend ya no participa en el filtrado de backtest.
+El backtest principal se ejecuta via `scripts/bt_optimizer.py` (pipeline completo: grid search + presets + apply). El notebook `analisis/strategies_designer.ipynb` es un legacy alternativo.
 
-### Flujo de backtest:
+### bt_optimizer.py — Pipeline completo (5 fases):
 
 ```
-Notebook / optimizer_cli.py
+Phase 0: Carga datos historicos (CSVs partido_*.csv)
        ↓
-API call: GET /analytics/strategies/cartera (con parametros)
+Phase 1: Grid search individual por estrategia
+         _analyze_strategy_simple(key, trigger_fn, extract_fn, win_fn, cfg, min_dur)
+         → evaluacion con quality gates (N, ROI, IC95)
        ↓
-Backend: analyze_cartera() → llama 7x analyze_strategy_*() sobre datos historicos
+Phase 2: Construye cartera_config.json optima por estrategia
        ↓
-Devuelve bets con version flags
+Phase 3: Portfolio presets via optimizer_cli.py
+         → 4 criterios: max_roi, max_pl, max_wr, min_dd
+         → resultados en data/presets/preset_*.json
        ↓
-Notebook/CLI aplica filtros, ajustes y simulacion de bankroll
+Phase 4: Apply (merge inteligente en cartera_config.json)
+         → preserva las 26 estrategias; disabled solo cambia enabled=False
        ↓
-Resultado: metricas de rendimiento, combinacion optima
+Phase 5: Export CSV/XLSX de resultados
 ```
 
 ### analyze_cartera() — Orquestador backend:
 
+`analyze_cartera()` itera el `_STRATEGY_REGISTRY` y llama `_analyze_strategy_simple()` para cada estrategia:
+
 ```
-analyze_cartera()  →  analyze_strategy_back_draw_00(min_dur=N)
-                  →  analyze_strategy_xg_underperformance(min_dur=N)
-                  →  analyze_strategy_odds_drift(min_dur=N)
-                  →  analyze_strategy_goal_clustering(min_dur=N)
-                  →  analyze_strategy_pressure_cooker(min_dur=N)
-                  →  analyze_strategy_tarde_asia(min_dur=N)
-                  →  analyze_strategy_momentum_xg(version, min_dur=N)
+analyze_cartera()
+    for (key, name, trigger_fn, extract_fn, win_fn) in _STRATEGY_REGISTRY:
+        _analyze_strategy_simple(key, trigger_fn, extract_fn, win_fn, cfg, min_dur)
 ```
 
-Cada `analyze_strategy_*()` genera TODAS las apuestas posibles que cumplen condiciones basicas (marcador, minuto minimo, datos disponibles). Cada bet incluye **version flags** (passes_v2, passes_v3, etc.) que el notebook/CLI usa para filtrar.
-
-El unico parametro que `analyze_cartera()` pasa a las estrategias es `min_dur` (duracion minima de la senal), leido de `cartera_config.json > min_duration`.
+No hay funciones `analyze_strategy_*()` individuales. El unico parametro que `analyze_cartera()` pasa es `min_dur`, leido de `cartera_config.json > min_duration`.
 
 ### Endpoint backend:
 
-El endpoint `GET /analytics/strategies/cartera` sigue existiendo y es usado por `optimizer_cli.py` para obtener el superconjunto de bets. El filtrado y la evaluacion se hacen en el notebook o CLI.
+El endpoint `GET /analytics/strategies/cartera` es usado por `optimizer_cli.py` para obtener el superconjunto de bets para el portfolio optimizer (Phase 3).
 
 ---
 
@@ -359,8 +391,8 @@ Tras la limpieza, ambos sistemas son ahora de **capa unica** (backend only):
 | **Capas de filtrado** | 1 (backend genera bets → notebook/CLI filtra y evalua) | 1 (todo inline en backend) |
 | **Quien lee cartera_config.json** | Backend (via API) + notebook/CLI | Backend (`analytics.py` cada 60s) |
 | **Datos null** | Backend DEJA PASAR bets con datos null | Live REQUIERE datos no-null para generar senal |
-| **Versiones de estrategia** | Backend genera ALL bets con version flags; notebook/CLI filtra con la version activa | Backend filtra con la version activa directamente |
-| **Thresholds hardcodeados** | Cada `analyze_strategy_*()` tiene sus propias constantes internas | `detect_betting_signals()` lee params de `versions` dict |
+| **Triggers** | `_analyze_strategy_simple()` llama triggers con `curr_idx=idx` para cada fila | `detect_betting_signals()` llama triggers con `curr_idx=len(rows)-1` |
+| **Parametros de estrategia** | Solo `min_dur` de config. Grid search (bt_optimizer.py) pasa params directamente al trigger. | `detect_betting_signals()` lee todos los params de `versions` dict construido por analytics.py |
 
 ### Nota sobre datos NULL (descartado como problema)
 
@@ -374,7 +406,7 @@ Ambos sistemas (backtest y live) parten del mismo CSV. Si un stat es null en una
 
 Tanto las estrategias core como las SD deben pasar 3 quality gates:
 
-1. **N >= G_MIN_BETS**: minimo de apuestas (dinamico: `max(15, n_partidos // 25)`, tipicamente ~33)
+1. **N >= G_MIN_BETS**: minimo de apuestas (dinamico: `max(15, n_partidos // 25)`, ~46 con 1168 partidos)
 2. **ROI >= G_MIN_ROI** (10%): retorno minimo sobre inversion
 3. **IC95_lower >= IC95_MIN_LOW** (40%): limite inferior del intervalo de confianza Wilson al 95%
 
@@ -447,44 +479,44 @@ Si una estrategia no pasa alguno de estos gates, se desactiva automaticamente en
 - Solo tracking en backtest. Config: `enabled: true` pero `tarde_asia: "off"` en versions dict.
 - No genera senales live.
 
-### 7.8 Estrategias SD (Strategy Designer) — 19 estrategias, SOLO BACKTEST
+### 7.8 Las 19 estrategias adicionales — completamente integradas
 
-Las estrategias SD fueron descubiertas automaticamente por el agente strategy-designer sobre los datos historicos (~800+ partidos). Estan definidas en:
+Las 19 estrategias adicionales fueron descubiertas por el agente strategy-designer. Historicamente tenian el prefijo `sd_`, que fue eliminado en 2026-03-12 — ahora son entidades completamente independientes e iguales al resto.
 
-- **`aux/sd_generators.py`** (1816 lineas): 19 funciones generadoras que iteran filas de CSV y producen bets
-- **`aux/sd_filters.py`** (825 lineas): filtros realistas (odds, dedup, slippage, stability)
-- **`betfair_scraper/dashboard/backend/utils/sd_strategies.py`** (205 lineas): `SD_APPROVED_CONFIGS` (19 configs) + `eval_sd()` evaluador
+**Integracion completa** (identica a las 7 estrategias originales):
+- Trigger propio `_detect_<name>_trigger()` en `csv_reader.py`
+- BT via `analyze_cartera()` → `_analyze_strategy_simple()`
+- LIVE via `detect_betting_signals()` con los mismos triggers
+- Config propia en `cartera_config.json`
 
-**Las 19 estrategias SD aprobadas:**
+**Las 19 estrategias:**
 
 | # | Clave | Descripcion |
 |---|-------|-------------|
-| 1 | `sd_over25_2goal` | BACK O2.5 from 2-Goal Lead |
-| 2 | `sd_under35_late` | BACK U3.5 Late |
-| 3 | `sd_lay_over45_v3` | LAY O4.5 V3 Tight |
-| 4 | `sd_draw_xg_conv` | BACK Draw xG Convergence |
-| 5 | `sd_poss_extreme` | BACK O0.5 Poss Extreme |
-| 6 | `sd_longshot` | BACK Longshot |
-| 7 | `sd_cs_00` | BACK CS 0-0 |
-| 8 | `sd_over25_2goals` | BACK O2.5 from Two Goals |
-| 9 | `sd_cs_close` | BACK CS 2-1/1-2 |
-| 10 | `sd_cs_one_goal` | BACK CS 1-0/0-1 |
-| 11 | `sd_draw_11` | BACK Draw 1-1 |
-| 12 | `sd_ud_leading` | BACK UD Leading |
-| 13 | `sd_under35_3goals` | BACK U3.5 Three-Goal Lid |
-| 14 | `sd_away_fav_leading` | BACK Away Fav Leading |
-| 15 | `sd_home_fav_leading` | BACK Home Fav Leading |
-| 16 | `sd_under45_3goals` | BACK U4.5 Three Goals Low xG |
-| 17 | `sd_cs_11` | BACK CS 1-1 Late |
-| 18 | `sd_cs_20` | BACK CS 2-0/0-2 Late |
-| 19 | `sd_cs_big_lead` | BACK CS Big Lead Late |
+| 1 | `over25_2goal` | BACK O2.5 from 2-Goal Lead |
+| 2 | `under35_late` | BACK U3.5 Late |
+| 3 | `lay_over45_v3` | LAY O4.5 V3 Tight |
+| 4 | `draw_xg_conv` | BACK Draw xG Convergence |
+| 5 | `poss_extreme` | BACK O0.5 Poss Extreme |
+| 6 | `longshot` | BACK Longshot |
+| 7 | `cs_00` | BACK CS 0-0 |
+| 8 | `over25_2goals` | BACK O2.5 from Two Goals |
+| 9 | `cs_close` | BACK CS 2-1/1-2 |
+| 10 | `cs_one_goal` | BACK CS 1-0/0-1 |
+| 11 | `draw_11` | BACK Draw 1-1 |
+| 12 | `ud_leading` | BACK UD Leading |
+| 13 | `under35_3goals` | BACK U3.5 Three-Goal Lid |
+| 14 | `away_fav_leading` | BACK Away Fav Leading |
+| 15 | `home_fav_leading` | BACK Home Fav Leading |
+| 16 | `under45_3goals` | BACK U4.5 Three Goals Low xG |
+| 17 | `cs_11` | BACK CS 1-1 Late |
+| 18 | `cs_20` | BACK CS 2-0/0-2 Late |
+| 19 | `cs_big_lead` | BACK CS Big Lead Late |
 
-**Integracion en config**: Algunas SD tienen entradas en `cartera_config.json` (lay_over15, lay_draw_asym, lay_over25_def, back_sot_dom, back_over15_early, lay_false_fav, sd_over25_2goal, sd_under35_late, sd_longshot, sd_cs_close, sd_cs_one_goal, sd_ud_leading, sd_home_fav_leading, sd_cs_20, sd_cs_big_lead). Estas entradas se usan para la evaluacion en presets via `optimizer_cli.py`.
-
-**Limitaciones actuales:**
-- **Sin deteccion live**: no hay codigo en `detect_betting_signals()` para SD. Solo funcionan en backtest via el notebook.
-- **Evaluacion**: el notebook (`strategies_designer.ipynb`) ejecuta los generadores sobre datos historicos y aplica los mismos quality gates + ajustes realistas que las core.
-- **Presets**: las SD se incluyen en `_STRATEGY_PARAMS` (celda notebook) y en `_build_preset_config()` (`optimizer_cli.py`) para persistir en `cartera_config.json`.
+**Archivos auxiliares** (legacy, usados en notebooks):
+- `auxiliar/sd_generators.py` — generadores legacy (wrappers sobre triggers de csv_reader)
+- `auxiliar/sd_filters.py` — filtros legacy para backtests en notebook
+- `utils/sd_strategies.py` — `eval_sd()` evaluador legacy para notebook
 
 ---
 

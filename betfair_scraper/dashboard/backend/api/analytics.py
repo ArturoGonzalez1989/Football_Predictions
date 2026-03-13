@@ -159,17 +159,26 @@ def _apply_realistic_adjustments(signals: list, adj: dict, risk_filter: str) -> 
       6. Anti-contrarias (first match-odds bet type per match wins)
       7. Dedup (same match + same market, keep first)
     """
-    adj_enabled      = adj.get("enabled", True)
-    min_odds_cfg     = float(adj.get("min_odds", 0))       if adj_enabled else 0
-    max_odds_cfg     = float(adj.get("max_odds", 999))     if adj_enabled else 999
-    slippage_pct     = float(adj.get("slippage_pct", 0))   if adj_enabled else 0
-    drift_min_min    = int(adj.get("drift_min_minute", 0)) if adj_enabled else 0
-    dedup_enabled    = bool(adj.get("dedup", False))        if adj_enabled else False
-    conflict_filter  = bool(adj.get("conflict_filter", False)) if adj_enabled else False
-    allow_contrarias = bool(adj.get("allow_contrarias", True)) if adj_enabled else True
-    stability_cfg    = int(adj.get("stability", 1))         if adj_enabled else 1
-    global_min       = adj.get("global_minute_min")         if adj_enabled else None
-    global_max       = adj.get("global_minute_max")         if adj_enabled else None
+    adj_enabled = adj.get("enabled", True)
+
+    def _num(val, default, cast):
+        if val is None:
+            return default
+        try:
+            return cast(val)
+        except Exception:
+            return default
+
+    min_odds_cfg     = _num(adj.get("min_odds", 0),   0.0, float)   if adj_enabled else 0.0
+    max_odds_cfg     = _num(adj.get("max_odds", 999), 999.0, float) if adj_enabled else 999.0
+    slippage_pct     = _num(adj.get("slippage_pct", 0), 0.0, float) if adj_enabled else 0.0
+    drift_min_min    = _num(adj.get("drift_min_minute", 0), 0, int) if adj_enabled else 0
+    dedup_enabled    = bool(adj.get("dedup", False))                if adj_enabled else False
+    conflict_filter  = bool(adj.get("conflict_filter", False))      if adj_enabled else False
+    allow_contrarias = bool(adj.get("allow_contrarias", True))      if adj_enabled else True
+    stability_cfg    = _num(adj.get("stability", 1), 1, int)        if adj_enabled else 1
+    global_min       = adj.get("global_minute_min")                 if adj_enabled else None
+    global_max       = adj.get("global_minute_max")                 if adj_enabled else None
 
     skip_reasons: dict = {}  # id(sig) → reason string
 
@@ -262,18 +271,20 @@ def _apply_realistic_adjustments(signals: list, adj: dict, risk_filter: str) -> 
                 skip_reasons[id(sig)] = f"contraria({bet_type}!={seen_match_odds[mid]})"
         pass1 = filtered4
 
-    # Pass 5: dedup (same match + same market, keep first)
-    if dedup_enabled:
-        seen_markets: set = set()
-        filtered5 = []
-        for sig in pass1:
-            key = _live_market_key(sig)
-            if key not in seen_markets:
-                seen_markets.add(key)
-                filtered5.append(sig)
-            else:
-                skip_reasons[id(sig)] = f"dedup({key})"
-        pass1 = filtered5
+    # Pass 5: dedup (same match + same market, keep first).
+    # Always applied (market-group deduplication is mandatory, not opt-in).
+    # The legacy `dedup_enabled` flag is kept for backwards compatibility but
+    # no longer gates this pass.
+    seen_markets: set = set()
+    filtered5 = []
+    for sig in pass1:
+        key = _live_market_key(sig)
+        if key not in seen_markets:
+            seen_markets.add(key)
+            filtered5.append(sig)
+        else:
+            skip_reasons[id(sig)] = f"dedup({key})"
+    pass1 = filtered5
 
     return pass1, skip_reasons
 

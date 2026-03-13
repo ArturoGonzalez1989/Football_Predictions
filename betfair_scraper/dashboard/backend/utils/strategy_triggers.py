@@ -735,6 +735,14 @@ def _detect_momentum_xg_trigger(rows: list, curr_idx: int, cfg: dict) -> Optiona
          xg_underperf_local, xg_underperf_visitante}
     """
     row = rows[curr_idx]
+    cfg = {
+        **cfg,
+        "sot_min": cfg.get("sot_min", cfg.get("sotMin", 2)),
+        "sot_ratio_min": cfg.get("sot_ratio_min", cfg.get("sotRatioMin", 1.5)),
+        "xg_underperf_min": cfg.get("xg_underperf_min", cfg.get("xgUnderperfMin", 0.3)),
+        "min_odds": cfg.get("min_odds", cfg.get("odds_min", cfg.get("oddsMin", 1.5))),
+        "max_odds": cfg.get("max_odds", cfg.get("odds_max", cfg.get("oddsMax", 4.0))),
+    }
     minuto = _to_float(row.get("minuto", ""))
     if minuto is None:
         return None
