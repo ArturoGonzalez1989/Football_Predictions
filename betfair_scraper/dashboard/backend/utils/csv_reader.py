@@ -63,6 +63,7 @@ from .strategy_triggers import (
     _detect_draw_equalizer_trigger,
     _detect_draw_22_trigger,
     _detect_lay_over45_blowout_trigger,
+    _detect_over35_early_goals_trigger,
     _get_over_odds_field,
 )
 
@@ -369,6 +370,12 @@ _STRATEGY_REGISTRY = [
      "Lay Over 4.5 in 3-0/0-3 blowouts: winning team drops intensity post 3rd goal",
      _sd_fixed("lay_over45", "LAY OVER 4.5", ["goal_minute", "sot_post"]),
      lambda t, gl, gv: (gl + gv) <= 4),
+
+    ("over35_early_goals", "BACK Over 3.5 Early Goals",
+     _detect_over35_early_goals_trigger,
+     "Back Over 3.5 when exactly 3 goals scored before min 65: market underprices 4th goal",
+     _sd_fixed("back_over35", "BACK OVER 3.5", ["goals_total", "score"]),
+     lambda t, gl, gv: (gl + gv) >= 4),
 
     # ─── Original 7 strategies — unified BT/LIVE via registry ──────────────
 

@@ -1807,4 +1807,40 @@ def _detect_lay_over45_blowout_trigger(rows: list, curr_idx: int, cfg: dict) -> 
     }
 
 
+def _detect_over35_early_goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Over 3.5 when exactly 3 goals scored before m_max (early high-scoring match).
+
+    Edge: market anchors Over 3.5 on pre-match xG. When 3 goals arrive before
+    minute 65, the match has proven high-scoring intent beyond model predictions.
+    Anti-tautology: triggers ONLY on exactly 3 goals (not 4+, which is already won).
+
+    cfg keys: m_min, m_max, odds_min, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 40))
+    m_max = float(cfg.get("m_max", 65))
+    odds_min = float(cfg.get("odds_min", 1.8))
+    odds_max = float(cfg.get("odds_max", 8.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    # Exactly 3 goals — anti-tautology: 4+ means Over 3.5 already won
+    if int(gl_f) + int(gv_f) != 3:
+        return None
+    odds = _to_float(row.get("back_over35", ""))
+    if odds is None or not (odds_min <= odds <= odds_max):
+        return None
+    return {
+        "minuto": m,
+        "back_over35": odds,
+        "goals_total": 3,
+        "score": f"{int(gl_f)}-{int(gv_f)}",
+    }
+
+
 # ── End unified strategy trigger functions ───────────────────────────────────

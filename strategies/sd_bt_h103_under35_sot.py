@@ -387,7 +387,7 @@ def main():
         print(f"  under35_3goals match IDs: {len(u35_3g_ids)}")
         print(f"  Overlap H103 vs under35_late: {len(overlap_late)} ({len(overlap_late)/len(h103_ids)*100:.1f}% of H103)")
         print(f"  Overlap H103 vs under35_3goals: {len(overlap_3g)} ({len(overlap_3g)/len(h103_ids)*100:.1f}% of H103)")
-        print(f"  SAME MARKET (Under 3.5) → overlap gate applies")
+        print(f"  SAME MARKET (Under 3.5) -- overlap gate applies")
 
         # Show performance of unique-only bets
         unique_bets = [b for b in best["bets"] if b["match_id"] not in (u35_late_ids | u35_3g_ids)]

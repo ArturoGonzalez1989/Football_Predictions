@@ -11,13 +11,13 @@
     "xg": {
       "enabled": true,
       "version": "base",
-      "xgExcessMin": 0.5,
+      "xgExcessMin": 0.6,
       "sotMin": 0,
-      "minuteMin": 0,
-      "minuteMax": 70
+      "minuteMin": 10,
+      "minuteMax": 80
     },
     "drift": {
-      "enabled": false,
+      "enabled": true,
       "version": "v1",
       "driftMin": 15,
       "oddsMax": 999,
@@ -200,13 +200,20 @@
       "odds_max": 8.0
     },
     "lay_over45_blowout": {
-      "enabled": true,
-      "minuteMin": 63,
-      "minuteMax": 78,
-      "post_window": 5,
+      "enabled": false,
+      "minuteMin": 60,
+      "minuteMax": 75,
+      "post_window": 10,
       "sot_max": 1,
       "odds_max": 15.0,
-      "include_31": 1
+      "include_31": 0
+    },
+    "over35_early_goals": {
+      "enabled": true,
+      "minuteMin": 40,
+      "minuteMax": 65,
+      "oddsMin": 1.8,
+      "oddsMax": 8.0
     }
   },
   "bankroll_mode": "fixed",
@@ -255,5 +262,12 @@
     "ci_high": 77.5,
     "roi": 40.03,
     "n_partidos": 737
+  },
+  "over35_early_goals": {
+    "enabled": true,
+    "minuteMin": 40,
+    "minuteMax": 65,
+    "oddsMin": 1.8,
+    "oddsMax": 8.0
   }
 }

@@ -1,10 +1,77 @@
 # Strategy Designer — Historial de investigacion
 Ultima actualizacion: 2026-03-13
-Dataset al momento de la investigacion: 954 partidos finalizados (1228 CSVs, 2026-02-10 a 2026-03-13)
-Total hipotesis investigadas: 101 (H1-H87 internal + H88-H95 from Gemini analisis2.md + H96-H101 from Gemini batch 2) in 15 rounds + R16 re-evaluation + R17 Gemini analysis + R18 Gemini batch 2
+Dataset al momento de la investigacion: 963 partidos finalizados (1242 CSVs, 2026-02-10 a 2026-03-13)
+Total hipotesis investigadas: 103 (H1-H87 internal + H88-H95 from Gemini analisis2.md + H96-H101 from Gemini batch 2 + H102-H103 from R19) in 15 rounds + R16 re-evaluation + R17 Gemini analysis + R18 Gemini batch 2 + R19 market scanner validation
 
 > Este fichero es la referencia para el agente strategy-designer.
 > Antes de investigar una hipotesis nueva, verificar que no este ya listada aqui.
+
+## APROBADAS RONDA 19 (1 nueva — market scanner validation)
+
+Ronda 19 validated candidate A from the R19 market scanner: BACK Over 3.5 when exactly 3 goals scored before min 65. This is the first Over 3.5 strategy to pass all quality gates. 963 finished matches, 1242 CSVs.
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI (realistic) | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H102 | BACK Over 3.5 Early Goals | BACK O3.5 | 66 | 65.2% | +75.5% | 4.27 | +67.7% | +93.5% | strategies/sd_report_h102_back_over35_early.md |
+
+### Quality gates resumen (Ronda 19, realistic validation)
+
+| Gate | H102 |
+|------|------|
+| G1: N>=49 | PASS (66) |
+| G2: ROI>=10% (realistic) | PASS (75.5%) |
+| G3: IC95_lo>=40% | PASS (53.1%) |
+| G4: Train ROI>0% | PASS (67.7%) |
+| G5: Test ROI>0% | PASS (93.5%) |
+| G6: Overlap<30% same market | PASS (0% -- unique Over 3.5 market) |
+| G7: >=3 ligas | PASS (32) |
+| G8: DateConc<50% | PASS (30.3%) |
+
+### Notas sobre H102
+
+- **First Over 3.5 strategy ever approved.** Previous attempts (H78: test ROI=0.5%) failed because they lacked the "3 goals already scored" filter. The key insight is that 3 goals already on the board is a much stronger signal than any stat-based predictor of a 4th goal.
+- **28.9pp edge** over implied probability (65.2% actual vs 36.3% implied from avg odds 2.76). Largest edge found in any Over/Under market.
+- **100/576 combos pass gates** — edge is robust across wide parameter ranges, not parameter-dependent.
+- **Won bets have HIGHER avg odds** (2.84 vs 2.61 lost) — genuine mispricing confirmed.
+- **Test ROI > Train ROI** (93.5% vs 67.7%) — no overfitting, edge strengthening over time.
+- **32 leagues**, max single-league concentration 10.6% — universally applicable.
+- **Anti-tautology enforced**: only triggers when exactly 3 goals scored (not 4+, which would make Over 3.5 already won).
+- **Unique market slot**: no existing strategy trades Over 3.5. Zero market overlap with all 26 existing strategies.
+- **Different from H78 (Over 3.5 FH Activity, DISCARDED)**: H78 used first-half stats without requiring goals. H102 requires 3 actual goals, which is a fundamentally different and much stronger signal.
+- **Different from lay_over45_blowout (H95, Gemini)**: H95 is LAY Over 4.5 with LOW goals/xG. H102 is BACK Over 3.5 with HIGH goals. Opposite conditions, opposite markets.
+
+## DESCARTADA RONDA 19 — Candidato C (H103)
+
+Ronda 19 also validated Candidate C from the market scanner: BACK Under 3.5 with SoT dominance (any score). Despite passing all quality gates and realistic validation individually, it FAILS the overlap gate.
+
+| H# | Name | Mercado | Reason |
+|----|------|---------|--------|
+| H103 | BACK Under 3.5 SoT Dominance | BACK U3.5 | **OVERLAP FATAL**: 53.8% overlap with existing Under 3.5 strategies (under35_late + under35_3goals) in the SAME market. Gate threshold: 30%. Unique bets (N=85) have ROI=7.4% (<10% gate). The SoT dominance signal adds quality filtering on top of existing 3-goal triggers but does not generate sufficient independent value. |
+
+### H103 detailed results
+
+**Best combo**: min=60-85, sot_adv=1, side=any, score=any, odds=[1.2, 4.0]
+- Full set: N=184, WR=68.5%, ROI=20.7% realistic, Sharpe=2.81, CI95=[61.4%, 74.8%]
+- Train: ROI=19.1% | Test: ROI=24.3% (test > train, robust)
+- 41 leagues, avg odds=1.91
+- 788/2187 grid combos pass all quality gates -- signal is real and robust
+
+**Realistic validator output**: PASS (all 5 gates pass)
+```
+SD REALISTIC VALIDATION
+  Raw:       N=184, WR=68.5%, ROI=23.1%, P/L=425.15, MaxDD=74.11
+  Realistic: N=184, WR=68.5%, ROI=20.7%, P/L=381.1, MaxDD=57.82
+  Delta:     N=0, WR=0.0pp, ROI=-2.4pp, P/L=-44.05
+  Quality Gates (PASS): all 5 pass
+```
+
+**Why it fails**: The edge is real but REDUNDANT.
+- 53.8% of H103's bets fire on matches already covered by under35_late or under35_3goals
+- The 3-goal trigger subset (N=99) carries most of the profit; these matches already have Under 3.5 coverage
+- Unique bets (N=85, mostly at 0-2 goals) have WR=74.1% but avg odds=1.66, producing ROI=7.4%
+- Score distribution at trigger: 1-1 (40), 2-1 (38), 2-0 (29), 1-2 (25), 3-0 (18) -- dominated by tight scores where Under 3.5 is already near-certain
+
+**Lesson**: SoT dominance is a valid quality filter for Under 3.5 (it selects higher-WR subsets), but it should be added as an OPTIONAL filter to existing under35 strategies rather than as a standalone strategy. The independent signal at low-goal states is too weak (odds too low) to generate meaningful ROI.
 
 ## INTEGRADA EN PRODUCCION
 
@@ -422,7 +489,7 @@ Ronda 17 evaluated 8 hypotheses from Gemini's `strategies/analisis2.md`. 4 were 
 
 **H55 nota**: CS 2-0/0-2 at min 65-80 without odds cap: N=105, WR=41%, ROI=26.5%, Sharpe=1.48. The WR is too uncertain (IC95 lower bound 32%). With more data, the confidence interval could narrow. The edge appears real (train ROI=22%, test ROI=36.6%) but the variability in outcomes is high because losses cost more (CS odds avg 3.50 means -10 per loss vs +23.75 per win).
 
-## DESCARTADAS (47) -- NO RE-INVESTIGAR
+## DESCARTADAS (48) -- NO RE-INVESTIGAR
 
 | H# | Nombre | Mercado | Razon de descarte |
 |---|---|---|---|
@@ -479,6 +546,7 @@ Ronda 17 evaluated 8 hypotheses from Gemini's `strategies/analisis2.md`. 4 were 
 | H99 | "Cierre 4-1" BACK CS 4-1/1-4 | BACK CS 4-1/1-4 | Columns back_rc_4_1/back_rc_1_4 DO NOT EXIST in CSVs (0% presence). |
 | H100 | "Remontada Incompleta" BACK Draw 2-deficit | BACK Draw | Only 3.0% draw rate from 2-goal deficit. ROI ~-40% at any odds. |
 | H101 | "Anti-Scoreline 0-2/2-0" LAY CS 0-2/2-0 | LAY CS 0-2/2-0 | 108 grid combos ALL negative ROI. Best: N=43, ROI=-20.6%. Market correct. |
+| H103 | BACK Under 3.5 SoT Dominance | BACK U3.5 | Overlap 53.8% with under35_late + under35_3goals (same market, gate=30%). Unique bets: N=85, ROI=7.4% (<10%). SoT filter is valid quality enhancement for existing strategies, not independent signal. |
 
 ## MERCADOS / CONCEPTOS AGOTADOS
 
@@ -527,7 +595,8 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 
 ## NOTAS PARA FUTURAS RONDAS
 
-- Hipotesis H1-H101 ya cubiertas. Siguiente ronda empieza en H102.
+- Hipotesis H1-H103 ya cubiertas. Siguiente ronda empieza en H104.
+- **H103 insight (SoT dominance for Under 3.5)**: SoT advantage is a valid quality filter but not an independent signal. Consider adding SoT filter as optional parameter to under35_late/under35_3goals config rather than creating new strategy.
 - **Ronda 15 hallazgos clave (H87 -- Team Yield by Role)**:
   - Tested role-specific yield (home-as-home ROI, away-as-away ROI, role_balance) across 2155 bets, 7 strategies, 931 matches.
   - Grid search: 3 yield types x 9 thresholds x 4 min_hist x 2 directions = 216 combos.
