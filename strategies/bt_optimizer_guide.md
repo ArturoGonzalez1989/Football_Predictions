@@ -215,6 +215,65 @@ python tests/reconcile.py
 
 ---
 
+## Estrategias LAY — P/L distinto al BACK
+
+Las estrategias LAY tienen una fórmula de P/L diferente a las BACK:
+- **Win**: `+STAKE * 0.95` (fijo, independiente de odds)
+- **Loss**: `-STAKE * (lay_odds - 1)` (liability — crece con las odds)
+
+Esto significa que odds altas en LAY implican pérdidas potenciales grandes. El ROI del BT
+refleja esto correctamente porque `_analyze_strategy_simple` lee la win function del registry
+(que evalúa si el resultado final cumple la condición) y el P/L calculado en `analyze_cartera()`
+usa la fórmula LAY cuando el tipo de mercado es LAY.
+
+Estrategias LAY actuales en el pipeline: `lay_over45_v3`, `lay_over45_blowout`,
+`lay_draw_away_leading` (H104), `lay_cs11` (H106).
+
+**Importante al definir el search space de una estrategia LAY**: incluir un rango de `odds_max`
+que controle la liability máxima. Con odds muy altas (>20), una sola pérdida puede borrar
+muchas ganancias.
+
+---
+
+## Estrategias registradas en el pipeline
+
+| Estrategia | Tipo | Round | Estado bt_optimizer |
+|-----------|------|-------|---------------------|
+| goal_clustering | BACK | Original | ✅ En SINGLE_STRATEGIES |
+| pressure_cooker | BACK | Original | ✅ |
+| over25_2goal | BACK | R1 | ✅ |
+| under35_late | BACK | R1 | ✅ |
+| longshot | BACK | R1 | ✅ |
+| cs_close | BACK | R1 | ✅ |
+| cs_one_goal | BACK | R1 | ✅ |
+| ud_leading | BACK | R1 | ✅ |
+| home_fav_leading | BACK | R1 | ✅ |
+| cs_20 | BACK | R1 | ✅ |
+| cs_big_lead | BACK | R1 | ✅ |
+| lay_over45_v3 | LAY | R1 | ✅ |
+| draw_xg_conv | BACK | R1 | ✅ |
+| poss_extreme | BACK | R1 | ✅ |
+| cs_00 | BACK | R1 | ✅ |
+| over25_2goals | BACK | R1 | ✅ |
+| draw_11 | BACK | R1 | ✅ |
+| under35_3goals | BACK | R1 | ✅ |
+| away_fav_leading | BACK | R1 | ✅ |
+| under45_3goals | BACK | R1 | ✅ |
+| cs_11 | BACK | R1 | ✅ |
+| draw_equalizer | BACK | R17 | ✅ |
+| draw_22 | BACK | R17 | ✅ |
+| lay_over45_blowout | LAY | R18 | ✅ |
+| over35_early_goals | BACK | R19 | ✅ (añadida 2026-03-14) |
+| lay_draw_away_leading | LAY | R19 | ✅ (añadida 2026-03-14) |
+| lay_cs11 | LAY | R19 | ✅ (añadida 2026-03-14) |
+| back_draw_00 | BACK | Original | ✅ (versioned family) |
+| xg_underperformance | BACK | Original | ✅ (versioned family) |
+| odds_drift | BACK | Original | ✅ (versioned family) |
+| momentum_xg | BACK | Original | ✅ (versioned family) |
+| tarde_asia | BACK | Original | Sin search space (liga-based) |
+
+---
+
 ## Notas importantes
 
 - **`--phase individual` guarda resultados** en `bt_optimizer_results.json`. Los phases posteriores

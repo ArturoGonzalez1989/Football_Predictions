@@ -252,6 +252,28 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "odds_max":     [10.0, 15.0, 20.0],
         "include_31":   [0, 1],
     },
+
+    # ── R19 brute-force discoveries ────────────────────────────────────────────
+    "over35_early_goals": {
+        "m_min":     [40, 45, 50],
+        "m_max":     [60, 65, 70],
+        "odds_min":  [1.5, 1.8, 2.0],
+        "odds_max":  [6.0, 8.0, 10.0],
+    },
+    "lay_draw_away_leading": {  # LAY — win=+stake*0.95, loss=-stake*(odds-1)
+        "m_min":    [50, 55, 60],
+        "m_max":    [75, 78, 80],
+        "xg_max":   [1.2, 1.5, 1.8, 2.0],
+        "odds_min": [2.0, 2.5],
+        "odds_max": [8.0, 10.0],
+    },
+    "lay_cs11": {               # LAY — win=+stake*0.95, loss=-stake*(odds-1)
+        "m_min":     [55, 58, 60, 63],
+        "m_max":     [80, 83, 85, 88],
+        "odds_min":  [1.5, 2.0],
+        "odds_max":  [20.0, 50.0],
+    },
+
     # tarde_asia: no grid search (detection is liga-based, no tunable params)
 }
 
@@ -276,6 +298,8 @@ SINGLE_STRATEGIES = [
     "under35_3goals", "away_fav_leading", "under45_3goals", "cs_11",
     "draw_equalizer", "draw_22",
     "lay_over45_blowout",
+    # R19 brute-force discoveries
+    "over35_early_goals", "lay_draw_away_leading", "lay_cs11",
 ]
 
 
