@@ -15,16 +15,9 @@ from pathlib import Path
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
-try:
-    import requests
-except ImportError:
-    print("ERROR: 'requests' no instalado. Ejecuta: pip install requests")
-    sys.exit(1)
-
 # ── Config ──────────────────────────────────────────────────────────────
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-API_URL = "http://localhost:8000/api/analytics/strategies/cartera"
 CONFIG_PATH = BASE_DIR / "betfair_scraper" / "cartera_config.json"
 DATA_DIR = BASE_DIR / "betfair_scraper" / "data"
 OUTPUT_PATH = Path(__file__).resolve().parent / "dashboard_bt.html"
@@ -86,50 +79,28 @@ def _enrich_bet(b, match_meta):
 
 
 def fetch_bt_bets():
-    """Read the most recent portfolio_bets_*.xlsx (or .csv) exported by the notebook."""
-    import csv as _csv
+    """Read BT bets directly from analyze_cartera() — canonical source for all 26 strategies."""
+    backend = str(BASE_DIR / "betfair_scraper" / "dashboard" / "backend")
+    if backend not in sys.path:
+        sys.path.insert(0, backend)
+    from utils import csv_reader as _cr
 
-    bt_dir = Path(__file__).resolve().parent
-    candidates = sorted(bt_dir.glob("portfolio_bets_*.xlsx"), reverse=True)
-    use_excel = bool(candidates)
-    if not candidates:
-        candidates = sorted(bt_dir.glob("portfolio_bets_*.csv"), reverse=True)
-    if not candidates:
-        print("ERROR: No se encontró portfolio_bets_*.xlsx ni .csv en analisis/")
-        print("Ejecuta el notebook strategies_designer.ipynb (Kernel → Restart & Run All).")
-        sys.exit(1)
-
-    bt_csv = candidates[0]
-    print(f"  Leyendo BT {'Excel' if use_excel else 'CSV'}: {bt_csv.name}")
     match_meta = _build_match_meta()
-
-    if use_excel:
-        import openpyxl as _xl
-        wb = _xl.load_workbook(bt_csv, read_only=True, data_only=True)
-        ws = wb.active
-        headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
-        rows_iter = (
-            {headers[i]: (c.value if c.value is not None else "") for i, c in enumerate(row)}
-            for row in ws.iter_rows(min_row=2)
-        )
-    else:
-        rows_iter = _csv.DictReader(open(bt_csv, encoding="utf-8"))
+    result = _cr.analyze_cartera()
+    bets_raw = result.get("bets", [])
 
     bets = []
-    for row in rows_iter:
-        pl_raw = float(row.get("pl_eur") or row.get("pl") or 0)
-        won_raw = row.get("won", "")
-        odds = float(row.get("effective_odds") or row.get("back_odds") or 0) or None
+    for row in bets_raw:
         b = {
             "match_id":      row.get("match_id", ""),
             "strategy":      row.get("strategy", ""),
             "timestamp_utc": row.get("timestamp_utc", ""),
-            "minuto":        int(float(row["minuto"])) if row.get("minuto") else None,
-            "won":           won_raw in ("True", "1", "true", True),
-            "pl":            round(pl_raw * FLAT_STAKE, 2),
-            "back_odds":     odds,
-            "team":          row.get("team") or row.get("backed_team") or "",
-            "risk_level":    row.get("risk_level", ""),
+            "minuto":        row.get("minuto"),
+            "won":           bool(row.get("won")),
+            "pl":            round(float(row.get("pl", 0)) * FLAT_STAKE, 2),
+            "back_odds":     row.get("back_odds"),
+            "team":          row.get("team", "") or "",
+            "risk_level":    "",
         }
         bets.append(_enrich_bet(b, match_meta))
 
@@ -172,20 +143,6 @@ def fetch_live_bets():
     return bets
 
 
-def fetch_data():
-    print("Fetching data from API...")
-    try:
-        r = requests.get(API_URL, timeout=120)
-        r.raise_for_status()
-    except Exception as e:
-        print(f"ERROR: No se pudo conectar al backend: {e}")
-        print("Asegúrate de que el backend está corriendo en localhost:8000")
-        sys.exit(1)
-    data = r.json()
-    print(f"  Recibidas {len(data.get('bets', []))} bets crudas")
-    return data
-
-
 def load_config():
     with open(CONFIG_PATH, encoding="utf-8") as f:
         return json.load(f)
@@ -195,335 +152,6 @@ def count_matches():
     return len(list(DATA_DIR.glob("partido_*.csv")))
 
 
-def fetch_sd_bets(cfg):
-    """Generate SD strategy bets directly from CSV files via aux/sd_generators."""
-    import sys
-    aux_dir = str(BASE_DIR / "aux")
-    if aux_dir not in sys.path:
-        sys.path.insert(0, aux_dir)
-    try:
-        from sd_generators import generate_all_new_bets
-    except ImportError as e:
-        print(f"  WARNING: No se pudo importar sd_generators: {e}")
-        return []
-
-    strats = cfg.get("strategies", {})
-    enabled_sd = {k for k, v in strats.items()
-                  if k.startswith("sd_") and isinstance(v, dict) and v.get("enabled")}
-    if not enabled_sd:
-        return []
-
-    print(f"  Generando bets SD ({len(enabled_sd)} estrategias activas)...")
-    all_sd = generate_all_new_bets(str(DATA_DIR))
-    print(f"  SD brutas: {len(all_sd)}")
-
-    result = []
-    for bet in all_sd:
-        s = bet.get("strategy", "")
-        if s not in enabled_sd:
-            continue
-
-        # Apply config minute range
-        sc = strats.get(s, {})
-        m = bet.get("minuto")
-        if m is not None and (m < sc.get("m_min", 0) or m > sc.get("m_max", 90)):
-            continue
-
-        # Normalize odds to back_odds (generators use various field names)
-        if not bet.get("back_odds"):
-            for odds_key in (
-                "back_cs_odds", "back_cs_00_odds",
-                "back_ud_odds",
-                "back_home_fav_odds", "back_home_odds",
-                "back_away_odds",
-                "back_longshot_odds",
-                "back_over_odds", "back_over25_odds", "back_over05_odds",
-                "back_under35_odds", "back_under45_odds",
-                "back_draw_11_odds", "back_draw_conv_odds",
-                "lay_over45_odds",
-                "over_odds",
-            ):
-                if bet.get(odds_key):
-                    bet["back_odds"] = bet[odds_key]
-                    break
-
-        # Scale P/L from stake=1 (generators) to FLAT_STAKE=10 (dashboard)
-        bet["pl"] = round(bet["pl"] * FLAT_STAKE, 2)
-
-        # Ensure compatibility with apply_realistic_adjustments:
-        # - stability_count=99 so SD bets always pass the stability filter
-        # - team=strategy so dedup uses (match_id, strategy) as key instead of (match_id, Unknown)
-        bet["stability_count"] = 99
-        bet.setdefault("team", bet.get("strategy", "sd"))
-
-        result.append(bet)
-
-    print(f"  SD tras filtros: {len(result)}")
-    return result
-
-
-# ── Filtering (mirrors cartera.ts) ──────────────────────────────────────
-
-def get_bet_odds(b):
-    return b.get("back_draw") or b.get("back_over_odds") or b.get("over_odds") or b.get("back_odds") or 2.0
-
-
-def get_bet_type(b):
-    strat = b.get("strategy", "")
-    if strat == "back_draw_00":
-        return "Draw"
-    ol = b.get("over_line", "")
-    if ol:
-        return ol.replace("Over ", "O ")
-    return b.get("team", "Unknown")
-
-
-def bet_market_key(b):
-    return f"{b.get('match_id', '')}::{get_bet_type(b)}"
-
-
-def filter_by_strategy(bets, cfg):
-    """Filter bets keeping only enabled strategies with matching config params.
-    Mirrors cartera.ts filter*Bets() functions."""
-    strats = cfg.get("strategies", {})
-    result = []
-    for b in bets:
-        s = b.get("strategy", "")
-
-        if s == "back_draw_00":
-            sc = strats.get("draw", {})
-            if not sc.get("enabled", True):
-                continue
-            xg_max = sc.get("xgMax", 1.0)
-            poss_max = sc.get("possMax", 100)
-            shots_max = sc.get("shotsMax", 20)
-            m_min = sc.get("minuteMin", 0)
-            m_max = sc.get("minuteMax", 90)
-            if xg_max < 1.0 and b.get("xg_total") is not None and b["xg_total"] >= xg_max:
-                continue
-            if poss_max < 100 and b.get("poss_diff") is not None and b["poss_diff"] >= poss_max:
-                continue
-            if shots_max < 20 and b.get("shots_total") is not None and b["shots_total"] >= shots_max:
-                continue
-            if m_min > 0 and b.get("minuto") is not None and b["minuto"] < m_min:
-                continue
-            if m_max < 90 and b.get("minuto") is not None and b["minuto"] >= m_max:
-                continue
-
-        elif s == "xg_underperformance":
-            sc = strats.get("xg", {})
-            if not sc.get("enabled", True):
-                continue
-            sot_min = sc.get("sotMin", 0)
-            xg_excess_min = sc.get("xgExcessMin", 0)
-            m_min = sc.get("minuteMin", 0)
-            m_max = sc.get("minuteMax", 90)
-            if xg_excess_min > 0 and b.get("xg_excess") is not None and b["xg_excess"] < xg_excess_min:
-                continue
-            if sot_min > 0 and b.get("sot_team") is not None and b["sot_team"] < sot_min:
-                continue
-            if m_min > 0 and b.get("minuto") is not None and b["minuto"] < m_min:
-                continue
-            if m_max < 90 and b.get("minuto") is not None and b["minuto"] >= m_max:
-                continue
-
-        elif s == "odds_drift":
-            sc = strats.get("drift", {})
-            if not sc.get("enabled", True):
-                continue
-            goal_diff_min = sc.get("goalDiffMin", 0)
-            drift_min = sc.get("driftMin", 30)
-            odds_max = sc.get("oddsMax", 999)
-            m_min = sc.get("minuteMin", 0)
-            m_max = sc.get("minuteMax", 90)
-            mom_gap_min = sc.get("momGapMin", 0)
-            if goal_diff_min > 0 and b.get("goal_diff") is not None and b["goal_diff"] < goal_diff_min:
-                continue
-            if drift_min > 30 and b.get("drift_pct") is not None and b["drift_pct"] < drift_min:
-                continue
-            if odds_max < 999 and b.get("back_odds") is not None and b["back_odds"] > odds_max:
-                continue
-            if m_min > 0 and b.get("minuto") is not None and b["minuto"] < m_min:
-                continue
-            if m_max < 90 and b.get("minuto") is not None and b["minuto"] >= m_max:
-                continue
-            if mom_gap_min > 0 and b.get("synth_momentum_gap") is not None and b["synth_momentum_gap"] <= mom_gap_min:
-                continue
-
-        elif s == "goal_clustering":
-            sc = strats.get("clustering", {})
-            if not sc.get("enabled", True):
-                continue
-            sot_min = sc.get("sotMin", 0)
-            m_min = sc.get("minuteMin", 0)
-            m_max = sc.get("minuteMax", 90)
-            xg_rem_min = sc.get("xgRemMin", 0)
-            if sot_min > 0 and b.get("sot_max") is not None and b["sot_max"] < sot_min:
-                continue
-            if m_min > 0 and b.get("minuto") is not None and b["minuto"] < m_min:
-                continue
-            if m_max < 90 and b.get("minuto") is not None and b["minuto"] >= m_max:
-                continue
-            if xg_rem_min > 0 and b.get("synth_xg_remaining") is not None and b["synth_xg_remaining"] < xg_rem_min:
-                continue
-
-        elif s == "pressure_cooker":
-            sc = strats.get("pressure", {})
-            if not sc.get("enabled", True):
-                continue
-            m_min = sc.get("minuteMin", 0)
-            m_max = sc.get("minuteMax", 90)
-            if m_min > 0 and b.get("minuto") is not None and b["minuto"] < m_min:
-                continue
-            if m_max < 90 and b.get("minuto") is not None and b["minuto"] >= m_max:
-                continue
-
-        elif s == "tarde_asia":
-            sc = strats.get("tarde_asia", {})
-            if not sc.get("enabled", True):
-                continue
-
-        elif s in ("momentum_xg_v1", "momentum_xg_v2"):
-            sc = strats.get("momentum_xg", {})
-            ver = sc.get("version", "v1")
-            if ver == "off":
-                continue
-            if s == "momentum_xg_v1" and ver != "v1":
-                continue
-            if s == "momentum_xg_v2" and ver != "v2":
-                continue
-            m_min = sc.get("minuteMin", 0)
-            m_max = sc.get("minuteMax", 90)
-            if m_min > 0 and b.get("minuto") is not None and b["minuto"] < m_min:
-                continue
-            if m_max < 90 and b.get("minuto") is not None and b["minuto"] >= m_max:
-                continue
-
-        result.append(b)
-    return result
-
-
-def apply_realistic_adjustments(bets, cfg):
-    """Mirror cartera.ts:applyRealisticAdjustments + filterByRisk."""
-    adj = cfg.get("adjustments", {})
-    if not adj.get("enabled", True):
-        return bets
-
-    result = list(bets)
-    global_min = adj.get("global_minute_min")
-    global_max = adj.get("global_minute_max")
-    drift_min_min = adj.get("drift_min_minute", 0)
-    max_odds = adj.get("max_odds", 999)
-    min_odds = adj.get("min_odds", 0)
-    dedup = adj.get("dedup", False)
-    conflict_filter = adj.get("conflict_filter", False)
-    allow_contrarias = adj.get("allow_contrarias", True)
-    stability = adj.get("stability", 1)
-    slippage_pct = adj.get("slippage_pct", 0)
-
-    # 0. Global minute range
-    if global_min is not None or global_max is not None:
-        filtered = []
-        for b in result:
-            m = b.get("minuto")
-            if m is None:
-                filtered.append(b)
-                continue
-            if global_min is not None and m < global_min:
-                continue
-            if global_max is not None and m >= global_max:
-                continue
-            filtered.append(b)
-        result = filtered
-
-    # 1. Drift min minute
-    if drift_min_min > 0:
-        result = [b for b in result
-                  if b.get("strategy") != "odds_drift"
-                  or (b.get("minuto") is not None and b["minuto"] >= drift_min_min)]
-
-    # 2. Max odds
-    if max_odds < 999:
-        result = [b for b in result if get_bet_odds(b) <= max_odds]
-
-    # 3. Min odds
-    if min_odds > 0:
-        result = [b for b in result if get_bet_odds(b) >= min_odds]
-
-    # 4. Dedup
-    if dedup:
-        seen = set()
-        deduped = []
-        for b in result:
-            key = bet_market_key(b)
-            if key not in seen:
-                seen.add(key)
-                deduped.append(b)
-        result = deduped
-
-    # 5. Conflict filter
-    if conflict_filter:
-        xg_matches = {b["match_id"] for b in result if b.get("strategy") == "xg_underperformance"}
-        result = [b for b in result
-                  if b.get("strategy") not in ("momentum_xg_v1", "momentum_xg_v2")
-                  or b.get("match_id") not in xg_matches]
-
-    # 5b. Anti-contrarias
-    if not allow_contrarias:
-        seen_mo = {}
-        filtered = []
-        for b in result:
-            is_mo = b.get("strategy") in ("back_draw_00", "odds_drift", "momentum_xg_v1", "momentum_xg_v2")
-            if not is_mo:
-                filtered.append(b)
-                continue
-            bt = "draw" if b.get("strategy") == "back_draw_00" else (b.get("team") or "home")
-            mid = b.get("match_id")
-            first = seen_mo.get(mid)
-            if first is None:
-                seen_mo[mid] = bt
-                filtered.append(b)
-            elif first == bt:
-                filtered.append(b)
-            # else: contraria, skip
-        result = filtered
-
-    # 6. Stability
-    if stability > 1:
-        result = [b for b in result if (b.get("stability_count") or 1) >= stability]
-
-    # 7. Slippage (modify P/L for wins)
-    if slippage_pct > 0:
-        factor = 1 - slippage_pct / 100
-        adjusted = []
-        for b in result:
-            if not b.get("won"):
-                adjusted.append(b)
-            else:
-                nb = dict(b)
-                odds = get_bet_odds(b) * factor
-                nb["pl"] = round((odds - 1) * FLAT_STAKE * 0.95, 2)
-                adjusted.append(nb)
-        result = adjusted
-
-    # Risk filter
-    risk_filter = cfg.get("risk_filter", "all")
-    if risk_filter != "all":
-        filtered = []
-        for b in result:
-            rl = (b.get("risk_info") or {}).get("risk_level", "none")
-            if risk_filter == "no_risk" and rl not in ("none", ""):
-                continue
-            if risk_filter == "medium" and rl != "medium":
-                continue
-            if risk_filter == "high" and rl != "high":
-                continue
-            if risk_filter == "with_risk" and rl not in ("medium", "high"):
-                continue
-            filtered.append(b)
-        result = filtered
-
-    return result
 
 
 # ── Metrics computation ─────────────────────────────────────────────────
@@ -615,26 +243,18 @@ def _group_stats(bets, key_fn):
     return table
 
 
-STRATEGY_LABELS = {
-    "back_draw_00": "Back Empate 0-0",
-    "xg_underperformance": "xG Underperf",
-    "odds_drift": "Odds Drift",
-    "goal_clustering": "Goal Clustering",
-    "pressure_cooker": "Pressure Cooker",
-    "tarde_asia": "Tarde Asia",
-    "momentum_xg_v1": "Momentum xG v1",
-    "momentum_xg_v2": "Momentum xG v2",
-    # SD strategies
-    "sd_over25_2goal": "SD Over 2.5 (2-goal lead)",
-    "sd_under35_late": "SD Under 3.5 Late",
-    "sd_longshot": "SD Longshot",
-    "sd_cs_close": "SD CS Close (2-1/1-2)",
-    "sd_cs_one_goal": "SD CS One-Goal (1-0/0-1)",
-    "sd_ud_leading": "SD Underdog Leading",
-    "sd_home_fav_leading": "SD Home Fav Leading",
-    "sd_cs_20": "SD CS 2-0/0-2",
-    "sd_cs_big_lead": "SD CS Big Lead",
-}
+def _build_strategy_labels():
+    """Build label map dynamically from _STRATEGY_REGISTRY so it never goes stale."""
+    backend = str(BASE_DIR / "betfair_scraper" / "dashboard" / "backend")
+    if backend not in sys.path:
+        sys.path.insert(0, backend)
+    try:
+        from utils.csv_reader import _STRATEGY_REGISTRY
+        return {k: name for k, name, *_ in _STRATEGY_REGISTRY}
+    except Exception:
+        return {}
+
+STRATEGY_LABELS = _build_strategy_labels()
 
 
 def compute_strategy_table(bets):
@@ -1012,7 +632,7 @@ def compute_odds_hist(bets):
     labels = ["1.0-1.5", "1.5-2.0", "2.0-2.5", "2.5-3.0", "3.0-4.0", "4.0-5.0", "5.0+"]
     groups = defaultdict(list)
     for b in bets:
-        odds = get_bet_odds(b)
+        odds = b.get("back_odds") or 2.0
         for i, (lo, hi) in enumerate(bins):
             if lo <= odds < hi:
                 groups[i].append(b)
