@@ -11,7 +11,7 @@
     },
     "xg": {
       "enabled": true,
-      "sotMin": 0,
+      "sotMin": 2,
       "xgExcessMin": 0.5,
       "minuteMin": 0,
       "minuteMax": 70
@@ -123,7 +123,7 @@
     "cs_one_goal": {
       "enabled": true,
       "minuteMin": 70,
-      "minuteMax": 88
+      "minuteMax": 90
     },
     "ud_leading": {
       "enabled": true,
@@ -200,7 +200,7 @@
     },
     "draw_11": {
       "enabled": true,
-      "minuteMin": 70,
+      "minuteMin": 65,
       "minuteMax": 90,
       "odds_min": 1.0
     },
@@ -222,6 +222,29 @@
       "minuteMin": 60,
       "minuteMax": 78,
       "xgMax": 2.5
+    },
+    "draw_equalizer": {
+      "enabled": true,
+      "minuteMin": 65,
+      "minuteMax": 90,
+      "fav_pre_max": 2.5,
+      "min_goals_each": 1,
+      "odds_max": 8.0
+    },
+    "draw_22": {
+      "enabled": true,
+      "minuteMin": 68,
+      "minuteMax": 90,
+      "odds_max": 8.0
+    },
+    "lay_over45_blowout": {
+      "enabled": false,
+      "minuteMin": 60,
+      "minuteMax": 75,
+      "post_window": 10,
+      "sot_max": 1,
+      "odds_max": 15.0,
+      "include_31": 0
     }
   },
   "bankroll_mode": "half_kelly",
@@ -265,6 +288,6 @@
     "wr": 76.9,
     "ci_low": 69.0,
     "ci_high": 83.2,
-    "roi": 64.03
+    "roi": 61.22
   }
 }

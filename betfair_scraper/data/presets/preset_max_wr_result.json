@@ -1,7 +1,7 @@
 {
   "combo": {
     "draw": "off",
-    "xg": "v3",
+    "xg": "base",
     "drift": "off",
     "clustering": "v2",
     "pressure": "off",
@@ -16,7 +16,7 @@
     "br": "fixed"
   },
   "risk_filter": "all",
-  "best_score": 72.6,
+  "best_score": 72.9,
   "adj": {
     "dedup": false,
     "minOdds": null,
@@ -29,13 +29,13 @@
     "globalMinuteMin": null,
     "globalMinuteMax": null
   },
-  "n_bets": 66,
-  "wins": 55,
-  "win_pct": 83.3,
-  "flat_roi": 2.52,
-  "flat_pl": 16.62,
-  "ci_low": 72.6,
-  "ci_high": 90.4,
+  "n_bets": 67,
+  "wins": 56,
+  "win_pct": 83.6,
+  "flat_roi": 2.5,
+  "flat_pl": 16.76,
+  "ci_low": 72.9,
+  "ci_high": 90.6,
   "csv_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_max_wr.csv",
   "config_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_max_wr_config.json"
 }

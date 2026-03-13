@@ -38,7 +38,6 @@ timestamp_utc,match_id,strategy,minuto,bet_type_dir,won,pl,effective_odds,risk_l
 2026-02-26 19:04:30,plzen-panathinaikos-apuestas-35286824,pressure_cooker,61,,False,-1.0,3.3,,,,,,,,,,,,,,,3.3,,,,,,,,,,,,,,
 2026-02-26 22:37:59,santos-vasco-da-gama-apuestas-35234353,odds_drift_v1,35,,True,4.27,1.48,,,,,,,,,,,,,,,1.48,,,,,,,,,,,,,,
 2026-02-27 18:09:10,trabzonspor-fatih-karagumruk-istanbul-apuestas-352,goal_clustering,47,,True,7.89,1.87,,,,,,,,,,,,,,,1.87,,,,,,,,,,,,,,
-2026-02-27 19:31:24,aab-hillerod-fodbold-apuestas-35285677,pressure_cooker,70,,True,38.95,5.2,,,,,,,,,,,,,,,5.2,,,,,,,,,,,,,,
 2026-02-27 21:08:23,estrasburgo-lens-apuestas-35270693,pressure_cooker,62,,False,-1.0,2.6,,,,,,,,,,,,,,,2.6,,,,,,,,,,,,,,
 2026-02-28 11:50:54,sporting-lisbon-b-leixoes-apuestas-35292792,odds_drift_v1,45,,True,10.64,2.16,,,,,,,,,,,,,,,2.16,,,,,,,,,,,,,,
 2026-02-28 14:15:23,rayo-vallecano-athletic-de-bilbao-apuestas-3527246,pressure_cooker,56,,False,-1.0,2.42,,,,,,,,,,,,,,,2.42,,,,,,,,,,,,,,

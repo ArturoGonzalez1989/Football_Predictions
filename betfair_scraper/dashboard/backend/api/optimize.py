@@ -97,9 +97,8 @@ LFF_OPTS          = ["off", "on"]
 BR_OPTS           = ["fixed", "half_kelly", "dd_protection", "anti_racha"]
 RISK_OPTS         = ["all", "no_risk", "with_risk", "medium"]
 
-# ── SD (Strategy Designer) PARAMS + OPTS ─────────────────────────────────────
-# 19 new strategies from sd_strategy_tracker.  Generators in auxiliar/sd_generators.py,
-# filters in auxiliar/sd_filters.py.  Here we add the versioned PARAMS + OPTS for
+# ── Additional Strategy PARAMS + OPTS ────────────────────────────────────────
+# 19 additional strategies (unified in _STRATEGY_REGISTRY). Versioned PARAMS + OPTS for
 # Phase 1, plus on/off toggles for the simpler strategies.
 
 SD_LAY_O45_PARAMS: Dict[str, Dict] = {
@@ -500,8 +499,7 @@ def _filter_lay_false_fav(bets: List[Dict], v: str) -> List[Dict]:
     return result
 
 
-# ── SD filter functions (mirrors auxiliar/sd_filters.py) ───────────────────────────
-# These are available for future integration into the optimizer or for ad-hoc use.
+# ── Strategy filter functions ─────────────────────────────────────────────────────
 # Currently NOT called from _phase1_worker (see note above _PHASE1_TOTAL).
 
 def _filter_sd_lay_over45(bets: List[Dict], v: str) -> List[Dict]:

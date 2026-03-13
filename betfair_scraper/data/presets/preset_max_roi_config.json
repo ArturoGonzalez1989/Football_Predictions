@@ -123,7 +123,7 @@
     "cs_one_goal": {
       "enabled": true,
       "minuteMin": 70,
-      "minuteMax": 88
+      "minuteMax": 90
     },
     "ud_leading": {
       "enabled": true,
@@ -200,7 +200,7 @@
     },
     "draw_11": {
       "enabled": true,
-      "minuteMin": 70,
+      "minuteMin": 65,
       "minuteMax": 90,
       "odds_min": 1.0
     },
@@ -222,6 +222,29 @@
       "minuteMin": 60,
       "minuteMax": 78,
       "xgMax": 2.5
+    },
+    "draw_equalizer": {
+      "enabled": true,
+      "minuteMin": 65,
+      "minuteMax": 90,
+      "fav_pre_max": 2.5,
+      "min_goals_each": 1,
+      "odds_max": 8.0
+    },
+    "draw_22": {
+      "enabled": true,
+      "minuteMin": 68,
+      "minuteMax": 90,
+      "odds_max": 8.0
+    },
+    "lay_over45_blowout": {
+      "enabled": false,
+      "minuteMin": 60,
+      "minuteMax": 75,
+      "post_window": 10,
+      "sot_max": 1,
+      "odds_max": 15.0,
+      "include_31": 0
     }
   },
   "bankroll_mode": "fixed",
@@ -261,10 +284,10 @@
     "cashout_pct": 0
   },
   "_optimizer_stats": {
-    "n": 65,
-    "wr": 73.8,
-    "ci_low": 62.0,
-    "ci_high": 83.0,
-    "roi": 102.86
+    "n": 64,
+    "wr": 73.4,
+    "ci_low": 61.5,
+    "ci_high": 82.7,
+    "roi": 98.38
   }
 }

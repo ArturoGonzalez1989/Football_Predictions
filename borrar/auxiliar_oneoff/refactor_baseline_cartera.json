@@ -1,0 +1,62 @@
+{
+  "total_bets": 2102,
+  "total_pl": -891.09,
+  "by_strategy": {
+    "back_draw_00": {
+      "count": 516,
+      "wins": 172,
+      "pl": -485.07,
+      "wr": 33.33,
+      "roi": -940.06
+    },
+    "momentum_xg_v1": {
+      "count": 198,
+      "wins": 76,
+      "pl": -280.69,
+      "wr": 38.38,
+      "roi": -1417.63
+    },
+    "momentum_xg_v2": {
+      "count": 229,
+      "wins": 86,
+      "pl": -341.8,
+      "wr": 37.55,
+      "roi": -1492.58
+    },
+    "xg_underperformance": {
+      "count": 219,
+      "wins": 137,
+      "pl": -232.25,
+      "wr": 62.56,
+      "roi": -1060.5
+    },
+    "goal_clustering": {
+      "count": 768,
+      "wins": 465,
+      "pl": 350.05,
+      "wr": 60.55,
+      "roi": 455.79
+    },
+    "pressure_cooker": {
+      "count": 37,
+      "wins": 21,
+      "pl": 19.9,
+      "wr": 56.76,
+      "roi": 537.84
+    },
+    "odds_drift": {
+      "count": 21,
+      "wins": 13,
+      "pl": 245.09,
+      "wr": 61.9,
+      "roi": 11670.95
+    },
+    "tarde_asia": {
+      "count": 114,
+      "wins": 61,
+      "pl": -166.32,
+      "wr": 53.51,
+      "roi": -1458.95
+    }
+  }
+}
