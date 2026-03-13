@@ -1843,4 +1843,83 @@ def _detect_over35_early_goals_trigger(rows: list, curr_idx: int, cfg: dict) -> 
     }
 
 
+def _detect_lay_draw_away_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """LAY Draw when away leads by exactly 1 + total xG below threshold.
+
+    Edge: market overprices draw probability when away leads in low-xG match.
+    Home team has shown no attacking quality; away can park the bus.
+    Anti-tautology: only fires when away leads by EXACTLY 1 (not 2+).
+
+    cfg keys: m_min, m_max, xg_max, odds_min, odds_max
+    """
+    m_min = float(cfg.get("m_min", 55))
+    m_max = float(cfg.get("m_max", 80))
+    xg_max = float(cfg.get("xg_max", 1.8))
+    odds_min = float(cfg.get("odds_min", 2.0))
+    odds_max = float(cfg.get("odds_max", 10.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl = _to_float(row.get("goles_local", ""))
+    gv = _to_float(row.get("goles_visitante", ""))
+    if gl is None or gv is None:
+        return None
+    # Away leads by exactly 1 (anti-tautology: not 2+ where draw is already very unlikely)
+    if not (int(gv) - int(gl) == 1):
+        return None
+    # Low xG filter
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    if xg_l is not None and xg_v is not None:
+        if xg_l + xg_v >= xg_max:
+            return None
+    # Odds check
+    odds = _to_float(row.get("lay_draw", ""))
+    if odds is None or not (odds_min <= odds <= odds_max):
+        return None
+    return {
+        "minuto": m,
+        "lay_draw": odds,
+        "score": f"{int(gl)}-{int(gv)}",
+        "xg_total": round((xg_l or 0) + (xg_v or 0), 2),
+    }
+
+
+def _detect_lay_cs11_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """LAY Correct Score 1-1 when score is exactly 0-1 (late match).
+
+    Edge: CS 1-1 is systematically overpriced at 0-1 late in match.
+    Market implies ~12-15% probability; actual rate is only 4%.
+    Anti-tautology: ONLY triggers at score 0-1 (the only away+1 state
+    where CS 1-1 is still mathematically reachable).
+
+    cfg keys: m_min, m_max, odds_min, odds_max
+    """
+    m_min = float(cfg.get("m_min", 60))
+    m_max = float(cfg.get("m_max", 85))
+    odds_min = float(cfg.get("odds_min", 1.5))
+    odds_max = float(cfg.get("odds_max", 50.0))
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+    gl = _to_float(row.get("goles_local", ""))
+    gv = _to_float(row.get("goles_visitante", ""))
+    if gl is None or gv is None:
+        return None
+    # Must be exactly 0-1: ONLY valid state where CS 1-1 is still reachable
+    if int(gl) != 0 or int(gv) != 1:
+        return None
+    # Odds check
+    odds = _to_float(row.get("lay_rc_1_1", ""))
+    if odds is None or not (odds_min <= odds <= odds_max):
+        return None
+    return {
+        "minuto": m,
+        "lay_rc_1_1": odds,
+        "score": "0-1",
+    }
+
+
 # ── End unified strategy trigger functions ───────────────────────────────────

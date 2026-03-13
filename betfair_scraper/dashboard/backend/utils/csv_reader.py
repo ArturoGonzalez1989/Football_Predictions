@@ -64,6 +64,8 @@ from .strategy_triggers import (
     _detect_draw_22_trigger,
     _detect_lay_over45_blowout_trigger,
     _detect_over35_early_goals_trigger,
+    _detect_lay_draw_away_leading_trigger,
+    _detect_lay_cs11_trigger,
     _get_over_odds_field,
 )
 
@@ -377,6 +379,18 @@ _STRATEGY_REGISTRY = [
      _sd_fixed("back_over35", "BACK OVER 3.5", ["goals_total", "score"]),
      lambda t, gl, gv: (gl + gv) >= 4),
 
+    ("lay_draw_away_leading", "LAY Draw Away Leading",
+     _detect_lay_draw_away_leading_trigger,
+     "LAY Draw when away leads by 1 + low xG: home has no attacking quality to equalize",
+     _sd_fixed("lay_draw", "LAY DRAW", ["score", "xg_total"]),
+     lambda t, gl, gv: gl != gv),
+
+    ("lay_cs11", "LAY CS 1-1 at 0-1",
+     _detect_lay_cs11_trigger,
+     "LAY CS 1-1 when score is 0-1 late: market overprices 1-1 via familiarity bias, only 4% actual rate",
+     _sd_fixed("lay_rc_1_1", "LAY CS 1-1", ["score"]),
+     lambda t, gl, gv: not (gl == 1 and gv == 1)),
+
     # ─── Original 7 strategies — unified BT/LIVE via registry ──────────────
 
     # Back Empate 0-0 (6 versions)
@@ -504,6 +518,8 @@ _STRATEGY_MARKET: dict[str, str] = {
     "over25_2goal":   "over_2.5",
     "goal_clustering":"over_2.5",
     "pressure_cooker":"over_2.5",
+    "lay_draw_away_leading": "lay_draw",
+    "lay_cs11":       "lay_cs",
 }
 
 # Mapping from registry keys that use legacy config keys to their legacy key.

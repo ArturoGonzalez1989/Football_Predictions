@@ -1,10 +1,73 @@
 # Strategy Designer — Historial de investigacion
 Ultima actualizacion: 2026-03-13
 Dataset al momento de la investigacion: 963 partidos finalizados (1242 CSVs, 2026-02-10 a 2026-03-13)
-Total hipotesis investigadas: 103 (H1-H87 internal + H88-H95 from Gemini analisis2.md + H96-H101 from Gemini batch 2 + H102-H103 from R19) in 15 rounds + R16 re-evaluation + R17 Gemini analysis + R18 Gemini batch 2 + R19 market scanner validation
+Total hipotesis investigadas: 106 (H1-H87 internal + H88-H95 from Gemini analisis2.md + H96-H101 from Gemini batch 2 + H102-H103 from R19 + H104 LAY Draw away leading + H105 ad-hoc validation + H106 LAY CS 1-1) in 15 rounds + R16 re-evaluation + R17 Gemini analysis + R18 Gemini batch 2 + R19 market scanner validation + R20 ad-hoc validations + R21 H106
 
 > Este fichero es la referencia para el agente strategy-designer.
 > Antes de investigar una hipotesis nueva, verificar que no este ya listada aqui.
+
+## APROBADA H106 — LAY Correct Score 1-1 at Score 0-1 (R21 validation)
+
+H106 validated from brute-force scanner results. LAY CS 1-1 when score is exactly 0-1 in minute 60-85. Critical tautology guard: only score 0-1 is valid (at 1-2, 2-3 etc. CS 1-1 is already dead). Third LAY strategy ever approved. First LAY Correct Score strategy.
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI (realistic) | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H106 | LAY CS 1-1 at 0-1 | LAY CS 1-1 | 50 | 96.0% | +79.8% | 7.50 | +84.0% | +70.0% | strategies/sd_report_h106_lay_cs11.md |
+
+### Quality gates resumen (H106, realistic validation)
+
+| Gate | H106 |
+|------|------|
+| G1: N>=38 | PASS (50) |
+| G2: ROI>=10% (realistic) | PASS (79.8%) |
+| G3: IC95_lo>=40% | PASS (86.5%) |
+| G4: Train ROI>0% | PASS (84.0%) |
+| G5: Test ROI>0% | PASS (70.0%) |
+| G6: Overlap<30% same market | PASS (0% -- new LAY CS market, no existing LAY CS strategies) |
+| G7: >=3 ligas | PASS (25) |
+
+### Notas sobre H106
+
+- **First LAY Correct Score strategy ever approved.** Third LAY strategy overall (after lay_over45_v3 and H104 LAY Draw).
+- **64/360 grid combos pass all quality gates** (17.8% pass rate). Edge is robust and NOT parameter-dependent.
+- **Critical anti-tautology guard**: Only triggers at score 0-1. At 1-2, 2-3 etc., CS 1-1 is mathematically impossible, making LAY a guaranteed win. The scanner mixed these tautologies (12.7% of unfiltered bets). After removing them, the genuine edge at 0-1 is stronger than reported.
+- **4% draw rate at 1-1 from score 0-1 late**: market implies ~12-15% from avg odds ~8. The 8-11pp edge is massive.
+- **Slippage-immune**: LAY wins are fixed at +STAKE*0.95 regardless of odds. No slippage adjustment applies.
+- **Liability risk**: At max odds 38.0, loss = STAKE * 37. But only 2/50 losses, both at low odds (3.80, 3.90). Max realized loss: -29.0 per STAKE=10.
+- **25 leagues** -- universally applicable across all football markets.
+- **lay_rc_1_1 column**: 38.8% non-null rate. Strategy triggers on ~5.2% of matches. Expected N~62 with 1200 matches.
+
+## APROBADA H104 — LAY Draw Away Leading + Low xG (R20 ad-hoc validation)
+
+H104 validated from brute-force scanner results. LAY Draw when away team leads by exactly 1 goal and total xG < 1.8, minute 55-80. First LAY Draw strategy ever approved.
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI (realistic) | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H104 | LAY Draw Away Leading | LAY Draw | 57 | 89.5% | +54.6% | 3.44 | +44.9% | +75.6% | strategies/sd_report_h104_lay_draw_away_leading.md |
+
+### Quality gates resumen (H104, realistic validation)
+
+| Gate | H104 |
+|------|------|
+| G1: N>=38 | PASS (57) |
+| G2: ROI>=10% (realistic) | PASS (54.6%) |
+| G3: IC95_lo>=40% | PASS (78.9%) |
+| G4: Train ROI>0% | PASS (44.9%) |
+| G5: Test ROI>0% | PASS (75.6%) |
+| G6: Overlap<30% same market | PASS (0% -- new LAY Draw market group, separate from BACK Draw) |
+| G7: >=3 ligas | PASS (29) |
+
+### Notas sobre H104
+
+- **First LAY Draw strategy ever approved.** Second LAY strategy overall (after lay_over45_v3).
+- **75.3% of 972 grid combos pass all quality gates** -- the highest pass rate of any hypothesis ever tested. The edge is extremely robust and NOT parameter-dependent.
+- **10.5pp edge** over implied probability: actual draw rate 10.5% vs implied ~21% from avg lay odds 4.77.
+- **Test ROI > Train ROI** (75.6% vs 44.9%) -- no overfitting, edge strengthening.
+- **29 leagues**, max single-league concentration low -- universally applicable.
+- **Anti-tautology enforced**: only triggers when away leads by EXACTLY 1 (not 2+, which would make draw trivially unlikely).
+- **LAY Draw is a separate market from BACK Draw**: should be in its own market group `"lay_draw"` in `_STRATEGY_MARKET`, NOT grouped with `"draw"` (BACK Draw strategies).
+- **Slippage-immune**: LAY wins are not subject to the 2% slippage applied to BACK wins. Raw == realistic.
+- **Max liability risk**: at max odds 10.0, loss = STAKE * 9.0. Average odds 4.77 means average loss = STAKE * 3.77. The 89.5% WR compensates handsomely.
 
 ## APROBADAS RONDA 19 (1 nueva — market scanner validation)
 
@@ -39,6 +102,31 @@ Ronda 19 validated candidate A from the R19 market scanner: BACK Over 3.5 when e
 - **Unique market slot**: no existing strategy trades Over 3.5. Zero market overlap with all 26 existing strategies.
 - **Different from H78 (Over 3.5 FH Activity, DISCARDED)**: H78 used first-half stats without requiring goals. H102 requires 3 actual goals, which is a fundamentally different and much stronger signal.
 - **Different from lay_over45_blowout (H95, Gemini)**: H95 is LAY Over 4.5 with LOW goals/xG. H102 is BACK Over 3.5 with HIGH goals. Opposite conditions, opposite markets.
+
+## DESCARTADA — H105 (ad-hoc validation, 2026-03-13)
+
+H105: BACK Home Match Odds when home leading by exactly 1 goal, late game (65-90 min), optional low xG filter.
+
+| H# | Name | Mercado | Reason |
+|----|------|---------|--------|
+| H105 | BACK Home Leading +1 Low xG | BACK Home (match odds) | **OVERLAP FATAL**: 60.7% overlap with existing `home_fav_leading` strategy in the SAME market (BACK Home). Gate threshold: 30%. The 139 unique bets (home non-favourites leading) overlap with `ud_leading` when the underdog is the home team. H105 is the union of two existing strategies. |
+
+### H105 detailed results
+
+**Best combo (raw quality gates)**: min=65-90, xg=none (no xG filter), N=354, WR=77.7%, ROI=33.8%, Sharpe=4.68
+- Train ROI=34.0%, Test ROI=33.2% (remarkably stable)
+- 54 leagues, avg odds=1.83, CI95=[73.1%, 81.9%]
+- 12/30 grid combos pass all quality gates -- signal is real
+
+**Overlap breakdown**:
+- 215/354 bets (60.7%) overlap with home_fav_leading (pre-match favourite homes leading)
+- 139/354 bets (39.3%) are unique -- home non-favourites leading by 1
+- Overlap bets: N=215, WR=84.2%, ROI=25.9%, Sharpe=3.73
+- Unique bets: N=139, WR=67.6%, ROI=45.9%, Sharpe=3.08
+
+**Why the unique bets are also redundant**: The 139 "unique" H105 bets are home teams that are NOT pre-match favourites but are leading by 1 late. This is exactly `ud_leading` (H59) restricted to home underdogs. The `ud_leading` strategy already covers underdog-leading scenarios for both home and away teams.
+
+**Lesson**: "Home leading by 1 late" is not a new signal -- it is the union of `home_fav_leading` (favourite homes) and `ud_leading` (underdog homes). The strong raw metrics (ROI=33.8%, Sharpe=4.68) simply reflect that both existing strategies are already profitable. No independent edge.
 
 ## DESCARTADA RONDA 19 — Candidato C (H103)
 
