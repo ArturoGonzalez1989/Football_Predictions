@@ -60,6 +60,9 @@ from .strategy_triggers import (
     _detect_cs_11_trigger,
     _detect_cs_20_trigger,
     _detect_cs_big_lead_trigger,
+    _detect_draw_equalizer_trigger,
+    _detect_draw_22_trigger,
+    _detect_lay_over45_blowout_trigger,
     _get_over_odds_field,
 )
 
@@ -349,6 +352,24 @@ _STRATEGY_REGISTRY = [
      _sd_fixed("back_rc_1_1", "BACK CS 1-1", []),
      lambda t, gl, gv: gl == 1 and gv == 1),
 
+    ("draw_equalizer",  "BACK Draw Equalizer Late",
+     _detect_draw_equalizer_trigger,
+     "Back Draw after underdog equalizes against pre-match favourite",
+     _sd_fixed("back_draw", "BACK DRAW", []),
+     lambda t, gl, gv: gl == gv),
+
+    ("draw_22",         "BACK Draw 2-2 Late",
+     _detect_draw_22_trigger,
+     "Back Draw when score is exactly 2-2 late in the game",
+     _sd_fixed("back_draw", "BACK DRAW", []),
+     lambda t, gl, gv: gl == gv),
+
+    ("lay_over45_blowout", "LAY Over 4.5 Blowout",
+     _detect_lay_over45_blowout_trigger,
+     "Lay Over 4.5 in 3-0/0-3 blowouts: winning team drops intensity post 3rd goal",
+     _sd_fixed("lay_over45", "LAY OVER 4.5", ["goal_minute", "sot_post"]),
+     lambda t, gl, gv: (gl + gv) <= 4),
+
     # ─── Original 7 strategies — unified BT/LIVE via registry ──────────────
 
     # Back Empate 0-0 (6 versions)
@@ -470,6 +491,9 @@ _STRATEGY_MARKET: dict[str, str] = {
     "under35_3goals": "under_3.5",
     "draw_11":        "draw",
     "draw_xg_conv":   "draw",
+    "draw_equalizer": "draw",
+    "draw_22":        "draw",
+    "lay_over45_blowout": "lay_over_4.5",
     "over25_2goal":   "over_2.5",
     "goal_clustering":"over_2.5",
     "pressure_cooker":"over_2.5",
@@ -1994,6 +2018,11 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             return ("match_odds", "HOME")
         elif rec.startswith("BACK AWAY"):
             return ("match_odds", "AWAY")
+        elif rec.startswith("LAY"):
+            # LAY signals are not subject to BACK-side conflict detection:
+            # LAY Over = economically equivalent to BACK Under (same direction).
+            # Treating them as conflicting would incorrectly block valid stacking.
+            return None
         elif "OVER" in rec:
             return ("over_under", "OVER")
         elif "UNDER" in rec:

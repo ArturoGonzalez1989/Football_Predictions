@@ -1,7 +1,7 @@
 # Strategy Designer — Historial de investigacion
-Ultima actualizacion: 2026-03-07
-Dataset al momento de la investigacion: 931 partidos finalizados (sorted by timestamp, 2026-02-10 a 2026-03-07)
-Total hipotesis investigadas: 87 (H1-H87) en 15 rondas
+Ultima actualizacion: 2026-03-13
+Dataset al momento de la investigacion: 954 partidos finalizados (1228 CSVs, 2026-02-10 a 2026-03-13)
+Total hipotesis investigadas: 101 (H1-H87 internal + H88-H95 from Gemini analisis2.md + H96-H101 from Gemini batch 2) in 15 rounds + R16 re-evaluation + R17 Gemini analysis + R18 Gemini batch 2
 
 > Este fichero es la referencia para el agente strategy-designer.
 > Antes de investigar una hipotesis nueva, verificar que no este ya listada aqui.
@@ -60,6 +60,43 @@ Ronda 13 explored 5 hypotheses (H77-H81) with 896 matches. Focus: unexploited CS
 |----|------|--------|
 | H78 | BACK Over 3.5 FH Activity | Test ROI=0.5% (below 10% threshold). N=75, WR=74.7% but avg odds=1.44. Train=14.3%, test collapses. Market adjusts O3.5 accurately when goals are scored early. |
 | H80 | BACK Home Leading FH | Test ROI=1.9% (below 10% threshold). N=191, WR=81.7% but avg odds=1.39. The edge at first half is real but tiny (~2pp over implied). H70 (late version, min 55+) captures this much better because the edge grows as time runs out. |
+
+## APROBADAS RONDA 16 (2 re-evaluated from monitoring)
+
+Ronda 16 re-evaluated H62 and H68 (previously in monitoring with N=40 and N=44 at 931 matches). With 934 finished matches, both now pass all quality gates including realistic validation.
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI (realistic) | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H62 | BACK Draw After UD Equalizer Late | BACK Draw | 111 | 55.9% | +59.3% | 3.20 | +65.8% | +44.6% | strategies/sd_report_back_draw_equalizer.md |
+| 2 | H68 | BACK Draw at 2-2 Late | BACK Draw (2-2) | 61 | 60.7% | +80.4% | 3.11 | +87.7% | +64.3% | strategies/sd_report_back_draw_22_late.md |
+
+### Quality gates resumen (Ronda 16, realistic validation)
+
+| Gate | H62 | H68 |
+|------|-----|-----|
+| G1: N>=37 | PASS (111) | PASS (61) |
+| G2: ROI>=10% (realistic) | PASS (59.3%) | PASS (80.4%) |
+| G3: IC95_lo>=40% | PASS (46.6%) | PASS (48.1%) |
+| G4: Train ROI>0% | PASS (65.8%) | PASS (87.7%) |
+| G5: Test ROI>0% | PASS (44.6%) | PASS (64.3%) |
+| G6: >=3 ligas | PASS (38) | PASS (37) |
+| G7: DateConc<50% | PASS (22.5%) | PASS (23.0%) |
+
+### Notas sobre las nuevas estrategias
+
+- **H62 has significant match overlap with H58 (Draw 1-1 Late)**: 89% of H62's 1-1 bets also trigger H58. However, H62's equalizer filter produces much higher ROI (63% vs 31%). The 37 unique bets (at 2-2 and 3-3) have ROI=57.6%. In deployment, dedup ensures only 1 bet per match.
+- **H68 is fully independent from H58**: Mutually exclusive score conditions (2-2 vs 1-1). Zero overlap. Together they form a "Draw portfolio" covering the two most common drawn scorelines.
+- **H68 is the STAR of R16**: ROI=80.4% realistic, Sharpe=3.11. The market underprices draws at 2-2 by ~22pp. This is the largest draw mispricing found across all hypotheses.
+- **Both use ONLY Tier 1 columns** (back_draw, back_home, back_away, goles, minuto) -- zero data availability risk.
+- **Draw portfolio after R16**: H58 (Draw 1-1, N=128, ROI=31%) + H62 (Draw Equalizer, N=111, ROI=59.3%) + H68 (Draw 2-2, N=61, ROI=80.4%). Combined unique bets estimated ~250+.
+
+### Cross-overlap between R16 approved
+
+| Par | Match overlap | Market overlap |
+|-----|---------------|----------------|
+| H62 vs H68 | 49.2% of H68 | SAME (BACK Draw), dedup handles |
+| H62 vs H58 | 89.2% of H62 at 1-1 | SAME (BACK Draw), dedup handles |
+| H68 vs H58 | 0% | 0% (mutually exclusive scores) |
 
 ## APROBADAS RONDA 12 (2 nuevas)
 
@@ -297,6 +334,68 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | 18 | H35 | BACK Longshot Resistente | BACK MO (longshot) | ROI insuficiente |
 | 19 | H37 | BACK CS 0-0 Early | BACK CS 0-0 | ROI insuficiente |
 
+## DESCARTADAS RONDA 18 — Gemini batch 2 (all 6 fail)
+
+Ronda 18 evaluated 6 hypotheses from a second Gemini analysis (H96-H101). All 6 fail feasibility checks before full backtest or fail all grid combos during backtest. Dataset: 954 finished matches (1228 CSVs).
+
+| H# | Name | Mercado | Reason |
+|----|------|---------|--------|
+| H96 | "Fiesta Inacabada 3-2" LAY CS 3-2/2-3 | LAY CS 3-2/2-3 | INSUFFICIENT N: only 24 matches with score 3-2/2-3 at min 65-80. ZERO matches have xG_total >= 4.0 (proposed filter). Only 3 of 24 have CS odds data. After all filters, N effectively = 0. |
+| H97 | "Colapso Local Estadistico" BACK Away Winner | BACK Away | INSUFFICIENT N: only 5 matches where home leads 1-0/2-1 at min 65-80 with xG_away - xG_home >= 0.7 AND SoT_away >= SoT_home + 2. Scenario essentially doesn't exist in dataset. Of those 5, away only wins 1 (20%). |
+| H98 | "Anti-Goleada 5+" LAY Over 5.5 | LAY Over 5.5 | DEAD: back_over55 has only 7.3% non-null rate. Of 35 matches with 5+ goals at 60-72, only 13 have odds, avg=1.39 (far below proposed 1.8-3.0 range). Worse: 57.1% go OVER 5.5, so LAY would lose majority. Market is correct here. Also H10 previously descartada for same market (tail risk). |
+| H99 | "Cierre 4-1 del Gigante" BACK CS 4-1/1-4 | BACK CS 4-1/1-4 | NOT TESTABLE: columns back_rc_4_1 and back_rc_1_4 DO NOT EXIST in CSVs (0% presence). Even if they did, only 11.3% of 3-0/3-1 matches end 4-1/1-4 (11 of 97). |
+| H100 | "Remontada Incompleta" BACK Draw from 2-goal deficit | BACK Draw | DEAD by WR: only 3.0% of 2-goal deficit matches at min 65-78 end in draw (2 of 67). Even at avg draw odds ~20, ROI would be ~-40%. Comebacks from 2 goals down are extremely rare. |
+| H101 | "Anti-Scoreline 0-2/2-0" LAY CS 0-2/2-0 | LAY CS 0-2/2-0 | DEAD: full 108-combo grid search, ALL negative ROI. Best combo: N=43, WR=69.8%, ROI=-20.6%. The 30.2% loss rate at avg CS odds ~4.06 (liability ~-30 per loss) overwhelms the 69.8% win rate at +9.50 per win. Market prices CS 0-2/2-0 correctly. |
+
+### Key observations from R18
+
+- **Rare scorelines (3-2, 4-1) don't have enough occurrences** for strategies. The dataset has 38 FT 3-2/2-3 combined (3.9%) and 20 FT 4-1/1-4 (2.1%). These frequencies will not support N>=38 even with 2000+ matches.
+- **LAY CS on "common" scorelines (0-2/2-0) is correctly priced**: 108 grid combos tested, all negative. The market does NOT systematically overprice CS 0-2/2-0.
+- **Stat-reversal comeback is a myth in our data**: Only 5 matches where home leads but away dominates stats with the proposed thresholds. The scenario is too rare because favourites that lead typically also dominate stats.
+- **back_over55 column is essentially empty** (7.3% non-null): any strategy depending on Over 5.5 odds is not testable.
+- **CS 4-1/1-4 columns don't exist**: Betfair's CS market data in our scraper doesn't include 4-1/1-4 scorelines.
+- **2-goal deficit -> Draw is a dead angle**: Confirmed again that comebacks from 2+ goals are nearly impossible (3.0% draw rate). The market knows this.
+
+## APROBADAS RONDA 17 — Gemini analisis2.md (1 nueva)
+
+Ronda 17 evaluated 8 hypotheses from Gemini's `strategies/analisis2.md`. 4 were immediately discarded as non-testable (require external data: UEFA table position, altitude, travel distance, Europa League calendar). Of the 4 testable, 1 approved (H95), 2 discarded (H91 insufficient N, H93 insufficient N), 1 discarded (H88 fails IC95 gate).
+
+| # | Hipotesis | Nombre | Mercado | N | WR | ROI (realistic) | Sharpe | Train ROI | Test ROI | Reporte |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | H95 | LAY Over 4.5 Blowout | LAY Over 4.5 (3-0/0-3/3-1/1-3 at min 55-75) | 45 | 68.9% | +167.8% | 3.91 | +177.5% | +146.2% | auxiliar/sd_bt_gemini_h8_lay_over45_blowout.py |
+
+### Quality gates resumen (Ronda 17, realistic validation)
+
+| Gate | H95 |
+|------|-----|
+| G1: N>=37 | PASS (45) |
+| G2: ROI>=10% (realistic) | PASS (167.8%) |
+| G3: IC95_lo>=40% | PASS (54.3%) |
+| G4: Train ROI>0% | PASS (177.5%) |
+| G5: Test ROI>0% | PASS (146.2%) |
+| G6: >=3 ligas | PASS (24) |
+
+### Notas sobre la estrategia aprobada
+
+- **H95 (LAY Over 4.5 Blowout)** exploits the "pressure release" effect: when a team reaches 3-0/0-3/3-1/1-3 at min 55-75, the winning team reduces intensity and the losing team becomes defensive. The market keeps Over 4.5 odds low (avg 3.6) expecting more goals, but only 31% of these matches actually reach 5+ goals.
+- **Zero overlap with lay_over45_v3** (existing strategy): lay_over45_v3 triggers on <=2 total goals, H95 triggers on 3-0/0-3/3-1/1-3. Mutually exclusive by score condition.
+- **23.4% overlap with under45_3goals**: Both profit from the same outcome (FT total <=4) but use different market columns (LAY Over 4.5 vs BACK Under 4.5). Below the 30% threshold.
+- **78.7% match overlap with cs_big_lead**: Same match universe but completely different market (CS vs Over/Under). No conflict.
+- **Uses ONLY Tier 1 columns** (lay_over45, goles, minuto, tiros_puerta for SoT filter) -- zero data availability risk.
+- The include_31=True (adding 3-1/1-3 scorelines) adds 25 bets vs 3-0/0-3 only. The 3-0/0-3 WR is 91% (20/22) while 3-1/1-3 is 52% (13/25). The combined portfolio is stronger than either subset.
+
+### Hypotheses discarded in R17
+
+| H# (Gemini) | Internal | Name | Reason |
+|----|---------|------|--------|
+| H1 | H88 | UEFA League Phase | NOT TESTABLE: requires UEFA competition metadata and league table position. Not available in CSVs. |
+| H2 | H89 | Altitude Asymmetry | NOT TESTABLE: requires stadium altitude data. Not available in CSVs. |
+| H3 | H90 | Travel Distance | NOT TESTABLE: requires geo-distance between cities. Not available in CSVs. |
+| H4 | H91 | Reverse Favourite-Longshot Bias | TESTABLE but FAILS IC95 gate. Best: N=57, WR=47.4%, ROI=69.4%, IC95_lo=35.0% (need >=40%). High-odds longshot bets (~3.5 avg) have inherently wide confidence intervals. Also overlaps with ud_leading/longshot existing strategies. |
+| H5 | H92 | Corner Clusters | BORDERLINE TESTABLE: corners data only 49% available (Tier 2). Can detect delta-corners from cumulative counts but signal is noisy. Universe too small given null rate. Not tested. |
+| H6 | H93 | CS 2-2 Trap (Csaplar) | TESTABLE but INSUFFICIENT N. Strict version (2-0 held 20+ min then 2-1): max N=12. Broad version (any 2-1 at min 65+): N=42-78 but WR=18-23% with IC95_lo=8-13% (far below 40%). FT 2-2 only happens in 5.3% of matches. |
+| H7 | H94 | Europa League Fatigue | NOT TESTABLE: requires UEFA calendar and team schedule data. Not available in CSVs. |
+
 ## EN SEGUIMIENTO (7)
 
 | # | Hipotesis | Nombre | Mercado | N actual | Mejor ROI | Gate que falla | Fecha revision |
@@ -304,9 +403,9 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | 1 | H40 | BACK HT Leader | BACK MO (leader) | 302 | +3.3% | Train ROI=0.3% (marginal) | Cuando dataset > 1200 |
 | 2 | H54 | BACK Over 4.5 High-Activity Momentum | BACK O4.5 | 25 | +96.0% | N=25 < 60 (need more high-scoring games) | Cuando dataset > 1500 |
 | 3 | H55 | BACK CS 2-0/0-2 Hold | BACK CS 2-0/0-2 | 105 | +26.5% | SUPERSEDED by H79 (R13) -- better params, passes all gates | -- |
-| 4 | H62 | BACK Draw After UD Equalizer Late | BACK Draw | 40 | +149.5% | N=40 < 60 (Sharpe=3.38, train=156%/test=134%) | Cuando dataset > 1200 |
+| 4 | H62 | BACK Draw After UD Equalizer Late | BACK Draw | 111 | +59.3% | PROMOTED to APPROVED (R16) | -- |
 | 5 | H65 | BACK CS 3-0/0-3 Late Hold | BACK CS 3-0/0-3 | 49 | +74.3% | SUPERSEDED by H81 (R13) -- adds 3-1/1-3, passes all gates | -- |
-| 6 | H68 | BACK Draw at 2-2 Late | BACK Draw (2-2) | 44 | +28.4% | N=44 < 60 (WR=54.5%, Sharpe=1.16, edge=+10.5pp vs implied) | Cuando dataset > 1200 |
+| 6 | H68 | BACK Draw at 2-2 Late | BACK Draw (2-2) | 61 | +80.4% | PROMOTED to APPROVED (R16) | -- |
 | 7 | H69 | BACK Under 0.5 Late Scoreless | BACK U0.5 | 78 | +15.4% | Sharpe=0.78, low edge/variance ratio; overlaps with H44 concept | Cuando dataset > 1200 |
 
 **H68 nota**: BACK Draw at 2-2 at min 70-85. N=44, WR=54.5%, ROI=28.4%, Sharpe=1.16. The market underprices draws at 2-2 by ~10pp (actual 54.5% vs implied ~38%). Both teams have scored twice, creating mutual exhaustion and risk-aversion that favours draws. Different dynamics from H58 (Draw 1-1) -- at 2-2, each goal required different tactical adjustments. With 1200+ matches should reach N>=60. Extends Draw analysis to high-scoring tied games.
@@ -374,6 +473,12 @@ Integradas en `strategies_designer.ipynb` pero no pasan quality gates actuales (
 | H85 | Profitable Away Team boost | FILTER | Strong-looking signal in xg_underperf (N=25 boost ROI=78.8%) but N too small. Under_late max_yield>=0% holds in test (+14.1pp) but effect driven by under_late itself having ~0% ROI. |
 | H86 | Team Yield x League Tier interaction | FILTER | Tier 2/3 show positive delta but Tier 1 shows REVERSE signal (-13.8pp). Not actionable. |
 | H87 | Team Yield BY ROLE (home-as-home, away-as-away) | FILTER | Pearson r = -0.016 (essentially zero). Role balance unstable across quarters (Q3 reverses -24pp). 12/216 grid combos positive in train+test but all marginal (<5pp train) or tiny N (20-33). Same counter-intuitive pattern as H82-H86: "bad" teams provide more value. Role-specific yield adds no signal vs generic yield. |
+| H96 | "Fiesta Inacabada 3-2" LAY CS 3-2/2-3 | LAY CS 3-2/2-3 | N=24 raw, ZERO with xG>=4.0. Only 3 have CS odds. Effectively N=0 after filters. |
+| H97 | "Colapso Local Estadistico" BACK Away | BACK Away | N=5 total with stat filters. Scenario doesn't exist in data. |
+| H98 | "Anti-Goleada 5+" LAY Over 5.5 | LAY O5.5 | back_over55 7.3% non-null. 57% go OVER 5.5. Market correct. H10 same market previously dead. |
+| H99 | "Cierre 4-1" BACK CS 4-1/1-4 | BACK CS 4-1/1-4 | Columns back_rc_4_1/back_rc_1_4 DO NOT EXIST in CSVs (0% presence). |
+| H100 | "Remontada Incompleta" BACK Draw 2-deficit | BACK Draw | Only 3.0% draw rate from 2-goal deficit. ROI ~-40% at any odds. |
+| H101 | "Anti-Scoreline 0-2/2-0" LAY CS 0-2/2-0 | LAY CS 0-2/2-0 | 108 grid combos ALL negative ROI. Best: N=43, ROI=-20.6%. Market correct. |
 
 ## MERCADOS / CONCEPTOS AGOTADOS
 
@@ -408,6 +513,12 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 - **BACK Over 3.5 first half**: H78 -- test ROI=0.5%, market adjusts O3.5 correctly when goals scored early
 - **BACK Home Leading First Half**: H80 -- test ROI=1.9%, edge only ~2pp. Late strategies (H70) capture this much better
 - **Team Yield as filter (H82-H87)**: R14 tested generic yield (H82-H86, 5 hypotheses, 180 combos). R15 tested role-specific yield (H87: home-as-home, away-as-away, 216 combos). BOTH approaches fail. Generic: ZERO combos improve train+test. Role-specific: Pearson r = -0.016 (zero correlation), 12/216 combos positive in both sets but all marginal or tiny N. Signal unstable across quarters (Q3 reverses -24pp). Counter-intuitive "bad yield = better outcomes" pattern persists in role-specific analysis. Team yield -- whether generic or role-specific -- is NOT predictive. Concept EXHAUSTED across 6 hypotheses.
+- **LAY CS on common scorelines (0-2/2-0)**: H101 -- 108 combos all negative ROI. Market prices correctly.
+- **BACK CS 4-1/1-4**: H99 -- columns don't exist in CSVs. Cannot test.
+- **Stat-reversal comeback (home leading, away dominates)**: H97 -- scenario occurs in only 5/954 matches. Too rare.
+- **BACK Draw from 2-goal deficit**: H100 -- 3.0% draw rate. Dead angle confirmed.
+- **LAY Over 5.5 after 5+ goals**: H98 -- back_over55 7.3% non-null; market correct (57% go over). H10 also dead.
+- **LAY CS on rare scorelines (3-2/2-3) with stat filters**: H96 -- N=0 after xG filter. Insufficient base frequency.
 - **Handicap / Asian Handicap**: No columns available in dataset (confirmed R8 exploration)
 - **HT-specific markets**: No HT market columns available (confirmed R8 exploration)
 - **BTTS markets**: No columns available (confirmed R7 exploration)
@@ -416,7 +527,7 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
 
 ## NOTAS PARA FUTURAS RONDAS
 
-- Hipotesis H1-H87 ya cubiertas. Siguiente ronda empieza en H88.
+- Hipotesis H1-H101 ya cubiertas. Siguiente ronda empieza en H102.
 - **Ronda 15 hallazgos clave (H87 -- Team Yield by Role)**:
   - Tested role-specific yield (home-as-home ROI, away-as-away ROI, role_balance) across 2155 bets, 7 strategies, 931 matches.
   - Grid search: 3 yield types x 9 thresholds x 4 min_hist x 2 directions = 216 combos.
@@ -451,10 +562,10 @@ Estos mercados o angulos han sido investigados extensivamente y el mercado los p
   - **Under 0.5 late scoreless has edge (+12pp at min 80)** but overlaps conceptually with H44 and has low Sharpe. Not recommended for approval at current N.
   - **Goal timing analysis**: Second half is more productive (77.3% of matches have 1+ goals in 2H). The 45-55 minute window is peak goal-scoring (avg 0.41 goals/match in those 10 minutes). Late minutes (75-90) see significant goal-scoring but also many holds.
   - **Comeback analysis**: Leader at 70' holds to win 85.6% of the time. Only 12.2% of trailing teams equalize, 2.1% complete a comeback. The market significantly overestimates comeback probability.
-- El notebook usa `eval_sd()` con gates: N >= G_MIN_BETS_SD (31), ROI >= G_MIN_ROI, IC95_low >= IC95_MIN_LOW.
-- Muchas estrategias aprobadas con 800 partidos quedaron "off" con el dataset filtrado del notebook. Con mas datos pueden reactivarse automaticamente.
-- Las funciones `_apply_sd_*` y configs `SD_APPROVED_CONFIGS` estan en `betfair_scraper/dashboard/backend/utils/sd_strategies.py`.
-- Generadores de bets en `auxiliar/sd_generators.py`, filtros en `auxiliar/sd_filters.py`.
+- Todas las estrategias estan integradas en `_STRATEGY_REGISTRY` de `csv_reader.py` — no hay distincion entre "antiguas" y "nuevas".
+- Quality gates actuales (bt_optimizer 2026-03-12): N >= max(15, n_partidos//25) ~46 con 1168 partidos, ROI >= 10%, IC95_lower >= 40%.
+- Con mas datos muchas estrategias "off" (enabled=false) pueden reactivarse automaticamente al re-correr bt_optimizer.
+- NOTA: referencias a sd_strategies.py, sd_generators.py, sd_filters.py en notas anteriores son OBSOLETAS — esos ficheros fueron archivados en borrar/ en 2026-03-13.
 - **Ronda 9 hallazgos clave**:
   - CS structural inefficiency confirmed UNIVERSALLY across all tight scorelines. At min 70-80, EVERY tested score has positive edge vs market-implied probability.
   - The edge is largest for rarer scorelines (3-0, 1-2, 3-1) where market has least information, but also significant for common scores (1-0, 0-1, 2-1).

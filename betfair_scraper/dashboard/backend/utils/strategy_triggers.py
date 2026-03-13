@@ -1609,4 +1609,202 @@ def _detect_cs_big_lead_trigger(rows: list, curr_idx: int, cfg: dict) -> Optiona
     }
 
 
+def _detect_draw_equalizer_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Draw after underdog equalizes (favourite was leading, underdog tied it up).
+
+    cfg keys: m_min, m_max, fav_pre_max, min_goals_each, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 65))
+    m_max = float(cfg.get("m_max", 90))
+    fav_pre_max = float(cfg.get("fav_pre_max", 2.5))
+    min_goals_each = int(cfg.get("min_goals_each", 1))
+    odds_max = float(cfg.get("odds_max", 8.0))
+
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+
+    # Score must be tied with at least min_goals_each each
+    if gl != gv or gl < min_goals_each:
+        return None
+
+    # Determine pre-match favourite from first valid odds row
+    first_home = None
+    first_away = None
+    for r in rows[:5]:
+        bh = _to_float(r.get("back_home", ""))
+        ba = _to_float(r.get("back_away", ""))
+        if bh and ba and bh > 1 and ba > 1:
+            first_home = bh
+            first_away = ba
+            break
+    if first_home is None or first_away is None:
+        return None
+
+    # Favourite = lower pre-match odds; check fav_pre_max
+    fav_team = "local" if first_home <= first_away else "visitante"
+    fav_pre_odds = min(first_home, first_away)
+    if fav_pre_odds > fav_pre_max:
+        return None
+
+    # Favourite must have been leading at some point before curr_idx
+    fav_was_leading = False
+    for r in rows[:curr_idx]:
+        r_gl = _to_float(r.get("goles_local", ""))
+        r_gv = _to_float(r.get("goles_visitante", ""))
+        if r_gl is None or r_gv is None:
+            continue
+        r_gl_i = int(r_gl)
+        r_gv_i = int(r_gv)
+        if fav_team == "local" and r_gl_i > r_gv_i:
+            fav_was_leading = True
+            break
+        elif fav_team == "visitante" and r_gv_i > r_gl_i:
+            fav_was_leading = True
+            break
+
+    if not fav_was_leading:
+        return None
+
+    odds = _to_float(row.get("back_draw", ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+
+    return {
+        "minuto": m,
+        "back_draw": odds,
+    }
+
+
+def _detect_draw_22_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """BACK Draw when score is exactly 2-2 at m_min-m_max.
+
+    cfg keys: m_min, m_max, odds_max
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 70))
+    m_max = float(cfg.get("m_max", 90))
+    odds_max = float(cfg.get("odds_max", 8.0))
+
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    if int(gl_f) != 2 or int(gv_f) != 2:
+        return None
+
+    odds = _to_float(row.get("back_draw", ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+
+    return {
+        "minuto": m,
+        "back_draw": odds,
+    }
+
+
+def _detect_lay_over45_blowout_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
+    """LAY Over 4.5 in blowout: score 3-0/0-3 at m_min-m_max, with low SoT
+    in the post_window minutes after the 3rd goal (intensity has dropped).
+
+    cfg keys: m_min, m_max, post_window, sot_max, odds_max, include_31
+    Returns dict with trigger data or None if no trigger at this row.
+    """
+    m_min = float(cfg.get("m_min", 60))
+    m_max = float(cfg.get("m_max", 75))
+    post_window = float(cfg.get("post_window", 10))
+    sot_max = int(cfg.get("sot_max", 1))
+    odds_max = float(cfg.get("odds_max", 15.0))
+    include_31 = bool(int(cfg.get("include_31", 0)))
+
+    row = rows[curr_idx]
+    m = _to_float(row.get("minuto", ""))
+    if m is None or not (m_min <= m <= m_max):
+        return None
+
+    gl_f = _to_float(row.get("goles_local", ""))
+    gv_f = _to_float(row.get("goles_visitante", ""))
+    if gl_f is None or gv_f is None:
+        return None
+    gl = int(gl_f)
+    gv = int(gv_f)
+
+    valid_scores = [(3, 0), (0, 3), (3, 1), (1, 3)] if include_31 else [(3, 0), (0, 3)]
+    if (gl, gv) not in valid_scores:
+        return None
+
+    total_goals = gl + gv
+
+    # Find the minute when the Nth goal was scored (first row where total == total_goals)
+    goal_minute = None
+    for i in range(curr_idx + 1):
+        r = rows[i]
+        r_gl = _to_float(r.get("goles_local", ""))
+        r_gv = _to_float(r.get("goles_visitante", ""))
+        if r_gl is None or r_gv is None:
+            continue
+        if int(r_gl) + int(r_gv) >= total_goals:
+            gm = _to_float(r.get("minuto", ""))
+            if gm is not None:
+                goal_minute = gm
+            break
+
+    if goal_minute is None:
+        return None
+
+    # Require at least post_window minutes since the scoring goal
+    if m - goal_minute < post_window:
+        return None
+
+    # SoT are cumulative in CSVs — measure delta from goal_minute to now
+    sot_at_goal_l, sot_at_goal_v = None, None
+    for i in range(curr_idx + 1):
+        r = rows[i]
+        r_m = _to_float(r.get("minuto", ""))
+        if r_m is None or r_m < goal_minute:
+            continue
+        s_l = _to_float(r.get("sot_local", ""))
+        s_v = _to_float(r.get("sot_visitante", ""))
+        if s_l is not None and s_v is not None:
+            sot_at_goal_l = s_l
+            sot_at_goal_v = s_v
+        break
+
+    sot_now_l = _to_float(row.get("sot_local", ""))
+    sot_now_v = _to_float(row.get("sot_visitante", ""))
+
+    # SoT check is optional: only applied when data is available (Tier-2 stat).
+    # When missing, we rely solely on post_window as the intensity-drop signal.
+    sot_post = None
+    if sot_at_goal_l is not None and sot_now_l is not None and sot_now_v is not None:
+        sot_post = max(0, int(sot_now_l) + int(sot_now_v) - int(sot_at_goal_l) - int(sot_at_goal_v or 0))
+        if sot_post > sot_max:
+            return None
+
+    odds = _to_float(row.get("lay_over45", ""))
+    if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+
+    return {
+        "minuto": m,
+        "lay_over45": odds,
+        "goal_minute": goal_minute,
+        "sot_post": sot_post,
+    }
+
+
 # ── End unified strategy trigger functions ───────────────────────────────────

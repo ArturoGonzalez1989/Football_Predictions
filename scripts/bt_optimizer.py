@@ -232,6 +232,26 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "m_min": [62, 65, 68, 70],
         "m_max": [82, 85, 88, 90],
     },
+    "draw_equalizer": {
+        "m_min":          [60, 63, 65, 68],
+        "m_max":          [85, 88, 90],
+        "fav_pre_max":    [2.0, 2.5, 3.0],
+        "min_goals_each": [1, 2],
+        "odds_max":       [6.0, 8.0, 10.0],
+    },
+    "draw_22": {
+        "m_min":    [65, 68, 70, 72],
+        "m_max":    [85, 88, 90],
+        "odds_max": [6.0, 8.0, 10.0],
+    },
+    "lay_over45_blowout": {
+        "m_min":        [55, 58, 60, 63],
+        "m_max":        [72, 75, 78],
+        "post_window":  [5, 8, 10, 12],
+        "sot_max":      [0, 1, 2],
+        "odds_max":     [10.0, 15.0, 20.0],
+        "include_31":   [0, 1],
+    },
     # tarde_asia: no grid search (detection is liga-based, no tunable params)
 }
 
@@ -254,6 +274,8 @@ SINGLE_STRATEGIES = [
     "cs_20", "cs_big_lead", "lay_over45_v3", "draw_xg_conv",
     "poss_extreme", "cs_00", "over25_2goals", "draw_11",
     "under35_3goals", "away_fav_leading", "under45_3goals", "cs_11",
+    "draw_equalizer", "draw_22",
+    "lay_over45_blowout",
 ]
 
 

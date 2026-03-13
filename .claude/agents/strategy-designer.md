@@ -2,10 +2,11 @@
 name: strategy-designer
 description: >
   Especialista en diseno de nuevas estrategias de apuestas Betfair Exchange in-play. Analiza
-  los 850+ CSVs de partidos minuto a minuto (cuotas, xG, SoT, posesion, corners, etc.),
-  genera hipotesis creativas de nuevos edges de mercado, valida con rigor estadistico
-  (N>=60, train/test split 70/30, IC95%, Sharpe, max drawdown), detecta solapamiento con
-  las 13 estrategias existentes, y entrega especificaciones completas listas para implementar.
+  los 1168+ CSVs de partidos minuto a minuto (cuotas, xG, SoT, posesion, corners, etc.),
+  genera hipotesis creativas de nuevos edges de mercado (siguiente: H88), valida con rigor
+  estadistico (N>=46, train/test split 70/30, IC95%, Sharpe, max drawdown), detecta
+  solapamiento con las 26 estrategias existentes, y entrega especificaciones completas listas
+  para implementar en el pipeline unificado (csv_reader.py + cartera_config.json).
   Usa sub-agentes sub-backtest-runner para paralelizar la validacion. Invocame cuando quieras
   explorar nuevas ideas de estrategia o buscar edges no explotados en los datos historicos.
   Palabras clave: "nueva estrategia", "strategy design", "busca edge", "proponer estrategia",
@@ -71,35 +72,73 @@ Columnas Tier 2 pueden usarse como filtro secundario pero no como condicion prin
 
 ---
 
-## 13 ESTRATEGIAS EXISTENTES (NO duplicar)
+## 26 ESTRATEGIAS EXISTENTES (NO duplicar)
 
-| # | Nombre | Trigger signature | Mercado |
-|---|--------|-------------------|---------|
-| 1 | Back Empate 0-0 | Score 0-0, min 30+, xG bajo, poss equilibrada | BACK Draw |
-| 2 | xG Underperformance | Equipo perdiendo con xG excess >= 0.5 | BACK Over (goles) |
-| 3 | Odds Drift Contrarian | Equipo ganando pero cuota sube 30%+ en 10min | BACK ganador |
-| 4 | Goal Clustering | Gol reciente + SoT alto = mas goles | BACK Over |
-| 5 | Pressure Cooker | Empate con goles a 65-75' | BACK Over |
-| 6 | Momentum xG | SoT dominance + xG underperf | BACK equipo dominante |
-| 7 | LAY Over 1.5 Late | <=1 gol a 75-85' | LAY Over 1.5 |
-| 8 | LAY Empate Asimetrico | 0-0 a 65-75' con xG ratio >= 2.5 | LAY Draw |
-| 9 | LAY Over 2.5 Defensivo | <=1 gol a 70-80' con xG < 1.2 | LAY Over 2.5 |
-| 10 | Back SoT Dominance | Empate 60-80', SoT >= 4 vs <= 1 | BACK equipo dominante |
-| 11 | Back Over 1.5 Early | <=1 gol 25-45', xG >= 1.0, SoT >= 4 | BACK Over 1.5 |
-| 12 | LAY Falso Favorito | Fav odds <= 1.70, rival domina xG (ratio >= 2.0) 65-85' | LAY favorito |
-| 13 | Tarde Asia | Inactiva (solo tracking) | — |
+Todas registradas en `_STRATEGY_REGISTRY` de `csv_reader.py` y en `cartera_config.json`.
+
+| # | Clave config | Nombre | Trigger principal | Mercado | Estado |
+|---|-------------|--------|-------------------|---------|--------|
+| 1 | draw | Back Empate 0-0 | Score 0-0, min 30+, xG bajo, poss equilibrada | BACK Draw | Desactivada |
+| 2 | xg | xG Underperformance | Equipo perdiendo con xG excess >= 0.5 | BACK Over | Activa |
+| 3 | drift | Odds Drift Contrarian | Equipo ganando pero cuota sube 30%+ en 10min | BACK ganador | Activa |
+| 4 | clustering | Goal Clustering | Gol reciente + SoT alto = mas goles | BACK Over 2.5 | Activa |
+| 5 | pressure | Pressure Cooker | Empate con goles a 65-75' | BACK Over 2.5 | Activa |
+| 6 | momentum_xg | Momentum xG | SoT dominance + xG underperf | BACK equipo dominante | Config-dependiente |
+| 7 | tarde_asia | Tarde Asia | — | — | Inactiva (solo tracking) |
+| 8 | over25_2goal | BACK Over 2.5 2-Goal Lead | 2+ goles de ventaja, odds bajas | BACK Over 2.5 | Activa |
+| 9 | under35_late | BACK Under 3.5 Late | Marcador 1-0/0-1, min 55-75, actividad baja | BACK Under 3.5 | Activa |
+| 10 | longshot | BACK Longshot Leading | Equipo con cuota alta (longshot) ganando tarde | BACK Match Winner | Activa |
+| 11 | cs_close | BACK CS Close | Score 2-1/1-2, min 70+, odds CS adecuadas | BACK CS 2-1/1-2 | Activa |
+| 12 | cs_one_goal | BACK CS 1-0/0-1 | Score 1-0/0-1, min 68-85 | BACK CS 1-0/0-1 | Activa |
+| 13 | ud_leading | BACK Underdog Leading | Underdog ganando tarde | BACK Match Winner (underdog) | Activa |
+| 14 | home_fav_leading | BACK Home Fav Leading | Favorito local ganando, min 55+ | BACK Match Winner (home) | Activa |
+| 15 | cs_20 | BACK CS 2-0/0-2 | Score 2-0/0-2, min 75-90 | BACK CS 2-0/0-2 | Activa |
+| 16 | cs_big_lead | BACK CS Big Lead | Score 3-0/0-3/3-1/1-3, tarde | BACK CS (gran ventaja) | Activa |
+| 17 | lay_over45_v3 | LAY Over 4.5 v3 | <=3 goles, xG bajo, tarde | LAY Over 4.5 | Activa |
+| 18 | draw_xg_conv | BACK Draw xG Conv | Score 1-1, xG convergente, tarde | BACK Draw | Inactiva (no pasa gates) |
+| 19 | poss_extreme | BACK Poss Extreme | Posesion extrema dominante | BACK Over 0.5 | Activa |
+| 20 | cs_00 | BACK CS 0-0 | Score 0-0, muy tarde, odds especificas | BACK CS 0-0 | Inactiva (no pasa gates) |
+| 21 | over25_2goals | BACK Over 2.5 2 Goals | 2 goles marcados, odds especificas | BACK Over 2.5 | Inactiva (no pasa gates) |
+| 22 | draw_11 | BACK Draw 1-1 | Score 1-1, min 70+ | BACK Draw | Activa |
+| 23 | under35_3goals | BACK Under 3.5 3 Goals | 3 goles, xG bajo, tarde | BACK Under 3.5 | Activa |
+| 24 | away_fav_leading | BACK Away Fav Leading | Favorito visitante ganando tarde | BACK Match Winner (away) | Activa |
+| 25 | under45_3goals | BACK Under 4.5 3 Goals | 3 goles, xG bajo, tarde | BACK Under 4.5 | Activa |
+| 26 | cs_11 | BACK CS 1-1 | Score 1-1, tarde, odds CS | BACK CS 1-1 | Inactiva (no pasa gates) |
+
+**Ver `strategies/sd_strategy_tracker.md` para historial completo de las 87 hipotesis investigadas (H1-H87).**
 
 Antes de proponer una hipotesis, verificar que no sea una variante menor de alguna existente.
-La clave esta en **nuevos mercados** (correct score, over 3.5/4.5, half-time, ambos marcan),
-**nuevas combinaciones de stats**, o **nuevos rangos temporales**.
+La clave esta en **nuevos mercados** (over 3.5, first-half goals, BTTS-like), **combinaciones
+no exploradas de stats**, o **patrones temporales no cubiertos** (primera mitad, minutos 45-55).
 
 ---
 
-## METODOLOGIA OBLIGATORIA (8 PASOS)
+## METODOLOGIA OBLIGATORIA (9 PASOS)
+
+### PASO 0 — Reevaluar estrategias "en seguimiento" (ANTES de generar hipotesis nuevas)
+
+Lee la seccion "EN SEGUIMIENTO" del tracker. Con el dataset actual (1168 partidos vs 931 cuando
+se investigaron), puede haber estrategias que ahora superen el gate N >= max(15, 1168//25) = 46.
+
+Para cada una con N_actual cercano al gate, lanza un sub-agente `sub-backtest-runner` con los
+parametros ya conocidos (del reporte individual si existe, o del tracker) para verificar si ahora
+pasa todos los quality gates con el dataset actual.
+
+**Estrategias prioritarias para reevaluar (2026-03-13):**
+- **H62** (Draw after UD equalizer): N=40 con 931 partidos → estimar ~50+ con 1168. ROI=149.5%, Sharpe=3.38, train/test ambos >100%. Muy prometedora si alcanza N>=46.
+- **H68** (Draw at 2-2): N=44 → estimar ~55+ con 1168. ROI=28.4%, IC95 pendiente.
+- **H54** (Over 4.5 high activity): N=25, necesita ~1500 partidos para alcanzar N>=46.
+- **H40** (HT Leader): N=302 pero ROI marginal (3.3%). No tiene prioridad.
+- **H69** (Under 0.5 scoreless late): N=78, IC gate ok, pero Sharpe=0.78 bajo.
+
+Si una estrategia en seguimiento ahora pasa TODOS los gates, tratarla como candidata del Paso 4
+y continuar directamente desde Paso 4.5 (validacion realista). NO generar hipotesis nuevas
+si hay candidatas de seguimiento listas para aprobar.
 
 ### PASO 1 — Exploracion de datos
 
-Escribe y ejecuta un script `strategies/sd_explore_data.py` que analice:
+Escribe y ejecuta un script `strategies/sd_explore_data_r{N}.py` (donde N es el numero de ronda actual)
+que analice — usa nombre numerado para no sobreescribir exploraciones previas:
 
 1. **Dataset overview**: total partidos, rango de fechas, distribucion por liga/pais
 2. **Score distribution**: frecuencia de cada resultado final (0-0, 1-0, 1-1, 2-0, etc.)
@@ -163,29 +202,39 @@ se equivoca por sesgos psicologicos, inercia de cuotas, o patrones contra-intuit
 apostador comun no consideraria. Las mejores estrategias suelen ser las menos obvias.
 
 **Ejemplo de hipotesis creativa (nivel esperado):**
-- **BACK Favorito Remontador**: El favorito pre-partido (cuota < 2.0 al inicio) se pone perdiendo
-  pero domina estadisticamente (SoT, xG, posesion). El mercado sobrereacciona al gol en contra:
-  las cuotas del favorito saltan a 3.0-6.0+. Si las stats muestran que sigue dominando, la
-  remontada es probable y las cuotas ofrecen value enorme. Combina informacion pre-partido
-  (quien era favorito) con in-play (quien domina) — algo que pocos modelos hacen.
+- **BACK Draw After 2-2 Late**: A 2-2 en min 70+, ambos equipos han demostrado capacidad goleadora
+  pero el juego entra en fase de "empate mutuo satisfactorio". El mercado sigue pricerando al
+  ganador porque ve el partido "abierto" (2 goles cada uno), pero estadisticamente el empate
+  es el resultado modal en partidos que llegan a 2-2 tarde. Diferente dinámica que 1-1 (H58):
+  a 2-2 ambos equipos ya arriesgaron mucho y tienden a gestionar — edge en Draw subestimado.
+  (Nota: H68 está en seguimiento con N=44, ROI=28.4%. Con 1168 partidos podria alcanzar N>=46.)
 
-**Ideas de nichos NO explotados por las 13 estrategias existentes:**
-- **Situaciones contra-intuitivas**: favorito perdiendo pero dominando; equipo con mas goles
-  pero peores stats (falsa ventaja); empate en partido con cuotas extremas pre-partido
-- **Combinaciones pre-partido + in-play**: usar cuotas iniciales como proxy de calidad del equipo,
-  luego contrastar con lo que pasa en el partido
-- **Reacciones excesivas del mercado**: cuotas que se mueven demasiado rapido tras un gol, creando
-  ventanas de value de 5-10 minutos
-- **Patrones temporales**: que pasa en torno al descanso (min 40-55), patrones de "ultimo cuarto"
-  (min 75-85), reacciones a goles tardios
-- Mercados de correct score (odds altas, edge potencial en scorelines especificos)
-- Over/Under 3.5 o 4.5 (las existentes solo cubren 1.5 y 2.5)
-- LAY al favorito cuando va ganando pero pierde momentum (diferente de Falso Favorito)
-- BACK equipo local cuando domina corners y posesion (home advantage + presion estadistica)
-- "Safe harbor" LAY: equipos con cuota muy baja (<1.30) que raramente sufren comebacks
-- Tarjetas como proxy de frustracion/presion (booking_points como indicador)
-- xG convergence: cuando xG de ambos equipos converge = partido equilibrado = value en Draw
-- Momentum shift detection: un equipo cambia de dominado a dominante
+**Ideas de nichos NO explotados por las 26 estrategias existentes:**
+
+Los mercados/conceptos siguientes NO han sido investigados aun (consultar la seccion
+"MERCADOS / CONCEPTOS AGOTADOS" del tracker para ver lo que ya esta cerrado):
+
+- **BACK Draw en alta presion sin goles** (min 55-75, 0-0, SoT total >= 8, xG total >= 1.5):
+  El mercado baja la cuota del Draw cuando hay mucha actividad. Si los goles no llegan pese
+  a mucha presion, ¿hay mean reversion hacia el draw? Diferente de H74 (que testeaba 55-70 sin stats).
+- **BACK Under con equipos que gestionan** (lider +2, corner ratio bajo, posesion del lider < 45%):
+  Equipos liderando ampliamente a menudo se defienden bajando possession. Señal de "partido cerrado".
+- **Reacciones al descanso** (min 46-52 con cambio de dominancia estadistica entre 1H y 2H):
+  El mercado no ajusta rapido cuando el equipo que dominaba en 1H empieza a ceder en 2H.
+- **BACK Draw 2-2 tardio** (H68 en seguimiento — reevaluar con 1168 partidos antes de proponer nuevo):
+  Si H68 no alcanza N>=46, investigar variantes con rango de minutos mas amplio.
+- **Booking points como proxy de partido caliente** (Tier 2 — usar solo como filtro secundario):
+  Partidos con alta tension (booking_points >= 30) pueden tener patrones distintos en Over/Under.
+- **Patrones de primer gol** (en que minuto se marca el primer gol y como afecta a Over 2.5 final):
+  Si el primer gol es tardio (min 60+), ¿bajan las chances de Over 2.5? El mercado puede sobrereaccionar.
+
+**IMPORTANTE — ya investigado, NO repetir:**
+- LAY al favorito perdiendo momentum: H7, H8, H22, H27, H33, H34, H38 — MUERTO
+- Over 3.5 en cualquier condicion: H12, H42, H78 — mercado eficiente
+- Odds movement como signal: H31 — noise puro
+- Correct Score 0-0: H37, H56, H75 — confirmado muerto en 3 rondas
+- Corners como predictor: H36 — datos 50% cobertura, sin edge
+- BACK Over 2.5 (cualquier variante): SATURADO, 7+ estrategias ya cubren este mercado
 
 Prioriza hipotesis que:
 - Sean **creativas y no obvias** — el mercado ya pricerea las estrategias obvias
@@ -231,18 +280,22 @@ date_concentration, y lista de match_ids que triggered.
 ### PASO 4 — Recoleccion y quality gates
 
 Recoge los resultados de todos los sub-agentes. Para cada combinacion de parametros,
-aplica los **8 quality gates**. Una estrategia DEBE pasar TODOS para ser candidata:
+aplica los **quality gates** alineados con `bt_optimizer.py`. Una estrategia DEBE pasar
+TODOS para ser candidata (mismos gates que el optimizer usa en produccion):
 
 | # | Gate | Umbral | Razon |
 |---|------|--------|-------|
-| 1 | Sample size | N >= 60 | Significancia estadistica minima |
-| 2 | Test set size | N_test >= 18 (30% de 60) | Validacion out-of-sample |
-| 3 | ROI positivo en ambos | ROI_train > 0% AND ROI_test > 0% | Sin overfitting |
-| 4 | Win rate lower bound | IC95% lo > 40% | Confianza en la tasa de acierto |
-| 5 | Drawdown controlado | Max DD < 40% bankroll | Riesgo manejable |
-| 6 | No redundante | Overlap < 30% con existentes | Valor anadido real |
-| 7 | Diversificacion por liga | >= 3 ligas diferentes | No dependiente de una liga |
-| 8 | No concentrado temporalmente | Max 50% bets en ventana 3 dias | Edge sostenido |
+| 1 | Sample size | N >= max(15, n_partidos // 25) — ~46 con 1168 partidos | Significancia estadistica adaptativa |
+| 2 | Test set size | N_test >= 30% de N (cronologico) | Validacion out-of-sample |
+| 3 | ROI positivo en ambos | ROI_train > 0% AND ROI_test > 0% | Sin overfitting temporal |
+| 4 | ROI post-ajustes | ROI_realistic >= 10% | Gate principal del optimizer |
+| 5 | Win rate lower bound | IC95_lower >= 40% (Wilson) | Confianza en la tasa de acierto |
+| 6 | Drawdown controlado | Max DD < 40% bankroll (orientativo) | Riesgo manejable |
+| 7 | No redundante | Overlap < 30% con existentes (mismo mercado) | Valor anadido real |
+| 8 | Diversificacion por liga | >= 3 ligas diferentes | No dependiente de una liga |
+
+**Nota clave:** Los gates 1, 4, 5 son los mismos que `_eval_bets()` en `scripts/bt_optimizer.py`.
+El bt_optimizer es el juez definitivo — los gates aqui son para filtrar antes de llegar a el.
 
 Muestra tabla de resultados con semaforo:
 - PASS = cumple todos los gates
@@ -272,14 +325,14 @@ python strategies/sd_validate_realistic.py --file auxiliar/sd_bt_{name}_bets.jso
 
 3. **Copia el output COMPLETO** (tanto stderr como stdout) en tu reporte.
 
-El validador aplica los mismos filtros que el notebook BT real:
+El validador aplica los mismos filtros que el bt_optimizer en produccion:
 - **Slippage 2%** en BACK wins (reduce P/L de cada victoria)
 - **Odds filter [1.05, 10.0]** (elimina bets con odds extremas)
 - **Dedup** (1 bet por match)
 
-Y verifica quality gates del notebook:
-- N >= max(15, n_matches/25) (~35 con 896 matches)
-- **ROI >= 10% post-ajustes** (el gate más importante)
+Y verifica los mismos quality gates del bt_optimizer:
+- N >= max(15, n_matches/25) (~46 con 1168 matches)
+- **ROI >= 10% post-ajustes** (el gate mas importante — mismo umbral que bt_optimizer)
 - IC95 lower bound >= 40%
 - Train ROI > 0 y Test ROI > 0
 
@@ -316,13 +369,17 @@ ultra-optimizados para un valor puntual.
 Escribe `strategies/sd_overlap.py` que:
 
 1. Carga los match_ids que triggered cada estrategia candidata
-2. Simula cuales de esos mismos partidos triggered cada una de las 13 estrategias existentes
+2. Simula cuales de esos mismos partidos triggered cada una de las 26 estrategias existentes
    (usando las condiciones del cartera_config.json)
 3. Calcula overlap = |interseccion| / |candidata| para cada par
-4. Si overlap > 30% con alguna existente, la candidata NO es independiente
+4. Si overlap > 30% con alguna existente en el MISMO MERCADO, la candidata NO es independiente
+
+**Nota importante**: alto overlap en match-ids pero en mercados distintos es normal y NO descalifica.
+Por ejemplo, cs_one_goal y cs_close tienen ~70% match overlap pero zero market overlap (ambas BACK CS).
+El gate de overlap aplica SOLO cuando el mercado es el mismo (ver `_STRATEGY_MARKET` en csv_reader.py).
 
 Para simular las existentes, puedes usar una version simplificada que solo checkee:
-- Minuto range + score condition + 1-2 stats principales de cada estrategia
+- Minuto range + score condition + mercado del trigger
 
 ---
 
@@ -405,14 +462,13 @@ Para cada estrategia VALIDADA (que pase todos los gates), escribe un informe en
 ## Quality Gates
 | Gate | Resultado |
 |------|-----------|
-| N >= 60 | PASS ({N}) |
-| N_test >= 18 | PASS ({N_test}) |
+| N >= max(15, n_partidos//25) | PASS ({N}) |
+| N_test >= 30% N (cronologico) | PASS ({N_test}) |
+| ROI realistic >= 10% | PASS ({roi_realistic}%) |
 | ROI train+test > 0% | PASS |
 | IC95% lo > 40% | PASS ({lo}%) |
-| Max DD < 40% | PASS ({DD}%) |
-| Overlap < 30% | PASS ({max_overlap}%) |
+| Overlap < 30% (mismo mercado) | PASS ({max_overlap}%) |
 | >= 3 ligas | PASS ({count}) |
-| Concentracion < 50% | PASS ({max_pct}%) |
 
 ## Validación Realista (sd_validate_realistic.py)
 **Verdict: {PASS|FAIL}**
@@ -469,8 +525,8 @@ Ademas, genera un resumen ejecutivo global `strategies/sd_summary.md` con:
 
 ## TEMPLATE DE SCRIPT PYTHON
 
-Usa este patron probado como base para todos los scripts de backtest.
-Proviene de `_ux-lenovo-legion/strategy_research_h2_h3.py`.
+Usa este patron como base para todos los scripts de backtest en `strategies/`.
+(Patron consolidado de 15 rondas de investigacion, H1-H87.)
 
 ```python
 """
@@ -621,236 +677,91 @@ def stats(bets):
 
 ---
 
-### PASO 9 — Integracion en notebook strategies_designer.ipynb
+### PASO 9 — Integracion en el pipeline de produccion
 
-Cuando el usuario pida integrar estrategias aprobadas en el notebook, sigue este proceso:
+La arquitectura post-refactoring (2026-03-11) es **radicalmente mas simple** que el pipeline antiguo.
+No hay notebook que actualizar, no hay `optimize.py` que extender, no hay secciones separadas.
 
-#### Arquitectura del notebook
+**Referencia obligatoria**: lee `analisis/nueva_estrategia_guia.md` — contiene el checklist completo
+y actualizado con codigo de ejemplo para cada paso.
 
-El notebook `analisis/strategies_designer.ipynb` tiene esta estructura:
-- **Celdas 0-4**: Setup, imports, carga de datos via `csv_reader.analyze_cartera()`
-- **Celdas 5-8**: Config global (criterio, bankroll, stake, risk filter, ajustes realistas)
-- **Celdas 9-26**: Optimizacion individual por estrategia (grid search)
-- **Celdas 27-38**: Cartera combinada (KPIs, metricas, charts, historial, CO optimizer)
-- **Celdas 39-53**: Preset optimizer (4 criterios, comparacion, aplicacion)
-- **Celdas 54-55**: Export JSON/CSV para audit
+#### Resumen del proceso (4 pasos)
 
-#### Archivos involucrados
+**Paso 9.A — Trigger en `csv_reader.py`**
 
-- `analisis/strategies_designer.ipynb` — El notebook principal
-- `betfair_scraper/dashboard/backend/api/optimize.py` — Funciones de filtrado, param dicts, Phase 1-4
-- `betfair_scraper/dashboard/backend/api/optimizer_cli.py` — CLI runner para presets (multiprocessing)
-- `betfair_scraper/dashboard/backend/utils/csv_reader.py` — `analyze_cartera()` genera superconjunto de bets
-- `betfair_scraper/cartera_config.json` — Config de versiones/params
+Añadir la funcion `_detect_<name>_trigger(rows, curr_idx, cfg)` siguiendo el patron de las 26
+existentes. Reglas criticas:
+- Solo mira `rows[:curr_idx+1]` — nunca filas futuras
+- Lee params desde `cfg` (viene de `cartera_config.json`)
+- Retorna `None` o `dict` con al menos `{'back_odds': X, 'recommendation': '...'}`
 
-#### Para cada nueva estrategia, se necesita:
+**Paso 9.B — Registro en `_STRATEGY_REGISTRY`**
 
-**A. Generador de bets (superconjunto)**
-
-Las estrategias existentes obtienen sus bets de `csv_reader.analyze_cartera()`, que escanea todos los
-`partido_*.csv` y genera un superconjunto amplio. Para las nuevas estrategias hay dos opciones:
-
-1. **Opcion preferida**: Anadir una funcion `analyze_strategy_{key}()` en `csv_reader.py` que genere
-   el superconjunto para la nueva estrategia, y llamarla desde `analyze_cartera()`.
-2. **Opcion rapida**: Crear una funcion standalone en `optimize.py` o en el propio notebook que lea
-   los CSVs directamente y genere bets. Util para prototipado antes de la implementacion completa.
-
-Cada bet generado debe ser un dict con al minimo:
+Añadir una tupla al final de `_STRATEGY_REGISTRY` en `csv_reader.py`:
 ```python
-{
-    "strategy": "nombre_estrategia",   # clave unica
-    "match_id": "...",
-    "minuto": float,
-    "timestamp_utc": "...",
-    "won": bool,
-    "pl": float,                       # P/L con stake fijo
-    "effective_odds": float,
-    "bet_type_dir": "back" | "lay",
-    "risk_level": "sin_riesgo" | "riesgo_medio" | "con_riesgo",
-    # + campos especificos de la estrategia para filtrado
+(
+    'nombre_key',                        # clave en cartera_config.json
+    'Nombre Display',                    # nombre legible en UI
+    _detect_nombre_trigger,              # funcion trigger del Paso 9.A
+    'Descripcion breve del edge',        # descripcion
+    _extract_<mercado>_odds,             # extractor de odds (reutilizar existentes)
+    lambda t, gl, gv: <condicion_win>,  # win_fn — VERIFICAR con casos manuales
+),
+```
+
+Extractores disponibles: `_extract_over_odds`, `_extract_under_odds`, `_extract_team_odds`,
+`_extract_cs_odds`, `_extract_lay_odds`. Solo crear uno nuevo si el mercado es realmente nuevo.
+
+**Paso 9.C — Config en `cartera_config.json`**
+
+Añadir entrada minima con `enabled: false` (el bt_optimizer decidira si la activa):
+```json
+"nombre_key": {
+    "enabled": false,
+    "minuteMin": 55,
+    "minuteMax": 85
 }
 ```
 
-**B. Funcion de filtrado en optimize.py**
-
-Anadir `_filter_{key}(bets, v)` siguiendo el patron existente:
-```python
-{KEY}_PARAMS: Dict[str, Dict] = {
-    "on": dict(param1=val1, param2=val2, min_min=X, min_max=Y),
-    # versiones adicionales si aplica
-}
-
-def _filter_{key}(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off" or v not in {KEY}_PARAMS:
-        return []
-    p = {KEY}_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") != "nombre_estrategia":
-            continue
-        # aplicar filtros de params...
-        result.append(b)
-    return result
-```
-
-**C. Options array para preset optimizer**
-
-Anadir al archivo optimize.py:
-```python
-{KEY}_OPTS = ["off", "on"]  # o ["off", "v1", "v2"] si hay versiones
-```
-
-Y actualizar `_PHASE1_TOTAL`, `MAX_BETS_COMBO`, y el loop de Phase 1 en `_worker_phase1()`.
-
-**D. Celda de grid search en el notebook**
-
-Cada estrategia nueva necesita una celda markdown (header) + una celda code:
+**Paso 9.D — Si comparte mercado, añadir a `_STRATEGY_MARKET`**
 
 ```python
-# Markdown: ## Estrategia: {NOMBRE}
-# Trigger: {descripcion}, Mercado: {mercado}
-# Grid: param1=[val1,val2,...], param2=[val1,val2,...]
-
-_{key}_results = []
-_base_{key} = [b for b in _ALL_BETS if b.get('strategy') == 'nombre_estrategia']
-print(f"Base {key}: {len(_base_{key})} bets")
-
-for param1, param2 in itertools.product(
-    [val1, val2, val3],
-    [val1, val2, val3],
-):
-    filtered = _filter_{key}(_base_{key}, "on", override=dict(param1=param1, param2=param2))
-    r = _eval_combo(filtered, dict(param1=param1, param2=param2))
-    if r:
-        _{key}_results.append(r)
-
-if _{key}_results:
-    _best = max(_{key}_results, key=lambda x: x['Score'])
-    CFG_{KEY} = {k: _best[k] for k in ('param1', 'param2')}
-    print(f"BEST: {CFG_{KEY}} -> N={_best['N']}, WR={_best['WR%']:.1f}%, ROI={_best['ROI%']:.1f}%")
-    _opt_table(_{key}_results)
-else:
-    CFG_{KEY} = None
-    print("No valid configs found")
-```
-
-**E. Integracion en cartera combinada (celda ~28)**
-
-Anadir la estrategia al array `_chosen`:
-```python
-_chosen = [
-    ('Draw', CFG_DRAW),
+# En csv_reader.py — solo si comparte mercado con estrategia existente
+_STRATEGY_MARKET = {
     ...
-    ('{Nombre}', CFG_{KEY}),  # NUEVA
-]
+    'nombre_key': 'over_2.5',  # mismo grupo = dedup activo
+}
 ```
 
-Y en el bucle de ensamblaje de bets, anadir:
-```python
-if CFG_{KEY}:
-    _bets_all.extend(_filter_{key}(_base_{key}, "on", override=CFG_{KEY}))
+Grupos actuales: `under_3.5` (under35_late, under35_3goals), `draw` (draw_11, draw_xg_conv),
+`over_2.5` (over25_2goal, goal_clustering, pressure_cooker).
+
+**Paso 9.E — Validar e integrar**
+
+```bash
+python scripts/bt_optimizer.py --phase all  # grid search + config optima + presets
+python tests/reconcile.py                   # verificar match rate >= 97%
 ```
 
-**F. Integracion en preset optimizer**
+El `bt_optimizer.py` se encarga automaticamente de:
+- Grid search de parametros (phase 1)
+- Actualizar `enabled` y params en `cartera_config.json` segun quality gates (phase 2)
+- Regenerar presets de portfolio (phases 3-4)
 
-En `optimizer_cli.py`, anadir la nueva estrategia al grid de Phase 1:
-- Nuevo `{KEY}_OPTS` en el producto cartesiano
-- Actualizar `_PHASE1_TOTAL`
-- En `_worker_phase1()`, anadir la llamada a `_filter_{key}()`
+**Lo que YA NO hace falta hacer manualmente** (a diferencia de la arquitectura antigua):
+- No añadir a `optimize.py` — el registry propaga automaticamente
+- No modificar `analytics.py` — itera el registry automaticamente
+- No tocar `reconcile.py` — itera el registry automaticamente
+- No actualizar celda de cartera en ningun notebook
+- No añadir a ninguna lista en `optimizer_cli.py`
 
-#### Parametros desde los reportes sd_report_*.md
-
-Los parametros de cada estrategia estan documentados en su reporte. Ejemplo:
-- `sd_report_lay_over45.md` -> min=65-75, goals<=2, odds<=15
-- `sd_report_back_longshot.md` -> cuota_pre>=2.5, min>=65, xG>=0.2
-
-Usar estos como defaults y crear un grid con +/- variaciones para optimizacion.
-
-#### Orden de trabajo (con sub-agentes en paralelo)
-
-El trabajo se paraleliza usando sub-agentes via Task tool. Como multiples sub-agentes NO pueden
-editar el mismo fichero simultaneamente, el patron es:
-
-1. **Orchestrator lee y prepara** (secuencial):
-   a. Lee tracker `strategies/sd_strategy_tracker.md` para listar las aprobadas
-   b. Lee cada reporte `strategies/sd_report_*.md` para extraer triggers y params
-   c. Lee `optimize.py` para entender patron de filtrado existente
-   d. Lee el notebook para entender estructura actual
-   e. Prepara una SPEC por estrategia: {key, nombre, mercado, tipo, trigger, params, grid_values}
-
-2. **Lanza sub-agentes en paralelo** (maximo 4 simultaneos via Task tool):
-   Cada sub-agente recibe un batch de ~5 estrategias y su spec completa.
-   Cada sub-agente escribe a archivos SEPARADOS en `auxiliar/`:
-
-   ```
-   Sub-agente batch-integrator #1 (estrategias #1-#5):
-     -> auxiliar/sd_int_batch1_generators.py   (funciones de generacion de bets standalone)
-     -> auxiliar/sd_int_batch1_filters.py      (funciones _filter_{key} + PARAMS dicts)
-     -> auxiliar/sd_int_batch1_notebook.json    (celdas de grid search en formato JSON)
-     -> auxiliar/sd_int_batch1_cartera.py       (fragmento de integracion en cartera combinada)
-
-   Sub-agente batch-integrator #2 (estrategias #6-#10):
-     -> auxiliar/sd_int_batch2_*.py/json
-
-   Sub-agente batch-integrator #3 (estrategias #11-#15):
-     -> auxiliar/sd_int_batch3_*.py/json
-
-   Sub-agente batch-integrator #4 (estrategias #16-#19):
-     -> auxiliar/sd_int_batch4_*.py/json
-   ```
-
-   **Prompt tipo para cada sub-agente:**
-   ```
-   Eres un integrador de estrategias de backtest. Genera codigo Python para las siguientes
-   estrategias usando el patron existente.
-
-   PATRON DE REFERENCIA: [incluir ejemplo de _filter existente de optimize.py]
-   NOTEBOOK PATTERN: [incluir ejemplo de celda grid search existente]
-
-   ESTRATEGIAS A INTEGRAR:
-   #{n}: {nombre} - {mercado} - Trigger: {desc} - Params: {params}
-   ...
-
-   OUTPUTS REQUERIDOS:
-   1. auxiliar/sd_int_batch{N}_generators.py - Funciones standalone que lean CSVs y generen bets
-   2. auxiliar/sd_int_batch{N}_filters.py - Funciones _filter_{key}() + {KEY}_PARAMS dicts + {KEY}_OPTS
-   3. auxiliar/sd_int_batch{N}_notebook.json - Array JSON de celdas [{type:"markdown",source:...}, {type:"code",source:...}]
-   4. auxiliar/sd_int_batch{N}_cartera.py - Fragmento para la seccion de cartera combinada
-   ```
-
-3. **Orchestrator consolida** (secuencial, tras recoger todos los sub-agentes):
-   a. Lee todos los `auxiliar/sd_int_batch*_filters.py` y los inyecta en `optimize.py`
-   b. Lee todos los `auxiliar/sd_int_batch*_generators.py` y los consolida en un helper
-      `betfair_scraper/dashboard/backend/api/new_strategies_gen.py` (o los inserta en el notebook)
-   c. Lee todos los `auxiliar/sd_int_batch*_notebook.json` e inserta las celdas en el notebook
-      (tras las estrategias existentes, antes de la cartera combinada)
-   d. Lee todos los `auxiliar/sd_int_batch*_cartera.py` y actualiza la celda de cartera combinada
-   e. Actualiza `_PHASE1_TOTAL` y el preset optimizer con los nuevos `*_OPTS`
-   f. Ejecuta el notebook para verificar que funciona
-
-#### Regla para sub-agentes PASO 9
-
-- Cada sub-agente escribe SOLO a `auxiliar/sd_int_batch{N}_*.py/json` — NUNCA a ficheros de produccion
-- El orchestrator es el UNICO que edita `optimize.py`, el notebook, y `optimizer_cli.py`
-- Si un sub-agente necesita leer ficheros de referencia (optimize.py, reportes), puede hacerlo
-- Los sub-agentes deben incluir comentarios `# Strategy: {key}` para facilitar la consolidacion
-- Formato de celdas notebook JSON: `[{"cell_type": "markdown", "source": "..."}, {"cell_type": "code", "source": "..."}]`
-
-#### Regla critica
-
-**NO mezclar generacion de bets con filtrado**. El patron es:
-- `csv_reader.py` genera el SUPERCONJUNTO amplio (condiciones basicas)
-- `optimize.py` FILTRA por version/params (condiciones exactas)
-- El notebook hace GRID SEARCH sobre los params del filtro
-
-Si una estrategia nueva no tiene su superconjunto en `analyze_cartera()`, crear una funcion
-standalone que lea los CSVs y genere bets. NUNCA hardcodear bets en el notebook.
+**Ver `analisis/nueva_estrategia_guia.md` para codigo de ejemplo completo y verificaciones post-implementacion.**
 
 ---
 
 ## REGLAS
 
-1. **Scripts de investigacion van a `strategies/`**. Para integracion (PASO 9), SI se modifican `optimize.py`, `optimizer_cli.py`, y el notebook
+1. **Scripts de investigacion van a `strategies/`**. Para integracion (PASO 9), solo se modifican `csv_reader.py` y `cartera_config.json` — nada mas.
 2. **Preferir columnas Tier 1** como triggers principales. Tier 2 solo como filtro secundario
 3. **No cherry-pick parametros** — si un grid search muestra ROI positivo solo para 1 de 20
    combinaciones, eso es ruido, no una estrategia
@@ -869,6 +780,14 @@ standalone que lea los CSVs y genere bets. NUNCA hardcodear bets en el notebook.
 
 **OBLIGATORIO**: Antes de empezar cualquier sesion de trabajo, lee `strategies/sd_strategy_tracker.md`.
 Al terminar cada sesion, actualiza ese fichero con los resultados.
+
+**Estado actual del tracker** (2026-03-13):
+- 87 hipotesis investigadas (H1-H87) en 15 rondas con 931 partidos
+- **Siguiente hipotesis: H88** — siguiente ronda empieza ahi
+- 26 estrategias en produccion (todas integradas en `_STRATEGY_REGISTRY`)
+- 47 hipotesis descartadas — ver seccion DESCARTADAS antes de proponer nuevas
+- 7 hipotesis en seguimiento — revisar cuando dataset > 1200 partidos
+- **Dataset actual: 1168 partidos** (mayor que el de la investigacion — reevaluar seguimiento)
 
 ### Formato del tracker
 
@@ -899,7 +818,7 @@ Dataset: {N} partidos, rango {fecha_inicio} - {fecha_fin}
 
 1. **Leer SIEMPRE al inicio** — el tracker contiene decisiones previas. No re-investigar estrategias ya descartadas a menos que haya datos nuevos significativos (>20% mas partidos).
 2. **Mover entre secciones** cuando proceda:
-   - SEGUIMIENTO → APROBADA: cuando N >= 60 y pase los 8 quality gates
+   - SEGUIMIENTO → APROBADA: cuando N >= max(15, n_partidos//25) y pase todos los quality gates
    - SEGUIMIENTO → DESCARTADA: cuando con N suficiente sigue fallando gates
    - DESCARTADA → SEGUIMIENTO: solo si cambian las premisas (nuevo mercado disponible, cambio de dataset)
 3. **Nunca borrar entradas** — las descartadas son informacion valiosa para no repetir trabajo
@@ -910,3 +829,10 @@ Dataset: {N} partidos, rango {fecha_inicio} - {fecha_fin}
 ### Creacion inicial
 
 Si `strategies/sd_strategy_tracker.md` no existe, crealo con las secciones vacias y poblalo con los resultados de la sesion actual.
+
+### Sobre los reportes de estrategias
+
+- Reportes individuales: `strategies/sd_report_*.md` — uno por hipotesis aprobada
+- Resumenes por ronda: `strategies/sd_summary_r*.md` — resumen ejecutivo por ronda
+- Validador realista: `strategies/sd_validate_realistic.py` — ejecutar en PASO 4.5
+- Scripts de backtest de rondas anteriores: en `borrar/strategies/` (referencia historica, no en produccion)
