@@ -426,6 +426,10 @@ async def start_scheduler():
     # Alerts monitor: logs system alerts every 60s (even when nobody is viewing the dashboard)
     asyncio.create_task(_alerts_monitor())
     print(f"[{datetime.now()}] Alerts monitor started (logs to alerts.jsonl every 60s)")
+    # Telegram bot callback polling: handles "Añadir a MI PAPER" inline button
+    from utils import telegram_poller as _tg_poller
+    asyncio.create_task(_tg_poller.start_polling())
+    print(f"[{datetime.now()}] Telegram callback polling started")
 
 
 @app.on_event("shutdown")

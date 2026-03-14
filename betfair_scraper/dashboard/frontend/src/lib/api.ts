@@ -333,6 +333,8 @@ export interface PlaceBetRequest {
   win_rate_historical?: number
   roi_historical?: number
   sample_size?: number
+  entry_conditions?: Record<string, any>
+  thresholds?: Record<string, string>
   // User input fields
   bet_type: "paper" | "real"
   stake: number
@@ -388,16 +390,8 @@ export interface PlacedBetsResponse {
 
 // ── Cartera configuration (single source of truth) ─────────────────────
 export interface CarteraConfig {
-  /** New param-based format (replaces legacy `versions`) */
-  strategies?: {
-    draw?: { enabled: boolean; xgMax: number; possMax: number; shotsMax: number; xgDomAsym: boolean; minuteMin?: number; minuteMax?: number }
-    xg?: { enabled: boolean; sotMin: number; minuteMin?: number; minuteMax: number }
-    drift?: { enabled: boolean; goalDiffMin: number; driftMin: number; oddsMax: number; minuteMin: number; minuteMax?: number; momGapMin: number }
-    clustering?: { enabled: boolean; minuteMin?: number; minuteMax: number; xgRemMin: number }
-    pressure?: { enabled: boolean; minuteMin?: number; minuteMax?: number }
-    tarde_asia?: { enabled: boolean; minuteMin?: number; minuteMax?: number }
-    momentum_xg?: { version: string; minuteMin?: number; minuteMax?: number }
-  }
+  /** New param-based format (replaces legacy `versions`) — all 34 strategies */
+  strategies?: Record<string, { enabled?: boolean; minuteMin?: number; minuteMax?: number; [key: string]: any }>
   /** Legacy version format — kept for backward compat when reading old configs */
   versions?: {
     draw?: string
@@ -411,6 +405,7 @@ export interface CarteraConfig {
   bankroll_mode: string
   flat_stake?: number
   initial_bankroll?: number
+  stake_pct?: number
   active_preset: string | null
   risk_filter: string
   min_duration: {
@@ -488,8 +483,10 @@ export const api = {
   // Placed bets tracking
   placeBet: (bet: PlaceBetRequest) => post<PlacedBet>("/bets/place", bet),
   getPlacedBets: () => get<PlacedBetsResponse>("/bets/placed"),
+  getManualBets: () => get<PlacedBetsResponse>("/bets/manual"),
   clearBets: () => del<{ status: string; message: string }>("/bets/clear"),
   resolveBet: (id: number, result: "won" | "lost") => post<{ ok: boolean; bet_id: number; result: string }>(`/bets/${id}/resolve?result=${result}`, {}),
+  addToManualPaper: (betId: number) => post<{ ok: boolean; manual_bet_id: number }>(`/bets/${betId}/add-to-manual`, {}),
 
   // Cartera configuration
   getConfig: () => get<CarteraConfig>("/config/cartera"),

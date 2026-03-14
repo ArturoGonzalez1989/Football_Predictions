@@ -86,8 +86,8 @@ def _validate_config(config: Dict[str, Any]) -> None:
     """Raise ValueError if config contains values that would silently break the system."""
     if "strategies" in config and not isinstance(config["strategies"], dict):
         raise ValueError("'strategies' must be an object")
-    if "bankroll_mode" in config and config["bankroll_mode"] not in ("fixed", "fractional"):
-        raise ValueError(f"'bankroll_mode' must be 'fixed' or 'fractional', got {config['bankroll_mode']!r}")
+    if "bankroll_mode" in config and config["bankroll_mode"] not in ("fixed", "fractional", "pct"):
+        raise ValueError(f"'bankroll_mode' must be 'fixed', 'fractional' or 'pct', got {config['bankroll_mode']!r}")
     flat_stake = config.get("flat_stake")
     if flat_stake is not None and (not isinstance(flat_stake, (int, float)) or flat_stake <= 0):
         raise ValueError(f"'flat_stake' must be a positive number, got {flat_stake!r}")

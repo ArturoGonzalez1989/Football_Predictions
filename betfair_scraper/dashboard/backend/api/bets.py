@@ -15,11 +15,13 @@ log = logging.getLogger(__name__)
 
 from utils.csv_reader import _resolve_csv_path, _read_csv_rows, _to_float
 from utils import signals_audit_logger as _audit
+from utils import telegram_notifier as _tg
 
 router = APIRouter()
 
 # Path to placed bets CSV
 PLACED_BETS_CSV = Path(__file__).parent.parent.parent.parent / "placed_bets.csv"
+PLACED_BETS_MANUAL_CSV = Path(__file__).parent.parent.parent.parent / "placed_bets_manual.csv"
 GAMES_CSV = Path(__file__).parent.parent.parent.parent / "games.csv"
 
 CSV_HEADERS = [
@@ -48,6 +50,8 @@ class PlaceBetRequest(BaseModel):
     win_rate_historical: Optional[float] = None
     roi_historical: Optional[float] = None
     sample_size: Optional[int] = None
+    entry_conditions: Optional[dict] = None
+    thresholds: Optional[dict] = None
     # User input fields
     bet_type: Literal["paper", "real"]
     stake: float
@@ -115,12 +119,33 @@ def _ensure_csv_exists():
             writer.writerow(CSV_HEADERS)
 
 
+def _ensure_manual_csv_exists():
+    """Crea el CSV manual con headers si no existe"""
+    if not PLACED_BETS_MANUAL_CSV.exists():
+        with open(PLACED_BETS_MANUAL_CSV, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(CSV_HEADERS)
+
+
 def _get_next_id() -> int:
     """Obtiene el siguiente ID disponible"""
     if not PLACED_BETS_CSV.exists():
         return 1
 
     with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+        if not rows:
+            return 1
+        return max(int(row['id']) for row in rows if row.get('id', '').isdigit()) + 1
+
+
+def _get_next_manual_id() -> int:
+    """Obtiene el siguiente ID disponible para el CSV manual"""
+    if not PLACED_BETS_MANUAL_CSV.exists():
+        return 1
+
+    with open(PLACED_BETS_MANUAL_CSV, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         rows = list(reader)
         if not rows:
@@ -455,6 +480,24 @@ async def place_bet(bet: PlaceBetRequest):
                 ''
             ])
 
+        # ── Telegram notification ──
+        _tg.send_signal({
+            "bet_type": bet.bet_type,
+            "recommendation": bet.recommendation,
+            "match_name": bet.match_name,
+            "match_url": bet.match_url,
+            "strategy_name": bet.strategy_name,
+            "minute": bet.minute,
+            "score": bet.score,
+            "back_odds": bet.back_odds,
+            "min_odds": bet.min_odds,
+            "win_rate_historical": bet.win_rate_historical,
+            "roi_historical": bet.roi_historical,
+            "sample_size": bet.sample_size,
+            "confidence": bet.confidence,
+            "entry_conditions": bet.entry_conditions,
+        }, bet.stake, bet_id=bet_id)
+
         return PlacedBet(
             id=bet_id,
             timestamp_utc=timestamp,
@@ -509,6 +552,68 @@ async def resolve_bet(bet_id: int, result: str):
     return {"ok": True, "bet_id": bet_id, "result": result}
 
 
+def _add_to_manual_impl(bet_id: int) -> dict:
+    """Lógica central de add-to-manual. Llamable desde la API y desde el bot de Telegram.
+    Raises ValueError con el mensaje de error (prefijo '409:' para duplicados).
+    Returns {"ok": True, "manual_bet_id": int}.
+    """
+    if not PLACED_BETS_CSV.exists():
+        raise ValueError("No hay apuestas registradas")
+
+    with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+        rows = list(csv.DictReader(f))
+
+    original = next((r for r in rows if r.get('id', '') == str(bet_id)), None)
+    if not original:
+        raise ValueError(f"Apuesta {bet_id} no encontrada")
+
+    if original.get('status') != 'pending':
+        raise ValueError("Solo se pueden añadir apuestas en juego al paper manual")
+
+    _ensure_manual_csv_exists()
+
+    with open(PLACED_BETS_MANUAL_CSV, 'r', encoding='utf-8') as f:
+        manual_rows = list(csv.DictReader(f))
+    if any(r.get('match_id') == original['match_id'] and r.get('recommendation') == original['recommendation'] for r in manual_rows):
+        raise ValueError("409:Esta apuesta ya está en tu paper manual")
+
+    new_id = _get_next_manual_id()
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    with open(PLACED_BETS_MANUAL_CSV, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            new_id, timestamp,
+            original.get('match_id', ''), original.get('match_name', ''),
+            original.get('match_url', ''), original.get('strategy', ''),
+            original.get('strategy_name', ''), original.get('minute', ''),
+            original.get('score', ''), original.get('recommendation', ''),
+            original.get('back_odds', ''), original.get('min_odds', ''),
+            original.get('expected_value', ''), original.get('confidence', ''),
+            original.get('win_rate_historical', ''), original.get('roi_historical', ''),
+            original.get('sample_size', ''), original.get('bet_type', 'paper'),
+            original.get('stake', ''), original.get('notes', ''),
+            'pending', '', ''
+        ])
+
+    return {"ok": True, "manual_bet_id": new_id}
+
+
+@router.post("/api/bets/{bet_id}/add-to-manual")
+async def add_to_manual_paper(bet_id: int):
+    """Copia una apuesta del sistema automático al paper manual del usuario."""
+    try:
+        result = _add_to_manual_impl(bet_id)
+        return result
+    except ValueError as e:
+        msg = str(e)
+        if msg.startswith("409:"):
+            raise HTTPException(status_code=409, detail=msg[4:])
+        raise HTTPException(status_code=404, detail=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al añadir al paper manual: {str(e)}")
+
+
 @router.delete("/api/bets/clear")
 async def clear_placed_bets():
     """Reset paper trading — elimina todas las apuestas y deja solo los headers."""
@@ -521,52 +626,37 @@ async def clear_placed_bets():
         raise HTTPException(status_code=500, detail=f"Error al limpiar apuestas: {str(e)}")
 
 
-@router.get("/api/bets/placed")
-async def get_placed_bets():
-    """Obtiene todas las apuestas realizadas, enriquecidas con datos live."""
-    try:
-        if not PLACED_BETS_CSV.exists():
-            return {
-                "total": 0,
-                "pending": 0,
-                "won": 0,
-                "lost": 0,
-                "total_pl": 0,
-                "bets": []
-            }
+def _load_bets_response(csv_path: Path, persist_updates: bool = True) -> dict:
+    """Carga apuestas desde un CSV, enriquece las pendientes y devuelve la respuesta estándar."""
+    if not csv_path.exists():
+        return {"total": 0, "pending": 0, "won": 0, "lost": 0, "cashout": 0, "total_pl": 0, "bets": []}
 
-        bets = []
-        with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                bets.append(dict(row))
+    bets = []
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            bets.append(dict(row))
 
-        # Get active match IDs from games.csv
-        active_match_ids = _get_active_match_ids()
+    active_match_ids = _get_active_match_ids()
+    cashout_pct = None  # CO desactivado
 
-        # Load cashout_pct from config (single source of truth)
-        # CO desactivado hardcoded — no hacer auto-cashout hasta validar en producción
-        cashout_pct = None
+    for bet in bets:
+        if bet.get("status") == "pending":
+            match_id = bet.get("match_id", "")
+            is_active = match_id in active_match_ids
+            _enrich_with_live_data(bet, is_match_active=is_active, cashout_pct=cashout_pct)
 
-        # Enrich pending bets with live data (for visualization only, not settlement)
-        for bet in bets:
-            if bet.get("status") == "pending":
-                match_id = bet.get("match_id", "")
-                is_active = match_id in active_match_ids
-                _enrich_with_live_data(bet, is_match_active=is_active, cashout_pct=cashout_pct)
+    for bet in bets:
+        if (bet.get("status") == "pending"
+                and bet.get("bet_type") == "paper"
+                and bet.get("suggest_cashout")
+                and "cashout_pl" in bet):
+            bet["status"] = "cashout"
+            bet["result"] = "cashout"
+            bet["pl"] = bet["cashout_pl"]
+            bet["_needs_csv_update"] = True
 
-        # Auto-cashout: paper bets con suggest_cashout → liquidar con cashout_pl
-        for bet in bets:
-            if (bet.get("status") == "pending"
-                    and bet.get("bet_type") == "paper"
-                    and bet.get("suggest_cashout")
-                    and "cashout_pl" in bet):
-                bet["status"] = "cashout"
-                bet["result"] = "cashout"
-                bet["pl"] = bet["cashout_pl"]
-                bet["_needs_csv_update"] = True
-
-        # Persist auto-settled and auto-cashed bets to CSV
+    if persist_updates:
         csv_updates = {}
         for bet in bets:
             if bet.pop("_needs_csv_update", False):
@@ -578,29 +668,57 @@ async def get_placed_bets():
                         "pl": str(bet.get("pl", "")),
                     }
         if csv_updates:
-            _update_csv_rows(csv_updates)
+            # Inline update for the given csv_path
+            rows = []
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    bid = row.get("id", "")
+                    if bid in csv_updates:
+                        row.update(csv_updates[bid])
+                    rows.append(row)
+            import shutil
+            tmp_path = csv_path.with_suffix('.csv.tmp')
+            with open(tmp_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+                writer.writeheader()
+                writer.writerows(rows)
+            shutil.move(str(tmp_path), str(csv_path))
 
-        # Compute stats
-        stats = {"pending": 0, "won": 0, "lost": 0, "cashout": 0}
-        total_pl = 0.0
-        for bet in bets:
-            status = bet.get("status", "pending")
-            stats[status] = stats.get(status, 0) + 1
-            pl = _to_float(bet.get("pl"))
-            if pl is not None:
-                total_pl += pl
+    stats = {"pending": 0, "won": 0, "lost": 0, "cashout": 0}
+    total_pl = 0.0
+    for bet in bets:
+        status = bet.get("status", "pending")
+        stats[status] = stats.get(status, 0) + 1
+        pl = _to_float(bet.get("pl"))
+        if pl is not None:
+            total_pl += pl
 
-        bets.sort(key=lambda x: x.get('timestamp_utc', ''), reverse=True)
+    bets.sort(key=lambda x: x.get('timestamp_utc', ''), reverse=True)
+    return {
+        "total": len(bets),
+        "pending": stats.get("pending", 0),
+        "won": stats.get("won", 0),
+        "lost": stats.get("lost", 0),
+        "cashout": stats.get("cashout", 0),
+        "total_pl": round(total_pl, 2),
+        "bets": bets,
+    }
 
-        return {
-            "total": len(bets),
-            "pending": stats.get("pending", 0),
-            "won": stats.get("won", 0),
-            "lost": stats.get("lost", 0),
-            "cashout": stats.get("cashout", 0),
-            "total_pl": round(total_pl, 2),
-            "bets": bets
-        }
 
+@router.get("/api/bets/placed")
+async def get_placed_bets():
+    """Obtiene todas las apuestas automáticas, enriquecidas con datos live."""
+    try:
+        return _load_bets_response(PLACED_BETS_CSV)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener apuestas: {str(e)}")
+
+
+@router.get("/api/bets/manual")
+async def get_manual_bets():
+    """Obtiene las apuestas del paper manual del usuario."""
+    try:
+        return _load_bets_response(PLACED_BETS_MANUAL_CSV)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener apuestas manuales: {str(e)}")

@@ -11,6 +11,7 @@ from fastapi import APIRouter, Query
 from typing import Dict, List, Any, Optional
 from utils import csv_reader
 from utils import signals_audit_logger as _audit
+from utils import telegram_notifier as _tg
 from api.config import load_config
 
 # Path compartido con bets.py
@@ -100,6 +101,10 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
             _audit.log_bet_placed(next_id, sig, stake)
         except Exception as e:
             logging.getLogger(__name__).warning(f"Audit log failed for bet {next_id}: {e}")
+
+        # ── Telegram notification ──
+        _tg.send_signal(sig, stake)
+
         _auto_placed_keys.add(market_key)
     except Exception as e:
         # Loguear error en fichero para depuración (no interrumpir el endpoint)
@@ -208,6 +213,11 @@ def _apply_realistic_adjustments(signals: list, adj: dict, risk_filter: str) -> 
             if min_odds_cfg > 0 and effective_odds < min_odds_cfg:
                 skip_reasons[sid] = f"odds_low({effective_odds:.2f}<{min_odds_cfg})"
                 continue
+            # Per-signal min_odds: each strategy has a calculated break-even floor
+            per_signal_min = sig.get("min_odds")
+            if per_signal_min is not None and effective_odds < per_signal_min:
+                skip_reasons[sid] = f"odds_below_signal_min({effective_odds:.2f}<{per_signal_min:.2f})"
+                continue
             if max_odds_cfg < 999 and back_odds > max_odds_cfg:
                 skip_reasons[sid] = f"odds_high({back_odds:.2f}>{max_odds_cfg})"
                 continue
@@ -302,7 +312,13 @@ def run_paper_auto_place() -> dict:
         md_live = cfg.get("min_duration_live", {})
         adj = cfg.get("adjustments", {})
         risk_filter = cfg.get("risk_filter", "all")
-        flat_stake  = float(cfg.get("flat_stake", 10.0))
+        bankroll_mode = cfg.get("bankroll_mode", "fixed")
+        if bankroll_mode == "pct":
+            bankroll   = float(cfg.get("initial_bankroll", 100.0))
+            stake_pct  = float(cfg.get("stake_pct", 1.0))
+            flat_stake = round(bankroll * stake_pct / 100, 2)
+        else:
+            flat_stake = float(cfg.get("flat_stake", 10.0))
 
         drift_s      = s.get("drift", {})
         clustering_s = s.get("clustering", {})

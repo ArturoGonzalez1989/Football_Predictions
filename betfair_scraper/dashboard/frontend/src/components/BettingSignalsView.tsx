@@ -28,144 +28,6 @@ const DEFAULT_COMBO: VersionCombo = {
   draw: "v2r", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed"
 }
 
-// ── Strategy display metadata (label + color only) ───────────────────────────
-const STRATEGY_META_DISPLAY: Record<string, { label: string; color: string }> = {
-  draw:       { label: "Back Empate",     color: "text-cyan-400" },
-  xg:         { label: "xG Underperf.",   color: "text-amber-400" },
-  drift:      { label: "Odds Drift",      color: "text-emerald-400" },
-  clustering: { label: "Goal Clustering", color: "text-rose-400" },
-  pressure:   { label: "Pressure Cooker", color: "text-orange-400" },
-  tardeAsia:  { label: "Tarde Asia",      color: "text-sky-400" },
-  momentumXG: { label: "Momentum × xG",  color: "text-violet-400" },
-}
-
-// ── Dynamic criteria builder — reads from cartera_config.strategies ───────────
-// This ensures the displayed conditions ALWAYS match what the live detector uses.
-function buildCriteria(
-  strategy: string,
-  ver: string,
-  cfgStrategies: CarteraConfig["strategies"],
-): string[] {
-  const s = cfgStrategies ?? {}
-
-  switch (strategy) {
-    case "draw": {
-      const d = s.draw
-      const xgMax    = d?.xgMax    ?? (ver === "v2" ? 0.5 : 0.6)
-      const possMax  = d?.possMax  ?? (ver === "v15" || ver === "v3" ? 25 : 20)
-      const shots    = d?.shotsMax ?? 20
-      const minMin   = d?.minuteMin ?? 30  // default 30 = strategy intrinsic minimum
-      const minMax   = d?.minuteMax ?? 90
-      const criteria = ["Score 0-0", `Min ≥ ${minMin}`]
-      if (ver !== "v1") {
-        if (xgMax < 1.0)   criteria.push(`xG total < ${xgMax}`)
-        if (possMax < 100) criteria.push(`Pos. diff < ${possMax}%`)
-        if ((ver === "v2r" || ver === "v2") && shots < 20) criteria.push(`Tiros totales < ${shots}`)
-        if (ver === "v3" || d?.xgDomAsym)  criteria.push("Dominancia xG asimétrica")
-        if (ver === "v4") criteria.push("Gap Opta ≤ 10")
-      }
-      if (minMax < 90)  criteria.push(`Min < ${minMax}`)
-      return criteria
-    }
-
-    case "xg": {
-      const x = s.xg
-      const xgExcessMin = (x as any)?.xgExcessMin ?? 0.5
-      const sotMin    = x?.sotMin    ?? 0
-      const minuteMin = x?.minuteMin ?? 0
-      const minuteMax = x?.minuteMax ?? 90
-      // Effective minuteMin: strategy has intrinsic min 15, user can only increase it
-      const effectiveMinMin = Math.max(15, minuteMin)
-      const criteria = ["Equipo perdiendo", `xG equipo − goles ≥ ${xgExcessMin}`, `Min ≥ ${effectiveMinMin}`]
-      if (sotMin > 0)     criteria.push(`SoT equipo ≥ ${sotMin}`)
-      if (minuteMax < 90) criteria.push(`Min < ${minuteMax}`)
-      return criteria
-    }
-
-    case "drift": {
-      const d = s.drift
-      const driftMin    = d?.driftMin    ?? 30
-      const goalDiffMin = d?.goalDiffMin ?? 0
-      const oddsMax     = d?.oddsMax
-      const minuteMin   = d?.minuteMin   ?? 0
-      const minuteMax   = d?.minuteMax   ?? 90
-      const momGapMin   = d?.momGapMin   ?? 0
-      const criteria: string[] = []
-      // Version-specific score / range conditions
-      if (ver === "v1") {
-        criteria.push(goalDiffMin > 0
-          ? `Ventaja ≥ ${goalDiffMin} gol`
-          : "Ganando (cualquier marcador)")
-      } else if (ver === "v2") {
-        criteria.push("Diferencia goles ≥ 2")
-      } else if (ver === "v4") {
-        criteria.push("2ª parte (min > 45)")
-      }
-      // Drift threshold — V3 has fixed 100%
-      criteria.push(ver === "v3" ? "Drift odds ≥ 100%" : `Drift odds ≥ ${driftMin}%`)
-      if (minuteMin > 0)  criteria.push(`Min ≥ ${minuteMin}`)
-      if (minuteMax < 90) criteria.push(`Min < ${minuteMax}`)
-      if (oddsMax != null && oddsMax < 999) criteria.push(`Odds ≤ ${oddsMax}`)
-      if (momGapMin > 0)  criteria.push(`Momentum gap > ${momGapMin}`)
-      return criteria
-    }
-
-    case "clustering": {
-      const c = s.clustering
-      const sotMin    = (c as any)?.sotMin ?? 3
-      const minuteMin = c?.minuteMin ?? 0
-      const minuteMax = c?.minuteMax ?? 90
-      const xgRemMin  = c?.xgRemMin  ?? 0
-      // The entry window is min 15 to effectiveMax; goal must be recent within that window
-      const effectiveMax = minuteMax < 90 ? minuteMax : 80
-      const criteria = [`Gol reciente · min ${minuteMin > 15 ? minuteMin : 15}-${effectiveMax}`]
-      if (sotMin > 0) criteria.push(`SoT máx equipo ≥ ${sotMin}`)
-      if (xgRemMin > 0) criteria.push(`xG restante > ${xgRemMin}`)
-      return criteria
-    }
-
-    case "pressure": {
-      const p = s.pressure
-      const minMin = p?.minuteMin ?? 0
-      const minMax = p?.minuteMax ?? 90
-      // Intrinsic window 65-75; user config narrows it further
-      const pMin = Math.max(65, minMin)
-      const pMax = minMax < 90 ? Math.min(75, minMax) : 75
-      return [`Empate 1-1+ entre min ${pMin}-${pMax}`]
-    }
-
-    case "tardeAsia": {
-      const t = s.tarde_asia
-      const minMin = t?.minuteMin ?? 0
-      const minMax = t?.minuteMax ?? 90
-      const criteria = ["Hora local 14-20h", "Liga Asia / Alemania / Francia"]
-      if (minMin > 0)  criteria.push(`Min ≥ ${minMin}`)
-      if (minMax < 90) criteria.push(`Min < ${minMax}`)
-      return criteria
-    }
-
-    case "momentumXG": {
-      const m = s.momentum_xg
-      const minMin = m?.minuteMin ?? 0
-      const minMax = m?.minuteMax ?? 90
-      const momV2 = ver === "v2"
-      // Intrinsic min/max per version; user config narrows further
-      const iMin = momV2 ? 5 : 10
-      const iMax = momV2 ? 85 : 80
-      const effectiveMin = Math.max(iMin, minMin > 0 ? minMin : iMin)
-      const effectiveMax = minMax < 90 ? Math.min(iMax, minMax) : iMax
-      return [
-        `Equipo dominante (SoT ratio ≥ ${momV2 ? "1.05×" : "1.1×"})`,
-        `xG underperf > ${momV2 ? "0.1" : "0.15"}`,
-        `Min ${effectiveMin}-${effectiveMax}`,
-        `Odds ${momV2 ? "1.3–8.0" : "1.4–6.0"}`,
-      ]
-    }
-
-    default:
-      return []
-  }
-}
 
 // ── Market-based dedup key ────────────────────────────────────────────────────
 // Mirrors cartera.ts betMarketKey() logic so live registration and backtest
@@ -192,12 +54,17 @@ export function BettingSignalsView() {
   const [combo, setCombo] = useState<VersionCombo>(DEFAULT_COMBO)
   const [minDur, setMinDur] = useState<MinDurConfig>(DEFAULT_MIN_DUR)
   const [activeConfig, setActiveConfig] = useState<CarteraConfig | null>(null)
+  const [bankroll, setBankroll] = useState<number>(100)
+  const [stakePct, setStakePct] = useState<number>(1)
+  const [effectiveBankroll, setEffectiveBankroll] = useState<number>(100)
+  const [stakeConfigSaved, setStakeConfigSaved] = useState(false)
   const prevSignalKeys = useRef<Set<string> | null>(null)
   // Track auto-registered paper bets to avoid duplicates across polling cycles
   const autoRegisteredRef = useRef<Set<string>>(new Set())
   // On first fetch, pre-populate autoRegistered with already-mature signals so we don't retroactively register them
   const firstFetchDoneRef = useRef(false)
   const activeConfigRef = useRef<CarteraConfig | null>(null)
+  const effectiveBankrollRef = useRef<number>(100)
   const comboRef = useRef(combo)
   comboRef.current = combo
   const minDurRef = useRef(minDur)
@@ -208,10 +75,20 @@ export function BettingSignalsView() {
   useEffect(() => {
     if (configLoadedRef.current) return
     configLoadedRef.current = true
-    api.getConfig()
-      .then(cfg => {
+    Promise.all([api.getConfig(), api.getManualBets().catch(() => null)])
+      .then(([cfg, manualData]) => {
         setActiveConfig(cfg)
         activeConfigRef.current = cfg
+        const initBr = cfg.initial_bankroll ?? 100
+        if (cfg.initial_bankroll != null) setBankroll(cfg.initial_bankroll)
+        if (cfg.stake_pct != null) setStakePct(cfg.stake_pct)
+        // Effective bankroll = initial + cumulative P/L from resolved manual bets
+        const manualPL = (manualData?.bets ?? [])
+          .filter(b => b.status !== "pending" && b.pl != null)
+          .reduce((sum, b) => sum + (b.pl ?? 0), 0)
+        const effBr = Math.max(1, Math.round((initBr + manualPL) * 100) / 100)
+        setEffectiveBankroll(effBr)
+        effectiveBankrollRef.current = effBr
         const v = cfg.versions ?? {}
         const s = cfg.strategies ?? {}
         const newCombo: VersionCombo = {
@@ -268,7 +145,10 @@ export function BettingSignalsView() {
         firstFetchDoneRef.current = true
         allMature.forEach(s => autoRegisteredRef.current.add(signalMarketKey(s.match_id, s.recommendation)))
       } else {
-        const stake = activeConfigRef.current?.flat_stake ?? 10
+        const cfg = activeConfigRef.current
+        const bl = effectiveBankrollRef.current
+        const pct = cfg?.stake_pct ?? 1
+        const stake = Math.max(0.01, Math.round(bl * pct / 100 * 100) / 100)
         // Conflict filter: skip Momentum XG when xG Underperf is also mature for the same match (0% WR pair)
         const matureXGUnderperf = new Set(
           matureSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
@@ -297,6 +177,8 @@ export function BettingSignalsView() {
           win_rate_historical: sig.win_rate_historical,
           roi_historical: sig.roi_historical,
           sample_size: sig.sample_size,
+          entry_conditions: sig.entry_conditions,
+          thresholds: sig.thresholds,
           bet_type: "paper",
           stake,
           notes: "Auto-registrado",
@@ -368,6 +250,67 @@ export function BettingSignalsView() {
         </div>
       </div>
 
+      {/* Stake config box */}
+      <div className="flex items-center gap-3 mb-6 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-lg">
+        <span className="text-xs text-zinc-500 font-medium uppercase tracking-wide shrink-0">Stake</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-zinc-500">Inicial</span>
+          <input
+            type="number"
+            min={1}
+            step={10}
+            value={bankroll}
+            title="Bankroll inicial en euros"
+            placeholder="100"
+            onChange={e => setBankroll(Math.max(1, Number(e.target.value)))}
+            className="w-24 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-zinc-500"
+          />
+          <span className="text-xs text-zinc-600">€</span>
+        </div>
+        {effectiveBankroll !== bankroll && (
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-zinc-600">→</span>
+            <span className={`text-xs font-mono font-bold ${effectiveBankroll > bankroll ? "text-green-400" : "text-red-400"}`}>
+              {effectiveBankroll.toFixed(2)}€
+            </span>
+          </div>
+        )}
+        <span className="text-zinc-700">×</span>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            min={0.1}
+            max={100}
+            step={0.5}
+            value={stakePct}
+            title="Stake en % del bankroll"
+            placeholder="1"
+            onChange={e => setStakePct(Math.max(0.1, Math.min(100, Number(e.target.value))))}
+            className="w-16 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-zinc-500"
+          />
+          <span className="text-xs text-zinc-500">%</span>
+        </div>
+        <span className="text-zinc-700">=</span>
+        <span className="text-sm font-bold text-amber-400">
+          {Math.max(0.01, Math.round(effectiveBankroll * stakePct / 100 * 100) / 100).toFixed(2)} €/apuesta
+        </span>
+        <button
+          type="button"
+          onClick={async () => {
+            if (!activeConfig) return
+            const updated = { ...activeConfig, initial_bankroll: bankroll, stake_pct: stakePct, bankroll_mode: "pct" }
+            await api.saveConfig(updated)
+            setActiveConfig(updated)
+            activeConfigRef.current = updated
+            setStakeConfigSaved(true)
+            setTimeout(() => setStakeConfigSaved(false), 2000)
+          }}
+          className="ml-auto px-3 py-1 text-xs font-bold rounded bg-zinc-700 border border-zinc-600 text-zinc-300 hover:bg-zinc-600 transition-colors"
+        >
+          {stakeConfigSaved ? "✓ Guardado" : "Guardar"}
+        </button>
+      </div>
+
       {/* Main content + Watchlist sidebar */}
       <div className="flex gap-6">
         {/* Main column */}
@@ -406,7 +349,7 @@ export function BettingSignalsView() {
           )}
 
           {/* Active Strategy Criteria (read from saved cartera config) */}
-          <ActiveCriteriaBlock combo={combo} minDur={minDur} activeConfig={activeConfig} />
+          <ActiveCriteriaBlock activeConfig={activeConfig} />
         </div>
 
         {/* Watchlist sidebar */}
@@ -491,89 +434,105 @@ function WatchlistCard({ item }: { item: WatchlistItem }) {
   )
 }
 
+// ── Strategy label/color map — covers all strategies in cartera_config.json ──
+const STRATEGY_LABELS: Record<string, { label: string; color: string }> = {
+  // Legacy 7
+  draw:                 { label: "Back Empate 0-0",       color: "text-cyan-400" },
+  xg:                   { label: "xG Underperf.",         color: "text-amber-400" },
+  drift:                { label: "Odds Drift",            color: "text-emerald-400" },
+  clustering:           { label: "Goal Clustering (v1)",  color: "text-rose-400" },
+  pressure:             { label: "Pressure Cooker (v1)",  color: "text-orange-400" },
+  tarde_asia:           { label: "Tarde Asia",            color: "text-sky-400" },
+  momentum_xg:          { label: "Momentum xG",           color: "text-violet-400" },
+  // New strategies
+  over25_2goal:         { label: "Back Over 2.5 2G lead", color: "text-lime-400" },
+  under35_late:         { label: "Back Under 3.5 late",   color: "text-teal-400" },
+  longshot:             { label: "Back Longshot",         color: "text-pink-400" },
+  cs_close:             { label: "Back CS Close",         color: "text-indigo-400" },
+  cs_one_goal:          { label: "Back CS 1-0/0-1",       color: "text-amber-300" },
+  ud_leading:           { label: "Back Underdog Lead",    color: "text-red-300" },
+  home_fav_leading:     { label: "Back Home Fav.",        color: "text-blue-400" },
+  cs_20:                { label: "Back CS 2-0/0-2",       color: "text-cyan-300" },
+  cs_big_lead:          { label: "Back CS Big Lead",      color: "text-emerald-300" },
+  goal_clustering:      { label: "Goal Clustering",       color: "text-rose-400" },
+  pressure_cooker:      { label: "Pressure Cooker",       color: "text-orange-400" },
+  draw_xg_conv:         { label: "Back Draw xG Conv",     color: "text-cyan-400" },
+  cs_00:                { label: "Back CS 0-0",           color: "text-zinc-400" },
+  over25_2goals:        { label: "Back Over 2.5 2G",      color: "text-zinc-400" },
+  cs_11:                { label: "Back CS 1-1",           color: "text-zinc-400" },
+  lay_over45_v3:        { label: "LAY Over 4.5 v3",       color: "text-red-400" },
+  poss_extreme:         { label: "Back Poss. Extreme",    color: "text-purple-400" },
+  draw_11:              { label: "Back Draw 1-1",         color: "text-cyan-300" },
+  under35_3goals:       { label: "Back Under 3.5 3G",     color: "text-teal-300" },
+  away_fav_leading:     { label: "Back Away Fav.",        color: "text-sky-400" },
+  under45_3goals:       { label: "Back Under 4.5 3G",     color: "text-teal-400" },
+  draw_equalizer:       { label: "Back Draw Equalizer",   color: "text-cyan-400" },
+  draw_22:              { label: "Back Draw 2-2",         color: "text-cyan-300" },
+  lay_over45_blowout:   { label: "LAY Over 4.5 Blowout",  color: "text-red-400" },
+  over35_early_goals:   { label: "Back Over 3.5 Early",   color: "text-lime-300" },
+  lay_draw_away_leading:{ label: "LAY Draw Away Lead",    color: "text-red-400" },
+  lay_cs11:             { label: "LAY CS 1-1",            color: "text-red-300" },
+}
+
+function strategyCriteria(cfg: Record<string, any>): string[] {
+  const c: string[] = []
+  const mMin = cfg.minuteMin ?? cfg.m_min ?? 0
+  const mMax = cfg.minuteMax ?? cfg.m_max ?? 90
+  if (mMin > 0 || mMax < 90) c.push(`Min ${mMin}–${mMax < 90 ? mMax : "FT"}`)
+  if (cfg.xgMax != null && cfg.xgMax < 5)     c.push(`xG < ${cfg.xgMax}`)
+  if (cfg.xg_diff_max != null)                c.push(`xG diff ≤ ${cfg.xg_diff_max}`)
+  if (cfg.sotMin != null && cfg.sotMin > 0)   c.push(`SoT ≥ ${cfg.sotMin}`)
+  if (cfg.goalDiffMin != null && cfg.goalDiffMin > 0) c.push(`GD ≥ ${cfg.goalDiffMin}`)
+  if (cfg.goals_min != null)                  c.push(`G ${cfg.goals_min}–${cfg.goals_max ?? "+"}`)
+  if (cfg.poss_min != null)                   c.push(`Pos ≥ ${cfg.poss_min}%`)
+  if (cfg.fav_max != null)                    c.push(`Fav ≤ ${cfg.fav_max}`)
+  if (cfg.max_lead != null)                   c.push(`Ventaja ≤ ${cfg.max_lead}G`)
+  if (cfg.odds_min != null && cfg.odds_max != null) c.push(`Odds ${cfg.odds_min}–${cfg.odds_max}`)
+  else if (cfg.odds_min != null)              c.push(`Odds ≥ ${cfg.odds_min}`)
+  else if (cfg.odds_max != null && cfg.odds_max < 30) c.push(`Odds ≤ ${cfg.odds_max}`)
+  return c
+}
+
 // ── ActiveCriteriaBlock ───────────────────────────────────────────────────────
-function ActiveCriteriaBlock({
-  combo,
-  minDur,
-  activeConfig,
-}: {
-  combo: VersionCombo
-  minDur: MinDurConfig
-  activeConfig: CarteraConfig | null
-}) {
-  const strategyKeys = ["draw", "xg", "drift", "clustering", "pressure", "tardeAsia", "momentumXG"]
-
-  const comboKeyMap: Record<string, string> = {
-    draw: "draw", xg: "xg", drift: "drift",
-    clustering: "clustering", pressure: "pressure",
-    tardeAsia: "tardeAsia", momentumXG: "momentumXG",
-  }
-
-  const activeStrategies = strategyKeys.filter(k => {
-    const ver = combo[comboKeyMap[k] as keyof VersionCombo] as string
-    return ver && ver !== "off"
-  })
-  const offStrategies = strategyKeys.filter(k => {
-    const ver = combo[comboKeyMap[k] as keyof VersionCombo] as string
-    return !ver || ver === "off"
-  })
-
+function ActiveCriteriaBlock({ activeConfig }: { activeConfig: CarteraConfig | null }) {
+  const strategies = activeConfig?.strategies ?? {}
+  const activeKeys = Object.keys(strategies).filter(k => strategies[k]?.enabled !== false)
   const adj = activeConfig?.adjustments
-  const cfgStrategies = activeConfig?.strategies
 
   return (
     <div className="bg-zinc-900/30 border border-zinc-800 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-zinc-300">Cartera activa</h3>
+        <h3 className="text-sm font-semibold text-zinc-300">
+          Cartera activa
+          <span className="text-zinc-600 font-normal ml-2 text-[10px]">{activeKeys.length} activas</span>
+        </h3>
         <span className="text-[10px] text-zinc-600">
           Configura en{" "}
           <span className="text-zinc-400">Strategies → Cartera de Estrategias</span>
         </span>
       </div>
 
-      <div className="space-y-2">
-        {activeStrategies.map(k => {
-          const meta = STRATEGY_META_DISPLAY[k]
-          const ver = combo[comboKeyMap[k] as keyof VersionCombo] as string
-          // Build criteria dynamically from config so display matches live detector exactly
-          const criteria = buildCriteria(k, ver, cfgStrategies)
-          const durKey = k as keyof MinDurConfig
-          const hasDur = durKey in minDur
-          const dur = hasDur ? minDur[durKey] : null
-
+      <div className="space-y-1.5">
+        {activeKeys.map(k => {
+          const meta = STRATEGY_LABELS[k] ?? { label: k, color: "text-zinc-400" }
+          const criteria = strategyCriteria(strategies[k] ?? {})
           return (
             <div key={k} className="flex items-start gap-2">
-              <span className={`text-[11px] font-semibold min-w-[130px] shrink-0 ${meta.color}`}>
+              <span className={`text-[11px] font-semibold min-w-[170px] shrink-0 ${meta.color}`}>
                 {meta.label}
-                <span className="text-zinc-500 font-normal ml-1">
-                  {ver.toUpperCase()}
-                </span>
               </span>
-              <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <div className="flex-1 flex flex-wrap items-center gap-y-0.5">
                 {criteria.map((c, i) => (
                   <span key={i} className="text-[11px] text-zinc-400">
-                    {i > 0 && <span className="text-zinc-700 mr-2">·</span>}
+                    {i > 0 && <span className="text-zinc-700 mx-1">·</span>}
                     {c}
                   </span>
                 ))}
-                {dur !== null && (
-                  <span className="text-[11px] text-amber-600/80 ml-1">
-                    · min activa: {dur}
-                  </span>
-                )}
               </div>
             </div>
           )
         })}
 
-        {offStrategies.length > 0 && (
-          <div className="flex items-center gap-2 pt-1">
-            <span className="text-[10px] text-zinc-600">OFF:</span>
-            <span className="text-[10px] text-zinc-700">
-              {offStrategies.map(k => STRATEGY_META_DISPLAY[k].label).join(" · ")}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Risk filter + realistic mode */}

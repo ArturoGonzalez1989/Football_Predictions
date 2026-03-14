@@ -1,24 +1,30 @@
 import { useState, useEffect } from "react"
 import { api, type PlacedBetsResponse, type PlacedBet } from "../lib/api"
 
+type TabId = "auto" | "manual"
+
 export function AnalyticsView() {
-  const [data, setData] = useState<PlacedBetsResponse | null>(null)
+  const [tab, setTab] = useState<TabId>("auto")
+  const [autoData, setAutoData] = useState<PlacedBetsResponse | null>(null)
+  const [manualData, setManualData] = useState<PlacedBetsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [bankrollInit, setBankrollInit] = useState(100)
   const [stakePercent, setStakePercent] = useState(2)
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchAll = async () => {
       try {
-        setData(await api.getPlacedBets())
+        const [auto, manual] = await Promise.all([api.getPlacedBets(), api.getManualBets()])
+        setAutoData(auto)
+        setManualData(manual)
       } catch {
         /* silently ignore */
       } finally {
         setLoading(false)
       }
     }
-    fetch()
-    const id = setInterval(fetch, 30000)
+    fetchAll()
+    const id = setInterval(fetchAll, 30000)
     return () => clearInterval(id)
   }, [])
 
@@ -26,32 +32,58 @@ export function AnalyticsView() {
     return <div className="p-6 text-zinc-400">Cargando analytics...</div>
   }
 
+  const data = tab === "auto" ? autoData : manualData
   const bets = data?.bets ?? []
   const resolvedBets = bets.filter((b) => b.status !== "pending")
 
   // Sort chronologically (oldest first)
-  const sortedBets = [...resolvedBets].sort((a, b) => {
-    const timeA = new Date(a.timestamp_utc || 0).getTime()
-    const timeB = new Date(b.timestamp_utc || 0).getTime()
-    return timeA - timeB
-  })
+  const sortedResolved = [...resolvedBets].sort((a, b) =>
+    new Date(a.timestamp_utc || 0).getTime() - new Date(b.timestamp_utc || 0).getTime()
+  )
+  // All bets sorted for historial (pending shown first as EN JUEGO, then resolved)
+  const pendingBets = bets.filter((b) => b.status === "pending")
+  const sortedBets = sortedResolved  // metrics use only resolved
 
-  // Calculate metrics
-  const stats = calculateStats(sortedBets)
-  const bankrollSim = calculateBankrollSim(sortedBets, bankrollInit, stakePercent)
-  const strategyPerf = calculateStrategyPerformance(sortedBets)
-  const marketPerf = calculateMarketPerformance(sortedBets)
-  const riskMetrics = calculateRiskMetrics(sortedBets)
-  const plHistory = calculatePLHistory(sortedBets)
+  // Calculate metrics (resolved bets only)
+  const stats = calculateStats(sortedResolved)
+  const bankrollSim = calculateBankrollSim(sortedResolved, bankrollInit, stakePercent)
+  const strategyPerf = calculateStrategyPerformance(sortedResolved)
+  const marketPerf = calculateMarketPerformance(sortedResolved)
+  const riskMetrics = calculateRiskMetrics(sortedResolved)
+  const plHistory = calculatePLHistory(sortedResolved)
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-zinc-100">Paper Dashboard</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          Análisis detallado de rendimiento y métricas de riesgo
-        </p>
+      {/* Header + Tabs */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-100">Paper Dashboard</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Análisis detallado de rendimiento y métricas de riesgo
+          </p>
+        </div>
+        <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1">
+          {(["auto", "manual"] as TabId[]).map((t) => {
+            const count = t === "auto" ? autoData?.bets.length : manualData?.bets.length
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  tab === t
+                    ? "bg-zinc-700 text-zinc-100"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                {t === "auto" ? "Automático" : "Manual"}
+                {count != null && count > 0 && (
+                  <span className="ml-1.5 text-[11px] text-zinc-500">({count})</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* P/L Chart */}
@@ -145,7 +177,7 @@ export function AnalyticsView() {
       {/* Historial Table */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
         <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
-          📋 Historial ({sortedBets.length})
+          📋 Historial ({sortedResolved.length + pendingBets.length})
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -162,7 +194,10 @@ export function AnalyticsView() {
               </tr>
             </thead>
             <tbody>
-              {[...sortedBets].reverse().map((bet) => (
+              {pendingBets.map((bet) => (
+                <HistorialRow key={`p-${bet.id}`} bet={bet} />
+              ))}
+              {[...sortedResolved].reverse().map((bet) => (
                 <HistorialRow key={bet.id} bet={bet} />
               ))}
             </tbody>
@@ -557,7 +592,7 @@ function PLChart({ data }: { data: { timestamp: string; pl: number }[] }) {
       </div>
 
       {/* Chart area */}
-      <div className="ml-12 h-full flex items-end gap-1">
+      <div className="ml-12 h-full flex items-end gap-px overflow-hidden">
         {data.map((point, i) => {
           const height = ((point.pl - minPL) / range) * 100
           const isPositive = point.pl >= 0
@@ -704,13 +739,14 @@ function RecentForm({ bets }: { bets: PlacedBet[] }) {
 }
 
 function HistorialRow({ bet }: { bet: PlacedBet }) {
+  const isPending = bet.status === "pending"
   const won = bet.status === "won"
   const pl = Number(bet.pl) || 0
   const odds = Number(bet.back_odds) || 0
   const betType = parseBetType(bet.recommendation || "")
 
   return (
-    <tr className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+    <tr className={`border-b border-zinc-800/50 hover:bg-zinc-800/30 ${isPending ? "opacity-70" : ""}`}>
       <td className="py-2 px-2">
         <a
           href={bet.match_url}
@@ -734,14 +770,20 @@ function HistorialRow({ bet }: { bet: PlacedBet }) {
       <td className="py-2 px-2 text-right font-mono text-zinc-300">{Number(bet.stake).toFixed(0)}</td>
       <td className="py-2 px-2 text-right font-mono text-zinc-300">{odds.toFixed(2)}</td>
       <td className="py-2 px-2 text-center">
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-          won ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
-        }`}>
-          {won ? "WIN" : "LOSS"}
-        </span>
+        {isPending ? (
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 animate-pulse">
+            EN JUEGO
+          </span>
+        ) : (
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+            won ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
+          }`}>
+            {won ? "WIN" : "LOSS"}
+          </span>
+        )}
       </td>
-      <td className={`py-2 px-2 text-right font-mono font-bold ${pl >= 0 ? "text-green-400" : "text-red-400"}`}>
-        {pl >= 0 ? "+" : ""}{pl.toFixed(2)}
+      <td className={`py-2 px-2 text-right font-mono font-bold ${isPending ? "text-zinc-500" : pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+        {isPending ? "—" : `${pl >= 0 ? "+" : ""}${pl.toFixed(2)}`}
       </td>
     </tr>
   )
