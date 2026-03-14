@@ -11,19 +11,20 @@
     "xg": {
       "enabled": true,
       "version": "base",
-      "xgExcessMin": 0.6,
+      "xgExcessMin": 0.5,
       "sotMin": 0,
-      "minuteMin": 10,
-      "minuteMax": 80
+      "minuteMin": 0,
+      "minuteMax": 70
     },
     "drift": {
       "enabled": true,
       "version": "v1",
-      "driftMin": 15,
+      "driftMin": 30,
       "oddsMax": 999,
       "goalDiffMin": 0,
       "minuteMin": 0,
-      "minuteMax": 90
+      "minuteMax": 90,
+      "momGapMin": 0
     },
     "clustering": {
       "enabled": true,
@@ -33,7 +34,7 @@
       "xgRemMin": 0.0
     },
     "pressure": {
-      "enabled": false,
+      "enabled": true,
       "minuteMin": 0,
       "minuteMax": 90,
       "xg_sum_min": 0.5
@@ -72,7 +73,7 @@
     },
     "longshot": {
       "enabled": true,
-      "minuteMin": 65,
+      "minuteMin": 70,
       "minuteMax": 86,
       "odds_min": 1.5,
       "odds_max": 10.0
@@ -200,41 +201,41 @@
       "odds_max": 8.0
     },
     "lay_over45_blowout": {
-      "enabled": false,
-      "minuteMin": 60,
-      "minuteMax": 75,
-      "post_window": 10,
-      "sot_max": 1,
+      "enabled": true,
+      "minuteMin": 63,
+      "minuteMax": 78,
+      "post_window": 5,
+      "sot_max": 0,
       "odds_max": 15.0,
-      "include_31": 0
+      "include_31": 1
     },
     "over35_early_goals": {
       "enabled": true,
-      "minuteMin": 40,
+      "minuteMin": 45,
       "minuteMax": 65,
-      "oddsMin": 1.8,
-      "oddsMax": 8.0
+      "odds_min": 2.0,
+      "odds_max": 6.0
     },
     "lay_draw_away_leading": {
       "enabled": true,
-      "minuteMin": 55,
-      "minuteMax": 80,
+      "minuteMin": 60,
+      "minuteMax": 75,
       "xgMax": 1.8,
-      "oddsMin": 2.0,
-      "oddsMax": 10.0
+      "odds_min": 2.0,
+      "odds_max": 8.0
     },
     "lay_cs11": {
       "enabled": true,
       "minuteMin": 60,
-      "minuteMax": 85,
-      "oddsMin": 1.5,
-      "oddsMax": 50.0
+      "minuteMax": 88,
+      "odds_min": 1.5,
+      "odds_max": 50.0
     }
   },
   "bankroll_mode": "fixed",
   "flat_stake": 1,
   "initial_bankroll": 100,
-  "active_preset": "max_wr",
+  "active_preset": "max_pl",
   "risk_filter": "all",
   "min_duration": {
     "draw": 2,
@@ -258,10 +259,10 @@
   "adjustments": {
     "enabled": true,
     "dedup": false,
-    "max_odds": 6.0,
+    "max_odds": 7.0,
     "min_odds": null,
     "drift_min_minute": 0,
-    "slippage_pct": 0,
+    "slippage_pct": 2,
     "conflict_filter": false,
     "allow_contrarias": true,
     "stability": 1,

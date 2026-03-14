@@ -66,3 +66,8 @@ timestamp_utc,match_id,strategy,minuto,bet_type_dir,won,pl,effective_odds,risk_l
 2026-03-11 23:22:59,atletico-mg-internacional-apuestas-35274349,xg_underperformance_base,59,,False,-1.0,1.44,,,,,,,,,,,,,,,1.44,,,,,,,,,,,,,,
 2026-03-12 18:53:14,rijeka-estrasburgo-apuestas-35315433,xg_underperformance_base,45,,True,0.2,1.21,,,,,,,,,,,,,,,1.21,,,,,,,,,,,,,,
 2026-03-13 01:04:00,grêmio-red-bull-bragantino-apuestas-35274547,xg_underperformance_base,32,,True,0.14,1.15,,,,,,,,,,,,,,,1.15,,,,,,,,,,,,,,
+2026-03-13 18:42:58,greuther-fürth-elversberg-apuestas-35349671,xg_underperformance_base,52,,True,0.24,1.25,,,,,,,,,,,,,,,1.25,,,,,,,,,,,,,,
+2026-03-13 20:51:10,mirandés-cádiz-apuestas-35347081,xg_underperformance_base,62,,False,-1.0,1.56,,,,,,,,,,,,,,,1.56,,,,,,,,,,,,,,
+2026-03-13 21:05:25,wrexham-swansea-apuestas-35332604,xg_underperformance_base,46,,True,0.26,1.27,,,,,,,,,,,,,,,1.27,,,,,,,,,,,,,,
+2026-03-13 21:24:11,gante-zulte-waregem-apuestas-35338832,xg_underperformance_base,50,,True,0.22,1.23,,,,,,,,,,,,,,,1.23,,,,,,,,,,,,,,
+2026-03-14 00:20:34,audax-italiano-deportes-concepcion-apuestas-353476,xg_underperformance_base,59,,False,-1.0,1.45,,,,,,,,,,,,,,,1.45,,,,,,,,,,,,,,
