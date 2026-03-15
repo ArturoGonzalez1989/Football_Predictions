@@ -104,6 +104,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "sot_min":       [0, 1, 2, 3],
         "minute_min":    [0, 10, 15, 20],
         "minute_max":    [60, 65, 70, 75, 80, 90],
+        "odds_min":      [0, 1.20, 1.30, 1.40],
     },
     "odds_drift": {   # applies to versions v1/v2/v3/v4/v5/v6
         "drift_min_pct": [15, 20, 30],
@@ -111,17 +112,20 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "goal_diff_min": [0, 1],
         "min_minute":    [0, 30],
         "max_minute":    [85, 90],
+        "odds_min":      [0, 1.20, 1.40],
     },
     "goal_clustering": {
         "sot_min":    [0, 2, 3, 4],
         "min_minute": [0, 15, 20],
         "max_minute": [55, 60, 65, 70],
         "xg_rem_min": [0.0, 0.3, 0.6],
+        "odds_min":   [0, 1.20, 1.30],
     },
     "pressure_cooker": {
         "min_minute":    [55, 60, 65, 68],
         "max_minute":    [70, 73, 75, 78],
         "score_confirm": [1, 2, 3],
+        "odds_min":      [0, 1.20, 1.30],
     },
     "momentum_xg": {   # applies to versions v1/v2
         "min_m": [0, 5, 10, 15, 20],
@@ -142,6 +146,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "xg_max":     [2.5, 3.0, 3.5],
         "goals_min":  [2, 3],
         "goals_max":  [3, 4],
+        "odds_min":   [0, 1.20, 1.30, 1.40],
     },
     "longshot": {
         "m_min":     [60, 65, 70],
@@ -150,34 +155,40 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "odds_max":  [5.0, 7.0, 10.0],
     },
     "cs_close": {
-        "m_min": [60, 65, 67, 70],
-        "m_max": [78, 80, 83, 85],
+        "m_min":    [60, 65, 67, 70],
+        "m_max":    [78, 80, 83, 85],
+        "odds_min": [0, 3.0, 4.0, 5.0],
     },
     "cs_one_goal": {
-        "m_min": [60, 65, 68, 70],
-        "m_max": [82, 85, 88, 90],
+        "m_min":    [60, 65, 68, 70],
+        "m_max":    [82, 85, 88, 90],
+        "odds_min": [0, 2.5, 3.0, 3.5],
     },
     "ud_leading": {
         "m_min":            [45, 50, 53, 58],
         "m_max":            [78, 80, 83, 85],
         "ud_min_pre_odds":  [1.3, 1.5, 1.8, 2.0, 2.5],
         "max_lead":         [1, 2, 3],
+        "odds_min":         [0, 1.20, 1.40, 1.60],
     },
     "home_fav_leading": {
         "m_min":     [50, 55, 60],
         "m_max":     [75, 78, 80, 83],
         "max_lead":  [1, 2, 3],
         "fav_max":   [2.0, 2.5, 3.0],
+        "odds_min":  [0, 1.20, 1.30, 1.40],
     },
     "cs_20": {
         "m_min":    [65, 70, 72, 75],
         "m_max":    [83, 85, 88, 90],
         "odds_max": [8.0, 10.0, 15.0],
+        "odds_min": [0, 2.0, 3.0, 4.0],
     },
     "cs_big_lead": {
         "m_min":    [65, 68, 70, 72],
         "m_max":    [80, 82, 85],
         "odds_max": [6.0, 8.0, 10.0],
+        "odds_min": [0, 2.0, 3.0, 4.0],
     },
     "lay_over45_v3": {
         "m_min":      [45, 50, 55, 60],
@@ -189,6 +200,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "m_min":       [55, 60, 63, 65],
         "m_max":       [78, 80, 83, 85],
         "xg_diff_max": [0.5, 0.8, 1.0, 1.3],
+        "odds_min":    [0, 1.50, 1.80, 2.10],
     },
     "poss_extreme": {
         "m_min":    [25, 30, 35],
@@ -206,6 +218,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "m_min":    [40, 45, 48, 52],
         "m_max":    [58, 60, 63, 65],
         "odds_max": [3.0, 4.0, 5.0, 6.0],
+        "odds_min": [0, 1.20, 1.30, 1.40],
     },
     "draw_11": {
         "m_min":    [62, 65, 68, 70],
@@ -213,24 +226,28 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "odds_min": [1.0, 1.2, 1.4],
     },
     "under35_3goals": {
-        "m_min":  [60, 65, 70],
-        "m_max":  [80, 83, 85, 90],
-        "xg_max": [2.0, 2.5, 3.0],
+        "m_min":    [60, 65, 70],
+        "m_max":    [80, 83, 85, 90],
+        "xg_max":   [2.0, 2.5, 3.0],
+        "odds_min": [0, 1.20, 1.30, 1.40],
     },
     "away_fav_leading": {
         "m_min":    [60, 65, 68, 70],
         "m_max":    [80, 83, 85, 88],
         "max_lead": [1, 2, 3],
         "fav_max":  [2.0, 2.5, 3.0],
+        "odds_min": [0, 1.20, 1.40, 1.60],
     },
     "under45_3goals": {
-        "m_min":  [50, 55, 58, 60],
-        "m_max":  [75, 78, 80, 83],
-        "xg_max": [2.0, 2.5, 3.0],
+        "m_min":    [50, 55, 58, 60],
+        "m_max":    [75, 78, 80, 83],
+        "xg_max":   [2.0, 2.5, 3.0],
+        "odds_min": [0, 1.20, 1.30, 1.40],
     },
     "cs_11": {
-        "m_min": [62, 65, 68, 70],
-        "m_max": [82, 85, 88, 90],
+        "m_min":    [62, 65, 68, 70],
+        "m_max":    [82, 85, 88, 90],
+        "odds_min": [0, 3.0, 4.0, 5.0],
     },
     "draw_equalizer": {
         "m_min":          [60, 63, 65, 68],
@@ -238,11 +255,13 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "fav_pre_max":    [2.0, 2.5, 3.0],
         "min_goals_each": [1, 2],
         "odds_max":       [6.0, 8.0, 10.0],
+        "odds_min":       [0, 1.50, 2.00, 2.50],
     },
     "draw_22": {
         "m_min":    [65, 68, 70, 72],
         "m_max":    [85, 88, 90],
         "odds_max": [6.0, 8.0, 10.0],
+        "odds_min": [0, 1.50, 2.00, 2.50],
     },
     "lay_over45_blowout": {
         "m_min":        [55, 58, 60, 63],
@@ -604,6 +623,7 @@ def _snake_to_camel(params: dict) -> dict:
         "xg_rem_min":    "xgRemMin",
         "drift_min_pct": "driftMin",
         "max_odds":      "oddsMax",
+        "odds_min":      "oddsMin",
         "goal_diff_min": "goalDiffMin",
         "drift_mom_gap_min": "momGapMin",
         # Direct keys (already camelCase or pass-through)

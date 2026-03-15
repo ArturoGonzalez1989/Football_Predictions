@@ -56,6 +56,8 @@ export function BettingSignalsView() {
   const [activeConfig, setActiveConfig] = useState<CarteraConfig | null>(null)
   const [bankroll, setBankroll] = useState<number>(100)
   const [stakePct, setStakePct] = useState<number>(1)
+  const [stakeFixed, setStakeFixed] = useState<number>(2)
+  const [stakeMode, setStakeMode] = useState<"pct" | "fixed">("pct")
   const [effectiveBankroll, setEffectiveBankroll] = useState<number>(100)
   const [stakeConfigSaved, setStakeConfigSaved] = useState(false)
   const prevSignalKeys = useRef<Set<string> | null>(null)
@@ -82,6 +84,8 @@ export function BettingSignalsView() {
         const initBr = cfg.initial_bankroll ?? 100
         if (cfg.initial_bankroll != null) setBankroll(cfg.initial_bankroll)
         if (cfg.stake_pct != null) setStakePct(cfg.stake_pct)
+        if ((cfg as any).stake_fixed != null) setStakeFixed((cfg as any).stake_fixed)
+        if ((cfg as any).stake_mode === "fixed") setStakeMode("fixed")
         // Effective bankroll = initial + cumulative P/L from resolved manual bets
         const manualPL = (manualData?.bets ?? [])
           .filter(b => b.status !== "pending" && b.pl != null)
@@ -148,7 +152,9 @@ export function BettingSignalsView() {
         const cfg = activeConfigRef.current
         const bl = effectiveBankrollRef.current
         const pct = cfg?.stake_pct ?? 1
-        const stake = Math.max(0.01, Math.round(bl * pct / 100 * 100) / 100)
+        const stake = (cfg as any)?.stake_mode === "fixed"
+          ? Math.max(0.01, (cfg as any)?.stake_fixed ?? 2)
+          : Math.max(0.01, Math.round(bl * pct / 100 * 100) / 100)
         // Conflict filter: skip Momentum XG when xG Underperf is also mature for the same match (0% WR pair)
         const matureXGUnderperf = new Set(
           matureSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
@@ -251,57 +257,104 @@ export function BettingSignalsView() {
       </div>
 
       {/* Stake config box */}
-      <div className="flex items-center gap-3 mb-6 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-lg">
+      <div className="flex items-center gap-3 mb-6 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-lg flex-wrap">
         <span className="text-xs text-zinc-500 font-medium uppercase tracking-wide shrink-0">Stake</span>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-zinc-500">Inicial</span>
-          <input
-            type="number"
-            min={1}
-            step={10}
-            value={bankroll}
-            title="Bankroll inicial en euros"
-            placeholder="100"
-            onChange={e => setBankroll(Math.max(1, Number(e.target.value)))}
-            className="w-24 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-zinc-500"
-          />
-          <span className="text-xs text-zinc-600">€</span>
+
+        {/* Mode toggle */}
+        <div className="flex items-center rounded-md border border-zinc-700 overflow-hidden shrink-0">
+          <button
+            type="button"
+            onClick={() => setStakeMode("pct")}
+            className={`px-2.5 py-1 text-xs font-medium transition-colors ${stakeMode === "pct" ? "bg-zinc-600 text-zinc-100" : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
+          >
+            %
+          </button>
+          <button
+            type="button"
+            onClick={() => setStakeMode("fixed")}
+            className={`px-2.5 py-1 text-xs font-medium transition-colors ${stakeMode === "fixed" ? "bg-zinc-600 text-zinc-100" : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
+          >
+            €
+          </button>
         </div>
-        {effectiveBankroll !== bankroll && (
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-zinc-600">→</span>
-            <span className={`text-xs font-mono font-bold ${effectiveBankroll > bankroll ? "text-green-400" : "text-red-400"}`}>
-              {effectiveBankroll.toFixed(2)}€
+
+        {stakeMode === "pct" ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-zinc-500">Bankroll</span>
+              <input
+                type="number"
+                min={1}
+                step={10}
+                value={bankroll}
+                title="Bankroll inicial en euros"
+                placeholder="100"
+                onChange={e => setBankroll(Math.max(1, Number(e.target.value)))}
+                className="w-24 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-zinc-500"
+              />
+              <span className="text-xs text-zinc-600">€</span>
+            </div>
+            {!isNaN(effectiveBankroll) && effectiveBankroll !== bankroll && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-zinc-600">→</span>
+                <span className={`text-xs font-mono font-bold ${effectiveBankroll > bankroll ? "text-green-400" : "text-red-400"}`}>
+                  {effectiveBankroll.toFixed(2)}€
+                </span>
+              </div>
+            )}
+            <span className="text-zinc-700">×</span>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={0.1}
+                max={100}
+                step={0.5}
+                value={stakePct}
+                title="Stake en % del bankroll"
+                placeholder="1"
+                onChange={e => setStakePct(Math.max(0.1, Math.min(100, Number(e.target.value))))}
+                className="w-16 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-zinc-500"
+              />
+              <span className="text-xs text-zinc-500">%</span>
+            </div>
+            <span className="text-zinc-700">=</span>
+            <span className="text-sm font-bold text-amber-400">
+              {Math.max(0.01, Math.round((isNaN(effectiveBankroll) ? bankroll : effectiveBankroll) * stakePct / 100 * 100) / 100).toFixed(2)} €/apuesta
             </span>
-          </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={0.01}
+                step={0.5}
+                value={stakeFixed}
+                title="Stake fijo por apuesta"
+                placeholder="2"
+                onChange={e => setStakeFixed(Math.max(0.01, Number(e.target.value)))}
+                className="w-20 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-zinc-500"
+              />
+              <span className="text-sm font-bold text-amber-400">€/apuesta</span>
+            </div>
+          </>
         )}
-        <span className="text-zinc-700">×</span>
-        <div className="flex items-center gap-1.5">
-          <input
-            type="number"
-            min={0.1}
-            max={100}
-            step={0.5}
-            value={stakePct}
-            title="Stake en % del bankroll"
-            placeholder="1"
-            onChange={e => setStakePct(Math.max(0.1, Math.min(100, Number(e.target.value))))}
-            className="w-16 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-zinc-500"
-          />
-          <span className="text-xs text-zinc-500">%</span>
-        </div>
-        <span className="text-zinc-700">=</span>
-        <span className="text-sm font-bold text-amber-400">
-          {Math.max(0.01, Math.round(effectiveBankroll * stakePct / 100 * 100) / 100).toFixed(2)} €/apuesta
-        </span>
+
         <button
           type="button"
           onClick={async () => {
             if (!activeConfig) return
-            const updated = { ...activeConfig, initial_bankroll: bankroll, stake_pct: stakePct, bankroll_mode: "pct" }
-            await api.saveConfig(updated)
-            setActiveConfig(updated)
-            activeConfigRef.current = updated
+            const updated = {
+              ...activeConfig,
+              initial_bankroll: bankroll,
+              stake_pct: stakePct,
+              bankroll_mode: stakeMode === "pct" ? "pct" : "fixed",
+              stake_mode: stakeMode,
+              stake_fixed: stakeFixed,
+            } as CarteraConfig & { stake_mode: string; stake_fixed: number }
+            await api.saveConfig(updated as CarteraConfig)
+            setActiveConfig(updated as CarteraConfig)
+            activeConfigRef.current = updated as CarteraConfig
             setStakeConfigSaved(true)
             setTimeout(() => setStakeConfigSaved(false), 2000)
           }}

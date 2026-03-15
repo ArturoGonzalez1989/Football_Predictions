@@ -95,24 +95,25 @@
     "over25_2goal": {
       "enabled": true,
       "minuteMin": 45,
-      "minuteMax": 75,
+      "minuteMax": 78,
       "goalDiffMin": 2,
-      "sot_total_min": 3,
-      "odds_min": 1.6
+      "sot_total_min": 5,
+      "oddsMin": 1.6
     },
     "under35_late": {
       "enabled": true,
       "minuteMin": 65,
-      "minuteMax": 75,
+      "minuteMax": 85,
       "xgMax": 2.5,
-      "goals_min": 3,
-      "goals_max": 3
+      "goals_min": 2,
+      "goals_max": 3,
+      "oddsMin": 1.4
     },
     "longshot": {
       "enabled": true,
       "minuteMin": 70,
       "minuteMax": 86,
-      "odds_min": 1.5,
+      "oddsMin": 1.5,
       "odds_max": 10.0
     },
     "cs_close": {
@@ -123,52 +124,59 @@
     "cs_one_goal": {
       "enabled": true,
       "minuteMin": 70,
-      "minuteMax": 90
+      "minuteMax": 90,
+      "oddsMin": 0
     },
     "ud_leading": {
       "enabled": true,
       "minuteMin": 58,
       "minuteMax": 85,
       "ud_min_pre_odds": 1.3,
-      "max_lead": 1
+      "max_lead": 3,
+      "oddsMin": 1.6
     },
     "home_fav_leading": {
       "enabled": true,
       "minuteMin": 60,
       "minuteMax": 83,
-      "max_lead": 1,
-      "fav_max": 2.5
+      "max_lead": 3,
+      "fav_max": 2.5,
+      "oddsMin": 1.4
     },
     "cs_20": {
-      "enabled": false,
-      "m_min": 75,
-      "m_max": 90,
-      "odds_max": 10.0
+      "enabled": true,
+      "minuteMin": 75,
+      "minuteMax": 90,
+      "odds_max": 8.0,
+      "oddsMin": 0
     },
     "cs_big_lead": {
       "enabled": false,
       "m_min": 70,
       "m_max": 85,
-      "odds_max": 8.0
+      "odds_max": 8
     },
     "goal_clustering": {
       "enabled": true,
       "sotMin": 0,
       "minuteMin": 20,
       "minuteMax": 70,
-      "xgRemMin": 0.0
+      "xgRemMin": 0.0,
+      "oddsMin": 0
     },
     "pressure_cooker": {
       "enabled": true,
       "minuteMin": 55,
       "minuteMax": 75,
-      "score_confirm": 1
+      "score_confirm": 1,
+      "oddsMin": 0
     },
     "draw_xg_conv": {
       "enabled": true,
       "minuteMin": 65,
       "minuteMax": 83,
-      "xg_diff_max": 1.3
+      "xg_diff_max": 1.3,
+      "oddsMin": 2.1
     },
     "cs_00": {
       "enabled": false,
@@ -176,9 +184,11 @@
       "minuteMax": 90
     },
     "over25_2goals": {
-      "enabled": false,
-      "minuteMin": 0,
-      "minuteMax": 90
+      "enabled": true,
+      "minuteMin": 40,
+      "minuteMax": 60,
+      "odds_max": 4.0,
+      "oddsMin": 1.4
     },
     "cs_11": {
       "enabled": false,
@@ -202,40 +212,45 @@
       "enabled": true,
       "minuteMin": 65,
       "minuteMax": 90,
-      "odds_min": 1.0
+      "oddsMin": 1.0
     },
     "under35_3goals": {
       "enabled": true,
       "minuteMin": 60,
-      "minuteMax": 80,
-      "xgMax": 2.0
+      "minuteMax": 83,
+      "xgMax": 2.0,
+      "oddsMin": 1.4
     },
     "away_fav_leading": {
       "enabled": true,
       "minuteMin": 68,
       "minuteMax": 85,
       "max_lead": 1,
-      "fav_max": 2.0
+      "fav_max": 2.0,
+      "oddsMin": 1.2
     },
     "under45_3goals": {
       "enabled": true,
       "minuteMin": 60,
       "minuteMax": 78,
-      "xgMax": 2.5
+      "xgMax": 2.5,
+      "oddsMin": 0
     },
     "draw_equalizer": {
       "enabled": true,
-      "minuteMin": 65,
+      "minuteMin": 60,
       "minuteMax": 90,
       "fav_pre_max": 2.5,
       "min_goals_each": 1,
-      "odds_max": 8.0
+      "odds_max": 10.0,
+      "oddsMin": 2.5
     },
     "draw_22": {
       "enabled": true,
       "minuteMin": 68,
       "minuteMax": 90,
-      "odds_max": 8.0
+      "odds_max": 8.0,
+      "oddsMin": 1.5
     },
     "lay_over45_blowout": {
       "enabled": true,
@@ -250,7 +265,7 @@
       "enabled": true,
       "minuteMin": 45,
       "minuteMax": 65,
-      "odds_min": 2.0,
+      "oddsMin": 2.0,
       "odds_max": 6.0
     },
     "lay_draw_away_leading": {
@@ -258,15 +273,15 @@
       "minuteMin": 60,
       "minuteMax": 75,
       "xgMax": 1.8,
-      "odds_min": 2.0,
+      "oddsMin": 2.0,
       "odds_max": 8.0
     },
     "lay_cs11": {
       "enabled": true,
       "minuteMin": 60,
       "minuteMax": 88,
-      "odds_min": 1.5,
-      "odds_max": 50.0
+      "oddsMin": 1.5,
+      "odds_max": 20.0
     }
   },
   "bankroll_mode": "fixed",
@@ -306,10 +321,10 @@
     "cashout_pct": 0
   },
   "_optimizer_stats": {
-    "n": 139,
-    "wr": 76.3,
-    "ci_low": 68.5,
-    "ci_high": 82.6,
-    "roi": 59.34
+    "n": 134,
+    "wr": 75.4,
+    "ci_low": 67.4,
+    "ci_high": 81.9,
+    "roi": 66.58
   }
 }

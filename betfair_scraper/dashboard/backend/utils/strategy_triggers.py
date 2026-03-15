@@ -424,6 +424,10 @@ def _detect_odds_drift_trigger(
     if drift_pct < DRIFT_MIN:
         return None
 
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds_now < odds_min:
+        return None
+
     return {
         "team":       team,
         "odds_before": round(odds_before, 3),
@@ -521,6 +525,9 @@ def _detect_goal_clustering_trigger(
         return None
 
     over_odds = _to_float(curr_row.get(over_field, ""))
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if over_odds is not None and odds_min > 0 and over_odds < odds_min:
+        return None
     return {
         "goal_minute": goal_minute,
         "sot_max":     sot_max,
@@ -600,6 +607,9 @@ def _detect_pressure_cooker_trigger(
         return None
 
     over_odds = _to_float(curr_row.get(over_field, ""))
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if over_odds is not None and odds_min > 0 and over_odds < odds_min:
+        return None
     return {
         "total_goals": total_goals,
         "over_field":  over_field,
@@ -717,7 +727,13 @@ def _detect_xg_underperformance_trigger(rows: list, curr_idx: int, cfg: dict) ->
         row=row,
         cfg=cfg,
     )
-    return candidates[0] if candidates else None
+    if not candidates:
+        return None
+    result = candidates[0]
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and result.get("back_odds", 999) < odds_min:
+        return None
+    return result
 
 
 def _detect_momentum_xg_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
@@ -995,6 +1011,9 @@ def _detect_draw_xg_conv_trigger(rows: list, curr_idx: int, cfg: dict) -> Option
     odds = _to_float(row.get("back_draw", ""))
     if odds is None or odds <= 1.0 or odds > 15:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
     return {
         "minuto": m,
         "back_draw": odds,
@@ -1186,6 +1205,9 @@ def _detect_over25_2goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Optio
     odds = _to_float(row.get("back_over25", ""))
     if odds is None or odds <= 1.0 or odds > odds_max:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
     return {
         "minuto": m,
         "back_over25": odds,
@@ -1217,6 +1239,9 @@ def _detect_cs_close_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[d
     odds = _to_float(row.get(col, ""))
     if odds is None or odds <= 1.0:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
     return {
         "minuto": m,
         col: odds,
@@ -1247,6 +1272,9 @@ def _detect_cs_one_goal_trigger(rows: list, curr_idx: int, cfg: dict) -> Optiona
     col = f"back_rc_{gl}_{gv}"
     odds = _to_float(row.get(col, ""))
     if odds is None or odds <= 1.0:
+        return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
         return None
     return {
         "minuto": m,
@@ -1336,6 +1364,9 @@ def _detect_ud_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional
         return None
     if odds is None or odds <= 1.0:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
     return {
         "minuto": m,
         "back_home" if ud_team == "local" else "back_away": odds,
@@ -1369,6 +1400,9 @@ def _detect_under35_3goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Opti
         return None
     odds = _to_float(row.get("back_under35", ""))
     if odds is None or odds <= 1.01 or odds > 10:
+        return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
         return None
     return {
         "minuto": m,
@@ -1415,6 +1449,9 @@ def _detect_away_fav_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Op
         return None
     odds = _to_float(row.get("back_away", ""))
     if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
         return None
     return {
         "minuto": m,
@@ -1471,6 +1508,9 @@ def _detect_home_fav_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Op
     odds = _to_float(row.get("back_home", ""))
     if odds is None or odds <= 1.0 or odds > 10:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
     return {
         "minuto": m,
         "back_home": odds,
@@ -1508,6 +1548,9 @@ def _detect_under45_3goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Opti
     odds = _to_float(row.get("back_under45", ""))
     if odds is None or odds <= 1.01 or odds > 10:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
     return {
         "minuto": m,
         "back_under45": odds,
@@ -1536,6 +1579,9 @@ def _detect_cs_11_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict
         return None
     odds = _to_float(row.get("back_rc_1_1", ""))
     if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
         return None
     return {
         "minuto": m,
@@ -1569,6 +1615,9 @@ def _detect_cs_20_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict
     odds = _to_float(row.get(col, ""))
     if odds is None or odds <= 1.0 or odds > odds_max:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
     return {
         "minuto": m,
         col: odds,
@@ -1601,6 +1650,9 @@ def _detect_cs_big_lead_trigger(rows: list, curr_idx: int, cfg: dict) -> Optiona
     col = f"back_rc_{gl}_{gv}"
     odds = _to_float(row.get(col, ""))
     if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
         return None
     return {
         "minuto": m,
@@ -1678,6 +1730,9 @@ def _detect_draw_equalizer_trigger(rows: list, curr_idx: int, cfg: dict) -> Opti
     odds = _to_float(row.get("back_draw", ""))
     if odds is None or odds <= 1.0 or odds > odds_max:
         return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
+        return None
 
     return {
         "minuto": m,
@@ -1709,6 +1764,9 @@ def _detect_draw_22_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[di
 
     odds = _to_float(row.get("back_draw", ""))
     if odds is None or odds <= 1.0 or odds > odds_max:
+        return None
+    odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
+    if odds_min > 0 and odds < odds_min:
         return None
 
     return {

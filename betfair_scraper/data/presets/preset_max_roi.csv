@@ -63,3 +63,5 @@ timestamp_utc,match_id,strategy,minuto,bet_type_dir,won,pl,effective_odds,risk_l
 2026-03-09 17:42:34,panaitolikos-kifisia-apuestas-35310583,odds_drift_v1,83,,True,44.46,5.8,,,,,,,,,,,,,,,5.8,,,,,,,,,,,,,,
 2026-03-09 21:00:51,lazio-sassuolo-apuestas-35295981,pressure_cooker,55,,True,11.02,2.2,,,,,,,,,,,,,,,2.2,,,,,,,,,,,,,,
 2026-03-12 21:12:16,celta-de-vigo-lyon-apuestas-35314597,odds_drift_v1,55,,False,-1.0,1.93,,,,,,,,,,,,,,,1.93,,,,,,,,,,,,,,
+2026-03-14 13:55:04,lincoln-stockport-apuestas-35347068,pressure_cooker,68,,True,34.3,4.7,,,,,,,,,,,,,,,4.7,,,,,,,,,,,,,,
+2026-03-14 16:27:37,millwall-blackburn-apuestas-35338277,odds_drift_v1,66,,False,-1.0,1.51,,,,,,,,,,,,,,,1.51,,,,,,,,,,,,,,
