@@ -846,7 +846,8 @@ def analyze_cartera() -> dict:
 
     # Manual cache key including min_duration values and registry strategy enabled states
     _reg_enabled = {e[0]: cfg.get("strategies", {}).get(e[0], {}).get("enabled", False) for e in _STRATEGY_REGISTRY}
-    cache_key = f"cartera_{_json.dumps(md, sort_keys=True)}_{_json.dumps(_reg_enabled, sort_keys=True)}"
+    _global_min_odds = (cfg.get("adjustments") or {}).get("min_odds") or 0
+    cache_key = f"cartera_{_json.dumps(md, sort_keys=True)}_{_json.dumps(_reg_enabled, sort_keys=True)}_minodds{_global_min_odds}"
     if cache_key in _result_cache:
         return _result_cache[cache_key]
 
@@ -864,6 +865,10 @@ def analyze_cartera() -> dict:
             all_bets.append({**b, "strategy_label": _name})
 
     all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))
+
+    # Apply global min_odds floor from adjustments config (aligns BT with LIVE filter).
+    if _global_min_odds > 0:
+        all_bets = [b for b in all_bets if (b.get("back_odds") or 0) >= _global_min_odds]
 
     # Deduplicate: one bet per market per match (take earliest by minuto).
     # Strategies sharing a market group (e.g. under35_late + under35_3goals → under_3.5)
@@ -1948,7 +1953,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         _xg_total = (xg_local + xg_visitante) if (xg_local is not None and xg_visitante is not None) else None
         _m = int(minuto) if minuto is not None else 0
 
-        def _sd_signal(strategy_key, strategy_name, recommendation, odds, description, entry_cond):
+        def _sd_signal(strategy_key, strategy_name, recommendation, odds, description, entry_cond, cfg_min_odds=None):
             """Helper to build and emit an SD signal."""
             sig = {
                 "match_id": match_id,
@@ -1960,9 +1965,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 "score": f"{_gl}-{_gv}",
                 "recommendation": recommendation,
                 "back_odds": round(odds, 2) if odds else None,
-                "min_odds": 1.21,
+                "min_odds": cfg_min_odds if cfg_min_odds else None,
                 "expected_value": 0,
-                "odds_favorable": True,
+                "odds_favorable": (odds >= cfg_min_odds) if (cfg_min_odds and odds) else True,
                 "confidence": "medium",
                 "win_rate_historical": 0,
                 "roi_historical": 0,
@@ -2004,7 +2009,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             if _extracted is None:
                 continue
             _odds_val, _rec_str, _entry_cond = _extracted
-            _sd_signal(_key, _name, _rec_str, _odds_val, _desc, _entry_cond)
+            _cfg_odds_min = _cfg_entry.get("odds_min") or _cfg_entry.get("min_odds") or None
+            _sd_signal(_key, _name, _rec_str, _odds_val, _desc, _entry_cond, cfg_min_odds=_cfg_odds_min)
 
     # --- Enrich signals with age and maturity info ---
     _now = datetime.utcnow()

@@ -130,11 +130,12 @@ export interface SystemStatus {
   drivers_progress?: Record<string, DriverProgress>
 }
 
-async function post<T>(path: string, body?: any): Promise<T> {
+async function post<T>(path: string, body?: any, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
+    ...init,
   })
   if (!res.ok) throw new Error(`API error: ${res.status}`)
   return res.json()
@@ -483,7 +484,12 @@ export const api = {
   getConfig: () => get<CarteraConfig>("/config/cartera"),
   saveConfig: (config: CarteraConfig) => put<{ status: string }>("/config/cartera", config),
 
-  // Auto-open bet in browser
-  openBet: (matchUrl: string) => post<{ ok: boolean }>("/analytics/open-bet", { match_url: matchUrl }),
+  // Auto-open bet in browser (5s timeout — falls back to window.open on caller side)
+  openBet: (matchUrl: string, recommendation?: string, matchName?: string) => {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
+    return post<{ ok: boolean }>("/analytics/open-bet", { match_url: matchUrl, recommendation, match_name: matchName }, { signal: controller.signal })
+      .finally(() => clearTimeout(timer))
+  },
 
 }

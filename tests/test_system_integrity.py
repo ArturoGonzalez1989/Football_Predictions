@@ -16,6 +16,7 @@ Cubre 13 categorias de invariantes que deben mantenerse en cualquier estado del 
   T11 Trigger naming — cada registry key tiene _detect_{key}_trigger en csv_reader
   T12 SEARCH_SPACES — cubre todos los SINGLE_STRATEGIES de bt_optimizer
   T13 _COMBO_TO_REGISTRY — todos los valores son registry keys validos
+  T14 Signal min_odds — usa oddsMin del config, no hardcoded 1.21
 
 Uso:
     python tests/test_system_integrity.py
@@ -808,6 +809,60 @@ def t13_combo_to_registry():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# T14 — Signal min_odds uses oddsMin from config, not hardcoded 1.21
+# ─────────────────────────────────────────────────────────────────────────────
+
+def t14_signal_min_odds():
+    section("T14 — Signal min_odds not hardcoded")
+
+    if not CSV_READER_OK:
+        check("SKIP T14 (csv_reader not loaded)", False)
+        return
+
+    src_path = os.path.join(ROOT, "betfair_scraper", "dashboard", "backend",
+                            "utils", "csv_reader.py")
+    src = open(src_path, encoding="utf-8").read()
+
+    # 1. The hardcoded 1.21 must not appear as min_odds value in signal construction
+    hardcoded = re.search(r'"min_odds"\s*:\s*1\.21', src)
+    check("No hardcoded min_odds: 1.21 in signal construction",
+          hardcoded is None,
+          f"Found hardcoded 1.21 at: {hardcoded.group(0)}" if hardcoded else "")
+
+    # 2. _sd_signal must accept a cfg_min_odds parameter
+    has_param = "cfg_min_odds" in src
+    check("_sd_signal accepts cfg_min_odds parameter", has_param)
+
+    # 3. The registry loop must pass cfg_min_odds from _cfg_entry
+    has_pass = "_cfg_entry.get(\"odds_min\")" in src or "_cfg_entry.get('odds_min')" in src
+    check("Registry loop passes odds_min from _cfg_entry to _sd_signal", has_pass)
+
+    # 4. odds_favorable is computed dynamically (not always True)
+    has_dynamic_favorable = re.search(
+        r'"odds_favorable"\s*:\s*\(odds\s*>=\s*cfg_min_odds\)', src
+    )
+    check("odds_favorable computed from cfg_min_odds (not hardcoded True)",
+          has_dynamic_favorable is not None)
+
+    # 5. Config sanity: strategies with oddsMin=0 should NOT force favorable=False
+    #    (0 means no filter — any odds acceptable)
+    cfg_path = os.path.join(ROOT, "betfair_scraper", "cartera_config.json")
+    try:
+        cfg = json.load(open(cfg_path, encoding="utf-8"))
+        strategies = cfg.get("strategies", {})
+        # Verify that at least some enabled strategies have a meaningful oddsMin (>0)
+        meaningful_odds = [
+            k for k, v in strategies.items()
+            if isinstance(v, dict) and v.get("enabled") and (v.get("oddsMin") or 0) > 0
+        ]
+        check(f"At least some enabled strategies have meaningful oddsMin>0 ({len(meaningful_odds)} found)",
+              len(meaningful_odds) >= 3,
+              f"only found: {meaningful_odds}")
+    except Exception as e:
+        check("cartera_config.json readable for oddsMin check", False, str(e))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -835,6 +890,7 @@ def main():
     t11_trigger_naming()
     t12_search_spaces()
     t13_combo_to_registry()
+    t14_signal_min_odds()
 
     total = PASS + FAIL
     print(f"\n{'='*65}")

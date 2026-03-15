@@ -22,7 +22,7 @@
     "enabled": true,
     "dedup": false,
     "max_odds": 7.0,
-    "min_odds": null,
+    "min_odds": 1.1,
     "drift_min_minute": 0,
     "slippage_pct": 2,
     "conflict_filter": false,

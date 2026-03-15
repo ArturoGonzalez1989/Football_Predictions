@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { api, type BettingSignals, type BettingSignal, type WatchlistItem, type CarteraConfig } from "../lib/api"
 import { playSignalAlert } from "../lib/sounds"
 // ── Strategy enable/disable combo ────────────────────────────────────────────
@@ -677,282 +677,179 @@ function ActiveCriteriaBlock({ activeConfig }: { activeConfig: CarteraConfig | n
   )
 }
 
+function OpenBetButton({ matchUrl, isFavorable, recommendation, matchName }: { matchUrl: string; isFavorable: boolean; recommendation?: string; matchName?: string }) {
+  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle")
+  const handleClick = async () => {
+    setStatus("loading")
+    try {
+      await api.openBet(matchUrl, recommendation, matchName)
+      setStatus("ok")
+      setTimeout(() => setStatus("idle"), 2000)
+    } catch {
+      // fallback: open directly in browser tab
+      window.open(matchUrl, "_blank")
+      setStatus("err")
+      setTimeout(() => setStatus("idle"), 2000)
+    }
+  }
+  const label = status === "loading" ? "..." : status === "ok" ? "✓" : status === "err" ? "↗" : "Abrir"
+  const cls = isFavorable ? "bg-green-600 hover:bg-green-500 text-white" : "bg-zinc-700 hover:bg-zinc-600 text-zinc-300"
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={status === "loading"}
+      title={status === "err" ? "Bot falló — abierto en pestaña" : "Abrir en Betfair vía bot"}
+      className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-60 ${cls}`}
+    >
+      {status === "idle" && (
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      )}
+      {label}
+    </button>
+  )
+}
+
 function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; hasConflict?: boolean }) {
-
+  const [expanded, setExpanded] = React.useState(false)
   const isMature = signal.is_mature === true
-
-  // Determine card colors based on risk level (overrides confidence)
+  const isFavorable = signal.odds_favorable === true
+  const isUnfavorable = signal.odds_favorable === false
+  const hasOdds = signal.back_odds != null
   const riskLevel = signal.risk_info?.risk_level || "none"
 
   let cardBorderColor: string
   let cardBgColor: string
-
   if (riskLevel === "high") {
-    cardBorderColor = "border-red-500/40"
-    cardBgColor = "bg-red-500/10"
+    cardBorderColor = "border-red-500/40"; cardBgColor = "bg-red-500/5"
   } else if (riskLevel === "medium") {
-    cardBorderColor = "border-orange-500/40"
-    cardBgColor = "bg-orange-500/10"
+    cardBorderColor = "border-orange-500/40"; cardBgColor = "bg-orange-500/5"
   } else {
-    // No risk - use confidence colors
     const confidenceColors = {
-      high: { border: "border-green-500/20", bg: "bg-green-500/10" },
-      medium: { border: "border-yellow-500/20", bg: "bg-yellow-500/10" },
-      low: { border: "border-orange-500/20", bg: "bg-orange-500/10" },
+      high: { border: "border-green-500/20", bg: "bg-green-500/5" },
+      medium: { border: "border-yellow-500/20", bg: "bg-yellow-500/5" },
+      low: { border: "border-orange-500/20", bg: "bg-orange-500/5" },
     }
-    const colors = confidenceColors[signal.confidence]
-    cardBorderColor = colors.border
-    cardBgColor = colors.bg
+    const c = confidenceColors[signal.confidence]
+    cardBorderColor = c.border; cardBgColor = c.bg
   }
 
+  const verdictColor = isFavorable ? "text-green-400" : isUnfavorable ? "text-red-400" : "text-yellow-400"
+  const verdictText = isFavorable ? "APOSTAR" : isUnfavorable ? "NO APOSTAR" : "VERIFICAR"
+
   return (
-    <div className={`border rounded-lg p-4 ${cardBorderColor} ${cardBgColor}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <a
-              href={signal.match_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-zinc-100 hover:text-blue-400 transition-colors"
-            >
-              {signal.match_name}
-            </a>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
-              {signal.score}
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
-              Min {signal.minute}'
-            </span>
-            <SignalAgeBadge
-              ageMinutes={signal.signal_age_minutes}
-              minDurationCaps={signal.min_duration_caps}
-              isMature={signal.is_mature}
-            />
+    <div className={`border rounded-lg ${cardBorderColor} ${cardBgColor}`}>
+      {/* Compact main row */}
+      <div className="flex items-center gap-3 px-3 py-2.5">
+        {/* Verdict */}
+        <div className={`text-sm font-bold uppercase shrink-0 w-24 ${verdictColor}`}>{verdictText}</div>
+
+        {/* Match + strategy */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-sm font-semibold text-zinc-100 truncate">{signal.match_name}</span>
+            <span className="text-xs px-1.5 py-0 rounded bg-zinc-800 text-zinc-400">{signal.score}</span>
+            <span className="text-xs text-zinc-500">Min {signal.minute}'</span>
+            <SignalAgeBadge ageMinutes={signal.signal_age_minutes} minDurationCaps={signal.min_duration_caps} isMature={signal.is_mature} />
             {hasConflict && (
-              <span
-                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold bg-red-900/40 text-red-400 border border-red-500/40"
-                title="Par toxico detectado: MomXG + xG Underperf en el mismo partido tuvieron 0% WR historicamente. No apostar ambos."
-              >
-                ⚠ Conflicto
+              <span className="text-[10px] px-1.5 py-0 rounded-full font-bold bg-red-900/40 text-red-400 border border-red-500/40" title="Par tóxico: MomXG + xG Underperf tuvieron 0% WR">⚠ Conflicto</span>
+            )}
+            {riskLevel !== "none" && (
+              <span className={`text-[10px] px-1.5 py-0 rounded-full font-bold border ${riskLevel === "high" ? "bg-red-900/40 text-red-400 border-red-500/40" : "bg-orange-900/30 text-orange-400 border-orange-500/40"}`}>
+                {riskLevel === "high" ? "🔴" : "🟠"} Riesgo
               </span>
             )}
           </div>
-          <div className="text-xs text-zinc-500">{signal.strategy_name}</div>
-        </div>
-        <div className="text-right">
-          <div className="text-xs text-zinc-500 mb-1">Confianza</div>
-          <div className={`text-sm font-bold uppercase ${signal.confidence === 'high' ? 'text-green-400' : signal.confidence === 'medium' ? 'text-yellow-400' : 'text-orange-400'}`}>
-            {signal.confidence}
-          </div>
-        </div>
-      </div>
-
-      {/* Risk Warning */}
-      {signal.risk_info && signal.risk_info.has_risk && (
-        <div className={`mb-3 p-3 rounded border ${
-          signal.risk_info.risk_level === "high"
-            ? "bg-red-900/30 border-red-500/40"
-            : "bg-orange-900/20 border-orange-500/30"
-        }`}>
-          <div className="flex items-start gap-2">
-            <div className="text-lg mt-0.5">
-              {signal.risk_info.risk_level === "high" ? "🔴" : "🟠"}
-            </div>
-            <div className="flex-1">
-              <div className={`font-semibold text-sm mb-1 ${
-                signal.risk_info.risk_level === "high" ? "text-red-400" : "text-orange-400"
-              }`}>
-                {signal.risk_info.risk_level === "high" ? "Señal de Alto Riesgo" : "Señal de Riesgo Medio"}
-              </div>
-              <div className={`text-xs ${
-                signal.risk_info.risk_level === "high" ? "text-red-300/80" : "text-orange-300/80"
-              }`}>
-                {signal.risk_info.risk_reason}
-              </div>
-              <div className="flex gap-3 mt-2 text-[10px] text-zinc-400">
-                <span>Tiempo restante: {signal.risk_info.time_remaining} min</span>
-                {signal.risk_info.deficit > 0 && (
-                  <span>Déficit: {signal.risk_info.deficit} gol{signal.risk_info.deficit > 1 ? 'es' : ''}</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* GO/NO-GO Decision — always show min_odds guidance */}
-      {(() => {
-        const hasOdds = signal.back_odds != null
-        const isFavorable = signal.odds_favorable === true
-        const isUnfavorable = signal.odds_favorable === false
-        // No odds data at all — show min_odds guidance
-        const isUnknown = !hasOdds
-
-        const bgClass = isFavorable
-          ? 'bg-green-900/20 border-green-500/30'
-          : isUnfavorable
-            ? 'bg-red-900/20 border-red-500/30'
-            : 'bg-yellow-900/10 border-yellow-500/20'
-
-        return (
-          <div className={`mb-3 p-3 rounded border ${bgClass}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                {/* Verdict */}
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-zinc-500">{signal.strategy_name}</span>
+            <span className="text-xs font-mono text-zinc-300">{signal.recommendation}</span>
+            {hasOdds && signal.min_odds && (
+              <span className="text-xs text-zinc-500">
+                <span className={isFavorable ? "text-green-400 font-bold" : "text-red-400 font-bold"}>{signal.back_odds?.toFixed(2)}</span>
+                <span className="text-zinc-600"> / min </span>
+                <span className="text-zinc-400">{signal.min_odds.toFixed(2)}</span>
                 {isFavorable && (
-                  <>
-                    <div className="text-xl font-bold text-green-400">APOSTAR</div>
-                    {signal.expected_value != null && (
-                      <div className="text-xs text-zinc-400 mt-0.5">
-                        EV: +{signal.expected_value.toFixed(2)} EUR / 10 EUR apuesta
-                      </div>
-                    )}
-                  </>
+                  <span className="text-green-500 ml-1">(+{(((signal.back_odds! - signal.min_odds) / signal.min_odds) * 100).toFixed(0)}%)</span>
                 )}
-                {isUnfavorable && (
-                  <>
-                    <div className="text-xl font-bold text-red-400">NO APOSTAR</div>
-                    <div className="text-xs text-red-400/70 mt-0.5">
-                      Cuota {signal.back_odds?.toFixed(2)} por debajo del mínimo {signal.min_odds?.toFixed(2)}
-                    </div>
-                  </>
-                )}
-                {isUnknown && (
-                  <>
-                    <div className="text-lg font-bold text-yellow-400">VERIFICAR CUOTA</div>
-                    <div className="text-xs text-zinc-400 mt-0.5">
-                      No se pudo leer la cuota del mercado — comprueba en Betfair
-                    </div>
-                  </>
-                )}
-
-                {/* Min odds badge — always visible */}
-                {signal.min_odds && (
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800 border border-zinc-700">
-                    <span className="text-xs text-zinc-400">Cuota mínima:</span>
-                    <span className="text-sm font-bold text-zinc-100">{signal.min_odds.toFixed(2)}</span>
-                    {hasOdds && (
-                      <>
-                        <span className="text-zinc-600 mx-0.5">|</span>
-                        <span className="text-xs text-zinc-400">Actual:</span>
-                        <span className={`text-sm font-bold ${isFavorable ? 'text-green-400' : 'text-red-400'}`}>
-                          {signal.back_odds?.toFixed(2)}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex flex-col items-end gap-1.5">
-                {isMature && (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                    Paper auto
-                  </span>
-                )}
-                <a
-                  href={signal.match_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`px-4 py-2 font-semibold rounded-lg transition-colors flex items-center gap-2 shrink-0 ${
-                    isFavorable
-                      ? 'bg-green-600 hover:bg-green-500 text-white'
-                      : 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  <span>Ir al partido</span>
-                </a>
-              </div>
-            </div>
+              </span>
+            )}
+            {signal.win_rate_historical && (
+              <span className="text-[10px] text-zinc-500">WR {signal.win_rate_historical}% · ROI +{signal.roi_historical}%</span>
+            )}
+            {isMature && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0 rounded-full font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Paper auto
+              </span>
+            )}
           </div>
-        )
-      })()}
+        </div>
 
-      {/* Recommendation & Odds Analysis */}
-      <div className="mb-3 p-3 bg-zinc-900/60 rounded border border-zinc-700">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">Recomendación</div>
-            <div className="text-lg font-bold text-zinc-100">{signal.recommendation}</div>
-          </div>
-          {signal.min_odds && signal.back_odds && (
-            <div>
-              <div className="text-xs text-zinc-500 mb-1">Análisis de Cuota</div>
-              <div className="text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-zinc-400">Actual:</span>
-                  <span className="font-bold text-zinc-100">{signal.back_odds.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-zinc-400">Mínima:</span>
-                  <span className="font-mono text-zinc-300">{signal.min_odds.toFixed(2)}</span>
-                  {signal.back_odds >= signal.min_odds && (
-                    <span className="text-green-400 text-xs">
-                      (+{(((signal.back_odds - signal.min_odds) / signal.min_odds) * 100).toFixed(0)}%)
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Confidence */}
+        <div className={`text-xs font-bold uppercase shrink-0 ${signal.confidence === 'high' ? 'text-green-400' : signal.confidence === 'medium' ? 'text-yellow-400' : 'text-orange-400'}`}>
+          {signal.confidence}
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <OpenBetButton matchUrl={signal.match_url} isFavorable={isFavorable} recommendation={signal.recommendation} matchName={signal.match_name} />
+          <button
+            type="button"
+            onClick={() => setExpanded(v => !v)}
+            className="p-1.5 rounded text-zinc-600 hover:text-zinc-400 transition-colors"
+            title={expanded ? "Ocultar detalles" : "Ver detalles"}
+          >
+            <svg className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/* Historical Performance */}
-      {signal.win_rate_historical && (
-        <div className="mb-3 p-3 bg-zinc-900/30 rounded border border-zinc-800">
-          <div className="text-xs text-zinc-500 mb-2">Rendimiento Histórico</div>
-          <div className="grid grid-cols-3 gap-3 text-sm">
-            <div>
-              <div className="text-xs text-zinc-500">Win Rate</div>
-              <div className="font-bold text-zinc-100">{signal.win_rate_historical}%</div>
+      {/* Expandable details */}
+      {expanded && (
+        <div className="border-t border-zinc-800 px-3 py-3 space-y-3">
+          {/* Risk warning */}
+          {signal.risk_info?.has_risk && (
+            <div className={`p-2.5 rounded border text-xs ${riskLevel === "high" ? "bg-red-900/30 border-red-500/40 text-red-300/80" : "bg-orange-900/20 border-orange-500/30 text-orange-300/80"}`}>
+              <span className="font-semibold">{riskLevel === "high" ? "🔴 Alto Riesgo" : "🟠 Riesgo Medio"}:</span>{" "}
+              {signal.risk_info.risk_reason}{" "}
+              <span className="text-zinc-400">({signal.risk_info.time_remaining} min restantes)</span>
             </div>
+          )}
+          {/* Historical + conditions */}
+          <div className="grid grid-cols-2 gap-3">
+            {signal.win_rate_historical && (
+              <div>
+                <div className="text-xs text-zinc-500 mb-1.5">Rendimiento Histórico</div>
+                <div className="flex gap-4 text-xs">
+                  <div><span className="text-zinc-500">WR </span><span className="font-bold text-zinc-100">{signal.win_rate_historical}%</span></div>
+                  <div><span className="text-zinc-500">ROI </span><span className="font-bold text-green-400">+{signal.roi_historical}%</span></div>
+                  <div><span className="text-zinc-500">N </span><span className="font-mono text-zinc-300">{signal.sample_size}</span></div>
+                </div>
+              </div>
+            )}
             <div>
-              <div className="text-xs text-zinc-500">ROI</div>
-              <div className="font-bold text-green-400">+{signal.roi_historical}%</div>
-            </div>
-            <div>
-              <div className="text-xs text-zinc-500">Muestra</div>
-              <div className="font-mono text-zinc-300">{signal.sample_size} apuestas</div>
+              <div className="text-xs text-zinc-500 mb-1.5">Condiciones</div>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {Object.entries(signal.entry_conditions).map(([k, v]) => (
+                  <span key={k} className="text-xs"><span className="text-zinc-500">{formatConditionKey(k)}</span> <span className="font-mono text-zinc-300">{formatConditionValue(v)}</span></span>
+                ))}
+              </div>
             </div>
           </div>
-          {signal.description && (
-            <div className="mt-2 text-xs text-zinc-400 italic">{signal.description}</div>
-          )}
+          <div>
+            <div className="text-xs text-zinc-500 mb-1.5">Umbrales</div>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {Object.entries(signal.thresholds).map(([k, v]) => (
+                <span key={k} className="text-xs"><span className="text-zinc-500">{formatConditionKey(k)}</span> <span className="font-mono text-zinc-300">{String(v)}</span></span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Entry Conditions */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <div className="text-xs text-zinc-500 mb-1">Condiciones Actuales</div>
-          <div className="space-y-1">
-            {Object.entries(signal.entry_conditions).map(([key, value]) => (
-              <div key={key} className="text-xs">
-                <span className="text-zinc-400">{formatConditionKey(key)}:</span>{" "}
-                <span className="text-zinc-200 font-mono">{formatConditionValue(value)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <div className="text-xs text-zinc-500 mb-1">Umbrales</div>
-          <div className="space-y-1">
-            {Object.entries(signal.thresholds).map(([key, value]) => (
-              <div key={key} className="text-xs">
-                <span className="text-zinc-400">{formatConditionKey(key)}:</span>{" "}
-                <span className="text-zinc-300 font-mono">{value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

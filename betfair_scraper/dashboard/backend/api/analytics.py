@@ -615,55 +615,125 @@ async def clear_cache():
 
 
 _BETFAIR_SESSION_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data" / "betfair_session"
+# Chrome profile with saved Betfair credentials
+_CHROME_USER_DATA = Path(r"C:\Users\agonz\AppData\Local\Google\Chrome\User Data")
+_CHROME_PROFILE = "Default"
 _pw_instance = None
 _pw_context = None
 
 
-async def _get_betfair_browser():
-    """Return (or lazily create) a persistent Playwright browser context for Betfair."""
-    global _pw_instance, _pw_context
-    # Check if existing context is still alive
-    if _pw_context is not None:
+async def _pw_click_odds(page, recommendation: str, match_name: str) -> None:
+    """Click the BACK or LAY odds button for the correct selection. Only handles Match Odds market."""
+    import asyncio
+    if not recommendation:
+        return
+    rec = recommendation.upper()
+    is_lay = rec.startswith("LAY")
+    if not any(k in rec for k in ("HOME", "AWAY", "DRAW")):
+        return  # CS / Over-Under markets — user clicks manually
+
+    parts = match_name.split(" - ", 1)
+    home_name = parts[0].strip() if parts else ""
+    away_name = parts[1].strip() if len(parts) > 1 else ""
+
+    try:
+        runner_rows = page.locator("tr.runner-line")
+        count = await asyncio.wait_for(runner_rows.count(), timeout=5)
+    except Exception:
+        return
+
+    target_row = None
+    for i in range(count):
+        row = runner_rows.nth(i)
         try:
-            _ = _pw_context.pages  # property access — raises if closed
+            name_text = (await asyncio.wait_for(row.locator(".runner-name").text_content(), timeout=2) or "").lower()
         except Exception:
-            _pw_context = None
-    if _pw_context is None:
-        from playwright.async_api import async_playwright
-        if _pw_instance is None:
-            _pw_instance = await async_playwright().start()
-        _BETFAIR_SESSION_DIR.mkdir(parents=True, exist_ok=True)
-        _pw_context = await _pw_instance.chromium.launch_persistent_context(
-            str(_BETFAIR_SESSION_DIR),
-            headless=False,
-            channel="chrome",
-            args=["--start-maximized"],
-            no_viewport=True,
-        )
-        _log.info("Betfair browser context launched")
-    return _pw_context
+            continue
+        if "HOME" in rec and home_name and home_name.lower() in name_text:
+            target_row = row; break
+        if "AWAY" in rec and away_name and away_name.lower() in name_text:
+            target_row = row; break
+        if "DRAW" in rec and ("empate" in name_text or "draw" in name_text):
+            target_row = row; break
+
+    # Positional fallback: home=0, away=1, draw=2
+    if target_row is None and count >= 3:
+        idx = 0 if "HOME" in rec else (1 if "AWAY" in rec else 2)
+        target_row = runner_rows.nth(idx)
+
+    if target_row is None:
+        return
+
+    btn_sel = "td.bet-buttons.lay-cell button.bet-button-price" if is_lay else "td.bet-buttons.back-cell button.bet-button-price"
+    try:
+        btn = target_row.locator(btn_sel).first
+        await asyncio.wait_for(btn.wait_for(state="visible"), timeout=4)
+        await btn.click()
+        _log.info(f"Clicked {'LAY' if is_lay else 'BACK'} for: {recommendation}")
+    except Exception as e:
+        _log.warning(f"Could not click odds button: {e}")
+
+
+async def _pw_open_and_login(url: str, recommendation: str = "", match_name: str = "") -> None:
+    """Background task: open URL in Playwright using real Chrome profile (with saved credentials), then click odds."""
+    import asyncio
+    global _pw_instance, _pw_context
+    try:
+        if _pw_context is not None:
+            try:
+                _ = _pw_context.pages
+            except Exception:
+                _pw_context = None
+        if _pw_context is None:
+            from playwright.async_api import async_playwright
+            if _pw_instance is None:
+                _pw_instance = await async_playwright().start()
+            # Use real Chrome profile so saved Betfair credentials are available
+            _pw_context = await asyncio.wait_for(
+                _pw_instance.chromium.launch_persistent_context(
+                    str(_CHROME_USER_DATA),
+                    headless=False,
+                    channel="chrome",
+                    args=[f"--profile-directory={_CHROME_PROFILE}", "--start-maximized"],
+                    no_viewport=True,
+                ),
+                timeout=30,
+            )
+            _log.info("Betfair Playwright browser launched with real Chrome profile")
+        page = await _pw_context.new_page()
+        await asyncio.wait_for(page.goto(url, wait_until="domcontentloaded"), timeout=15)
+        # If login page shown, click login button (credentials auto-fill from saved passwords)
+        try:
+            login_btn = page.locator("a.btn-login, a:has-text('Iniciar sesión'), button:has-text('Iniciar sesión')")
+            await asyncio.wait_for(login_btn.first.wait_for(state="visible"), timeout=4)
+            await login_btn.first.click()
+            await asyncio.wait_for(page.wait_for_load_state("networkidle"), timeout=8)
+            # Wait for and submit auto-filled login form
+            try:
+                submit_btn = page.locator("button[type='submit'], input[type='submit'], button:has-text('Entrar'), button:has-text('Log In')")
+                await asyncio.wait_for(submit_btn.first.wait_for(state="visible"), timeout=5)
+                await submit_btn.first.click()
+                await asyncio.wait_for(page.wait_for_load_state("networkidle"), timeout=10)
+            except Exception:
+                pass
+        except Exception:
+            pass
+        # Click the correct odds button
+        await _pw_click_odds(page, recommendation, match_name)
+    except Exception as e:
+        _log.warning(f"Playwright open_bet error: {e}")
+        _pw_context = None
 
 
 @router.post("/open-bet")
 async def open_bet(payload: dict):
-    """Opens the Betfair match URL in a persistent Playwright browser and auto-clicks login if needed."""
+    """Opens Betfair in real Chrome (with saved credentials) and clicks the odds button via Playwright."""
+    import asyncio
     url = payload.get("match_url", "")
     if not url:
         return {"ok": False, "error": "No URL provided"}
-    try:
-        context = await _get_betfair_browser()
-        page = await context.new_page()
-        await page.goto(url, wait_until="domcontentloaded", timeout=15000)
-        # Click login button if visible (first time: user fills creds manually; after that session persists)
-        try:
-            login_btn = page.locator("a.btn-login, a:has-text('Iniciar sesión'), button:has-text('Iniciar sesión')")
-            await login_btn.first.wait_for(state="visible", timeout=3000)
-            await login_btn.first.click()
-            await page.wait_for_load_state("networkidle", timeout=8000)
-        except Exception:
-            pass  # Already logged in or login not needed
-        return {"ok": True}
-    except Exception as e:
-        _log.warning(f"open_bet error: {e}")
-        return {"ok": False, "error": str(e)}
+    recommendation = payload.get("recommendation", "")
+    match_name = payload.get("match_name", "")
+    asyncio.create_task(_pw_open_and_login(url, recommendation, match_name))
+    return {"ok": True}
 
