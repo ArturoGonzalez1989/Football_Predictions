@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { api, type BettingSignals, type BettingSignal, type WatchlistItem, type CarteraConfig } from "../lib/api"
 import { playSignalAlert } from "../lib/sounds"
-// ── Version combo types (inlined from removed cartera.ts) ────────────────────
+// ── Strategy enable/disable combo ────────────────────────────────────────────
 interface VersionCombo {
   draw: string
   xg: string
@@ -15,17 +15,17 @@ interface VersionCombo {
 
 function comboToSignalVersions(combo: VersionCombo): Record<string, string> {
   return {
-    draw: combo.draw,
-    xg: combo.xg,
-    drift: combo.drift,
-    clustering: combo.clustering,
-    pressure: combo.pressure,
-    momentum: combo.momentumXG ?? "v1",
+    draw: combo.draw === "off" ? "off" : "on",
+    xg: combo.xg === "off" ? "off" : "on",
+    drift: combo.drift === "off" ? "off" : "on",
+    clustering: combo.clustering === "off" ? "off" : "on",
+    pressure: combo.pressure === "off" ? "off" : "on",
+    momentum: combo.momentumXG === "off" ? "off" : "on",
   }
 }
 
 const DEFAULT_COMBO: VersionCombo = {
-  draw: "v2r", xg: "base", drift: "v1", clustering: "v2", pressure: "v1", tardeAsia: "off", momentumXG: "off", br: "fixed"
+  draw: "off", xg: "on", drift: "on", clustering: "on", pressure: "on", tardeAsia: "off", momentumXG: "off", br: "fixed"
 }
 
 
@@ -43,8 +43,9 @@ function signalMarketKey(matchId: string, recommendation: string): string {
 }
 
 // Recommended min durations — overridden by backend config on load
+// Keys use legacy short names for API query params compatibility
 export type MinDurConfig = { draw: number; xg: number; drift: number; clustering: number; pressure: number }
-const DEFAULT_MIN_DUR: MinDurConfig = { draw: 1, xg: 2, drift: 2, clustering: 4, pressure: 2 }
+const DEFAULT_MIN_DUR: MinDurConfig = { draw: 2, xg: 3, drift: 2, clustering: 4, pressure: 4 }
 
 export function BettingSignalsView() {
   const [signals, setSignals] = useState<BettingSignals | null>(null)
@@ -60,11 +61,16 @@ export function BettingSignalsView() {
   const [stakeMode, setStakeMode] = useState<"pct" | "fixed">("pct")
   const [effectiveBankroll, setEffectiveBankroll] = useState<number>(100)
   const [stakeConfigSaved, setStakeConfigSaved] = useState(false)
+  const [autoOpenBets, setAutoOpenBets] = useState(false)
   const prevSignalKeys = useRef<Set<string> | null>(null)
   // Track auto-registered paper bets to avoid duplicates across polling cycles
   const autoRegisteredRef = useRef<Set<string>>(new Set())
+  // Track auto-opened browser tabs to avoid duplicates across polling cycles
+  const autoOpenedRef = useRef<Set<string>>(new Set())
   // On first fetch, pre-populate autoRegistered with already-mature signals so we don't retroactively register them
   const firstFetchDoneRef = useRef(false)
+  const autoOpenBetsRef = useRef(false)
+  autoOpenBetsRef.current = autoOpenBets
   const activeConfigRef = useRef<CarteraConfig | null>(null)
   const effectiveBankrollRef = useRef<number>(100)
   const comboRef = useRef(combo)
@@ -93,24 +99,23 @@ export function BettingSignalsView() {
         const effBr = Math.max(1, Math.round((initBr + manualPL) * 100) / 100)
         setEffectiveBankroll(effBr)
         effectiveBankrollRef.current = effBr
-        const v = cfg.versions ?? {}
         const s = cfg.strategies ?? {}
         const newCombo: VersionCombo = {
-          draw: (v.draw || (s.draw?.enabled === false ? "off" : "v1")) as any,
-          xg: (v.xg || (s.xg?.enabled === false ? "off" : "base")) as any,
-          drift: (v.drift || (s.drift?.enabled === false ? "off" : "v1")) as any,
-          clustering: (v.clustering || (s.clustering?.enabled === false ? "off" : "v2")) as any,
-          pressure: (v.pressure || (s.pressure?.enabled === false ? "off" : "v1")) as any,
-          tardeAsia: (v.tarde_asia || (s.tarde_asia?.enabled ? "v1" : "off")) as any,
-          momentumXG: (s.momentum_xg?.version || v.momentum_xg || "off") as any,
+          draw: s.back_draw_00?.enabled ? "on" : "off",
+          xg: s.xg_underperformance?.enabled ? "on" : "off",
+          drift: s.odds_drift?.enabled ? "on" : "off",
+          clustering: s.goal_clustering?.enabled ? "on" : "off",
+          pressure: s.pressure_cooker?.enabled ? "on" : "off",
+          tardeAsia: s.tarde_asia?.enabled ? "on" : "off",
+          momentumXG: s.momentum_xg?.enabled ? "on" : "off",
           br: cfg.bankroll_mode as any,
         }
         const newMinDur: MinDurConfig = {
-          draw: cfg.min_duration.draw ?? 1,
-          xg: cfg.min_duration.xg ?? 2,
-          drift: cfg.min_duration.drift ?? 2,
-          clustering: cfg.min_duration.clustering ?? 4,
-          pressure: cfg.min_duration.pressure ?? 2,
+          draw: cfg.min_duration.back_draw_00 ?? 1,
+          xg: cfg.min_duration.xg_underperformance ?? 2,
+          drift: cfg.min_duration.odds_drift ?? 2,
+          clustering: cfg.min_duration.goal_clustering ?? 4,
+          pressure: cfg.min_duration.pressure_cooker ?? 2,
         }
         setCombo(newCombo)
         comboRef.current = newCombo
@@ -147,7 +152,11 @@ export function BettingSignalsView() {
       const matureSignals = allMature.filter(s => s.odds_favorable === true)
       if (!firstFetchDoneRef.current) {
         firstFetchDoneRef.current = true
-        allMature.forEach(s => autoRegisteredRef.current.add(signalMarketKey(s.match_id, s.recommendation)))
+        allMature.forEach(s => {
+          const key = signalMarketKey(s.match_id, s.recommendation)
+          autoRegisteredRef.current.add(key)
+          autoOpenedRef.current.add(key)
+        })
       } else {
         const cfg = activeConfigRef.current
         const bl = effectiveBankrollRef.current
@@ -160,7 +169,7 @@ export function BettingSignalsView() {
           matureSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
         )
         for (const sig of matureSignals) {
-          if ((sig.strategy === "momentum_xg_v1" || sig.strategy === "momentum_xg_v2")
+          if (sig.strategy === "momentum_xg"
               && matureXGUnderperf.has(sig.match_id)) {
             continue
           }
@@ -195,6 +204,17 @@ export function BettingSignalsView() {
               autoRegisteredRef.current.delete(key)
             }
           })
+        }
+
+        // Auto-open browser: open Betfair match URL for each new mature+favorable signal
+        if (autoOpenBetsRef.current) {
+          for (const sig of matureSignals) {
+            const key = signalMarketKey(sig.match_id, sig.recommendation)
+            if (autoOpenedRef.current.has(key)) continue
+            if (!sig.match_url) continue
+            autoOpenedRef.current.add(key)
+            api.openBet(sig.match_url).catch(() => {})
+          }
         }
       }
     } catch (e) {
@@ -244,7 +264,7 @@ export function BettingSignalsView() {
             Oportunidades detectadas en tiempo real según tu cartera de estrategias
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="text-right">
             <div className="text-xs text-zinc-500">Partidos en vivo</div>
             <div className="text-lg font-bold text-blue-400">{liveMatches}</div>
@@ -253,6 +273,23 @@ export function BettingSignalsView() {
             <div className="text-xs text-zinc-500">Señales activas</div>
             <div className="text-lg font-bold text-green-400">{activeSignals.length}</div>
           </div>
+          {/* Auto-open toggle */}
+          <button
+            type="button"
+            onClick={() => setAutoOpenBets(v => {
+              if (!v) autoOpenedRef.current = new Set() // reset so existing signals re-evaluate on next cycle
+              return !v
+            })}
+            title={autoOpenBets ? "Auto-abrir activo: abre Betfair al detectar señal" : "Auto-abrir desactivado"}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+              autoOpenBets
+                ? "bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
+                : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${autoOpenBets ? "bg-amber-400 animate-pulse" : "bg-zinc-600"}`} />
+            Auto-abrir
+          </button>
         </div>
       </div>
 
@@ -385,14 +422,14 @@ export function BettingSignalsView() {
                   activeSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
                 )
                 const matchesWithMomXG = new Set(
-                  activeSignals.filter(s => s.strategy === "momentum_xg_v1" || s.strategy === "momentum_xg_v2").map(s => s.match_id)
+                  activeSignals.filter(s => s.strategy === "momentum_xg").map(s => s.match_id)
                 )
                 const conflictMatchIds = new Set(
                   [...matchesWithXGUnderf].filter(id => matchesWithMomXG.has(id))
                 )
                 return activeSignals.map((signal, idx) => {
                   const hasConflict = conflictMatchIds.has(signal.match_id) &&
-                    (signal.strategy === "momentum_xg_v1" || signal.strategy === "momentum_xg_v2")
+                    signal.strategy === "momentum_xg"
                   return (
                     <SignalCard key={`${signal.match_id}-${signal.strategy}-${idx}`} signal={signal} hasConflict={hasConflict} />
                   )

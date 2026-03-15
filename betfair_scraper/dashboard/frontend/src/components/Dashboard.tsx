@@ -196,25 +196,15 @@ export function Dashboard() {
           </div>
         )}
 
-        {view === "signals" && <BettingSignalsView />}
-
-        {view === "bets" && <PlacedBetsView />}
-
-        {view === "live" && (
-          <LiveView
-            liveMatches={matches.live}
-            system={system}
-            onRefresh={refresh}
-          />
-        )}
-
-        {view === "upcoming" && <UpcomingView matches={matches.upcoming} />}
-
-        {view === "quality" && <DataQualityView />}
-
-        {view === "analytics" && <AnalyticsView />}
-
-        {view === "alerts" && <AlertsView />}
+        <div className={view !== "signals" ? "hidden" : ""}><BettingSignalsView /></div>
+        <div className={view !== "bets" ? "hidden" : ""}><PlacedBetsView /></div>
+        <div className={view !== "live" ? "hidden" : ""}>
+          <LiveView liveMatches={matches.live} system={system} onRefresh={refresh} />
+        </div>
+        <div className={view !== "upcoming" ? "hidden" : ""}><UpcomingView matches={matches.upcoming} /></div>
+        <div className={view !== "quality" ? "hidden" : ""}><DataQualityView /></div>
+        <div className={view !== "analytics" ? "hidden" : ""}><AnalyticsView /></div>
+        <div className={view !== "alerts" ? "hidden" : ""}><AlertsView /></div>
       </main>
     </div>
   )

@@ -51,6 +51,7 @@ export function AnalyticsView() {
   const marketPerf = calculateMarketPerformance(sortedResolved)
   const riskMetrics = calculateRiskMetrics(sortedResolved)
   const plHistory = calculatePLHistory(sortedResolved)
+  const dailyStats = calculateDailyStats(resolvedBets)
 
   return (
     <div className="p-6 space-y-6">
@@ -120,6 +121,14 @@ export function AnalyticsView() {
           </div>
         </section>
       </div>
+
+      {/* Daily Stats */}
+      <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+        <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
+          📅 Rendimiento Diario
+        </h2>
+        <DailyStatsTable rows={dailyStats} />
+      </section>
 
       {/* Risk Metrics */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
@@ -794,6 +803,144 @@ function StatItem({ label, value }: { label: string; value: string }) {
     <div>
       <div className="text-xs text-zinc-500 mb-1">{label}</div>
       <div className="text-lg font-bold text-zinc-100">{value}</div>
+    </div>
+  )
+}
+
+// ─── Daily Stats ───────────────────────────────────────────────────────────
+
+type DailyStatRow = {
+  date: string
+  n: number
+  won: number
+  lost: number
+  winRate: number
+  pl: number
+  bestPL: number
+  worstPL: number
+  topStrategy: string
+}
+
+function calculateDailyStats(bets: PlacedBet[]): DailyStatRow[] {
+  const byDay: Record<string, PlacedBet[]> = {}
+
+  for (const bet of bets) {
+    const day = (bet.timestamp_utc || "").slice(0, 10)
+    if (!day) continue
+    if (!byDay[day]) byDay[day] = []
+    byDay[day].push(bet)
+  }
+
+  return Object.entries(byDay)
+    .map(([date, dayBets]) => {
+      const won = dayBets.filter((b) => b.result === "won").length
+      const lost = dayBets.filter((b) => b.result === "lost").length
+      const resolved = won + lost
+      const winRate = resolved > 0 ? (won / resolved) * 100 : 0
+      const pl = dayBets.reduce((s, b) => s + (Number(b.pl) || 0), 0)
+      const pls = dayBets.map((b) => Number(b.pl) || 0)
+      const bestPL = pls.length > 0 ? Math.max(...pls) : 0
+      const worstPL = pls.length > 0 ? Math.min(...pls) : 0
+
+      // Strategy with most bets that day
+      const stratCount: Record<string, number> = {}
+      dayBets.forEach((b) => {
+        const s = b.strategy_name || b.strategy || "?"
+        stratCount[s] = (stratCount[s] || 0) + 1
+      })
+      const topStrategy = Object.entries(stratCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—"
+
+      return { date, n: dayBets.length, won, lost, winRate, pl, bestPL, worstPL, topStrategy }
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+}
+
+function DailyStatsTable({ rows }: { rows: DailyStatRow[] }) {
+  if (rows.length === 0) {
+    return <div className="text-sm text-zinc-500 text-center py-6">Sin datos</div>
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-[11px] text-zinc-500 uppercase tracking-wide border-b border-zinc-800">
+            <th className="text-left py-2 px-2">Fecha</th>
+            <th className="text-center py-2 px-2">Bets</th>
+            <th className="text-center py-2 px-2">W / L</th>
+            <th className="text-center py-2 px-2">WR%</th>
+            <th className="text-right py-2 px-2">P/L</th>
+            <th className="text-right py-2 px-2 hidden md:table-cell">Mejor</th>
+            <th className="text-right py-2 px-2 hidden md:table-cell">Peor</th>
+            <th className="text-left py-2 px-2 hidden lg:table-cell">Top estrategia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const plColor = row.pl >= 0 ? "text-green-400" : "text-red-400"
+            const wrColor =
+              row.winRate >= 60 ? "text-green-400"
+              : row.winRate >= 45 ? "text-amber-400"
+              : "text-red-400"
+
+            return (
+              <tr key={row.date} className="border-b border-zinc-800/50 hover:bg-zinc-800/20">
+                <td className="py-2 px-2 font-mono text-zinc-300 text-xs">{row.date}</td>
+                <td className="py-2 px-2 text-center text-zinc-400">{row.n}</td>
+                <td className="py-2 px-2 text-center">
+                  <span className="text-green-400">{row.won}</span>
+                  <span className="text-zinc-600 mx-0.5">/</span>
+                  <span className="text-red-400">{row.lost}</span>
+                </td>
+                <td className={`py-2 px-2 text-center font-bold ${wrColor}`}>
+                  {row.n > 0 ? `${row.winRate.toFixed(0)}%` : "—"}
+                </td>
+                <td className={`py-2 px-2 text-right font-mono font-bold ${plColor}`}>
+                  {row.pl >= 0 ? "+" : ""}{row.pl.toFixed(2)}
+                </td>
+                <td className="py-2 px-2 text-right font-mono text-green-400/70 text-xs hidden md:table-cell">
+                  +{row.bestPL.toFixed(2)}
+                </td>
+                <td className="py-2 px-2 text-right font-mono text-red-400/70 text-xs hidden md:table-cell">
+                  {row.worstPL.toFixed(2)}
+                </td>
+                <td className="py-2 px-2 text-zinc-500 text-xs truncate max-w-[140px] hidden lg:table-cell">
+                  {row.topStrategy}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+
+        {/* Totals row */}
+        {rows.length > 1 && (() => {
+          const totalN = rows.reduce((s, r) => s + r.n, 0)
+          const totalW = rows.reduce((s, r) => s + r.won, 0)
+          const totalL = rows.reduce((s, r) => s + r.lost, 0)
+          const totalPL = rows.reduce((s, r) => s + r.pl, 0)
+          const wr = totalW + totalL > 0 ? (totalW / (totalW + totalL)) * 100 : 0
+          return (
+            <tfoot>
+              <tr className="border-t border-zinc-700 text-xs font-bold text-zinc-300">
+                <td className="py-2 px-2 text-zinc-500">TOTAL</td>
+                <td className="py-2 px-2 text-center">{totalN}</td>
+                <td className="py-2 px-2 text-center">
+                  <span className="text-green-400">{totalW}</span>
+                  <span className="text-zinc-600 mx-0.5">/</span>
+                  <span className="text-red-400">{totalL}</span>
+                </td>
+                <td className={`py-2 px-2 text-center font-bold ${wr >= 55 ? "text-green-400" : wr >= 45 ? "text-amber-400" : "text-red-400"}`}>
+                  {wr.toFixed(0)}%
+                </td>
+                <td className={`py-2 px-2 text-right font-mono font-bold ${totalPL >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {totalPL >= 0 ? "+" : ""}{totalPL.toFixed(2)}
+                </td>
+                <td colSpan={3} />
+              </tr>
+            </tfoot>
+          )
+        })()}
+      </table>
     </div>
   )
 }

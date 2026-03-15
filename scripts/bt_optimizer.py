@@ -47,10 +47,8 @@ from utils import csv_reader
 from utils.csv_reader import (
     _STRATEGY_REGISTRY,
     _STRATEGY_REGISTRY_KEYS,
-    _LEGACY_MIN_DUR_KEY,
     _analyze_strategy_simple,
     _cfg_add_snake_keys,
-    _build_registry_config_map,
 )
 from utils.csv_loader import _get_all_finished_matches
 from api import optimizer_cli
@@ -74,11 +72,11 @@ MIN_PRESET_N     = 200  # real stats from analyze_cartera-equivalent; N<200 sign
 
 # ── Min-duration defaults (same as cartera_config.json) ──────────────────────
 DEFAULT_MIN_DUR = {
-    "draw":        2,
-    "xg":          3,
-    "drift":       2,
-    "clustering":  4,
-    "pressure":    4,
+    "back_draw_00":        2,
+    "xg_underperformance": 3,
+    "odds_drift":          2,
+    "goal_clustering":     4,
+    "pressure_cooker":     4,
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -88,26 +86,22 @@ DEFAULT_MIN_DUR = {
 # ─────────────────────────────────────────────────────────────────────────────
 SEARCH_SPACES: dict[str, dict[str, list]] = {
 
-    # ── Original 7 — versioned strategies ─────────────────────────────────────
-    # For these, "version" selects which trigger wrapper is used.
-    # The grid loops over versions AND params together.
+    # ── Original 7 strategies ─────────────────────────────────────────────────
 
-    "back_draw_00": {   # applies to versions v1/v15/v2/v2r/v3/v4
+    "back_draw_00": {
         "xg_max":    [0.4, 0.5, 0.6, 0.7, 1.0],
         "poss_max":  [15, 20, 25, 30, 100],
         "shots_max": [6, 8, 10, 12, 20],
         "minute_min":[25, 30, 35],
         "minute_max":[75, 80, 85, 90],
     },
-    "xg_underperformance": {   # applies to versions base/v2/v3
-        "xg_excess_min": [0.3, 0.4, 0.5, 0.6, 0.7],
+    "xg_underperformance": {           "xg_excess_min": [0.3, 0.4, 0.5, 0.6, 0.7],
         "sot_min":       [0, 1, 2, 3],
         "minute_min":    [0, 10, 15, 20],
         "minute_max":    [60, 65, 70, 75, 80, 90],
         "odds_min":      [0, 1.20, 1.30, 1.40],
     },
-    "odds_drift": {   # applies to versions v1/v2/v3/v4/v5/v6
-        "drift_min_pct": [15, 20, 30],
+    "odds_drift": {           "drift_min_pct": [15, 20, 30],
         "max_odds":      [5.0, 999],
         "goal_diff_min": [0, 1],
         "min_minute":    [0, 30],
@@ -127,8 +121,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "score_confirm": [1, 2, 3],
         "odds_min":      [0, 1.20, 1.30],
     },
-    "momentum_xg": {   # applies to versions v1/v2
-        "min_m": [0, 5, 10, 15, 20],
+    "momentum_xg": {           "min_m": [0, 5, 10, 15, 20],
         "max_m": [70, 75, 80, 85, 90],
     },
 
@@ -296,20 +289,12 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
     # tarde_asia: no grid search (detection is liga-based, no tunable params)
 }
 
-# Which versioned registry keys belong to each "family" for the grid search
-VERSIONED_FAMILIES = {
-    "back_draw_00":       ["back_draw_00_v1", "back_draw_00_v15", "back_draw_00_v2",
-                           "back_draw_00_v2r", "back_draw_00_v3", "back_draw_00_v4"],
-    "xg_underperformance":["xg_underperformance_base", "xg_underperformance_v2",
-                           "xg_underperformance_v3"],
-    "odds_drift":         ["odds_drift_v1", "odds_drift_v2", "odds_drift_v3",
-                           "odds_drift_v4", "odds_drift_v5", "odds_drift_v6"],
-    "momentum_xg":        ["momentum_xg_v1", "momentum_xg_v2"],
-}
-
-# Flat strategy keys (one registry entry = one strategy, no versioning)
+# All strategy keys — one registry entry per strategy, no versioning.
 SINGLE_STRATEGIES = [
+    # Original 7 (formerly versioned, now direct entries with cfg params)
+    "back_draw_00", "xg_underperformance", "odds_drift", "momentum_xg",
     "goal_clustering", "pressure_cooker",
+    # SD strategies
     "over25_2goal", "under35_late", "longshot",
     "cs_close", "cs_one_goal", "ud_leading", "home_fav_leading",
     "cs_20", "cs_big_lead", "lay_over45_v3", "draw_xg_conv",
@@ -392,8 +377,7 @@ def _registry_entry(key: str):
 
 
 def _get_min_dur(key: str, cfg_md: dict) -> int:
-    legacy_key = _LEGACY_MIN_DUR_KEY.get(key, key)
-    return cfg_md.get(legacy_key, cfg_md.get(key, 1))
+    return cfg_md.get(key, 1)
 
 
 def _load_config() -> dict:
@@ -445,38 +429,13 @@ def _run_single_strategy(key: str, space: dict, min_dur: int, n_fin: int) -> dic
     return best
 
 
-def _run_versioned_family(family: str, version_keys: list, space: dict,
-                           min_dur: int, n_fin: int) -> dict | None:
-    """Grid search over all versions + all params for a versioned family."""
-    param_names  = list(space.keys())
-    param_values = list(space.values())
-    best = None
-
-    for ver_key in version_keys:
-        entry = _registry_entry(ver_key)
-        if entry is None:
-            continue
-        _, _, trigger_fn, _, extract_fn, win_fn = entry
-
-        for combo_vals in itertools.product(*param_values):
-            raw_cfg = dict(zip(param_names, combo_vals))
-            cfg     = _cfg_add_snake_keys({**raw_cfg, "enabled": True})
-            bets    = _analyze_strategy_simple(ver_key, trigger_fn, extract_fn, win_fn, cfg, min_dur)
-            metrics = _eval_bets(bets, n_fin)
-            if metrics and (best is None or metrics["score"] > best["score"]):
-                best = {**metrics, "params": raw_cfg, "version_key": ver_key,
-                        "family": family}
-
-    return best
-
-
 def phase1_individual(n_fin: int, workers: int = 4,
                        only: list | None = None) -> dict:
     """
-    Run grid search for all strategies. Returns dict keyed by strategy family:
+    Run grid search for all strategies. Returns dict keyed by strategy key:
       { "goal_clustering": { n, wins, wr, pl, roi, ci_low, ci_high, max_dd, score,
-                              params: {...}, key/version_key: ... },
-        "back_draw_00":    { ..., family: "back_draw_00", version_key: "back_draw_00_v2r" },
+                              params: {...}, key: "goal_clustering" },
+        "back_draw_00":    { ..., key: "back_draw_00", params: {...} },
         ... }
     Strategies that don't pass quality gates are absent from the result.
     """
@@ -494,44 +453,22 @@ def phase1_individual(n_fin: int, workers: int = 4,
         if space is None:
             _log(f"  WARN: {key} — sin search space definido, skip")
             continue
-        tasks.append(("single", key, space, _get_min_dur(key, md)))
-
-    for family, ver_keys in VERSIONED_FAMILIES.items():
-        if only and family not in only:
-            continue
-        space = SEARCH_SPACES.get(family)
-        if space is None:
-            _log(f"  WARN: {family} — sin search space definido, skip")
-            continue
-        tasks.append(("versioned", family, ver_keys, space, _get_min_dur(ver_keys[0], md)))
+        tasks.append((key, space, _get_min_dur(key, md)))
 
     n_total = len(tasks)
     t0      = time.time()
 
     # Sequential execution — trigger lambdas in the registry are not picklable.
     # Match data is in module cache so each call is fast (~0.3-0.5 s).
-    for t in tasks:
-        kind = t[0]
-        if kind == "single":
-            _, key, space, min_dur = t
-            best = _run_single_strategy(key, space, min_dur, n_fin)
-            if best:
-                results[key] = best
-                _log(f"  ✓ {key}: N={best['n']} ROI={best['roi']}% "
-                     f"IC=[{best['ci_low']}-{best['ci_high']}] "
-                     f"params={best['params']}")
-            else:
-                _log(f"  ✗ {key}: no pasó quality gates")
+    for key, space, min_dur in tasks:
+        best = _run_single_strategy(key, space, min_dur, n_fin)
+        if best:
+            results[key] = best
+            _log(f"  ✓ {key}: N={best['n']} ROI={best['roi']}% "
+                 f"IC=[{best['ci_low']}-{best['ci_high']}] "
+                 f"params={best['params']}")
         else:
-            _, family, ver_keys, space, min_dur = t
-            best = _run_versioned_family(family, ver_keys, space, min_dur, n_fin)
-            if best:
-                results[family] = best
-                _log(f"  ✓ {family} ({best['version_key']}): N={best['n']} "
-                     f"ROI={best['roi']}% IC=[{best['ci_low']}-{best['ci_high']}] "
-                     f"params={best['params']}")
-            else:
-                _log(f"  ✗ {family}: no pasó quality gates (todas las versiones)")
+            _log(f"  ✗ {key}: no pasó quality gates")
 
     elapsed = time.time() - t0
     _log(f"Phase 1 completada en {elapsed:.1f}s — "
@@ -557,49 +494,19 @@ def phase2_build_config(individual_results: dict) -> dict:
 
     for family, result in individual_results.items():
         params = result["params"]
-        if family in VERSIONED_FAMILIES:
-            # Map back to the legacy config key (draw, xg, drift, momentum_xg)
-            legacy_map = {
-                "back_draw_00":        "draw",
-                "xg_underperformance": "xg",
-                "odds_drift":          "drift",
-                "momentum_xg":         "momentum_xg",
-            }
-            cfg_key  = legacy_map.get(family, family)
-            ver_key  = result.get("version_key", "")
-            # Extract version suffix: "back_draw_00_v2r" → "v2r"
-            ver_sfx  = ver_key.replace(family + "_", "").replace("back_draw_00_", "")
-
-            # Convert snake_case params back to camelCase for cartera_config.json
-            camel_params = _snake_to_camel(params)
-            new_strategies[cfg_key] = {
-                "enabled": True,
-                "version": ver_sfx,
-                **camel_params,
-            }
-            approved.append(f"{family} ({ver_key})")
-        else:
-            # Direct registry strategy — keep its own key
-            camel_params = _snake_to_camel(params)
-            new_strategies[family] = {
-                "enabled": True,
-                **camel_params,
-            }
-            approved.append(family)
+        camel_params = _snake_to_camel(params)
+        new_strategies[family] = {
+            "enabled": True,
+            **camel_params,
+        }
+        approved.append(family)
 
     # Disable strategies that didn't pass quality gates
-    all_families = (list(VERSIONED_FAMILIES.keys()) +
-                    SINGLE_STRATEGIES +
-                    ["tarde_asia"])
-    legacy_map_inv = {
-        "back_draw_00": "draw", "xg_underperformance": "xg",
-        "odds_drift": "drift",  "momentum_xg": "momentum_xg",
-    }
+    all_families = SINGLE_STRATEGIES + ["tarde_asia"]
     for fam in all_families:
         if fam not in individual_results:
-            cfg_key = legacy_map_inv.get(fam, fam)
-            if cfg_key in new_strategies:
-                new_strategies[cfg_key] = {**new_strategies[cfg_key], "enabled": False}
+            if fam in new_strategies:
+                new_strategies[fam] = {**new_strategies[fam], "enabled": False}
                 discarded.append(fam)
 
     _log(f"  Aprobadas ({len(approved)}): {', '.join(approved)}")
@@ -721,9 +628,7 @@ def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
     Returns real stats (n, wr, roi, pl, ci_low) reflecting what the live system
     would actually produce — not the portfolio optimizer's internal cherry-pick.
     """
-    strategy_configs = _build_registry_config_map(
-        _merge_preset_strategies(preset_cfg, base_cfg)
-    )
+    strategy_configs = _merge_preset_strategies(preset_cfg, base_cfg)
     md = base_cfg.get("min_duration", {})
 
     all_bets = []
@@ -731,8 +636,7 @@ def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
         s_cfg = strategy_configs.get(_key, {})
         if not s_cfg.get("enabled"):
             continue
-        min_dur_key = _LEGACY_MIN_DUR_KEY.get(_key, _key)
-        min_dur = md.get(min_dur_key, md.get(_key, 1))
+        min_dur = md.get(_key, 1)
         bets = _analyze_strategy_simple(
             _key, _trigger_fn, _extract_fn, _win_fn,
             _cfg_add_snake_keys(s_cfg), min_dur,
@@ -821,6 +725,11 @@ def phase4_apply(preset_paths: dict[str, Path],
             if key in preset_cfg:
                 merged[key] = preset_cfg[key]
         merged["strategies"] = _merge_preset_strategies(preset_cfg, base_cfg)
+        merged.pop("versions", None)  # legacy key — no longer used
+        # Guard: remove any strategy keys that leaked to root level
+        for _strat_key in list(merged.keys()):
+            if _strat_key in _STRATEGY_REGISTRY_KEYS:
+                del merged[_strat_key]
 
         CARTERA_CFG.write_text(json.dumps(merged, indent=2, ensure_ascii=False),
                                encoding="utf-8")
@@ -994,10 +903,8 @@ def main():
              f"{'P/L':>8} {'IC95':>12}")
         _log("-" * 70)
         for fam, r in sorted(individual.items(), key=lambda x: -x[1]["score"]):
-            ver = r.get("version_key", "")
-            label = f"{fam} ({ver})" if ver else fam
-            ci    = f"[{r['ci_low']}-{r['ci_high']}]"
-            _log(f"{label:<28} {r['n']:>5} {r['wr']:>6} {r['roi']:>7} "
+            ci = f"[{r['ci_low']}-{r['ci_high']}]"
+            _log(f"{fam:<28} {r['n']:>5} {r['wr']:>6} {r['roi']:>7} "
                  f"{r['pl']:>8.1f} {ci:>12}")
 
         if args.phase == "individual":

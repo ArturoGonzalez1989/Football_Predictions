@@ -1,20 +1,13 @@
 {
-  "versions": {
-    "draw": "off",
-    "xg": "base",
-    "drift": "v1",
-    "clustering": "v2",
-    "pressure": "v1"
-  },
   "bankroll_mode": "fixed",
   "active_preset": "max_pl",
   "risk_filter": "all",
   "min_duration": {
-    "draw": 2,
-    "xg": 3,
-    "drift": 2,
-    "clustering": 4,
-    "pressure": 4,
+    "back_draw_00": 2,
+    "xg_underperformance": 3,
+    "odds_drift": 2,
+    "goal_clustering": 4,
+    "pressure_cooker": 4,
     "over25_2goal": 1,
     "under35_late": 1,
     "longshot": 1,
@@ -28,20 +21,20 @@
   "adjustments": {
     "enabled": true,
     "dedup": false,
-    "max_odds": 7,
+    "max_odds": 7.0,
     "min_odds": null,
     "drift_min_minute": 0,
     "slippage_pct": 2,
     "conflict_filter": false,
-    "cashout_minute": null,
-    "cashout_pct": 0,
     "allow_contrarias": true,
     "stability": 1,
     "global_minute_min": null,
-    "global_minute_max": null
+    "global_minute_max": null,
+    "cashout_minute": null,
+    "cashout_pct": 0
   },
   "strategies": {
-    "draw": {
+    "back_draw_00": {
       "enabled": false,
       "xgMax": 0.6,
       "possMax": 20,
@@ -49,38 +42,37 @@
       "minuteMin": 30,
       "minuteMax": 90
     },
-    "xg": {
+    "xg_underperformance": {
       "enabled": true,
-      "version": "base",
-      "xgExcessMin": 0.5,
-      "sotMin": 0,
-      "minuteMin": 0,
-      "minuteMax": 70,
+      "xgExcessMin": 0.4,
+      "sotMin": 3,
+      "minuteMin": 10,
+      "minuteMax": 80,
       "oddsMin": 0
     },
-    "drift": {
+    "odds_drift": {
       "enabled": true,
-      "version": "v1",
-      "driftMin": 30,
+      "driftMin": 15,
       "oddsMax": 999,
       "goalDiffMin": 0,
       "minuteMin": 0,
       "minuteMax": 90,
-      "oddsMin": 0,
-      "momGapMin": 0
+      "oddsMin": 0
     },
-    "clustering": {
+    "goal_clustering": {
       "enabled": true,
-      "sotMin": 3,
-      "minuteMin": 0,
-      "minuteMax": 90,
-      "xgRemMin": 0
+      "sotMin": 0,
+      "minuteMin": 20,
+      "minuteMax": 70,
+      "xgRemMin": 0.0,
+      "oddsMin": 0
     },
-    "pressure": {
+    "pressure_cooker": {
       "enabled": true,
-      "minuteMin": 0,
-      "minuteMax": 90,
-      "xg_sum_min": 0.5
+      "minuteMin": 55,
+      "minuteMax": 75,
+      "score_confirm": 1,
+      "oddsMin": 0
     },
     "tarde_asia": {
       "enabled": false,
@@ -89,7 +81,6 @@
     },
     "momentum_xg": {
       "enabled": false,
-      "version": "off",
       "minuteMin": 0,
       "minuteMax": 90,
       "sotMin": 2,
@@ -120,12 +111,13 @@
       "minuteMin": 70,
       "minuteMax": 86,
       "oddsMin": 1.5,
-      "odds_max": 10
+      "odds_max": 10.0
     },
     "cs_close": {
-      "enabled": false,
-      "m_min": 70,
-      "m_max": 80
+      "enabled": true,
+      "minuteMin": 70,
+      "minuteMax": 85,
+      "oddsMin": 0
     },
     "cs_one_goal": {
       "enabled": true,
@@ -153,7 +145,7 @@
       "enabled": true,
       "minuteMin": 75,
       "minuteMax": 90,
-      "odds_max": 8,
+      "odds_max": 8.0,
       "oddsMin": 0
     },
     "cs_big_lead": {
@@ -161,21 +153,6 @@
       "m_min": 70,
       "m_max": 85,
       "odds_max": 8
-    },
-    "goal_clustering": {
-      "enabled": true,
-      "sotMin": 0,
-      "minuteMin": 20,
-      "minuteMax": 70,
-      "xgRemMin": 0,
-      "oddsMin": 0
-    },
-    "pressure_cooker": {
-      "enabled": true,
-      "minuteMin": 55,
-      "minuteMax": 75,
-      "score_confirm": 1,
-      "oddsMin": 0
     },
     "draw_xg_conv": {
       "enabled": true,
@@ -193,7 +170,7 @@
       "enabled": true,
       "minuteMin": 40,
       "minuteMax": 60,
-      "odds_max": 4,
+      "odds_max": 4.0,
       "oddsMin": 1.4
     },
     "cs_11": {
@@ -206,7 +183,7 @@
       "minuteMin": 50,
       "minuteMax": 70,
       "goals_max": 1,
-      "odds_max": 20
+      "odds_max": 20.0
     },
     "poss_extreme": {
       "enabled": true,
@@ -218,13 +195,13 @@
       "enabled": true,
       "minuteMin": 65,
       "minuteMax": 90,
-      "oddsMin": 1
+      "oddsMin": 1.0
     },
     "under35_3goals": {
       "enabled": true,
       "minuteMin": 60,
       "minuteMax": 83,
-      "xgMax": 2,
+      "xgMax": 2.0,
       "oddsMin": 1.4
     },
     "away_fav_leading": {
@@ -232,7 +209,7 @@
       "minuteMin": 68,
       "minuteMax": 85,
       "max_lead": 1,
-      "fav_max": 2,
+      "fav_max": 2.0,
       "oddsMin": 1.2
     },
     "under45_3goals": {
@@ -248,53 +225,53 @@
       "minuteMax": 90,
       "fav_pre_max": 2.5,
       "min_goals_each": 1,
-      "odds_max": 10,
+      "odds_max": 8.0,
       "oddsMin": 2.5
     },
     "draw_22": {
       "enabled": true,
       "minuteMin": 68,
       "minuteMax": 90,
-      "odds_max": 8,
+      "odds_max": 8.0,
       "oddsMin": 1.5
     },
     "lay_over45_blowout": {
       "enabled": true,
       "minuteMin": 63,
-      "minuteMax": 78,
-      "post_window": 5,
+      "minuteMax": 75,
+      "post_window": 10,
       "sot_max": 0,
-      "odds_max": 15,
+      "odds_max": 20.0,
       "include_31": 1
     },
     "over35_early_goals": {
       "enabled": true,
       "minuteMin": 45,
       "minuteMax": 65,
-      "oddsMin": 2,
-      "odds_max": 6
+      "oddsMin": 2.0,
+      "odds_max": 6.0
     },
     "lay_draw_away_leading": {
       "enabled": true,
       "minuteMin": 60,
       "minuteMax": 75,
       "xgMax": 1.8,
-      "oddsMin": 2,
-      "odds_max": 8
+      "oddsMin": 2.0,
+      "odds_max": 8.0
     },
     "lay_cs11": {
       "enabled": true,
       "minuteMin": 60,
       "minuteMax": 88,
       "oddsMin": 1.5,
-      "odds_max": 20
+      "odds_max": 20.0
     }
   },
   "flat_stake": 1,
   "initial_bankroll": 100,
   "stake_pct": 2.5,
   "min_duration_live": {
-    "clustering": 1
+    "goal_clustering": 1
   },
   "_optimizer_stats": {
     "n": 174,
@@ -303,13 +280,6 @@
     "ci_high": 77.5,
     "roi": 40.03,
     "n_partidos": 737
-  },
-  "over35_early_goals": {
-    "enabled": true,
-    "minuteMin": 40,
-    "minuteMax": 65,
-    "oddsMin": 1.8,
-    "oddsMax": 8
   },
   "stake_mode": "fixed",
   "stake_fixed": 1

@@ -9,7 +9,7 @@
 El sistema captura cuotas y estadisticas de partidos de futbol en vivo desde Betfair Exchange, las almacena en CSVs, y proporciona un dashboard web para:
 
 1. **Monitorizar partidos en vivo** (cuotas, stats, momentum)
-2. **Detectar senales de apuesta** en tiempo real (26 estrategias independientes, todas activas en BT y LIVE)
+2. **Detectar senales de apuesta** en tiempo real (32 estrategias independientes, todas activas en BT y LIVE)
 3. **Paper trading automatico** (colocacion automatica de apuestas simuladas)
 4. **Analisis historico** (backtest via `scripts/bt_optimizer.py` CLI o notebook legacy)
 5. **Optimizacion de cartera** (grid search individual + portfolio optimizer via `bt_optimizer.py`)
@@ -58,7 +58,7 @@ betfair_scraper/
     │   │   ├── optimize.py    # Optimizacion presets Phase 1+2 (1329 lineas)
     │   │   └── optimizer_cli.py # CLI para optimizacion paralela (691 lineas)
     │   └── utils/
-    │       ├── csv_reader.py      # ~6200 lineas. EL fichero critico. Registry de 26 estrategias + BT + LIVE.
+    │       ├── csv_reader.py      # ~6200 lineas. EL fichero critico. Registry de 32 estrategias + BT + LIVE.
     │       ├── sd_strategies.py   # eval_sd() evaluador legacy para notebook (205 lineas)
     │       ├── scraper_status.py  # Estado del scraper via psutil + log parsing (231 lineas)
     │       └── signals_audit_logger.py  # Audit log rotativo 50MB x 10 (214 lineas)
@@ -187,7 +187,7 @@ borrar/                        # Archivos movidos durante limpieza, pendientes d
 
 Este fichero contiene TODA la logica de:
 1. Carga y limpieza de datos CSV
-2. **Registry de las 26 estrategias** (`_STRATEGY_REGISTRY`): lista de tuplas `(key, name, trigger_fn, desc, extract_fn, win_fn)`
+2. **Registry de las 32 estrategias** (`_STRATEGY_REGISTRY`): lista de tuplas `(key, name, trigger_fn, desc, extract_fn, win_fn)`
 3. **Runner BT generico** (`_analyze_strategy_simple()`): ejecuta cualquier estrategia del registry
 4. **Orquestacion de cartera** (`analyze_cartera()`): itera el registry y llama `_analyze_strategy_simple` para cada una
 5. **Deteccion de senales live** (`detect_betting_signals()`): usa los mismos triggers del registry
@@ -197,7 +197,7 @@ Este fichero contiene TODA la logica de:
 
 #### Arquitectura de helpers compartidos BT↔LIVE
 
-**26 triggers** con interfaz identica `_detect_<name>_trigger(rows, curr_idx, cfg)`:
+**32 triggers** con interfaz identica `_detect_<name>_trigger(rows, curr_idx, cfg)`:
 - **BT** (`_analyze_strategy_simple`): itera todas las filas, `curr_idx=idx`
 - **LIVE** (`detect_betting_signals`): `curr_idx=len(rows)-1` (ultima fila)
 - Solo leen `rows[:curr_idx+1]` — nunca filas futuras
@@ -205,27 +205,14 @@ Este fichero contiene TODA la logica de:
 #### Estructuras de datos clave en csv_reader.py
 
 ```python
-# Registry: una entrada por version de estrategia (38 entradas para 26 estrategias)
+# Registry: 32 entradas, una por estrategia (sin versiones)
 _STRATEGY_REGISTRY = [
     ("over25_2goal", "BACK Over 2.5...", _detect_over25_2goal_trigger, ...),
-    ("xg_underperformance_base", "xG Underperf (Base)", _detect_xg_underperformance_trigger(...), ...),
-    ...
+    ("xg_underperformance", "xG Underperf", _detect_xg_underperformance_trigger, ...),
+    ("back_draw_00", "Back Empate 0-0", _detect_back_draw_00_trigger, ...),
+    ...  # 32 entradas totales
 ]
 _STRATEGY_REGISTRY_KEYS = {e[0] for e in _STRATEGY_REGISTRY}
-
-# Mapeo de claves registry a claves legacy de cartera_config.json
-_LEGACY_MIN_DUR_KEY = {
-    "xg_underperformance_base": "xg",
-    "odds_drift_v1": "drift",
-    ...
-}
-
-# Mapeo de config legacy a claves registry (usado por _build_registry_config_map)
-_ORIG_REGISTRY_MAP = [
-    ("xg", [("xg_underperformance_base","base"), ...]),
-    ("drift", [("odds_drift_v1","v1"), ...]),
-    ...
-]
 
 # Cache de primer trigger (garantiza mismos datos en BT y LIVE)
 _trigger_first_data: dict  # keyed by (match_id, strategy_key)
@@ -236,10 +223,10 @@ _trigger_first_data: dict  # keyed by (match_id, strategy_key)
 | Funcion | Proposito |
 |---------|-----------|
 | `_analyze_strategy_simple(key, trigger_fn, extract_fn, win_fn, cfg, min_dur)` | Runner BT generico — itera partidos e invoca trigger |
-| `_build_registry_config_map(strategies_cfg)` | Mapea claves legacy config a claves registry con enabled state |
+| `_cfg_add_snake_keys(cfg)` | Traduce camelCase config keys → snake_case para los triggers |
 | `analyze_cartera()` | Orquestador BT: itera `_STRATEGY_REGISTRY` → `_analyze_strategy_simple` por cada estrategia activa |
 | `detect_betting_signals(versions)` | Deteccion live: mismos triggers, `curr_idx=ultimo` |
-| `_detect_<name>_trigger(rows, curr_idx, cfg)` | 26 triggers, uno por estrategia |
+| `_detect_<name>_trigger(rows, curr_idx, cfg)` | 32 triggers, uno por estrategia |
 | `load_games()` | Carga games.csv + escanea data/ para CSV huerfanos |
 | `load_all_captures()` | Todas las capturas con ~50 campos de stats |
 | `load_match_detail()` | Ultimas 10 capturas + quality score + gap analysis |
@@ -285,7 +272,7 @@ Phase 3: Portfolio presets via optimizer_cli.py
          → resultados en data/presets/preset_*.json
        ↓
 Phase 4: Apply (merge inteligente en cartera_config.json)
-         → preserva las 26 estrategias; disabled solo cambia enabled=False
+         → preserva las 32 estrategias; disabled solo cambia enabled=False
        ↓
 Phase 5: Export CSV/XLSX de resultados
 ```
@@ -332,52 +319,25 @@ Post-filtros en analytics.py: odds favorable, risk level, maturity
 Paper trading: auto-coloca bets maduras (age >= min_dur + 1 min)
 ```
 
-### El dict `versions` (analytics.py lineas 137-172 / 516-553):
+### El dict `versions` (analytics.py):
 
-Se construye leyendo TODOS los params de `cartera_config.json > strategies`:
+Se construye directamente desde `cartera_config.json > strategies`. Contiene dos claves:
 
 ```python
 versions = {
-    "draw":       "v2r",           # version de estrategia
-    "xg":         "base",
-    "drift":      "v1",
-    "clustering": "v2",
-    "pressure":   "v1",
-    "momentum":   "v1",
-    "tarde_asia": "v1" | "off",
-    # min_duration por estrategia
-    "draw_min_dur":          "2",
-    "xg_min_dur":            "3",
-    "drift_min_dur":         "2",
-    "clustering_min_dur":    "4",
-    "pressure_min_dur":      "2",
-    # params de filtro por estrategia (todos como strings)
-    "drift_threshold":       "30",      # strategies.drift.driftMin
-    "drift_odds_max":        "999",     # strategies.drift.oddsMax
-    "drift_goal_diff_min":   "0",       # strategies.drift.goalDiffMin
-    "drift_minute_min":      "0",       # strategies.drift.minuteMin
-    "drift_mom_gap_min":     "0",       # strategies.drift.momGapMin
-    "clustering_minute_max": "60",      # strategies.clustering.minuteMax (default: 90)
-    "clustering_xg_rem_min": "0",       # strategies.clustering.xgRemMin
-    "clustering_sot_min":    "3",       # strategies.clustering.sotMin
-    "xg_minute_max":         "70",      # strategies.xg.minuteMax
-    "xg_sot_min":            "0",       # strategies.xg.sotMin
-    "xg_xg_excess_min":      "0.5",    # strategies.xg.xgExcessMin
-    "draw_xg_max":           "0.6",     # strategies.draw.xgMax
-    "draw_poss_max":         "25",      # strategies.draw.possMax
-    "draw_shots_max":        "20",      # strategies.draw.shotsMax
-    "draw_minute_min":       "30",      # strategies.draw.minuteMin
-    "draw_minute_max":       "90",      # strategies.draw.minuteMax
-    "xg_minute_min":         "0",       # strategies.xg.minuteMin
-    "clustering_minute_min": "0",       # strategies.clustering.minuteMin
-    "pressure_minute_min":   "0",       # strategies.pressure.minuteMin
-    "pressure_minute_max":   "90",      # strategies.pressure.minuteMax
-    "momentum_minute_min":   "0",       # strategies.momentum_xg.minuteMin
-    "momentum_minute_max":   "90",      # strategies.momentum_xg.minuteMax
+    "_strategy_configs": {        # dict de estrategias con sus params
+        "back_draw_00":        {"enabled": True, "xgMax": 0.6, "possMax": 25, ...},
+        "xg_underperformance": {"enabled": True, "xgExcessMin": 0.5, ...},
+        "odds_drift":          {"enabled": True, "driftMin": 30, ...},
+        # ... las 32 estrategias
+    },
+    "_min_duration": {            # duración mínima de señal (capturas)
+        "back_draw_00": 2, "xg_underperformance": 3, ...
+    },
 }
 ```
 
-`detect_betting_signals()` extrae TODOS estos params al inicio (lineas 3275-3296 aprox) y los usa inline para filtrar cada senal. **No hay segunda capa de filtrado.**
+`detect_betting_signals()` pasa `versions["_strategy_configs"]` directamente a cada trigger via `cfg`. **No hay segunda capa de filtrado.**
 
 ---
 
@@ -392,7 +352,7 @@ Tras la limpieza, ambos sistemas son ahora de **capa unica** (backend only):
 | **Quien lee cartera_config.json** | Backend (via API) + notebook/CLI | Backend (`analytics.py` cada 60s) |
 | **Datos null** | Backend DEJA PASAR bets con datos null | Live REQUIERE datos no-null para generar senal |
 | **Triggers** | `_analyze_strategy_simple()` llama triggers con `curr_idx=idx` para cada fila | `detect_betting_signals()` llama triggers con `curr_idx=len(rows)-1` |
-| **Parametros de estrategia** | Solo `min_dur` de config. Grid search (bt_optimizer.py) pasa params directamente al trigger. | `detect_betting_signals()` lee todos los params de `versions` dict construido por analytics.py |
+| **Parametros de estrategia** | `analyze_cartera()` lee params de `cfg.get("strategies", {})` directamente para cada trigger. | `detect_betting_signals()` lee params de `versions["_strategy_configs"]` pasado por analytics.py — mismo config, mismos params. |
 
 ### Nota sobre datos NULL (descartado como problema)
 
@@ -414,74 +374,56 @@ Si una estrategia no pasa alguno de estos gates, se desactiva automaticamente en
 
 ### 7.1 Back Empate (`back_draw_00`)
 
-- **Trigger**: marcador 0-0, minuto >= 30
+- **Trigger**: marcador 0-0, minuto >= minuteMin
 - **Mercado**: Back al empate (Match Odds)
-- **Versiones**: v1 (sin filtro extra), v15 (xG+poss), v2 (xG<0.5+poss<20+shots<8), v2r (xG<0.6+poss<20+shots<8, default), v3 (+xG dominance asimetrica), v4 (+Opta gap <= 10)
-- **Config params**: `xgMax` (0.6), `possMax` (25), `shotsMax` (20), `xgDomAsym` (false, activa filtro v3), `minuteMin` (30), `minuteMax` (90)
+- **Config params**: `xgMax` (0.6), `possMax` (25), `shotsMax` (20), `xgDomAsym` (false), `minuteMin` (30), `minuteMax` (90)
 - **Sentinel OFF**: `xgMax >= 1.0` = filtro xG off, `possMax >= 100` = poss off, `shotsMax >= 20` = shots off
-- **Backtest** (linea 1747): genera bets con version flags (passes_v15, passes_v2r, passes_v2, passes_v3). Usa thresholds hardcodeados: v15=xg<0.6+poss<25, v2r=xg<0.6+poss<20+shots<8, v2=xg<0.5+poss<20+shots<8.
-- **Live** (linea 3521): usa params del `versions` dict con logica sentinel idéntica.
+- BT y LIVE usan los mismos params del trigger via `cfg` dict.
 
 ### 7.2 xG Underperformance (`xg_underperformance`)
 
-- **Trigger**: equipo perdiendo con xG excess >= 0.5 (mas xG que goles), min >= 15
+- **Trigger**: equipo perdiendo con xG excess >= xgExcessMin, min >= 15
 - **Mercado**: Back Over (linea de Over mas cercana a goles actuales + 0.5)
-- **Versiones**: base (config params), v2 (SoT >= max(2, sotMin)), v3 (v2 + minuteMax filtro)
 - **Config params**: `xgExcessMin` (0.5), `sotMin` (2), `minuteMin` (0), `minuteMax` (70)
-- **Backtest** (linea 2026): hardcodea xg_excess threshold 0.5, min 15, SoT v2=2, v3=min<70.
-- **Live** (linea 3611): usa params del `versions` dict.
 
 ### 7.3 Odds Drift Contrarian (`odds_drift`)
 
-- **Trigger**: equipo ganando cuyas cuotas suben >= drift_min% en 10 min (mercado pierde confianza → apostar contrarian)
+- **Trigger**: equipo ganando cuyas cuotas suben >= driftMin% en 10 min (mercado pierde confianza → apostar contrarian)
 - **Mercado**: Back al equipo ganando cuyas cuotas driftan
-- **Versiones**: v1 (base), v2 (goalDiff>=2), v3 (drift>=100%), v4 (min>45+odds<=5), v5 (odds<=5), v6 (v5+momGap>0)
 - **Config params**: `driftMin` (30), `oddsMax` (999), `goalDiffMin` (0), `minuteMin` (0), `minuteMax` (90), `momGapMin` (0)
-- **Backtest** (linea 2207): CONSTANTES HARDCODEADAS propias: `DRIFT_MIN=0.30, WINDOW_MIN=10, MIN_MINUTE=5, MAX_MINUTE=80, MIN_ODDS=1.50, MAX_ODDS=30.0`. No usa config.
-- **Live** (linea 3694): HARDCODEA `minuto >= 30` como gate inicial (no usa `_drift_minute_min` para este check). Luego aplica params del `versions` dict para version-specific filters.
 
 ### 7.4 Goal Clustering (`goal_clustering`)
 
-- **Trigger**: gol reciente (ultimas 3 capturas) + SoT max >= sotMin + minuto 15-80
+- **Trigger**: gol reciente (ultimas 3 capturas) + SoT max >= sotMin + minuto en rango
 - **Mercado**: Back Over (total_actual + 0.5)
-- **Versiones**: v2 (base), v3 (minuteMax=60), v4 (xg_rem)
 - **Config params**: `sotMin` (3), `minuteMin` (0), `minuteMax` (60), `xgRemMin` (0)
-- **Restriccion**: una sola bet por partido.
-- **Backtest** (linea 4335): hardcodea min 15-80, SoT>=3.
-- **Live** (linea 3817): usa `max(15, _clustering_min_min)` como minimo, aplica minuteMax del config.
+- **Restriccion**: una sola bet por partido (market dedup).
 
 ### 7.5 Pressure Cooker (`pressure_cooker`)
 
 - **Trigger**: empate con goles (1-1+) en minutos 65-75
 - **Mercado**: Back Over (total_actual + 0.5)
-- **Versiones**: v1 (base), v2 (relaxed)
 - **Config params**: `minuteMin` (0), `minuteMax` (90)
-- **Logica**: `max(65, minuteMin) <= minuto <= min(75, minuteMax)` (siempre acota a 65-75 como limites duros)
-- **Score confirmation**: requiere 3+ capturas consecutivas con mismo score para confirmar que no es un cambio reciente.
+- **Logica**: `max(65, minuteMin) <= minuto <= min(75, minuteMax)` (65-75 como limites duros)
+- **Score confirmation**: requiere 3+ capturas consecutivas con mismo score.
 
 ### 7.6 Momentum xG (`momentum_xg`)
 
 - **Trigger**: equipo dominante en SoT (ratio >= sotRatioMin) + xG underperformance >= xgUnderperfMin + rango de minutos + rango de cuotas
 - **Mercado**: Back al equipo dominante (home o away)
-- **Versiones**: v1 (conservador), v2 (agresivo)
-- **Config params en cartera_config.json**: solo `version` ("v1"/"v2"), `minuteMin`, `minuteMax`
-- **HARDCODEADO en AMBOS sistemas** (ni en config ni en versions dict):
-  - v1: `sotMin=1, sotRatioMin=1.1, xgUnderperfMin=0.15, minMinute=10, maxMinute=80, oddsMin=1.4, oddsMax=6.0`
-  - v2: `sotMin=1, sotRatioMin=1.05, xgUnderperfMin=0.1, minMinute=5, maxMinute=85, oddsMin=1.3, oddsMax=8.0`
-- **Backtest** (linea 4924): `mom_cfg` dict hardcodeado por version.
-- **Live** (linea 3973): `mom_cfg` dict hardcodeado identico. Minutos override: usa `max(mom_cfg["min_m"], _momentum_minute_min)` y `min(mom_cfg["max_m"], _momentum_minute_max)`.
+- **Config params**: `minuteMin` (0), `minuteMax` (90). Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) hardcodeados en el trigger — no en config.
+- LIVE usa `max(hardcoded_min, minuteMin)` y `min(hardcoded_max, minuteMax)`.
 
 ### 7.7 Tarde Asia (`tarde_asia`) — INACTIVA
 
 - **Trigger**: partidos de ligas objetivo (Bundesliga, Ligue, Eredivisie, J-League, K-League) en primeros 15 minutos
 - **Mercado**: Back Over 2.5
 - **Deteccion de liga**: por URL keywords primero, luego fallback por nombres de equipos (listas hardcodeadas de equipos por pais)
-- Solo tracking en backtest. Config: `enabled: true` pero `tarde_asia: "off"` en versions dict.
-- No genera senales live.
+- Config: `enabled: false`. No genera senales live.
 
-### 7.8 Las 19 estrategias adicionales — completamente integradas
+### 7.8 Las 25 estrategias adicionales — completamente integradas
 
-Las 19 estrategias adicionales fueron descubiertas por el agente strategy-designer. Historicamente tenian el prefijo `sd_`, que fue eliminado en 2026-03-12 — ahora son entidades completamente independientes e iguales al resto.
+Las 25 estrategias adicionales fueron descubiertas por el agente strategy-designer en varias rondas. Las primeras 19 tenian historicamente el prefijo `sd_`, eliminado en 2026-03-12. Las ultimas 6 (R19) son descubrimientos brute-force posteriores. Todas son entidades completamente independientes e iguales al resto.
 
 **Integracion completa** (identica a las 7 estrategias originales):
 - Trigger propio `_detect_<name>_trigger()` en `csv_reader.py`
@@ -489,7 +431,7 @@ Las 19 estrategias adicionales fueron descubiertas por el agente strategy-design
 - LIVE via `detect_betting_signals()` con los mismos triggers
 - Config propia en `cartera_config.json`
 
-**Las 19 estrategias:**
+**Las 25 estrategias:**
 
 | # | Clave | Descripcion |
 |---|-------|-------------|
@@ -512,6 +454,12 @@ Las 19 estrategias adicionales fueron descubiertas por el agente strategy-design
 | 17 | `cs_11` | BACK CS 1-1 Late |
 | 18 | `cs_20` | BACK CS 2-0/0-2 Late |
 | 19 | `cs_big_lead` | BACK CS Big Lead Late |
+| 20 | `draw_equalizer` | BACK Draw Equalizer Late |
+| 21 | `draw_22` | BACK Draw 2-2 Late |
+| 22 | `lay_over45_blowout` | LAY Over 4.5 Blowout |
+| 23 | `over35_early_goals` | BACK Over 3.5 Early Goals |
+| 24 | `lay_draw_away_leading` | LAY Draw Away Leading |
+| 25 | `lay_cs11` | LAY CS 1-1 at 0-1 |
 
 **Archivos auxiliares** (legacy, usados en notebooks):
 - `auxiliar/sd_generators.py` — generadores legacy (wrappers sobre triggers de csv_reader)
@@ -520,7 +468,7 @@ Las 19 estrategias adicionales fueron descubiertas por el agente strategy-design
 
 ---
 
-## 8. Sistema de versiones y presets
+## 8. Sistema de presets
 
 ### Presets
 
@@ -528,9 +476,13 @@ Las 19 estrategias adicionales fueron descubiertas por el agente strategy-design
 
 Los presets se computan via `optimizer_cli.py` o el notebook (`strategies_designer.ipynb`). El proceso ejecuta una busqueda en fases:
 
-- **Fase 1**: combinaciones de versiones de estrategia × bankroll modes × risk filters
-- **Fase 2**: combinaciones de adjustments (dedup × maxOdds × minOdds × slippage × stability × etc.)
-- **Fase 3**: rangos de minutos por estrategia
+- **Fase 1**: combinaciones on/off de 7 estrategias × bankroll modes × risk filters (2,048 combos total)
+- **Fase 2**: combinaciones de adjustments (dedup × maxOdds × minOdds × slippage × stability × etc.) (7,776 combos)
+- **Fase 2.5**: steepest-descent para desactivar estrategias que no aportan con los adjustments de Fase 2
+- **Fase 3**: rangos de minutos para momentum_xg (5 candidatos)
+- **Fase 4**: porcentaje de cashout optimo (9 candidatos)
+
+El preset solo decide `enabled: true/false` por estrategia. Los params de cada estrategia (xgMax, driftMin, etc.) vienen del `bt_optimizer.py` grid search y están en `cartera_config.json`.
 
 Produce la configuracion optima segun la metrica del preset y la persiste en `cartera_config.json`.
 
@@ -598,7 +550,7 @@ Parametros en `cartera_config.json > adjustments`:
 main.py: background task auto_paper_trading()
   → analytics.py: run_paper_auto_place()
     → Leer cartera_config.json
-    → Construir versions dict
+    → Construir versions dict: {"_strategy_configs": strategies, "_min_duration": md}
     → csv_reader.detect_betting_signals(versions=versions)
     → Post-filtros en analytics.py:
       - min_odds check (min_odds >= 1.21)
@@ -617,7 +569,7 @@ main.py: background task auto_paper_trading()
 ```
 GET /analytics/signals/betting-opportunities
   → analytics.py: get_betting_signals()
-    → Misma logica de versions dict + detect_betting_signals()
+    → Mismo versions dict + detect_betting_signals()
     → Mismos post-filtros (odds, risk)
     → Devuelve senales + watchlist (detect_watchlist())
     → NO coloca bets (read-only)
@@ -660,11 +612,7 @@ analytics.py: run_auto_cashout()
 - `_get_cached_finished_data()` (linea 950): construye cache de partidos finished. Incluye preprocessing: normalizacion halftime, limpieza outliers, outlier stats, gap analysis. Se reutiliza por todas las funciones de analisis.
 - `clear_analytics_cache()`: llamado cada ciclo de paper trading (60s) y al guardar config.
 
-Cache key de `analyze_cartera()`:
-```python
-cache_key = f"cartera_{json.dumps(md, sort_keys=True)}"
-```
-Solo incluye `min_duration` values. **No incluye** params de estrategia (xgMax, etc.) porque esos se filtran en el notebook/CLI. Correcto para el patron actual pero fragil si se movieran filtros al backend.
+Cache key de `analyze_cartera()`: incluye `min_duration` + estado `enabled` de todas las estrategias. Cambios de params (xgMax, driftMin, etc.) requieren invalidacion manual via `clear_analytics_cache()`.
 
 ### Frontend:
 
@@ -820,13 +768,11 @@ Timeout: 5 minutos por script. Critical steps: 1 (scraper) y 6 (validacion stats
 
 ## 17. Problemas conocidos
 
-### 17.1 SD strategies: sin deteccion live
+### 17.1 Momentum xG: params parcialmente hardcodeados
 
-Las 19 estrategias SD solo funcionan en backtest (notebook). No hay codigo en `detect_betting_signals()` para detectar senales SD en tiempo real. Implementar esto requiere anadir generadores SD al flujo live de `csv_reader.py`.
+### 17.2 Momentum xG: params parcialmente hardcodeados
 
-### 17.2 Momentum xG: params hardcodeados
-
-Los parametros internos de Momentum xG (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) estan hardcodeados tanto en el backtest como en el live. No existen en `cartera_config.json` ni en el dict `versions`. Cambiar la version v1/v2 cambia TODOS los params de golpe — no se pueden ajustar individualmente.
+Los parametros internos de Momentum xG (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) estan hardcodeados en el trigger. No existen en `cartera_config.json`. Solo minuteMin/minuteMax son configurables via config.
 
 ### 17.3 Odds Drift: constantes hardcodeadas en backtest
 

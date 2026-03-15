@@ -122,76 +122,6 @@ def _match_score(trigger_score: str, ft_gl: int, ft_gv: int) -> bool:
         return False
 
 
-# ── Version-specific trigger wrappers for original 7 strategies ─────────────
-
-def _make_back_draw_trigger(version: str):
-    """Wrap _detect_back_draw_00_trigger with version-specific flag check."""
-    _FLAG = {"v15": "passes_v15", "v2": "passes_v2r", "v2r": "passes_v2r",
-             "v3": "passes_v3", "v4": "passes_v4"}
-    _flag_key = _FLAG.get(version)
-    def _t(rows, curr_idx, cfg):
-        t = _detect_back_draw_00_trigger(rows, curr_idx, cfg)
-        if t is None:
-            return None
-        if _flag_key and not t.get(_flag_key):
-            return None
-        return t
-    return _t
-
-
-def _make_drift_trigger(version: str):
-    """Wrap _detect_odds_drift_trigger with version-specific additional checks."""
-    def _t(rows, curr_idx, cfg):
-        t = _detect_odds_drift_trigger(rows, curr_idx, cfg)
-        if t is None:
-            return None
-        if version == "v2":
-            return t if t["goal_diff"] >= 2 else None
-        elif version == "v3":
-            return t if t["drift_pct"] >= 100 else None
-        elif version == "v4":
-            return t if (t["minuto"] > 45 and t["odds_now"] <= 5.0) else None
-        elif version in ("v5", "v6"):
-            if t["odds_now"] > 5.0:
-                return None
-            if version == "v6":
-                mom_gap_min = float(cfg.get("drift_mom_gap_min", 0))
-                if mom_gap_min > 0:
-                    synth = _compute_synthetic_at_trigger(rows, curr_idx)
-                    mom_gap = synth.get("momentum_gap")
-                    if mom_gap is None or mom_gap < mom_gap_min:
-                        return None
-        return t
-    return _t
-
-
-def _make_momentum_trigger(version: str):
-    """Wrap _detect_momentum_xg_trigger with version-specific default cfg."""
-    _DEFAULTS = {
-        "v1": {"sot_min": 1, "sot_ratio_min": 1.1,  "xg_underperf_min": 0.15,
-               "min_m": 10, "max_m": 80, "min_odds": 1.4, "max_odds": 6.0},
-        "v2": {"sot_min": 1, "sot_ratio_min": 1.05, "xg_underperf_min": 0.1,
-               "min_m": 5,  "max_m": 85, "min_odds": 1.3, "max_odds": 8.0},
-    }
-    _defaults = _DEFAULTS.get(version, _DEFAULTS["v1"])
-    def _t(rows, curr_idx, cfg):
-        return _detect_momentum_xg_trigger(rows, curr_idx, {**_defaults, **cfg})
-    return _t
-
-
-def _make_xg_trigger(version: str):
-    """Wrap _detect_xg_underperformance_trigger with version-specific default cfg."""
-    _DEFAULTS = {
-        "base": {"xg_excess_min": 0.5, "sot_min": 0, "minute_max": 90,  "minute_min": 15},
-        "v2":   {"xg_excess_min": 0.5, "sot_min": 2, "minute_max": 90,  "minute_min": 15},
-        "v3":   {"xg_excess_min": 0.5, "sot_min": 2, "minute_max": 70,  "minute_min": 15},
-    }
-    _defaults = _DEFAULTS.get(version, _DEFAULTS["base"])
-    def _t(rows, curr_idx, cfg):
-        return _detect_xg_underperformance_trigger(rows, curr_idx, {**_defaults, **cfg})
-    return _t
-
-
 # ── Extractor functions for original 7 strategies ───────────────────────────
 
 def _extract_drift(t):
@@ -391,110 +321,42 @@ _STRATEGY_REGISTRY = [
      _sd_fixed("lay_rc_1_1", "LAY CS 1-1", ["score"]),
      lambda t, gl, gv: not (gl == 1 and gv == 1)),
 
-    # ─── Original 7 strategies — unified BT/LIVE via registry ──────────────
+    # ─── Original 7 strategies — direct triggers (no version wrappers) ─────
 
-    # Back Empate 0-0 (6 versions)
-    ("back_draw_00_v1",  "BACK Draw 0-0 (V1)",  _make_back_draw_trigger("v1"),
-     "Back Draw 0-0: minute window, no extra filters",
+    ("back_draw_00",    "BACK Draw 0-0",
+     _detect_back_draw_00_trigger,
+     "Back Draw 0-0: cfg params (xg_max, poss_max, shots_max, minute window)",
      _sd_fixed("back_draw", "BACK DRAW", ["xg_total", "shots_total"]),
      lambda t, gl, gv: gl == gv),
 
-    ("back_draw_00_v15", "BACK Draw 0-0 (V15)", _make_back_draw_trigger("v15"),
-     "Back Draw 0-0: xG filter (V15)",
-     _sd_fixed("back_draw", "BACK DRAW", ["xg_total"]),
-     lambda t, gl, gv: gl == gv),
-
-    ("back_draw_00_v2",  "BACK Draw 0-0 (V2)",  _make_back_draw_trigger("v2"),
-     "Back Draw 0-0: xG + possession filter (V2)",
-     _sd_fixed("back_draw", "BACK DRAW", ["xg_total", "poss_diff"]),
-     lambda t, gl, gv: gl == gv),
-
-    ("back_draw_00_v2r", "BACK Draw 0-0 (V2R)", _make_back_draw_trigger("v2r"),
-     "Back Draw 0-0: xG + possession filter (V2R)",
-     _sd_fixed("back_draw", "BACK DRAW", ["xg_total", "poss_diff"]),
-     lambda t, gl, gv: gl == gv),
-
-    ("back_draw_00_v3",  "BACK Draw 0-0 (V3)",  _make_back_draw_trigger("v3"),
-     "Back Draw 0-0: xG dominance filter (V3)",
-     _sd_fixed("back_draw", "BACK DRAW", ["xg_total"]),
-     lambda t, gl, gv: gl == gv),
-
-    ("back_draw_00_v4",  "BACK Draw 0-0 (V4)",  _make_back_draw_trigger("v4"),
-     "Back Draw 0-0: opta gap filter (V4)",
-     _sd_fixed("back_draw", "BACK DRAW", ["xg_total"]),
-     lambda t, gl, gv: gl == gv),
-
-    # Odds Drift Contrarian (6 versions)
-    ("odds_drift_v1",  "Odds Drift Contrarian (V1)", _make_drift_trigger("v1"),
-     "Back drifting team: base drift check",
+    ("odds_drift",      "Odds Drift Contrarian",
+     _detect_odds_drift_trigger,
+     "Back drifting team: cfg params (drift_min_pct, goal_diff_min, max_odds)",
      _extract_drift,
      lambda t, gl, gv: (gl > gv) if t.get("team") == "home" else (gv > gl)),
 
-    ("odds_drift_v2",  "Odds Drift Contrarian (V2)", _make_drift_trigger("v2"),
-     "Back drifting team: goal diff >= 2",
-     _extract_drift,
-     lambda t, gl, gv: (gl > gv) if t.get("team") == "home" else (gv > gl)),
-
-    ("odds_drift_v3",  "Odds Drift Contrarian (V3)", _make_drift_trigger("v3"),
-     "Back drifting team: drift >= 100%",
-     _extract_drift,
-     lambda t, gl, gv: (gl > gv) if t.get("team") == "home" else (gv > gl)),
-
-    ("odds_drift_v4",  "Odds Drift Contrarian (V4)", _make_drift_trigger("v4"),
-     "Back drifting team: minute > 45, odds <= 5",
-     _extract_drift,
-     lambda t, gl, gv: (gl > gv) if t.get("team") == "home" else (gv > gl)),
-
-    ("odds_drift_v5",  "Odds Drift Contrarian (V5)", _make_drift_trigger("v5"),
-     "Back drifting team: odds <= 5",
-     _extract_drift,
-     lambda t, gl, gv: (gl > gv) if t.get("team") == "home" else (gv > gl)),
-
-    ("odds_drift_v6",  "Odds Drift Contrarian (V6)", _make_drift_trigger("v6"),
-     "Back drifting team: odds <= 5 + momentum gap",
-     _extract_drift,
-     lambda t, gl, gv: (gl > gv) if t.get("team") == "home" else (gv > gl)),
-
-    # Momentum Dominante x xG (2 versions)
-    ("momentum_xg_v1", "Momentum Dominante x xG (V1)", _make_momentum_trigger("v1"),
-     "Back dominant team with unscored xG (V1: sot_ratio>1.1, min 10-80)",
+    ("momentum_xg",     "Momentum Dominante x xG",
+     _detect_momentum_xg_trigger,
+     "Back dominant team with unscored xG: cfg params (sot_min, sot_ratio_min, etc.)",
      _extract_momentum,
      lambda t, gl, gv: (gl > gv) if t.get("dominant_team") == "Home" else (gv > gl)),
 
-    ("momentum_xg_v2", "Momentum Dominante x xG (V2)", _make_momentum_trigger("v2"),
-     "Back dominant team with unscored xG (V2: sot_ratio>1.05, min 5-85)",
-     _extract_momentum,
-     lambda t, gl, gv: (gl > gv) if t.get("dominant_team") == "Home" else (gv > gl)),
-
-    # Pressure Cooker
     ("pressure_cooker", "Pressure Cooker", _detect_pressure_cooker_trigger,
      "Back Over when tied with goals (1-1+) between min 65-75",
      _extract_over_odds,
      lambda t, gl, gv: (gl + gv) > t.get("total_goals", 0)),
 
-    # Goal Clustering
     ("goal_clustering", "Goal Clustering", _detect_goal_clustering_trigger,
      "Back Over after recent goal with active SoT",
      _extract_over_odds,
      lambda t, gl, gv: (gl + gv) > t.get("total_goals", 0)),
 
-    # xG Underperformance (3 versions)
-    ("xg_underperformance_base", "xG Underperformance (Base)", _make_xg_trigger("base"),
-     "Back Over when losing team generates high xG (base: no sot filter)",
+    ("xg_underperformance", "xG Underperformance",
+     _detect_xg_underperformance_trigger,
+     "Back Over when losing team generates high xG: cfg params (xg_excess_min, sot_min)",
      _extract_xg_underperf,
      lambda t, gl, gv: (gl + gv) > t.get("total_goals", 0)),
 
-    ("xg_underperformance_v2",   "xG Underperformance (V2)",   _make_xg_trigger("v2"),
-     "Back Over when losing team generates high xG (V2: sot_min>=2)",
-     _extract_xg_underperf,
-     lambda t, gl, gv: (gl + gv) > t.get("total_goals", 0)),
-
-    ("xg_underperformance_v3",   "xG Underperformance (V3)",   _make_xg_trigger("v3"),
-     "Back Over when losing team generates high xG (V3: sot_min>=2, max_min=70)",
-     _extract_xg_underperf,
-     lambda t, gl, gv: (gl + gv) > t.get("total_goals", 0)),
-
-    # Tarde Asia
     ("tarde_asia", "Tarde Asia", _detect_tarde_asia_trigger,
      "Back Over 2.5 in Asian/high-scoring leagues before min 15",
      _sd_fixed("back_over25", "BACK Over 2.5", ["liga"]),
@@ -521,53 +383,6 @@ _STRATEGY_MARKET: dict[str, str] = {
     "lay_draw_away_leading": "lay_draw",
     "lay_cs11":       "lay_cs",
 }
-
-# Mapping from registry keys that use legacy config keys to their legacy key.
-# Used for both min_duration lookup and config synthesis.
-_LEGACY_MIN_DUR_KEY: dict[str, str] = {
-    "goal_clustering":         "clustering",
-    "pressure_cooker":         "pressure",
-    "back_draw_00_v1":         "draw",
-    "back_draw_00_v15":        "draw",
-    "back_draw_00_v2":         "draw",
-    "back_draw_00_v2r":        "draw",
-    "back_draw_00_v3":         "draw",
-    "back_draw_00_v4":         "draw",
-    "odds_drift_v1":           "drift",
-    "odds_drift_v2":           "drift",
-    "odds_drift_v3":           "drift",
-    "odds_drift_v4":           "drift",
-    "odds_drift_v5":           "drift",
-    "odds_drift_v6":           "drift",
-    "xg_underperformance_base":"xg",
-    "xg_underperformance_v2":  "xg",
-    "xg_underperformance_v3":  "xg",
-    "momentum_xg_v1":          "momentum_xg",
-    "momentum_xg_v2":          "momentum_xg",
-}
-
-_ORIG_REGISTRY_MAP = [
-    ("draw", [
-        ("back_draw_00_v1", "v1"), ("back_draw_00_v15", "v15"),
-        ("back_draw_00_v2", "v2"), ("back_draw_00_v2r", "v2r"),
-        ("back_draw_00_v3", "v3"), ("back_draw_00_v4",  "v4"),
-    ]),
-    ("drift", [
-        ("odds_drift_v1", "v1"), ("odds_drift_v2", "v2"), ("odds_drift_v3", "v3"),
-        ("odds_drift_v4", "v4"), ("odds_drift_v5", "v5"), ("odds_drift_v6", "v6"),
-    ]),
-    ("clustering",  [("goal_clustering", None)]),
-    ("pressure",    [("pressure_cooker", None)]),
-    ("xg", [
-        ("xg_underperformance_base", "base"),
-        ("xg_underperformance_v2",   "v2"),
-        ("xg_underperformance_v3",   "v3"),
-    ]),
-    ("momentum_xg", [("momentum_xg_v1", "v1"), ("momentum_xg_v2", "v2")]),
-    ("tarde_asia",  [("tarde_asia", None)]),
-]
-
-_ORIG_DEFAULT_VERS = {"draw": "v2r", "drift": "v1", "xg": "base", "momentum_xg": "off"}
 
 # camelCase config keys → snake_case keys expected by trigger functions.
 # Each value is a list because some camelCase keys map to multiple snake_case aliases
@@ -608,32 +423,6 @@ def _cfg_add_snake_keys(cfg: dict) -> dict:
                     out[snake] = cfg[camel]
     return out
 
-
-def _build_registry_config_map(s: dict) -> dict:
-    """Map registry strategy keys → effective config with enabled state.
-
-    Synthesizes legacy config keys (clustering, pressure, draw, etc.) to registry
-    keys (goal_clustering, pressure_cooker, back_draw_00_v2r, etc.).
-    Existing entries in s are NOT overwritten — only missing keys are synthesized.
-    """
-    result = dict(s)
-    for (legacy_key, entries) in _ORIG_REGISTRY_MAP:
-        _old_cfg = s.get(legacy_key, {})
-        base_enabled = _old_cfg.get("enabled", False)
-        default_ver = _ORIG_DEFAULT_VERS.get(legacy_key)
-        if default_ver is not None:
-            active_ver = "off" if not base_enabled else (_old_cfg.get("version") or default_ver)
-        else:
-            active_ver = "on" if base_enabled else "off"
-        for (_reg_key, _ver) in entries:
-            if _reg_key in result:
-                continue  # Don't overwrite (analytics.py may have already synthesized)
-            if _ver is None:
-                _is_active = active_ver == "on"
-            else:
-                _is_active = active_ver != "off" and active_ver == _ver
-            result[_reg_key] = _cfg_add_snake_keys({**_old_cfg, "enabled": _is_active})
-    return result
 
 
 def _analyze_strategy_simple(key: str, trigger_fn, extractor_fn, win_fn,
@@ -972,7 +761,7 @@ def calculate_time_score_risk(
     - NONE: Otros casos
 
     Args:
-        strategy: Nombre de la estrategia (e.g., "momentum_xg_v1", "odds_drift")
+        strategy: Nombre de la estrategia (e.g., "momentum_xg", "odds_drift")
         minute: Minuto actual del partido
         home_score: Goles del equipo local
         away_score: Goles del equipo visitante
@@ -1063,14 +852,13 @@ def analyze_cartera() -> dict:
 
     all_bets = []
 
-    # All strategies use registry loop — single unified BT runner for all 39 strategies.
-    _reg_cfg_map = _build_registry_config_map(cfg.get("strategies", {}))
+    # All strategies use registry loop — single unified BT runner for all 32 strategies.
+    _strategies = cfg.get("strategies", {})
     for (_key, _name, _trigger_fn, _desc, _extract_fn, _win_fn) in _STRATEGY_REGISTRY:
-        _s_cfg = _reg_cfg_map.get(_key, {})
+        _s_cfg = _strategies.get(_key, {})
         if not _s_cfg.get("enabled"):
             continue  # Skip disabled strategies
-        _min_dur_key = _LEGACY_MIN_DUR_KEY.get(_key, _key)
-        _min_dur = md.get(_min_dur_key, md.get(_key, 1))
+        _min_dur = md.get(_key, 1)
         _s_bets = _analyze_strategy_simple(_key, _trigger_fn, _extract_fn, _win_fn, _cfg_add_snake_keys(_s_cfg), _min_dur)
         for b in _s_bets:
             all_bets.append({**b, "strategy_label": _name})
@@ -1656,7 +1444,7 @@ def simulate_cashout_cartera(
     result["by_strategy"]["pressure_cooker"] = _s([b for b in bets if b["strategy"] == "pressure_cooker"])
     result["by_strategy"]["tarde_asia"] = _s([b for b in bets if b["strategy"] == "tarde_asia"])
     result["by_strategy"]["momentum_xg"] = _s(
-        [b for b in bets if b["strategy"] in ("momentum_xg_v1", "momentum_xg_v2")]
+        [b for b in bets if b["strategy"] == "momentum_xg"]
     )
 
     result["cashout_mode"] = "lay_pct" if cashout_lay_pct is not None else "minute"
@@ -1937,18 +1725,18 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
     Detect live betting opportunities based on portfolio strategies.
 
     Args:
-        versions: Dict with version per strategy, e.g.:
-            {"draw": "v2r", "xg": "v2", "drift": "v1", "clustering": "v2", "pressure": "v1"}
-            Version "off" disables that strategy. None = default versions.
+        versions: Dict with strategy configs and min_duration, e.g.:
+            {"_strategy_configs": {...}, "_min_duration": {...}}
+            When None, loads defaults from cartera_config.json.
     """
     if versions is None:
-        versions = {"draw": "v2r", "xg": "v3", "drift": "v1", "clustering": "v2", "pressure": "v1"}
+        versions = {}
 
     # --- Minimum duration config ---
     # Each strategy uses its own key from the min_duration config (analytics.py passes _min_duration).
     _full_min_dur = versions.get("_min_duration", {})
     min_dur_map = {
-        _key: int(_full_min_dur.get(_LEGACY_MIN_DUR_KEY.get(_key, _key), 1))
+        _key: int(_full_min_dur.get(_key, 1))
         for _key in _STRATEGY_REGISTRY_KEYS
     }
 
@@ -2150,9 +1938,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
         # === REGISTRY STRATEGIES (trigger-based, one-shot detection) ===
         # Each strategy is a one-shot trigger: check current state, emit signal if conditions met.
-        # Config lives in cartera_config.json under strategies.<key>
-        # Synthesize legacy key mappings (clustering→goal_clustering, etc.) if not already done.
-        strategy_configs = _build_registry_config_map(versions.get("_strategy_configs", {}))
+        # Config lives in cartera_config.json under strategies.<key> (keys match registry keys).
+        strategy_configs = versions.get("_strategy_configs", {})
         _gl = int(goles_local)
         _gv = int(goles_visitante)
         _total_goals = _gl + _gv
@@ -2193,7 +1980,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                     _log_signal_to_csv(sig)
                     _register_outcome(match_id, sig["recommendation"], match_outcomes)
 
-        # --- Registry strategies: loop — all 39 strategies, uniform path ---
+        # --- Registry strategies: loop — all 32 strategies, uniform path ---
         for (_key, _name, _fn, _desc, _extract, _win_fn) in _STRATEGY_REGISTRY:
             _cfg_entry = _cfg_add_snake_keys(strategy_configs.get(_key, {}))
             if not (_cfg_entry.get("enabled") and goals_data_ok):
@@ -2250,9 +2037,12 @@ def detect_watchlist(versions: dict | None = None) -> list:
     """
     Detect matches that are close to triggering a signal but don't yet meet all conditions.
     Returns a list of watchlist items sorted by proximity (highest first).
+    Uses strategy config params from versions["_strategy_configs"].
     """
     if versions is None:
-        versions = {"draw": "v2r", "xg": "v3", "drift": "v1", "clustering": "v2", "pressure": "v1"}
+        versions = {}
+
+    strategy_configs = versions.get("_strategy_configs", {})
 
     games = load_games()
     live_matches = [g for g in games if g["status"] == "live"]
@@ -2282,85 +2072,80 @@ def detect_watchlist(versions: dict | None = None) -> list:
         tiros_v = _to_float(latest.get("tiros_visitante", "")) or 0
         sot_l = _to_float(latest.get("tiros_puerta_local", "")) or 0
         sot_v = _to_float(latest.get("tiros_puerta_visitante", "")) or 0
-        back_draw = _to_float(latest.get("back_draw", ""))
         back_home = _to_float(latest.get("back_home", ""))
         back_away = _to_float(latest.get("back_away", ""))
-
-        draw_ver = versions.get("draw", "v2r")
-        xg_ver = versions.get("xg", "v2")
-        drift_ver = versions.get("drift", "v1")
-        clustering_ver = versions.get("clustering", "v2")
-        pressure_ver = versions.get("pressure", "v1")
 
         match_info = {"match_id": match_id, "match_name": match["name"],
                       "match_url": match["url"], "minute": int(minuto),
                       "score": f"{int(gl)}-{int(gv)}"}
 
-        # --- DRAW watchlist ---
-        if draw_ver != "off" and gl == 0 and gv == 0:
+        # --- DRAW watchlist (back_draw_00) ---
+        _draw_cfg = strategy_configs.get("back_draw_00", {})
+        if _draw_cfg.get("enabled") and gl == 0 and gv == 0:
+            _xg_max = float(_draw_cfg.get("xgMax", _draw_cfg.get("xg_max", 1.0)))
+            _poss_max = float(_draw_cfg.get("possMax", _draw_cfg.get("poss_max", 100)))
+            _shots_max = float(_draw_cfg.get("shotsMax", _draw_cfg.get("shots_max", 20)))
+            _min_min = int(_draw_cfg.get("minuteMin", _draw_cfg.get("min_minute", 30)))
             conds = []
             conds.append({"label": "Score 0-0", "met": True})
-            conds.append({"label": "Min >= 30", "met": minuto >= 30,
-                          "current": f"Min {int(minuto)}", "target": "30"})
+            conds.append({"label": f"Min >= {_min_min}", "met": minuto >= _min_min,
+                          "current": f"Min {int(minuto)}", "target": str(_min_min)})
             if xg_l is not None and xg_v is not None:
                 xg_total = xg_l + xg_v
                 poss_diff = abs((pos_l or 50) - (pos_v or 50))
                 tiros_total = tiros_l + tiros_v
-                if draw_ver in ("v15", "v2r", "v2", "v3", "v4"):
-                    limit = 0.5 if draw_ver == "v2" else 0.6
-                    conds.append({"label": f"xG < {limit}", "met": xg_total < limit,
-                                  "current": f"{xg_total:.2f}", "target": str(limit)})
-                if draw_ver in ("v15", "v2r", "v2", "v3", "v4"):
-                    pd_limit = 25 if draw_ver in ("v15", "v3") else 20
-                    conds.append({"label": f"Pos. diff < {pd_limit}%", "met": poss_diff < pd_limit,
-                                  "current": f"{poss_diff:.0f}%", "target": f"{pd_limit}%"})
-                if draw_ver in ("v2r", "v2", "v4"):
-                    conds.append({"label": "Tiros < 8", "met": tiros_total < 8,
-                                  "current": str(int(tiros_total)), "target": "8"})
-                if draw_ver == "v3":
-                    xg_dom = (xg_l / xg_total) if xg_total > 0 else None
-                    xg_dom_ok = xg_dom is not None and (xg_dom > 0.55 or xg_dom < 0.45)
-                    conds.append({"label": "Dominancia xG asimétrica", "met": xg_dom_ok,
-                                  "current": f"{xg_dom:.0%}" if xg_dom else "n/a", "target": ">55% o <45%"})
-                if draw_ver == "v4":
-                    opta_gap_live = abs(opta_l - opta_v) if opta_l is not None and opta_v is not None else None
-                    conds.append({"label": "Opta gap <= 10", "met": opta_gap_live is not None and opta_gap_live <= 10,
-                                  "current": f"{opta_gap_live:.1f}" if opta_gap_live is not None else "n/a", "target": "10"})
+                if _xg_max < 1.0:
+                    conds.append({"label": f"xG < {_xg_max}", "met": xg_total < _xg_max,
+                                  "current": f"{xg_total:.2f}", "target": str(_xg_max)})
+                if _poss_max < 100:
+                    conds.append({"label": f"Pos. diff < {_poss_max}%", "met": poss_diff < _poss_max,
+                                  "current": f"{poss_diff:.0f}%", "target": f"{_poss_max}%"})
+                if _shots_max < 20:
+                    conds.append({"label": f"Tiros < {int(_shots_max)}", "met": tiros_total < _shots_max,
+                                  "current": str(int(tiros_total)), "target": str(int(_shots_max))})
 
             met = sum(1 for c in conds if c["met"])
             total = len(conds)
             if 0 < met < total:
                 watchlist.append({**match_info, "strategy": "Empate 0-0",
-                                  "version": draw_ver.upper(), "conditions": conds,
+                                  "conditions": conds,
                                   "met": met, "total": total, "proximity": round(met / total * 100)})
 
         # --- XG UNDERPERFORMANCE watchlist ---
-        if xg_ver != "off" and xg_l is not None and xg_v is not None:
+        _xg_cfg = strategy_configs.get("xg_underperformance", {})
+        if _xg_cfg.get("enabled") and xg_l is not None and xg_v is not None:
+            _xg_excess_min = float(_xg_cfg.get("xgExcessMin", _xg_cfg.get("xg_excess_min", 0.5)))
+            _xg_sot_min = int(_xg_cfg.get("sotMin", _xg_cfg.get("sot_min", 0)))
+            _xg_max_min = int(_xg_cfg.get("minuteMax", _xg_cfg.get("max_minute", 90)))
+            _xg_min_min = int(_xg_cfg.get("minuteMin", _xg_cfg.get("min_minute", 0)))
             for team_label, xg_t, goals_t, goals_o, sot_t in [
                 ("Home", xg_l, gl, gv, sot_l), ("Away", xg_v, gv, gl, sot_v)]:
                 xg_excess = xg_t - goals_t
                 conds = []
                 conds.append({"label": "Equipo perdiendo", "met": goals_t < goals_o})
-                conds.append({"label": "xG excess >= 0.5", "met": xg_excess >= 0.5,
-                              "current": f"{xg_excess:.2f}", "target": "0.50"})
-                conds.append({"label": "Min >= 15", "met": minuto >= 15,
-                              "current": f"Min {int(minuto)}", "target": "15"})
-                if xg_ver in ("v2", "v3"):
-                    conds.append({"label": "SoT >= 2", "met": sot_t >= 2,
-                                  "current": str(int(sot_t)), "target": "2"})
-                if xg_ver == "v3":
-                    conds.append({"label": "Min < 70", "met": minuto < 70,
-                                  "current": f"Min {int(minuto)}", "target": "70"})
+                conds.append({"label": f"xG excess >= {_xg_excess_min}", "met": xg_excess >= _xg_excess_min,
+                              "current": f"{xg_excess:.2f}", "target": f"{_xg_excess_min:.2f}"})
+                conds.append({"label": f"Min >= {_xg_min_min}", "met": minuto >= _xg_min_min,
+                              "current": f"Min {int(minuto)}", "target": str(_xg_min_min)})
+                if _xg_sot_min > 0:
+                    conds.append({"label": f"SoT >= {_xg_sot_min}", "met": sot_t >= _xg_sot_min,
+                                  "current": str(int(sot_t)), "target": str(_xg_sot_min)})
+                if _xg_max_min < 90:
+                    conds.append({"label": f"Min < {_xg_max_min}", "met": minuto < _xg_max_min,
+                                  "current": f"Min {int(minuto)}", "target": str(_xg_max_min)})
 
                 met = sum(1 for c in conds if c["met"])
                 total = len(conds)
                 if met >= 2 and met < total:
                     watchlist.append({**match_info, "strategy": f"xG Underp. ({team_label})",
-                                      "version": xg_ver.upper(), "conditions": conds,
+                                      "conditions": conds,
                                       "met": met, "total": total, "proximity": round(met / total * 100)})
 
         # --- ODDS DRIFT watchlist ---
-        if drift_ver != "off" and gl != gv:
+        _drift_cfg = strategy_configs.get("odds_drift", {})
+        if _drift_cfg.get("enabled") and gl != gv:
+            _drift_min = float(_drift_cfg.get("driftMin", _drift_cfg.get("drift_min_pct", 30)))
+            _drift_max_odds = float(_drift_cfg.get("oddsMax", _drift_cfg.get("max_odds", 999)))
             goal_diff = abs(int(gl) - int(gv))
             target_minute = minuto - 10
             hist_row = None
@@ -2382,37 +2167,26 @@ def detect_watchlist(versions: dict | None = None) -> list:
                     drift_pct_val = ((odds_now - odds_before) / odds_before) * 100
                     conds = []
                     conds.append({"label": "Equipo ganando", "met": True})
-                    conds.append({"label": "Drift >= 25%", "met": drift_pct_val >= 25,
-                                  "current": f"{drift_pct_val:.0f}%", "target": "25%"})
-                    if drift_ver == "v1":
-                        conds.append({"label": "Score 1-0", "met": goal_diff == 1 and (gl + gv) == 1,
-                                      "current": f"{int(gl)}-{int(gv)}", "target": "1-0"})
-                    elif drift_ver == "v2":
-                        conds.append({"label": "Dif. goles >= 2", "met": goal_diff >= 2,
-                                      "current": str(goal_diff), "target": "2"})
-                    elif drift_ver == "v3":
-                        conds.append({"label": "Drift >= 100%", "met": drift_pct_val >= 100,
-                                      "current": f"{drift_pct_val:.0f}%", "target": "100%"})
-                    elif drift_ver == "v4":
-                        conds.append({"label": "2a parte", "met": minuto > 45,
-                                      "current": f"Min {int(minuto)}", "target": "46"})
-                        conds.append({"label": "Odds <= 5", "met": odds_now <= 5.0,
-                                      "current": f"{odds_now:.2f}", "target": "5.00"})
-                    elif drift_ver == "v5":
-                        conds.append({"label": "Odds <= 5", "met": odds_now <= 5.0,
-                                      "current": f"{odds_now:.2f}", "target": "5.00"})
+                    conds.append({"label": f"Drift >= {_drift_min:.0f}%", "met": drift_pct_val >= _drift_min,
+                                  "current": f"{drift_pct_val:.0f}%", "target": f"{_drift_min:.0f}%"})
+                    if _drift_max_odds < 999:
+                        conds.append({"label": f"Odds <= {_drift_max_odds}", "met": odds_now <= _drift_max_odds,
+                                      "current": f"{odds_now:.2f}", "target": f"{_drift_max_odds:.2f}"})
 
                     met = sum(1 for c in conds if c["met"])
                     total = len(conds)
                     if met >= 1 and met < total:
                         watchlist.append({**match_info, "strategy": "Odds Drift",
-                                          "version": drift_ver.upper(), "conditions": conds,
+                                          "conditions": conds,
                                           "met": met, "total": total, "proximity": round(met / total * 100)})
 
         # --- GOAL CLUSTERING watchlist ---
-        if clustering_ver != "off":
+        _clust_cfg = strategy_configs.get("goal_clustering", {})
+        if _clust_cfg.get("enabled"):
+            _clust_sot_min = int(_clust_cfg.get("sotMin", _clust_cfg.get("sot_min", 3)))
+            _clust_min_min = int(_clust_cfg.get("minuteMin", _clust_cfg.get("min_minute", 0)))
+            _clust_max_min = int(_clust_cfg.get("minuteMax", _clust_cfg.get("max_minute", 90)))
             sot_max = max(sot_l, sot_v)
-            # Check for recent goal
             recent_goal = False
             for i in range(len(rows) - 1, max(0, len(rows) - 4), -1):
                 if i > 0:
@@ -2426,23 +2200,24 @@ def detect_watchlist(versions: dict | None = None) -> list:
 
             conds = []
             conds.append({"label": "Gol reciente", "met": recent_goal})
-            conds.append({"label": "Min 15-80", "met": 15 <= minuto <= 80,
-                          "current": f"Min {int(minuto)}", "target": "15-80"})
-            conds.append({"label": "SoT max >= 3", "met": sot_max >= 3,
-                          "current": str(int(sot_max)), "target": "3"})
-            if clustering_ver == "v3":
-                conds.append({"label": "Min < 75", "met": minuto < 75,
-                              "current": f"Min {int(minuto)}", "target": "75"})
+            conds.append({"label": f"Min {_clust_min_min}-{_clust_max_min}",
+                          "met": _clust_min_min <= minuto <= _clust_max_min,
+                          "current": f"Min {int(minuto)}", "target": f"{_clust_min_min}-{_clust_max_min}"})
+            conds.append({"label": f"SoT max >= {_clust_sot_min}", "met": sot_max >= _clust_sot_min,
+                          "current": str(int(sot_max)), "target": str(_clust_sot_min)})
 
             met = sum(1 for c in conds if c["met"])
             total = len(conds)
             if met >= 1 and met < total:
                 watchlist.append({**match_info, "strategy": "Goal Clustering",
-                                  "version": clustering_ver.upper(), "conditions": conds,
+                                  "conditions": conds,
                                   "met": met, "total": total, "proximity": round(met / total * 100)})
 
         # --- PRESSURE COOKER watchlist ---
-        if pressure_ver != "off":
+        _press_cfg = strategy_configs.get("pressure_cooker", {})
+        if _press_cfg.get("enabled"):
+            _press_min_min = int(_press_cfg.get("minuteMin", _press_cfg.get("min_minute", 55)))
+            _press_max_min = int(_press_cfg.get("minuteMax", _press_cfg.get("max_minute", 75)))
             total_goals = int(gl) + int(gv)
             is_draw = gl == gv
             has_goals = total_goals >= 2
@@ -2450,14 +2225,15 @@ def detect_watchlist(versions: dict | None = None) -> list:
             conds.append({"label": "Empate", "met": is_draw})
             conds.append({"label": "Score >= 1-1", "met": has_goals,
                           "current": f"{int(gl)}-{int(gv)}", "target": "1-1+"})
-            conds.append({"label": "Min 65-75", "met": 65 <= minuto <= 75,
-                          "current": f"Min {int(minuto)}", "target": "65-75"})
+            conds.append({"label": f"Min {_press_min_min}-{_press_max_min}",
+                          "met": _press_min_min <= minuto <= _press_max_min,
+                          "current": f"Min {int(minuto)}", "target": f"{_press_min_min}-{_press_max_min}"})
 
             met = sum(1 for c in conds if c["met"])
             total = len(conds)
             if met >= 1 and met < total:
                 watchlist.append({**match_info, "strategy": "Pressure Cooker",
-                                  "version": pressure_ver.upper(), "conditions": conds,
+                                  "conditions": conds,
                                   "met": met, "total": total, "proximity": round(met / total * 100)})
 
     # Sort by proximity descending

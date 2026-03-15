@@ -126,8 +126,7 @@ Añadir una tupla al final de la lista (línea ~428):
 ```
 La win function evalúa si la apuesta ganó dado el resultado final (`gl` = goles local, `gv` = visitante).
 
-Si la estrategia no es "plana" sino versionada (como xg o drift), añadirla también a
-`VERSIONED_FAMILIES` en bt_optimizer.py y a `_ORIG_REGISTRY_MAP` en csv_reader.py.
+Todas las estrategias son directas (sin versiones). Añadirla a `SINGLE_STRATEGIES` en bt_optimizer.py.
 
 ### 3. Search space en `SEARCH_SPACES` (`bt_optimizer.py`)
 Añadir un entry en el dict `SEARCH_SPACES` (línea ~89):

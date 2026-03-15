@@ -314,7 +314,7 @@ def _has_existing_bet(match_id: str, recommendation: str) -> bool:
     """Devuelve True si ya existe cualquier apuesta para este match+mercado (cualquier estado).
     Usa clave de mercado (draw/home/away/over_X.5) — dedup cross-estrategia.
     Bloquea re-entrada aunque el bet previo esté cashedout/won/lost,
-    ya que ambas versiones de la misma estrategia (V1/V2) apuestan al mismo mercado.
+    ya que múltiples estrategias del mismo mercado (e.g. draw_11 + draw_xg_conv) apuestan al mismo mercado.
     """
     if not PLACED_BETS_CSV.exists():
         return False
@@ -330,7 +330,6 @@ def _has_existing_bet(match_id: str, recommendation: str) -> bool:
 
 def _is_contraria(match_id: str, recommendation: str) -> bool:
     """Devuelve True si ya existe una apuesta en mercado OPUESTO (HOME↔AWAY) en el mismo partido.
-    Bloquea contrarias cross-estrategia: momentum V1 HOME después de momentum V2 AWAY (o viceversa).
     Solo aplica a mercados home/away — draw y over/X.5 no son contrarias entre sí.
     """
     if not PLACED_BETS_CSV.exists():
@@ -441,7 +440,7 @@ async def place_bet(bet: PlaceBetRequest):
             )
 
         # Deduplication: don't register if there's already any bet for same match+market
-        # (checks all statuses: pending, cashout, won, lost — blocks cross-strategy V1/V2 duplicates)
+        # (checks all statuses: pending, cashout, won, lost — blocks cross-strategy market duplicates)
         if _has_existing_bet(bet.match_id, bet.recommendation):
             raise HTTPException(status_code=409, detail="Ya existe una apuesta para este partido y mercado (dedup cross-estrategia)")
 

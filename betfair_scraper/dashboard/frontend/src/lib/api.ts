@@ -390,18 +390,8 @@ export interface PlacedBetsResponse {
 
 // ── Cartera configuration (single source of truth) ─────────────────────
 export interface CarteraConfig {
-  /** New param-based format (replaces legacy `versions`) — all 34 strategies */
+  /** Strategy configs — all 32 strategies keyed by registry key */
   strategies?: Record<string, { enabled?: boolean; minuteMin?: number; minuteMax?: number; [key: string]: any }>
-  /** Legacy version format — kept for backward compat when reading old configs */
-  versions?: {
-    draw?: string
-    xg?: string
-    drift?: string
-    clustering?: string
-    pressure?: string
-    tarde_asia?: string
-    momentum_xg?: string
-  }
   bankroll_mode: string
   flat_stake?: number
   initial_bankroll?: number
@@ -409,11 +399,12 @@ export interface CarteraConfig {
   active_preset: string | null
   risk_filter: string
   min_duration: {
-    draw: number
-    xg: number
-    drift: number
-    clustering: number
-    pressure: number
+    back_draw_00: number
+    xg_underperformance: number
+    odds_drift: number
+    goal_clustering: number
+    pressure_cooker: number
+    [key: string]: number
   }
   adjustments: {
     enabled: boolean
@@ -491,5 +482,8 @@ export const api = {
   // Cartera configuration
   getConfig: () => get<CarteraConfig>("/config/cartera"),
   saveConfig: (config: CarteraConfig) => put<{ status: string }>("/config/cartera", config),
+
+  // Auto-open bet in browser
+  openBet: (matchUrl: string) => post<{ ok: boolean }>("/analytics/open-bet", { match_url: matchUrl }),
 
 }

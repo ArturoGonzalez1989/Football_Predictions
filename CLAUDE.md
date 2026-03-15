@@ -25,7 +25,7 @@ La carpeta `/auxiliar` puede borrarse en cualquier momento sin afectar al sistem
 2. **CAPA UNICA (BACKTEST)**:
    - El backtest se ejecuta via `scripts/bt_optimizer.py` (nuevo, preferido) o el notebook legacy `analisis/strategies_designer.ipynb`.
    - `scripts/bt_optimizer.py` ejecuta grid search completo via `_analyze_strategy_simple()` directamente (no usa analyze_cartera()). Fases: 0=carga datos, 1=grid search individual, 2=build config optima, 3=presets via optimizer_cli, 4=apply, 5=export.
-   - Backend (`csv_reader.py:analyze_cartera()`) genera bets con condiciones basicas + version flags.
+   - Backend (`csv_reader.py:analyze_cartera()`) genera bets con condiciones basicas para cada estrategia activa.
    - Ya no existe capa de filtrado frontend (cartera.ts fue eliminado en limpieza 2026-03-08).
    - `analyze_cartera()` solo recibe `min_dur` de config. Cache key solo incluye min_duration.
 
@@ -73,7 +73,7 @@ betfair_scraper/
       api/optimize.py    → Optimizacion presets Phase 1+2 (1329 lineas)
       api/optimizer_cli.py → CLI para optimizacion paralela (691 lineas)
       utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~6200 lineas)
-      utils/sd_strategies.py → 19 SD configs + evaluador (205 lineas)
+      utils/sd_strategies.py → eval_sd() evaluador legacy para notebook (205 lineas)
       utils/scraper_status.py → Estado scraper via psutil + log parsing
       utils/signals_audit_logger.py → Audit log rotativo
     frontend/src/
@@ -102,15 +102,15 @@ borrar/                  → Archivos movidos durante limpieza (red de seguridad
 
 ## Estrategias (cartera_config.json)
 
-26 estrategias independientes. Cada una tiene su propia clave en `cartera_config.json`, su propio trigger `_detect_<name>_trigger()` en csv_reader.py, deteccion live via `detect_betting_signals()` y backtest via `analyze_cartera()`. No hay categorias ni jerarquias.
+32 estrategias independientes. Cada una tiene su propia clave en `cartera_config.json`, su propio trigger `_detect_<name>_trigger()` en csv_reader.py, deteccion live via `detect_betting_signals()` y backtest via `analyze_cartera()`. No hay categorias ni jerarquias.
 
 | Estrategia | Clave config | Estado |
 |------------|-------------|--------|
-| Back Empate 0-0 | draw | Desactivada por IC95 gate |
-| xG Underperformance | xg | Activa |
-| Odds Drift Contrarian | drift | Activa |
-| Goal Clustering | clustering | Activa |
-| Pressure Cooker | pressure | Activa |
+| Back Empate 0-0 | back_draw_00 | Desactivada por IC95 gate |
+| xG Underperformance | xg_underperformance | Activa |
+| Odds Drift Contrarian | odds_drift | Activa |
+| Goal Clustering | goal_clustering | Activa |
+| Pressure Cooker | pressure_cooker | Activa |
 | Momentum xG | momentum_xg | Config-dependiente |
 | Tarde Asia | tarde_asia | Inactiva |
 | BACK Over 2.5 2-Goal Lead | over25_2goal | Activa |
@@ -132,8 +132,14 @@ borrar/                  → Archivos movidos durante limpieza (red de seguridad
 | BACK Away Fav Leading | away_fav_leading | Activa |
 | BACK Under 4.5 3 Goals | under45_3goals | Activa |
 | BACK CS 1-1 | cs_11 | Inactiva (no pasa quality gates) |
+| BACK Draw Equalizer Late | draw_equalizer | Activa |
+| BACK Draw 2-2 Late | draw_22 | Activa |
+| LAY Over 4.5 Blowout | lay_over45_blowout | Activa |
+| BACK Over 3.5 Early Goals | over35_early_goals | Activa |
+| LAY Draw Away Leading | lay_draw_away_leading | Activa |
+| LAY CS 1-1 at 0-1 | lay_cs11 | Activa |
 
-Triggers de todas las estrategias en `betfair_scraper/dashboard/backend/utils/csv_reader.py` (26 funciones `_detect_*_trigger`). `sd_strategies.py` contiene solo el evaluador `eval_sd()` para uso del notebook legacy. Generadores auxiliares legacy en `auxiliar/sd_generators.py`.
+Triggers de todas las estrategias en `betfair_scraper/dashboard/backend/utils/csv_reader.py` (32 funciones `_detect_*_trigger`). `sd_strategies.py` contiene solo el evaluador `eval_sd()` para uso del notebook legacy. Generadores auxiliares legacy en `auxiliar/sd_generators.py`.
 
 ## Quality Gates (aplicados a TODAS las estrategias)
 
@@ -145,28 +151,26 @@ Implementados en `_eval_bets()` (`scripts/bt_optimizer.py`), `_eval_combo()` (no
 
 ### bt_optimizer.py — resultados con 1202 partidos (2026-03-13)
 
-17/26 estrategias pasan quality gates (N>=46, ROI>=10%, IC95>=40%). Aprobadas: `goal_clustering`, `pressure_cooker`, `over25_2goal`, `under35_late`, `longshot`, `cs_one_goal`, `ud_leading`, `home_fav_leading`, `lay_over45_v3`, `poss_extreme`, `draw_11`, `under35_3goals`, `away_fav_leading`, `under45_3goals`, `xg_underperformance_base`, `odds_drift_v1`, `draw_xg_conv`.
-No pasan: `back_draw_00`, `momentum_xg`, `cs_close`, `cs_20`, `cs_big_lead`, `tarde_asia`, `cs_00`, `over25_2goals`, `cs_11`.
+Resultados del ultimo run completo (1202 partidos): ver `auxiliar/bt_optimizer_results.json`. Las 32 estrategias se evaluan; las que no pasan quality gates quedan con `enabled: false` en `cartera_config.json`.
 
 bt_optimizer.py features: `_eval_preset_real_stats()` para stats honestas de phase4, `MIN_PRESET_N=200`, `DEFAULT_SELECTOR="robust"`.
 
-**cartera_config.json actual** (post phase2): 26 estrategias, 17 enabled con params optimizados del grid search. El portfolio optimizer (phase3) genera 4 presets con N=32, WR=78.1%, IC=[61.2-89.0%], ROI=142%.
+**cartera_config.json actual**: 32 estrategias, enabled segun ultimo BT run. El portfolio optimizer (phase3) genera 4 presets para las 7 estrategias "core" (on/off combos). Las otras 25 siempre activas si pasan quality gates.
 
-### phase4_apply — merge inteligente (fix 2026-03-12)
+### phase4_apply — merge inteligente
 
-`phase4_apply()` en `scripts/bt_optimizer.py` ya NO copia el preset verbatim (lo que destruia las 11 estrategias nuevas). Ahora hace merge:
+`phase4_apply()` en `scripts/bt_optimizer.py` hace merge:
 - Estrategias que el preset ACTIVA: aplica todos los params del preset (portfolio-optimizados).
 - Estrategias que el preset DESACTIVA: solo cambia `enabled=False`, preserva params optimizados.
-- Estrategias no conocidas por el preset (las 11 nuevas): sin cambios.
-- No re-añade claves obsoletas (lay_over15, lay_draw_asym, etc.) al config.
+- Estrategias no cubiertas por el preset: sin cambios.
 
-### _build_preset_config — merge con estrategias nuevas (fix 2026-03-12)
+### _build_preset_config
 
-`optimizer_cli._build_preset_config()` ahora copia las estrategias base de `cartera_config.json` que no estén en la lista hardcodeada (draw, xg, drift, etc.). Así los presets generados incluyen todas las estrategias nuevas con sus parámetros optimizados en el config activo.
+`optimizer_cli._build_preset_config()` parte del `cartera_config.json` actual y solo aplica `enabled: true/false` por estrategia segun el combo optimo. Los params (xgMax, driftMin, etc.) se preservan del grid search de bt_optimizer.
 
 ## Sistema de Presets
 
-Los presets se computan offline via `optimizer_cli.py` o el notebook `strategies_designer.ipynb` y se guardan directamente en `cartera_config.json`. La optimizacion ejecuta una busqueda en 3 fases (versiones, ajustes realistas, rangos de minutos) y produce la configuracion optima segun el criterio seleccionado (max_roi, max_pl, max_wr, min_dd, max_bets).
+Los presets se computan offline via `optimizer_cli.py` y se guardan directamente en `cartera_config.json`. La optimizacion ejecuta 5 fases: on/off combos (2,048), adjustments (7,776), strategy disabling (Phase 2.5), momentum minute range (Phase 3), cashout pct (Phase 4). Produce la configuracion optima segun el criterio seleccionado (max_roi, max_pl, max_wr, min_dd, max_bets).
 
 ### Heuristico CO por criterio
 - `max_roi` → 15% (solo cashouts con ganancia grande)
@@ -185,7 +189,7 @@ Los presets se computan offline via `optimizer_cli.py` o el notebook `strategies
 
 ## Alineamiento BT↔LIVE (completado 2026-03-11)
 
-Las **26 estrategias** usan **helpers compartidos** (GR8/GR9 compliant). BT y LIVE ejecutan el mismo codigo de deteccion.
+Las **32 estrategias** usan **helpers compartidos**. BT y LIVE ejecutan el mismo codigo de deteccion.
 
 ### Arquitectura de helpers compartidos
 
@@ -194,7 +198,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 - **LIVE** llama con `curr_idx=len(rows)-1` (ultima fila)
 - Solo mira `rows[:curr_idx+1]` — nunca filas futuras
 
-**26 triggers** en csv_reader.py, todos con la misma interfaz `_detect_<name>_trigger(rows, curr_idx, cfg)`:
+**32 triggers** en csv_reader.py, todos con la misma interfaz `_detect_<name>_trigger(rows, curr_idx, cfg)`:
 
 `_detect_back_draw_00_trigger`, `_detect_xg_underperformance_trigger`, `_detect_odds_drift_trigger`,
 `_detect_goal_clustering_trigger`, `_detect_pressure_cooker_trigger`, `_detect_momentum_xg_trigger`,
@@ -204,7 +208,9 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 `_detect_cs_close_trigger`, `_detect_cs_one_goal_trigger`, `_detect_draw_11_trigger`,
 `_detect_ud_leading_trigger`, `_detect_under35_3goals_trigger`, `_detect_away_fav_leading_trigger`,
 `_detect_home_fav_leading_trigger`, `_detect_under45_3goals_trigger`, `_detect_cs_11_trigger`,
-`_detect_cs_20_trigger`, `_detect_cs_big_lead_trigger`
+`_detect_cs_20_trigger`, `_detect_cs_big_lead_trigger`, `_detect_draw_equalizer_trigger`,
+`_detect_draw_22_trigger`, `_detect_lay_over45_blowout_trigger`, `_detect_over35_early_goals_trigger`,
+`_detect_lay_draw_away_leading_trigger`, `_detect_lay_cs11_trigger`
 
 ### Match rate
 
@@ -218,17 +224,16 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 
 ### Herramientas de verificacion
 
-- `tests/reconcile.py` — simula LIVE fila a fila y compara con BT. VERSIONS = {'_strategy_configs': s, 'min_duration': md}. Aplica market-group dedup al LIVE side (via `_STRATEGY_MARKET`) antes de comparar. ~175 lineas.
+- `tests/reconcile.py` — simula LIVE fila a fila y compara con BT. VERSIONS = {'_strategy_configs': s, '_min_duration': md}. Aplica market-group dedup al LIVE side (via `_STRATEGY_MARKET`) antes de comparar. ~175 lineas.
 - `auxiliar/compare_bt_live.py` — compara rendimiento BT vs LIVE estimado
 - `.claude/agents/system-auditor.md` — agente de mantenimiento de alineamiento
 
 ## Problemas conocidos
 
-1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config ni en versions dict. Hardcodeados identicos en backtest y live.
+1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config. Hardcodeados identicos en backtest y live.
 2. **Cache key parcial**: analyze_cartera() cache incluye min_duration + enabled states de todas las estrategias del registry. Cambios de parametros config distintos de enabled/min_duration requieren invalidacion manual (limpiar _result_cache).
 3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
-4. **bt_optimizer.py lento para odds_drift/back_draw_00**: 5760 combos x6 versiones (~36 min) y 9000 combos x6 versiones (~15 min). Reducir search space o paralelizar a nivel combo para acelerar.
-5. **Portfolio optimizer auto-desactiva xg/drift**: El optimizer_cli decide que el portfolio optimo no incluye xg_underperformance y odds_drift (mejoran WR y ROI excluyendolos). Es comportamiento correcto del optimizer, no un bug.
+4. **Portfolio optimizer auto-desactiva xg/drift**: El optimizer_cli decide que el portfolio optimo no incluye xg_underperformance y odds_drift (mejoran WR y ROI excluyendolos). Es comportamiento correcto del optimizer, no un bug.
 6. **Deduplicacion de mercado** (implementado 2026-03-13): Una sola apuesta por mercado por partido. `_STRATEGY_MARKET` en csv_reader.py define los grupos: under_3.5 (under35_late + under35_3goals), draw (draw_11 + draw_xg_conv), over_2.5 (over25_2goal + goal_clustering + pressure_cooker). Primera estrategia en disparar (por minuto) tiene prioridad. Reduce BT portfolio de 1727 a ~1655 bets. LIVE dedup es siempre-activo via Pass 5 en `_apply_realistic_adjustments()`.
 
 ## placed_bets.csv — estado 2026-03-13

@@ -185,24 +185,17 @@ def _detect_draw_filters(
     xg_total: Optional[float],
     poss_diff: Optional[float],
     shots_total: Optional[float],
-    opta_gap: Optional[float],
-    xg_dom: Optional[float],
-    synth_pressure_v: Optional[float],
     cfg: dict,
 ) -> dict:
-    """Evaluate version-specific filter conditions for the Back Draw 0-0 strategy.
+    """Evaluate filter conditions for the Back Draw 0-0 strategy.
 
     ``cfg`` must contain:
         xg_max        : float  — maximum total xG (sentinel 1.0 = filter off)
         poss_max      : float  — maximum |poss_local - poss_away| (sentinel 100 = off)
         shots_max     : float  — maximum total shots (sentinel 20 = off)
 
-    Returns a dict with boolean flags for each version:
-        passes_v15  : bool  — xG<xg_max AND poss_diff<poss_max
-        passes_v2r  : bool  — xG<xg_max AND poss_diff<poss_max AND shots<shots_max
-        passes_v2   : bool  — same as v2r (same math, different DRAW_PARAMS origin)
-        passes_v3   : bool  — v15 + xG dominance asymmetry + low visitor pressure
-        passes_v4   : bool  — v2r + |opta_gap| <= 10
+    Returns a dict with a single boolean flag:
+        passes : bool  — all cfg filters pass
 
     Null handling:
         - null xG passes the xg_max filter (mirrors _filter_draw sentinel behaviour)
@@ -212,34 +205,11 @@ def _detect_draw_filters(
     poss_max = cfg.get("poss_max", 100.0)
     shots_max = cfg.get("shots_max", 20.0)
 
-    # Individual gates — None values pass (superset behaviour, mirrors _filter_draw)
-    _xg_ok   = xg_max >= 1.0   or xg_total is None   or xg_total   < xg_max
-    _pos_ok  = poss_max >= 100 or poss_diff is None   or poss_diff  < poss_max
-    _sht_ok  = shots_max >= 20 or shots_total is None or shots_total < shots_max
+    _xg_ok  = xg_max >= 1.0   or xg_total is None   or xg_total   < xg_max
+    _pos_ok = poss_max >= 100  or poss_diff is None   or poss_diff  < poss_max
+    _sht_ok = shots_max >= 20  or shots_total is None or shots_total < shots_max
 
-    passes_v15 = _xg_ok and _pos_ok
-    passes_v2r = _xg_ok and _pos_ok and _sht_ok
-    passes_v2  = passes_v2r  # same numeric logic; BT uses slightly different variable names
-
-    # V3: V1.5 + xG dominance asymmetry + low visitor pressure
-    passes_v3 = (
-        passes_v15
-        and xg_dom is not None
-        and (xg_dom > 0.55 or xg_dom < 0.45)
-        and (synth_pressure_v is None or synth_pressure_v < 0.5)
-    )
-
-    # V4: V2r + Opta equilibrium (|opta_gap| <= 10)
-    opta_ok = opta_gap is not None and opta_gap <= 10
-    passes_v4 = passes_v2r and opta_ok
-
-    return {
-        "passes_v15": passes_v15,
-        "passes_v2r": passes_v2r,
-        "passes_v2":  passes_v2,
-        "passes_v3":  passes_v3,
-        "passes_v4":  passes_v4,
-    }
+    return {"passes": _xg_ok and _pos_ok and _sht_ok}
 
 
 def _detect_xg_underperf_candidates(
@@ -636,9 +606,8 @@ def _detect_pressure_cooker_trigger(
 def _detect_back_draw_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict]:
     """Unified Back Draw 0-0 trigger (rows, curr_idx, cfg) interface.
 
-    Checks basic entry conditions (0-0 score, minute in range) then evaluates
-    all version-specific filter flags via the internal ``_detect_draw_filters``
-    helper.
+    Checks basic entry conditions (0-0 score, minute in range) then applies
+    cfg-based filters (xg_max, poss_max, shots_max) via ``_detect_draw_filters``.
 
     ``cfg`` keys used:
         minute_min      : float  — minimum minute (default 30)
@@ -646,11 +615,9 @@ def _detect_back_draw_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Option
         xg_max          : float  — max total xG (sentinel >= 1.0 = off)
         poss_max        : float  — max possession diff (sentinel >= 100 = off)
         shots_max       : float  — max total shots (sentinel >= 20 = off)
-        _synth_pressure_v : float | None  — precomputed pressure index (optional)
 
-    Returns dict with flags + raw stats, or None if basic conditions not met:
-        {minuto, xg_total, poss_diff, shots_total, back_draw,
-         passes_v15, passes_v2r, passes_v2, passes_v3, passes_v4}
+    Returns dict with raw stats, or None if conditions not met:
+        {minuto, xg_total, poss_diff, shots_total, back_draw, passes}
     """
     row = rows[curr_idx]
     minuto = _to_float(row.get("minuto", ""))
@@ -678,21 +645,14 @@ def _detect_back_draw_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Option
     shots_v = _to_float(row.get("tiros_visitante", ""))
     shots_total = ((shots_l or 0) + (shots_v or 0)) if (shots_l is not None or shots_v is not None) else None
 
-    xg_dom = (xg_l / xg_total) if (xg_l is not None and xg_total and xg_total > 0) else None
-
-    opta_l = _to_float(row.get("opta_points_local", ""))
-    opta_v = _to_float(row.get("opta_points_visitante", ""))
-    opta_gap = abs(opta_l - opta_v) if (opta_l is not None and opta_v is not None) else None
-
-    # synth_pressure_v: optionally precomputed by caller (BT uses _compute_synthetic_at_trigger)
-    synth_pressure_v = cfg.get("_synth_pressure_v")
-
     flags = _detect_draw_filters(
         xg_total=xg_total, poss_diff=poss_diff,
         shots_total=float(shots_total) if shots_total is not None else None,
-        opta_gap=opta_gap, xg_dom=xg_dom, synth_pressure_v=synth_pressure_v,
         cfg=cfg,
     )
+
+    if not flags["passes"]:
+        return None
 
     return {
         "minuto":       minuto,

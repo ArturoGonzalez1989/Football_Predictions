@@ -306,7 +306,6 @@ def run_paper_auto_place() -> dict:
     """
     try:
         cfg = load_config()
-        v   = cfg.get("versions", {})
         s   = cfg.get("strategies", {})
         md      = cfg.get("min_duration", {})
         md_live = cfg.get("min_duration_live", {})
@@ -320,97 +319,15 @@ def run_paper_auto_place() -> dict:
         else:
             flat_stake = float(cfg.get("flat_stake", 10.0))
 
-        drift_s      = s.get("drift", {})
-        clustering_s = s.get("clustering", {})
-        xg_s         = s.get("xg", {})
-        draw_s       = s.get("draw", {})
-        pressure_s   = s.get("pressure", {})
-        momentum_s   = s.get("momentum_xg", {})
-
-        def _ver(v_key, s_key, default):
-            strat = s.get(s_key, {})
-            # enabled: false ALWAYS wins — regardless of version overrides
-            if strat.get("enabled") is False:
-                return "off"
-            if v.get(v_key):
-                return v.get(v_key)
-            if strat.get("version"):
-                return strat.get("version")
-            return default
+        # Build min_duration with live overrides
+        _md = dict(md)
+        for k, v in md_live.items():
+            _md[k] = v
 
         versions = {
-            "draw":       _ver("draw",       "draw",       "v2r"),
-            "xg":         _ver("xg",         "xg",         "base"),
-            "drift":      _ver("drift",      "drift",      "v1"),
-            "clustering": _ver("clustering", "clustering", "v2"),
-            "pressure":   _ver("pressure",   "pressure",   "v1"),
-            "momentum":   _ver("momentum_xg", "momentum_xg", "off"),
-            "tarde_asia": _ver("tarde_asia", "tarde_asia", "off"),
-            "draw_min_dur":          str(md_live.get("draw",       md.get("draw", 1))),
-            "xg_min_dur":            str(md_live.get("xg",         md.get("xg", 2))),
-            "drift_min_dur":         str(md_live.get("drift",      md.get("drift", 2))),
-            "clustering_min_dur":    str(md_live.get("clustering", md.get("clustering", 4))),
-            "pressure_min_dur":      str(md_live.get("pressure",   md.get("pressure", 2))),
-            "tarde_asia_min_dur":    str(md_live.get("tarde_asia", md.get("tarde_asia", 1))),
-            "momentum_min_dur":      str(md_live.get("momentum",   md.get("momentum", 1))),
-            "drift_threshold":       str(drift_s.get("driftMin", 30)),
-            "drift_odds_max":        str(drift_s.get("oddsMax", 999)),
-            "drift_goal_diff_min":   str(drift_s.get("goalDiffMin", 0)),
-            "drift_minute_min":      str(drift_s.get("minuteMin", 0)),
-            "drift_minute_max":      str(drift_s.get("minuteMax", 90)),
-            "drift_mom_gap_min":     str(drift_s.get("momGapMin", 0)),
-            "clustering_minute_max": str(clustering_s.get("minuteMax", 90)),
-            "clustering_xg_rem_min": str(clustering_s.get("xgRemMin", 0)),
-            "clustering_sot_min":    str(clustering_s.get("sotMin", 3)),
-            "xg_minute_max":         str(xg_s.get("minuteMax", 90)),
-            "xg_sot_min":            str(xg_s.get("sotMin", 0)),
-            "xg_xg_excess_min":      str(xg_s.get("xgExcessMin", 0.5)),
-            "draw_xg_max":           str(draw_s.get("xgMax", 1.0)),
-            "draw_poss_max":         str(draw_s.get("possMax", 100)),
-            "draw_shots_max":        str(draw_s.get("shotsMax", 20)),
-            "draw_minute_min":       str(draw_s.get("minuteMin", 30)),
-            "draw_minute_max":       str(draw_s.get("minuteMax", 90)),
-            "xg_minute_min":         str(xg_s.get("minuteMin", 0)),
-            "clustering_minute_min": str(clustering_s.get("minuteMin", 0)),
-            "pressure_minute_min":   str(pressure_s.get("minuteMin", 0)),
-            "pressure_minute_max":   str(pressure_s.get("minuteMax", 90)),
-            "pressure_xg_sum_min":   str(pressure_s.get("xg_sum_min", 0)),
-            "momentum_minute_min":   str(momentum_s.get("minuteMin", 0)),
-            "momentum_minute_max":   str(momentum_s.get("minuteMax", 90)),
+            "_strategy_configs": s,
+            "_min_duration": _md,
         }
-
-        # Synthesize per-version registry entries for the 7 original strategies
-        _s_configs = dict(s)
-        _ORIG_MAP = {
-            "draw": [
-                ("back_draw_00_v1", "v1"), ("back_draw_00_v15", "v15"),
-                ("back_draw_00_v2", "v2"), ("back_draw_00_v2r", "v2r"),
-                ("back_draw_00_v3", "v3"), ("back_draw_00_v4",  "v4"),
-            ],
-            "drift": [
-                ("odds_drift_v1", "v1"), ("odds_drift_v2", "v2"), ("odds_drift_v3", "v3"),
-                ("odds_drift_v4", "v4"), ("odds_drift_v5", "v5"), ("odds_drift_v6", "v6"),
-            ],
-            "clustering":  [("goal_clustering",            None)],
-            "pressure":    [("pressure_cooker",             None)],
-            "xg": [
-                ("xg_underperformance_base", "base"),
-                ("xg_underperformance_v2",   "v2"),
-                ("xg_underperformance_v3",   "v3"),
-            ],
-            "momentum_xg": [("momentum_xg_v1", "v1"), ("momentum_xg_v2", "v2")],
-            "tarde_asia":  [("tarde_asia",                 None)],
-        }
-        _VER_LOOKUP = {"momentum_xg": "momentum"}
-        for _legacy_key, _entries in _ORIG_MAP.items():
-            _old_cfg = s.get(_legacy_key, {})
-            _ver_key = _VER_LOOKUP.get(_legacy_key, _legacy_key)
-            _active_ver = versions.get(_ver_key, "off")
-            for (_reg_key, _ver) in _entries:
-                _is_active = _active_ver != "off" and (_ver is None or _active_ver == _ver)
-                _s_configs[_reg_key] = {**_old_cfg, "enabled": _is_active}
-        versions["_strategy_configs"] = _s_configs
-        versions["_min_duration"] = md
 
         # ── Audit: contar partidos live para log de ciclo ──
         try:
@@ -600,118 +517,46 @@ async def get_betting_signals(
 ) -> Dict[str, Any]:
     """Detect live betting opportunities based on portfolio strategies.
 
-    When no parameters are supplied, reads versions and min_duration from
-    cartera_config.json. Query params act as explicit overrides.
+    When no parameters are supplied, reads strategies and min_duration from
+    cartera_config.json. Query params act as on/off overrides.
     Applies adjustments (min_odds, max_odds, drift_min_minute) and risk_filter.
-    Auto-places mature signals as paper bets.
     """
     cfg = load_config()
-    v = cfg.get("versions", {})       # formato antiguo (puede estar vacío)
-    s = cfg.get("strategies", {})     # formato nuevo (enabled + params)
+    s   = cfg.get("strategies", {})
     md      = cfg.get("min_duration", {})
     md_live = cfg.get("min_duration_live", {})
     adj = cfg.get("adjustments", {})
     risk_filter = cfg.get("risk_filter", "all")
-    flat_stake = float(cfg.get("flat_stake", 10.0))
 
-    def _ver(query_param, v_key, s_key, default):
-        """Resuelve versión: query > enabled check > versions.<key> > strategies.<key>.version > default."""
-        if query_param:
-            return query_param
-        strat = s.get(s_key, {})
-        # enabled: false ALWAYS wins — regardless of version overrides
-        if strat.get("enabled") is False:
-            return "off"
-        if v.get(v_key):
-            return v.get(v_key)
-        if strat.get("version"):
-            return strat.get("version")
-        return default
+    # Apply query param overrides (on/off toggles for legacy compat)
+    _QUERY_MAP = {
+        "back_draw_00": draw, "xg_underperformance": xg,
+        "odds_drift": drift, "goal_clustering": clustering,
+        "pressure_cooker": pressure, "momentum_xg": momentum,
+    }
+    _s = dict(s)
+    for _reg_key, _qp in _QUERY_MAP.items():
+        if _qp is not None:
+            _s.setdefault(_reg_key, {})
+            _s[_reg_key] = {**_s[_reg_key], "enabled": _qp != "off"}
 
-    # ── Extraer parámetros por estrategia desde config (single source of truth) ──
-    # Estos params fluyen al detector live para garantizar alineación con histórico.
-    drift_s       = s.get("drift", {})
-    clustering_s  = s.get("clustering", {})
-    xg_s          = s.get("xg", {})
-    draw_s        = s.get("draw", {})
-    pressure_s    = s.get("pressure", {})
-    momentum_s    = s.get("momentum_xg", {})
+    # Apply min_dur query param overrides
+    _md = dict(md)
+    for k, v in md_live.items():
+        _md[k] = v
+    _MIN_DUR_MAP = {
+        "back_draw_00": draw_min_dur, "xg_underperformance": xg_min_dur,
+        "odds_drift": drift_min_dur, "goal_clustering": clustering_min_dur,
+        "pressure_cooker": pressure_min_dur,
+    }
+    for _reg_key, _qp in _MIN_DUR_MAP.items():
+        if _qp is not None:
+            _md[_reg_key] = _qp
 
     versions = {
-        "draw":       _ver(draw,       "draw",       "draw",       "v2r"),
-        "xg":         _ver(xg,         "xg",         "xg",         "base"),
-        "drift":      _ver(drift,       "drift",      "drift",      "v1"),
-        "clustering": _ver(clustering,  "clustering", "clustering", "v2"),
-        "pressure":   _ver(pressure,    "pressure",   "pressure",   "v1"),
-        "momentum":   _ver(momentum,    "momentum_xg", "momentum_xg", "off"),
-        "tarde_asia": _ver(None,        "tarde_asia", "tarde_asia", "off"),
-        "draw_min_dur":       str(draw_min_dur       if draw_min_dur       is not None else md_live.get("draw",       md.get("draw", 1))),
-        "xg_min_dur":         str(xg_min_dur         if xg_min_dur         is not None else md_live.get("xg",         md.get("xg", 2))),
-        "drift_min_dur":      str(drift_min_dur      if drift_min_dur      is not None else md_live.get("drift",      md.get("drift", 2))),
-        "clustering_min_dur": str(clustering_min_dur if clustering_min_dur is not None else md_live.get("clustering", md.get("clustering", 4))),
-        "pressure_min_dur":   str(pressure_min_dur   if pressure_min_dur   is not None else md_live.get("pressure",   md.get("pressure", 2))),
-        "tarde_asia_min_dur": str(md_live.get("tarde_asia", md.get("tarde_asia", 1))),
-        "momentum_min_dur":   str(md_live.get("momentum",   md.get("momentum", 1))),
-        # ── Strategy thresholds (from cartera_config.json strategies block) ──
-        # These make the live detector use the SAME params as the historical analysis.
-        "drift_threshold":      str(drift_s.get("driftMin", 30)),
-        "drift_odds_max":       str(drift_s.get("oddsMax", 999)),
-        "drift_goal_diff_min":  str(drift_s.get("goalDiffMin", 0)),
-        "drift_minute_min":     str(drift_s.get("minuteMin", 0)),
-        "drift_minute_max":     str(drift_s.get("minuteMax", 90)),
-        "drift_mom_gap_min":    str(drift_s.get("momGapMin", 0)),
-        "clustering_minute_max": str(clustering_s.get("minuteMax", 90)),
-        "clustering_xg_rem_min": str(clustering_s.get("xgRemMin", 0)),
-        "clustering_sot_min":   str(clustering_s.get("sotMin", 3)),
-        "xg_minute_max":        str(xg_s.get("minuteMax", 90)),
-        "xg_sot_min":           str(xg_s.get("sotMin", 0)),
-        "xg_xg_excess_min":     str(xg_s.get("xgExcessMin", 0.5)),
-        "draw_xg_max":          str(draw_s.get("xgMax", 1.0)),
-        "draw_poss_max":        str(draw_s.get("possMax", 100)),
-        "draw_shots_max":       str(draw_s.get("shotsMax", 20)),
-        "draw_minute_min":      str(draw_s.get("minuteMin", 30)),
-        "draw_minute_max":      str(draw_s.get("minuteMax", 90)),
-        "xg_minute_min":        str(xg_s.get("minuteMin", 0)),
-        "clustering_minute_min": str(clustering_s.get("minuteMin", 0)),
-        "pressure_minute_min":  str(pressure_s.get("minuteMin", 0)),
-        "pressure_minute_max":  str(pressure_s.get("minuteMax", 90)),
-        "pressure_xg_sum_min":  str(pressure_s.get("xg_sum_min", 0)),
-        "momentum_minute_min":  str(momentum_s.get("minuteMin", 0)),
-        "momentum_minute_max":  str(momentum_s.get("minuteMax", 90)),
+        "_strategy_configs": _s,
+        "_min_duration": _md,
     }
-
-    # Synthesize per-version registry entries for the 7 original strategies
-    _s_configs = dict(s)
-    _ORIG_MAP = {
-        "draw": [
-            ("back_draw_00_v1", "v1"), ("back_draw_00_v15", "v15"),
-            ("back_draw_00_v2", "v2"), ("back_draw_00_v2r", "v2r"),
-            ("back_draw_00_v3", "v3"), ("back_draw_00_v4",  "v4"),
-        ],
-        "drift": [
-            ("odds_drift_v1", "v1"), ("odds_drift_v2", "v2"), ("odds_drift_v3", "v3"),
-            ("odds_drift_v4", "v4"), ("odds_drift_v5", "v5"), ("odds_drift_v6", "v6"),
-        ],
-        "clustering":  [("goal_clustering",            None)],
-        "pressure":    [("pressure_cooker",             None)],
-        "xg": [
-            ("xg_underperformance_base", "base"),
-            ("xg_underperformance_v2",   "v2"),
-            ("xg_underperformance_v3",   "v3"),
-        ],
-        "momentum_xg": [("momentum_xg_v1", "v1"), ("momentum_xg_v2", "v2")],
-        "tarde_asia":  [("tarde_asia",                 None)],
-    }
-    _VER_LOOKUP = {"momentum_xg": "momentum"}
-    for _legacy_key, _entries in _ORIG_MAP.items():
-        _old_cfg = s.get(_legacy_key, {})
-        _ver_key = _VER_LOOKUP.get(_legacy_key, _legacy_key)
-        _active_ver = versions.get(_ver_key, "off")
-        for (_reg_key, _ver) in _entries:
-            _is_active = _active_ver != "off" and (_ver is None or _active_ver == _ver)
-            _s_configs[_reg_key] = {**_old_cfg, "enabled": _is_active}
-    versions["_strategy_configs"] = _s_configs
-    versions["_min_duration"] = md
 
     result = csv_reader.detect_betting_signals(versions=versions)
 
@@ -744,31 +589,21 @@ async def get_watchlist(
 ) -> List[Any]:
     """Matches close to triggering a signal but not yet meeting all conditions."""
     cfg = load_config()
-    v = cfg.get("versions", {})
     s = cfg.get("strategies", {})
 
-    def _ver(query_param, v_key, s_key, default):
-        if query_param:
-            return query_param
-        strat = s.get(s_key, {})
-        # enabled: false ALWAYS wins — regardless of version overrides
-        if strat.get("enabled") is False:
-            return "off"
-        if v.get(v_key):
-            return v.get(v_key)
-        if strat.get("version"):
-            return strat.get("version")
-        return default
-
-    versions = {
-        "draw":       _ver(draw,      "draw",       "draw",       "v2r"),
-        "xg":         _ver(xg,        "xg",         "xg",         "base"),
-        "drift":      _ver(drift,      "drift",      "drift",      "v1"),
-        "clustering": _ver(clustering, "clustering", "clustering", "v2"),
-        "pressure":   _ver(pressure,   "pressure",   "pressure",   "v1"),
-        "momentum":   _ver(momentum,   "momentum_xg", "momentum_xg", "off"),
-        "tarde_asia": _ver(None,       "tarde_asia", "tarde_asia", "off"),
+    # Apply query param overrides (on/off toggles)
+    _QUERY_MAP = {
+        "back_draw_00": draw, "xg_underperformance": xg,
+        "odds_drift": drift, "goal_clustering": clustering,
+        "pressure_cooker": pressure, "momentum_xg": momentum,
     }
+    _s = dict(s)
+    for _reg_key, _qp in _QUERY_MAP.items():
+        if _qp is not None:
+            _s.setdefault(_reg_key, {})
+            _s[_reg_key] = {**_s[_reg_key], "enabled": _qp != "off"}
+
+    versions = {"_strategy_configs": _s}
     return csv_reader.detect_watchlist(versions=versions)
 
 
@@ -777,4 +612,58 @@ async def clear_cache():
     """Clear analytics cache to force reload of data."""
     csv_reader.clear_analytics_cache()
     return {"status": "ok", "message": "Cache cleared successfully"}
+
+
+_BETFAIR_SESSION_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data" / "betfair_session"
+_pw_instance = None
+_pw_context = None
+
+
+async def _get_betfair_browser():
+    """Return (or lazily create) a persistent Playwright browser context for Betfair."""
+    global _pw_instance, _pw_context
+    # Check if existing context is still alive
+    if _pw_context is not None:
+        try:
+            _ = _pw_context.pages  # property access — raises if closed
+        except Exception:
+            _pw_context = None
+    if _pw_context is None:
+        from playwright.async_api import async_playwright
+        if _pw_instance is None:
+            _pw_instance = await async_playwright().start()
+        _BETFAIR_SESSION_DIR.mkdir(parents=True, exist_ok=True)
+        _pw_context = await _pw_instance.chromium.launch_persistent_context(
+            str(_BETFAIR_SESSION_DIR),
+            headless=False,
+            channel="chrome",
+            args=["--start-maximized"],
+            no_viewport=True,
+        )
+        _log.info("Betfair browser context launched")
+    return _pw_context
+
+
+@router.post("/open-bet")
+async def open_bet(payload: dict):
+    """Opens the Betfair match URL in a persistent Playwright browser and auto-clicks login if needed."""
+    url = payload.get("match_url", "")
+    if not url:
+        return {"ok": False, "error": "No URL provided"}
+    try:
+        context = await _get_betfair_browser()
+        page = await context.new_page()
+        await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+        # Click login button if visible (first time: user fills creds manually; after that session persists)
+        try:
+            login_btn = page.locator("a.btn-login, a:has-text('Iniciar sesión'), button:has-text('Iniciar sesión')")
+            await login_btn.first.wait_for(state="visible", timeout=3000)
+            await login_btn.first.click()
+            await page.wait_for_load_state("networkidle", timeout=8000)
+        except Exception:
+            pass  # Already logged in or login not needed
+        return {"ok": True}
+    except Exception as e:
+        _log.warning(f"open_bet error: {e}")
+        return {"ok": False, "error": str(e)}
 

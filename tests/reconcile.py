@@ -40,11 +40,9 @@ bt_raw   = csv_reader.analyze_cartera()
 all_bets = bt_raw.get('bets', [])
 print(f"BT superset: {len(all_bets)} bets")
 
-_synth_s = csv_reader._build_registry_config_map(s)
-
 bt_filtered = []
 for _reg_key, *_ in csv_reader._STRATEGY_REGISTRY:
-    if not _synth_s.get(_reg_key, {}).get('enabled'):
+    if not s.get(_reg_key, {}).get('enabled'):
         continue
     _reg_bets = [b for b in all_bets if b.get('strategy') == _reg_key]
     bt_filtered.extend(_reg_bets)
@@ -64,15 +62,15 @@ print(f"BT unique (match, strategy) pairs: {len(bt_set)}")
 
 # ── LIVE side ─────────────────────────────────────────────────────────────────
 
-# detect_betting_signals only consumes '_strategy_configs' and 'min_duration'
+# detect_betting_signals consumes '_strategy_configs' and '_min_duration'
 VERSIONS = {
     '_strategy_configs': s,
-    'min_duration': md,
+    '_min_duration': md,
 }
 
-# min_dur per registry key, using the same legacy-key mapping as analyze_cartera
+# min_dur per registry key — direct lookup (config keys match registry keys)
 MIN_DUR_MAP = {
-    k: md.get(csv_reader._LEGACY_MIN_DUR_KEY.get(k, k), 1)
+    k: md.get(k, 1)
     for k, *_ in csv_reader._STRATEGY_REGISTRY
 }
 

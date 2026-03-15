@@ -1,14 +1,11 @@
 """
 Preset optimizer — Python backend.
-Implements Phase 1 + Phase 2 of findBestCombo (cartera.ts) in Python,
-avoiding Chrome's RESULT_CODE_HUNG and Out of Memory issues.
 
-Phase 1 (~6.6M combos): finds best VersionCombo + BankrollMode + RiskFilter.
-Phase 2 (~7776 combos): finds best RealisticAdjustments given Phase 1 result.
-Phase 3 (5 combos): momentum minute range — stays in browser (trivial).
-
-Mirrors exactly: evaluateCombo, simulateCartera, filterXXXBets,
-applyRealisticAdjustments from cartera.ts.
+Phase 1 (~2,048 combos): finds best on/off strategy combo + BankrollMode + RiskFilter.
+Phase 2 (~7,776 combos): finds best RealisticAdjustments given Phase 1 result.
+Phase 2.5: steepest-descent strategy disabling refinement.
+Phase 3 (5 combos): momentum minute range.
+Phase 4: cashout percentage optimization.
 """
 import asyncio
 import json
@@ -37,38 +34,7 @@ router = APIRouter()
 # Pre-computed preset CSVs live here (written by optimizer_cli.py after each run).
 _PRESETS_DIR = _backend_dir.parent.parent / "data" / "presets"
 
-# ── Version → params mappings (mirrors cartera.ts exactly) ──────────────────
-
-DRAW_PARAMS: Dict[str, Dict] = {
-    "v1":  dict(xg_max=1.0, poss_max=100, shots_max=20, xg_dom_asym=False, min_min=30, min_max=90),
-    "v15": dict(xg_max=0.6, poss_max=25,  shots_max=20, xg_dom_asym=False, min_min=30, min_max=90),
-    "v2r": dict(xg_max=0.6, poss_max=20,  shots_max=8,  xg_dom_asym=False, min_min=30, min_max=90),
-    "v2":  dict(xg_max=0.5, poss_max=20,  shots_max=8,  xg_dom_asym=False, min_min=30, min_max=90),
-    "v3":  dict(xg_max=0.6, poss_max=25,  shots_max=20, xg_dom_asym=True,  min_min=30, min_max=90),
-}
-
-XG_PARAMS: Dict[str, Dict] = {
-    "base": dict(sot_min=0, xg_excess_min=0.5, min_min=0, min_max=70),
-    "v2":   dict(sot_min=2, xg_excess_min=0.5, min_min=0, min_max=70),
-    "v3":   dict(sot_min=2, xg_excess_min=0.5, min_min=0, min_max=70),
-}
-
-DRIFT_PARAMS: Dict[str, Dict] = {
-    "v1": dict(goal_diff_min=0, drift_min=30,  odds_max=1e9, min_min=0,  min_max=90, mom_gap_min=0),
-    "v2": dict(goal_diff_min=2, drift_min=30,  odds_max=1e9, min_min=0,  min_max=90, mom_gap_min=0),
-    "v3": dict(goal_diff_min=0, drift_min=100, odds_max=1e9, min_min=0,  min_max=90, mom_gap_min=0),
-    "v4": dict(goal_diff_min=0, drift_min=30,  odds_max=5,   min_min=45, min_max=90, mom_gap_min=0),
-    "v5": dict(goal_diff_min=0, drift_min=30,  odds_max=5,   min_min=0,  min_max=90, mom_gap_min=0),
-    "v6": dict(goal_diff_min=0, drift_min=30,  odds_max=5,   min_min=0,  min_max=90, mom_gap_min=200),
-}
-
-CLUSTERING_PARAMS: Dict[str, Dict] = {
-    "v2": dict(sot_min=3, min_min=0, min_max=90, xg_rem_min=0.0),
-    "v3": dict(sot_min=3, min_min=0, min_max=60, xg_rem_min=0.0),
-    "v4": dict(sot_min=3, min_min=0, min_max=80, xg_rem_min=0.8),
-}
-
-# Min odds per strategy — mirrors MIN_ODDS_BY_STRATEGY in cartera.ts
+# ── Min odds per strategy ────────────────────────────────────────────────────
 MIN_ODDS: Dict[str, float] = {
     "back_draw_00":        1.93,
     "xg_underperformance": 1.51,
@@ -76,91 +42,35 @@ MIN_ODDS: Dict[str, float] = {
     "goal_clustering":     1.73,
     "pressure_cooker":     1.83,
     "tarde_asia":          1.83,
-    "momentum_xg_v1":      1.65,
-    "momentum_xg_v2":      1.83,
+    "momentum_xg":         1.65,
 }
 
-# Opts arrays — mirrors cartera.ts findBestCombo exactly
-DRAW_OPTS         = ["v1", "v15", "v2r", "v2", "v3", "off"]
-XG_OPTS           = ["base", "v2", "v3", "off"]
-DRIFT_OPTS        = ["v1", "v2", "v3", "v4", "v5", "v6", "off"]
-CLUSTERING_OPTS   = ["v2", "v3", "v4", "off"]
-PRESSURE_OPTS     = ["v1", "off"]
-TARDESIA_OPTS     = ["v1", "off"]
-MOMENTUM_OPTS     = ["v1", "v2", "off"]
-LAY15_OPTS        = ["off", "v1", "v2"]
-LAY_DA_OPTS       = ["off", "on"]
-LAY25_OPTS        = ["off", "on"]
-BSD_OPTS          = ["off", "on"]
-BO15E_OPTS        = ["off", "on"]
-LFF_OPTS          = ["off", "on"]
+# Opts arrays — on/off toggles per strategy (versions eliminated)
+DRAW_OPTS         = ["on", "off"]
+XG_OPTS           = ["on", "off"]
+DRIFT_OPTS        = ["on", "off"]
+CLUSTERING_OPTS   = ["on", "off"]
+PRESSURE_OPTS     = ["on", "off"]
+TARDESIA_OPTS     = ["on", "off"]
+MOMENTUM_OPTS     = ["on", "off"]
 BR_OPTS           = ["fixed", "half_kelly", "dd_protection", "anti_racha"]
 RISK_OPTS         = ["all", "no_risk", "with_risk", "medium"]
 
-# ── Additional Strategy PARAMS + OPTS ────────────────────────────────────────
-# 19 additional strategies (unified in _STRATEGY_REGISTRY). Versioned PARAMS + OPTS for
-# Phase 1, plus on/off toggles for the simpler strategies.
-
-SD_LAY_O45_PARAMS: Dict[str, Dict] = {
-    "v1":   dict(min_min=65, min_max=75, goals_max=2, odds_max=15),
-    "v3":   dict(min_min=55, min_max=75, goals_max=1, odds_max=15),
-    "v2v4": dict(min_min=55, min_max=75, goals_max=2, odds_max=15, xg_max=2.0),
-    "late": dict(min_min=68, min_max=78, goals_max=2, odds_max=15),
-}
-SD_LEADER_DOM_PARAMS: Dict[str, Dict] = {
-    "v1": dict(min_min=55, min_max=70, sot_min=4, sot_max_rival=1),
-    "v2": dict(min_min=55, min_max=80, sot_min=3, sot_max_rival=2),
-    "v3": dict(min_min=50, min_max=75, sot_min=3, sot_max_rival=1),
-}
-SD_OVER25_2G_PARAMS: Dict[str, Dict] = {
-    "v1": dict(min_min=55, min_max=78, goal_diff_min=2, sot_total_min=3, odds_min=1.5, odds_max=8.0),
-    "v3": dict(min_min=55, min_max=75, goal_diff_min=2, sot_total_min=4, odds_min=1.5, odds_max=8.0),
-    "v4": dict(min_min=55, min_max=78, goal_diff_min=2, sot_total_min=3, odds_min=1.5, odds_max=8.0, xg_min=0.5),
-}
-
-SD_LAY_O45_OPTS    = ["off", "v1", "v3", "v2v4", "late"]
-SD_LEADER_DOM_OPTS = ["off", "v1", "v2", "v3"]
-SD_OVER25_2G_OPTS  = ["off", "v1", "v3", "v4"]
-SD_CONFLUENCE_OPTS = ["off", "on"]
-SD_DRAW_EQ_OPTS    = ["off", "on"]
-SD_UNDER25_OPTS    = ["off", "on"]
-SD_UNDER35_OPTS    = ["off", "on"]
-SD_DRAW_STL_OPTS   = ["off", "on"]
-SD_DRAW_CONV_OPTS  = ["off", "on"]
-SD_CORNER_SOT_OPTS = ["off", "on"]
-SD_O25_V4_OPTS     = ["off", "on"]
-SD_O35_FH_OPTS     = ["off", "on"]
-SD_O25_11_OPTS     = ["off", "on"]
-SD_POSS_OPTS       = ["off", "on"]
-SD_LONGSHOT_OPTS   = ["off", "on"]
-SD_CS00_OPTS       = ["off", "on"]
-
-# All (draw, xg) pairs — 6×4 = 24 combinations (includes draw="off", xg="off").
-# Used to split work across up to 24 workers instead of just 6 (draw-only).
+# All (draw, xg) pairs — 2×2 = 4 combinations.
+# Used to split work across workers.
 ALL_DRAW_XG_PAIRS = [(d, x) for d in DRAW_OPTS for x in XG_OPTS]
 
 _PHASE1_TOTAL = (
-    len(["v1", "v15", "v2r", "v2", "v3", "off"]) *       # DRAW
-    len(["base", "v2", "v3", "off"]) *                    # XG
-    len(["v1", "v2", "v3", "v4", "v5", "v6", "off"]) *   # DRIFT
-    len(["v2", "v3", "v4", "off"]) *                      # CLUSTERING
-    len(["v1", "off"]) *                                   # PRESSURE
-    len(["v1", "off"]) *                                   # TARDESIA
-    len(["v1", "v2", "off"]) *                            # MOMENTUM
-    len(["off", "v1", "v2"]) *                            # LAY15
-    len(["off", "on"]) *                                   # LAY_DA
-    len(["off", "on"]) *                                   # LAY25
-    len(["off", "on"]) *                                   # BSD
-    len(["off", "on"]) *                                   # BO15E
-    len(["off", "on"]) *                                   # LFF
-    len(["fixed", "half_kelly", "dd_protection", "anti_racha"]) *  # BR
-    len(["all", "no_risk", "with_risk", "medium"])        # RISK
-)  # = 12,386,304
-# NOTE: SD strategies are NOT included in _PHASE1_TOTAL or _phase1_worker.
-# Adding 16 extra toggles (5*4*4*2^13 = ~5.2B multiplier) would make the
-# brute-force search computationally infeasible.  SD strategies are optimized
-# independently in the notebook (strategies_designer.ipynb) via per-strategy
-# grid searches, then combined additively with the existing cartera.
+    len(DRAW_OPTS) *        # 2
+    len(XG_OPTS) *          # 2
+    len(DRIFT_OPTS) *       # 2
+    len(CLUSTERING_OPTS) *  # 2
+    len(PRESSURE_OPTS) *    # 2
+    len(TARDESIA_OPTS) *    # 2
+    len(MOMENTUM_OPTS) *    # 2
+    len(BR_OPTS) *          # 4
+    len(RISK_OPTS)          # 4
+)  # = 2,048
 _PHASE2_TOTAL = 2 * 3 * 3 * 3 * 2 * 2 * 3 * 3 * 3  # = 7776
 
 # Module-level state — updated from the worker thread, read by GET endpoints.
@@ -174,16 +84,8 @@ _opt_progress: Dict[str, Any] = {
 }
 
 MAX_BETS_COMBO = {
-    "draw": "v1", "xg": "base", "drift": "v1", "clustering": "v2",
-    "pressure": "v1", "tardeAsia": "v1", "momentumXG": "v1",
-    "layOver15": "v1", "layDrawAsym": "on", "layOver25Def": "on",
-    "backSotDom": "on", "backOver15Early": "on", "layFalseFav": "on",
-    # SD strategies — included in max_bets combo for completeness
-    "sdLayO45": "v1", "sdLeaderDom": "v1", "sdOver25_2g": "v1",
-    "sdConfluence": "on", "sdDrawEq": "on", "sdUnder25": "on",
-    "sdUnder35": "on", "sdDrawStl": "on", "sdDrawConv": "on",
-    "sdCornerSot": "on", "sdO25V4": "on", "sdO35Fh": "on",
-    "sdO25_11": "on", "sdPoss": "on", "sdLongshot": "on", "sdCs00": "on",
+    "draw": "on", "xg": "on", "drift": "on", "clustering": "on",
+    "pressure": "on", "tardeAsia": "on", "momentumXG": "on",
     "br": "fixed",
 }
 
@@ -244,110 +146,27 @@ def _fv(b: Dict, key: str) -> Optional[float]:
 # ── Filter functions (mirrors cartera.ts filter*Bets exactly) ───────────────
 
 def _filter_draw(bets: List[Dict], v: str) -> List[Dict]:
-    if v not in DRAW_PARAMS:
+    if v == "off":
         return []
-    p = DRAW_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") != "back_draw_00":
-            continue
-        xg = _fv(b, "xg_total")
-        if p["xg_max"] < 1.0 and xg is not None and xg >= p["xg_max"]:
-            continue
-        pd = _fv(b, "poss_diff")
-        if p["poss_max"] < 100 and pd is not None and pd >= p["poss_max"]:
-            continue
-        st = _fv(b, "shots_total")
-        if p["shots_max"] < 20 and st is not None and st >= p["shots_max"]:
-            continue
-        if p["xg_dom_asym"]:
-            dom = _fv(b, "synth_xg_dominance")
-            if dom is not None and 0.45 <= dom <= 0.55:
-                continue
-        mn = _fv(b, "minuto")
-        if p["min_min"] > 0 and mn is not None and mn < p["min_min"]:
-            continue
-        if mn is not None and mn >= p["min_max"]:
-            continue
-        result.append(b)
-    return result
+    return [b for b in bets if b.get("strategy") == "back_draw_00"]
 
 
 def _filter_xg(bets: List[Dict], v: str) -> List[Dict]:
-    if v not in XG_PARAMS:
+    if v == "off":
         return []
-    p = XG_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") not in ("xg_underperformance", "xg_underperformance_base"):
-            continue
-        xe = _fv(b, "xg_excess")
-        if p["xg_excess_min"] > 0 and xe is not None and xe < p["xg_excess_min"]:
-            continue
-        st = _fv(b, "sot_team")
-        if p["sot_min"] > 0 and st is not None and st < p["sot_min"]:
-            continue
-        mn = _fv(b, "minuto")
-        if p["min_min"] > 0 and mn is not None and mn < p["min_min"]:
-            continue
-        if mn is not None and mn >= p["min_max"]:
-            continue
-        result.append(b)
-    return result
+    return [b for b in bets if b.get("strategy") == "xg_underperformance"]
 
 
 def _filter_drift(bets: List[Dict], v: str) -> List[Dict]:
-    if v not in DRIFT_PARAMS:
+    if v == "off":
         return []
-    p = DRIFT_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") not in ("odds_drift", "odds_drift_v1"):
-            continue
-        gd = _fv(b, "goal_diff")
-        if p["goal_diff_min"] > 0 and gd is not None and gd < p["goal_diff_min"]:
-            continue
-        dp = _fv(b, "drift_pct")
-        if p["drift_min"] > 30 and dp is not None and dp < p["drift_min"]:
-            continue
-        bo = _fv(b, "back_odds")
-        if p["odds_max"] < 1e8 and bo is not None and bo > p["odds_max"]:
-            continue
-        mn = _fv(b, "minuto")
-        if p["min_min"] > 0 and mn is not None and mn < p["min_min"]:
-            continue
-        if mn is not None and mn >= p["min_max"]:
-            continue
-        mg = _fv(b, "synth_momentum_gap")
-        if p["mom_gap_min"] > 0 and mg is not None and mg <= p["mom_gap_min"]:
-            continue
-        result.append(b)
-    return result
+    return [b for b in bets if b.get("strategy") == "odds_drift"]
 
 
 def _filter_clustering(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    if v not in CLUSTERING_PARAMS:
-        return []
-    p = CLUSTERING_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") != "goal_clustering":
-            continue
-        sm = _fv(b, "sot_max")
-        if p["sot_min"] > 0 and sm is not None and sm < p["sot_min"]:
-            continue
-        mn = _fv(b, "minuto")
-        if p["min_min"] > 0 and mn is not None and mn < p["min_min"]:
-            continue
-        if mn is not None and mn >= p["min_max"]:
-            continue
-        xr = _fv(b, "synth_xg_remaining")
-        if p["xg_rem_min"] > 0 and xr is not None and xr < p["xg_rem_min"]:
-            continue
-        result.append(b)
-    return result
+    return [b for b in bets if b.get("strategy") == "goal_clustering"]
 
 
 def _filter_pressure(bets: List[Dict], v: str) -> List[Dict]:
@@ -365,302 +184,9 @@ def _filter_tardesia(bets: List[Dict], v: str) -> List[Dict]:
 def _filter_momentum(bets: List[Dict], v: str) -> List[Dict]:
     if v == "off":
         return []
-    target = f"momentum_xg_{v}"  # "v1" → "momentum_xg_v1"
-    return [b for b in bets if b.get("strategy") == target]
+    return [b for b in bets if b.get("strategy") == "momentum_xg"]
 
 
-def _filter_lay_over15(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    result = []
-    for b in bets:
-        if b.get("strategy") != "lay_over15":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < 75:
-            continue
-        if mn is not None and mn >= 85:
-            continue
-        if v == "v1" and not b.get("passes_lay_v1"):
-            continue
-        if v == "v2" and not b.get("passes_lay_v2"):
-            continue
-        result.append(b)
-    return result
-
-
-def _filter_lay_draw_asym(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    result = []
-    for b in bets:
-        if b.get("strategy") != "lay_draw_asym":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < 65:
-            continue
-        if mn is not None and mn >= 75:
-            continue
-        xr = _fv(b, "xg_ratio")
-        if xr is not None and xr < 2.5:
-            continue
-        result.append(b)
-    return result
-
-
-def _filter_lay_over25_def(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    result = []
-    for b in bets:
-        if b.get("strategy") != "lay_over25_def":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < 70:
-            continue
-        if mn is not None and mn >= 80:
-            continue
-        xt = _fv(b, "xg_total")
-        if xt is not None and xt >= 1.2:
-            continue
-        tg = _fv(b, "total_goals_trigger")
-        if tg is not None and tg > 1:
-            continue
-        result.append(b)
-    return result
-
-
-def _filter_back_sot_dom(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    result = []
-    for b in bets:
-        if b.get("strategy") != "back_sot_dom":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < 60:
-            continue
-        if mn is not None and mn > 80:
-            continue
-        sd = _fv(b, "sot_dominant")
-        if sd is not None and sd < 4:
-            continue
-        sr = _fv(b, "sot_rival")
-        if sr is not None and sr > 1:
-            continue
-        result.append(b)
-    return result
-
-
-def _filter_back_over15_early(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    result = []
-    for b in bets:
-        if b.get("strategy") != "back_over15_early":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < 25:
-            continue
-        if mn is not None and mn > 45:
-            continue
-        xt = _fv(b, "xg_total")
-        if xt is not None and xt < 1.0:
-            continue
-        st = _fv(b, "sot_total")
-        if st is not None and st < 4:
-            continue
-        tg = _fv(b, "total_goals_trigger")
-        if tg is not None and tg > 1:
-            continue
-        result.append(b)
-    return result
-
-
-def _filter_lay_false_fav(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    result = []
-    for b in bets:
-        if b.get("strategy") != "lay_false_fav":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < 65:
-            continue
-        if mn is not None and mn > 85:
-            continue
-        xr = _fv(b, "xg_ratio")
-        if xr is not None and xr < 2.0:
-            continue
-        fo = _fv(b, "fav_back_odds")
-        if fo is not None and fo > 1.70:
-            continue
-        result.append(b)
-    return result
-
-
-# ── Strategy filter functions ─────────────────────────────────────────────────────
-# Currently NOT called from _phase1_worker (see note above _PHASE1_TOTAL).
-
-def _filter_sd_lay_over45(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off" or v not in SD_LAY_O45_PARAMS:
-        return []
-    p = SD_LAY_O45_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") != "lay_over45":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < p["min_min"]:
-            continue
-        if mn is not None and mn >= p["min_max"]:
-            continue
-        tg = _fv(b, "total_goals_trigger")
-        if tg is not None and tg > p["goals_max"]:
-            continue
-        od = _fv(b, "lay_over45_odds")
-        if od is not None and od > p["odds_max"]:
-            continue
-        if "xg_max" in p:
-            xt = _fv(b, "xg_total")
-            if xt is not None and xt >= p["xg_max"]:
-                continue
-        result.append(b)
-    return result
-
-
-def _filter_sd_leader_dom(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off" or v not in SD_LEADER_DOM_PARAMS:
-        return []
-    p = SD_LEADER_DOM_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") != "back_leader_dom":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < p["min_min"]:
-            continue
-        if mn is not None and mn >= p["min_max"]:
-            continue
-        ls = _fv(b, "leader_sot")
-        if ls is not None and ls < p["sot_min"]:
-            continue
-        rs = _fv(b, "rival_sot")
-        if rs is not None and rs > p["sot_max_rival"]:
-            continue
-        result.append(b)
-    return result
-
-
-def _filter_sd_over25_2goal(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off" or v not in SD_OVER25_2G_PARAMS:
-        return []
-    p = SD_OVER25_2G_PARAMS[v]
-    result = []
-    for b in bets:
-        if b.get("strategy") != "over25_2goal":
-            continue
-        mn = _fv(b, "minuto")
-        if mn is not None and mn < p["min_min"]:
-            continue
-        if mn is not None and mn >= p["min_max"]:
-            continue
-        gd = _fv(b, "goal_diff")
-        if gd is not None and gd < p["goal_diff_min"]:
-            continue
-        st = _fv(b, "sot_total")
-        if st is not None and st < p["sot_total_min"]:
-            continue
-        od = _fv(b, "back_over25_odds")
-        if od is not None:
-            if od < p.get("odds_min", 0):
-                continue
-            if od > p.get("odds_max", 999):
-                continue
-        if "xg_min" in p:
-            xt = _fv(b, "xg_total")
-            if xt is not None and xt < p["xg_min"]:
-                continue
-        result.append(b)
-    return result
-
-
-def _filter_sd_confluence(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "confluence_over25"]
-
-
-def _filter_sd_draw_eq(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "draw_equalizer"]
-
-
-def _filter_sd_under25_scl(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "under25_scoreless"]
-
-
-def _filter_sd_under35_late(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "under35_late"]
-
-
-def _filter_sd_draw_stl(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "draw_stalemate"]
-
-
-def _filter_sd_draw_xg_conv(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "draw_xg_conv"]
-
-
-def _filter_sd_corner_sot(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "corner_sot_over25"]
-
-
-def _filter_sd_over25_2g_v4(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "over25_2goal_v4"]
-
-
-def _filter_sd_over35_fh(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "over35_fh_goals"]
-
-
-def _filter_sd_over25_11(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "over25_from_11"]
-
-
-def _filter_sd_poss_extreme(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "poss_extreme"]
-
-
-def _filter_sd_back_longshot(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "back_longshot"]
-
-
-def _filter_sd_cs_00(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "cs_00"]
 
 
 def _filter_by_risk(bets: List[Dict], risk: str) -> List[Dict]:
@@ -687,7 +213,7 @@ def _bet_market_key(b: Dict) -> str:
     match_id = b.get("match_id", "")
     if strategy == "back_draw_00":
         return f"{match_id}:draw"
-    if strategy in ("odds_drift", "odds_drift_v1", "momentum_xg_v1", "momentum_xg_v2"):
+    if strategy in ("odds_drift", "momentum_xg"):
         return f"{match_id}:back:{b.get('team') or 'unknown'}"
     # Goal Clustering: deduplicate at strategy level — only the first trigger per match fires.
     # Each goal changes over_line but we only want the first clustering signal per match.
@@ -722,7 +248,7 @@ def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
     if drift_min is not None:
         result = [
             b for b in result
-            if b.get("strategy") not in ("odds_drift", "odds_drift_v1") or (_fv(b, "minuto") or 0) >= drift_min
+            if b.get("strategy") != "odds_drift" or (_fv(b, "minuto") or 0) >= drift_min
         ]
 
     # 2. Max odds filter
@@ -749,10 +275,10 @@ def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
 
     # 5. Conflict filter: remove MomXG bets from matches that also have xG Underperf
     if adj.get("conflictFilter"):
-        xg_matches = {b.get("match_id") for b in result if b.get("strategy") in ("xg_underperformance", "xg_underperformance_base")}
+        xg_matches = {b.get("match_id") for b in result if b.get("strategy") == "xg_underperformance"}
         result = [
             b for b in result
-            if b.get("strategy") not in ("momentum_xg_v1", "momentum_xg_v2")
+            if b.get("strategy") != "momentum_xg"
             or b.get("match_id") not in xg_matches
         ]
 
@@ -762,7 +288,7 @@ def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
         new2: List[Dict] = []
         for b in result:
             strategy = b.get("strategy", "")
-            is_match_odds = strategy in ("back_draw_00", "odds_drift", "odds_drift_v1", "momentum_xg_v1", "momentum_xg_v2")
+            is_match_odds = strategy in ("back_draw_00", "odds_drift", "momentum_xg")
             if not is_match_odds:
                 new2.append(b)
                 continue
@@ -878,9 +404,9 @@ def _simulate_cartera_py(bets: List[Dict], bankroll_init: float, mode: str, flat
                 stake_pct = 0.02
         elif mode == "variable":
             strategy = b.get("strategy", "")
-            if strategy in ("odds_drift", "odds_drift_v1"):
+            if strategy == "odds_drift":
                 stake_pct = 0.025
-            elif strategy in ("xg_underperformance", "xg_underperformance_base"):
+            elif strategy == "xg_underperformance":
                 stake_pct = 0.03
             elif strategy == "pressure_cooker":
                 stake_pct = 0.02
@@ -951,29 +477,21 @@ def _score_of(sim: Dict, criterion: str) -> float:
 def _phase1_worker(args: tuple) -> tuple:
     """
     Runs Phase 1 search for a subset of (draw, xg) pairs.
-    Accepts draw_xg_pairs — a list of (draw, xg) tuples — instead of separate
-    draw_subset + xg_opts, enabling up to 15-worker splits (5 draws × 3 xg versions).
+    Each strategy is on/off — 7 strategies × 4 BR × 4 risk = 2,048 combos total.
     Returns (best_combo_dict, best_risk, best_score).
     """
-    # Windows: set BELOW_NORMAL priority inside the worker itself.
-    # ProcessPoolExecutor uses 'spawn' on Windows, so workers do NOT inherit the
-    # parent's priority class — they always start at NORMAL priority regardless of
-    # the parent's creationflags. Setting it here guarantees Chrome's renderer is
-    # never starved of CPU time.
     if sys.platform == "win32":
         import ctypes
         ctypes.windll.kernel32.SetPriorityClass(
             ctypes.windll.kernel32.GetCurrentProcess(), 0x00004000)  # BELOW_NORMAL
 
     (bets, draw_xg_pairs, drift_opts, clustering_opts, pressure_opts,
-     tardesia_opts, momentum_opts, lay15_opts, lay_da_opts, lay25_opts,
-     bsd_opts, bo15e_opts, lff_opts, br_opts, risk_opts,
+     tardesia_opts, momentum_opts, br_opts, risk_opts,
      criterion, bankroll_init) = args
 
     best_combo = None
     best_risk = "all"
     best_score = -math.inf
-    _itr_p1 = 0
 
     for draw, xg in draw_xg_pairs:
         draw_bets = _filter_draw(bets, draw)
@@ -988,64 +506,34 @@ def _phase1_worker(args: tuple) -> tuple:
                         tardesia_bets = _filter_tardesia(bets, tardesia)
                         for momentum in momentum_opts:
                             momentum_bets = _filter_momentum(bets, momentum)
-                            for lay15 in lay15_opts:
-                                lay15_bets = _filter_lay_over15(bets, lay15)
-                                for lay_da in lay_da_opts:
-                                    lay_da_bets = _filter_lay_draw_asym(bets, lay_da)
-                                    for lay25 in lay25_opts:
-                                        lay25_bets = _filter_lay_over25_def(bets, lay25)
-                                        for bsd in bsd_opts:
-                                            bsd_bets = _filter_back_sot_dom(bets, bsd)
-                                            for bo15e in bo15e_opts:
-                                                bo15e_bets = _filter_back_over15_early(bets, bo15e)
-                                                for lff in lff_opts:
-                                                    lff_bets = _filter_lay_false_fav(bets, lff)
-                                                    combined = [
-                                                        b for b in (
-                                                            draw_bets + xg_bets + drift_bets +
-                                                            clustering_bets + pressure_bets +
-                                                            tardesia_bets + momentum_bets +
-                                                            lay15_bets + lay_da_bets + lay25_bets +
-                                                            bsd_bets + bo15e_bets + lff_bets
-                                                        )
-                                                        if _meets_min_odds(b)
-                                                    ]
-                                                    combined.sort(key=lambda b: b.get("timestamp_utc") or "")
-                                                    for br in br_opts:
-                                                        for risk in risk_opts:
-                                                            filtered = _filter_by_risk(combined, risk)
-                                                            if len(filtered) < 15:
-                                                                continue
-                                                            sim = _simulate_cartera_py(filtered, bankroll_init, br)
-                                                            score = _score_of(sim, criterion)
-                                                            if score > best_score:
-                                                                best_score = score
-                                                                best_risk = risk
-                                                                best_combo = {
-                                                                    "draw": draw, "xg": xg,
-                                                                    "drift": drift,
-                                                                    "clustering": clustering,
-                                                                    "pressure": pressure,
-                                                                    "tardeAsia": tardesia,
-                                                                    "momentumXG": momentum,
-                                                                    "layOver15": lay15,
-                                                                    "layDrawAsym": lay_da,
-                                                                    "layOver25Def": lay25,
-                                                                    "backSotDom": bsd,
-                                                                    "backOver15Early": bo15e,
-                                                                    "layFalseFav": lff,
-                                                                    "br": br,
-                                                                }
-                                                            _itr_p1 += 1
-                                                            if _itr_p1 % 100_000 == 0:
-                                                                _pct = min(99, round(_itr_p1 / _PHASE1_TOTAL * 100))
-                                                                _opt_progress["pct"] = _pct
-                                                                _opt_progress["message"] = (
-                                                                    f"Phase 1 — {_pct}% "
-                                                                    f"({_itr_p1:,} / {_PHASE1_TOTAL:,} combos)"
-                                                                )
-                                                                logger.info("Optimizer Phase 1: %d%% (%d/%d)",
-                                                                            _pct, _itr_p1, _PHASE1_TOTAL)
+                            combined = [
+                                b for b in (
+                                    draw_bets + xg_bets + drift_bets +
+                                    clustering_bets + pressure_bets +
+                                    tardesia_bets + momentum_bets
+                                )
+                                if _meets_min_odds(b)
+                            ]
+                            combined.sort(key=lambda b: b.get("timestamp_utc") or "")
+                            for br in br_opts:
+                                for risk in risk_opts:
+                                    filtered = _filter_by_risk(combined, risk)
+                                    if len(filtered) < 15:
+                                        continue
+                                    sim = _simulate_cartera_py(filtered, bankroll_init, br)
+                                    score = _score_of(sim, criterion)
+                                    if score > best_score:
+                                        best_score = score
+                                        best_risk = risk
+                                        best_combo = {
+                                            "draw": draw, "xg": xg,
+                                            "drift": drift,
+                                            "clustering": clustering,
+                                            "pressure": pressure,
+                                            "tardeAsia": tardesia,
+                                            "momentumXG": momentum,
+                                            "br": br,
+                                        }
 
     return best_combo, best_risk, best_score
 

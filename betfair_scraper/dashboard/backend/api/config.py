@@ -19,24 +19,15 @@ router = APIRouter()
 _CONFIG_PATH = Path(__file__).resolve().parent.parent.parent.parent / "cartera_config.json"
 
 DEFAULT_CONFIG: Dict[str, Any] = {
-    "versions": {
-        "draw": "v2r",
-        "xg": "base",
-        "drift": "v1",
-        "clustering": "v2",
-        "pressure": "v1",
-        # tarde_asia and momentum_xg are intentionally absent:
-        # they are always resolved from strategies block at runtime.
-    },
     "bankroll_mode": "fixed",
     "active_preset": None,
     "risk_filter": "all",
     "min_duration": {
-        "draw": 1,
-        "xg": 2,
-        "drift": 2,
-        "clustering": 4,
-        "pressure": 2,
+        "back_draw_00": 1,
+        "xg_underperformance": 2,
+        "odds_drift": 2,
+        "goal_clustering": 4,
+        "pressure_cooker": 2,
     },
     "adjustments": {
         "enabled": False,
