@@ -273,8 +273,8 @@
   "initial_bankroll": 100,
   "stake_pct": 2.5,
   "min_duration_live": {
-    "goal_clustering": 0,
-    "over35_early_goals": 0,
+    "goal_clustering": 1,
+    "over35_early_goals": 1,
     "draw_11": 0,
     "draw_22": 0,
     "draw_equalizer": 0,

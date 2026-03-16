@@ -2380,6 +2380,23 @@ class MatchDriver:
                 self._consecutive_failures = 0
                 self._stage, self._stage_pct = "live", 100  # Primera (o siguiente) captura exitosa
                 log.info(f"✓ [{self.match_id}] Captura exitosa: {estado_partido}, min {info['minuto']}, {info['goles_local']}-{info['goles_visitante']}")
+
+                # Guardar screenshot por minuto para evidencias (el backend busca por minuto exacto)
+                try:
+                    minuto_actual = info.get("minuto", "0")
+                    screenshot_path = os.path.join(OUTPUT_DIR, f"screenshot_{self.match_id}_{minuto_actual}.png")
+                    self.driver.save_screenshot(screenshot_path)
+                    # Limpiar screenshots antiguos del mismo partido (conservar últimos 3 minutos)
+                    import glob as _glob
+                    existing = sorted(_glob.glob(os.path.join(OUTPUT_DIR, f"screenshot_{self.match_id}_*.png")))
+                    for old in existing[:-3]:
+                        try:
+                            os.remove(old)
+                        except Exception:
+                            pass
+                except Exception as _e:
+                    log.debug(f"[{self.match_id}] Screenshot omitido: {_e}")
+
                 return datos
 
             except WebDriverException as e:

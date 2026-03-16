@@ -376,6 +376,7 @@ _STRATEGY_MARKET: dict[str, str] = {
     "draw_xg_conv":   "draw",
     "draw_equalizer": "draw",
     "draw_22":        "draw",
+    "cs_11":          "draw",
     "lay_over45_blowout": "lay_over_4.5",
     "over25_2goal":   "over_2.5",
     "goal_clustering":"over_2.5",

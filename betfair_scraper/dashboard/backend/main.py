@@ -27,6 +27,7 @@ from api.analytics import router as analytics_router, run_paper_auto_place
 from api.bets import router as bets_router, run_auto_cashout
 from api.config import router as config_router
 from api.alerts import router as alerts_router, run_alert_checks
+from api.scripts import router as scripts_router
 
 # Force fresh reload of csv_reader to avoid stale module cache
 try:
@@ -52,6 +53,7 @@ app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"]
 app.include_router(bets_router, tags=["bets"])
 app.include_router(config_router, prefix="/api", tags=["config"])
 app.include_router(alerts_router, tags=["alerts"])
+app.include_router(scripts_router)
 
 
 # ==================== AUTO REFRESH SCHEDULER ====================

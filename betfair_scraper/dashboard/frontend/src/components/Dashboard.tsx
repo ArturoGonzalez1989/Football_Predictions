@@ -9,8 +9,9 @@ import { PlacedBetsView } from "./PlacedBetsView"
 import { AnalyticsView } from "./AnalyticsView"
 import AlertsView from "./AlertsView"
 import { BacktestView } from "./BacktestView"
+import { ScriptsView } from "./ScriptsView"
 
-type View = "signals" | "bets" | "live" | "upcoming" | "quality" | "analytics" | "alerts" | "backtest"
+type View = "signals" | "bets" | "live" | "upcoming" | "quality" | "analytics" | "alerts" | "backtest" | "scripts"
 
 export function Dashboard() {
   const [view, setView] = useState<View>("signals")
@@ -170,6 +171,19 @@ export function Dashboard() {
             }
             badgeColor={(alertCounts?.critical ?? 0) > 0 ? "red" : "amber"}
           />
+
+          <div className="border-t border-zinc-800 my-2" />
+
+          <NavItem
+            active={view === "scripts"}
+            onClick={() => setView("scripts")}
+            icon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            }
+            label="Scripts"
+          />
         </nav>
 
         <div className="p-3 border-t border-zinc-800 text-[10px] text-zinc-600 flex items-center justify-between">
@@ -218,6 +232,7 @@ export function Dashboard() {
         <div className={view !== "analytics" ? "hidden" : ""}><AnalyticsView /></div>
         <div className={view !== "alerts" ? "hidden" : ""}><AlertsView /></div>
         <div className={view !== "backtest" ? "hidden" : ""}><BacktestView /></div>
+        <div className={view !== "scripts" ? "hidden" : ""}><ScriptsView /></div>
       </main>
     </div>
   )

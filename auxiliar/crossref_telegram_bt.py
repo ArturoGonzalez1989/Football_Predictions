@@ -1,39 +1,48 @@
-import sys, re, csv
+import sys, re, csv, webbrowser
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
+from html import escape
 
-# Read CSV
-csv_path = 'C:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/analisis/bt_results_20260315_134033.csv'
-csv_rows = []
-with open(csv_path, encoding='utf-8') as f:
+# ── placed_bets.csv (source of real paper-trading results) ──────────────────
+_placed_path = Path('C:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/placed_bets.csv')
+placed_rows = []
+with open(_placed_path, encoding='utf-8') as f:
     reader = csv.DictReader(f)
     for row in reader:
-        csv_rows.append(row)
+        placed_rows.append(row)
 
-mar_rows = [r for r in csv_rows if r.get('timestamp_utc','').startswith('2026-03-14') or r.get('timestamp_utc','').startswith('2026-03-15')]
+# Build lookups
+placed_lookup = {}   # (ev_id, strategy_key) → row
+ev_to_match  = {}    # ev_id → match_name  (for MID rows)
+for r in placed_rows:
+    slug_m = re.search(r'apuestas-(\d+)', r['match_id'])
+    if slug_m:
+        ev_id = slug_m.group(1)
+        placed_lookup[(ev_id, r['strategy'])] = r
+        ev_to_match[ev_id] = r['match_name']
 
-# Build lookup by match_id + strategy
-csv_lookup = {}
-for r in mar_rows:
-    mid = r['match_id'].lower()
-    strat = r['strategy']
-    csv_lookup[(mid, strat)] = r
+print(f"Loaded placed_bets.csv: {len(placed_rows)} bets")
 
-all_match_ids = list(set(r['match_id'].lower() for r in mar_rows))
-
-# Read Telegram
-content = Path('c:/Users/agonz/Downloads/Telegram Desktop/ChatExport_2026-03-14/messages.html').read_text(encoding='utf-8')
+# ── Telegram export ─────────────────────────────────────────────────────────
+_tg_candidates = sorted(
+    Path('C:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/ChatExport').glob('messages*.html'),
+    reverse=True
+)
+if not _tg_candidates:
+    raise FileNotFoundError("No messages*.html found in ChatExport/")
+_tg_path = _tg_candidates[0]
+print(f"Using Telegram export: {_tg_path}")
+content = _tg_path.read_text(encoding='utf-8')
 
 msg_pattern = re.compile(
-    r'title="(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}[^"]*)".*?<div class="text">(.*?)</div>\s*</div>\s*</div>',
+    r'title=\"(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}[^\"]*)\".*?<div class=\"text\">(.*?)</div>\s*</div>\s*</div>',
     re.DOTALL
 )
-
 raw_alerts = []
 for m in msg_pattern.finditer(content):
     ts = m.group(1)
     raw_text = m.group(2)
-    link_match = re.search(r'href="([^"]+)"', raw_text)
+    link_match = re.search(r'href=\"([^\"]+)\"', raw_text)
     link = link_match.group(1) if link_match else ''
     text = re.sub(r'<[^>]+>', ' ', raw_text)
     text = text.replace("&apos;", "'").replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&nbsp;', ' ')
@@ -49,7 +58,6 @@ def is_bet_alert(text):
 
 bet_alerts = [a for a in raw_alerts if is_bet_alert(a['text'])]
 bet_alerts = [a for a in bet_alerts if 'Test FC' not in a['text']]
-
 print(f"Betting alerts (excl. test): {len(bet_alerts)}")
 
 STRAT_MAP = {
@@ -73,6 +81,8 @@ STRAT_MAP = {
     'LAY CS 1-1 at 0-1': 'lay_cs11',
     'LAY Over 4.5 Blowout': 'lay_over45_blowout',
     'BACK Draw 1-1': 'draw_11',
+    'BACK CS 1-1 Late': 'cs_11',
+    'BACK CS 1-1': 'cs_11',
     'BACK CS 2-0/0-2': 'cs_20',
     'Odds Drift Contrarian': 'odds_drift',
     'BACK Longshot Leading': 'longshot',
@@ -95,7 +105,6 @@ def extract_strategy_key(text):
             if k.lower() in label.lower():
                 return v, k
         return None, label
-    # Non-SEÑAL format: strategy is in bold at start
     for k, v in STRAT_MAP.items():
         if text.startswith(k) or text.startswith('🟢 ' + k) or text.startswith('🔴 ' + k):
             return v, k
@@ -104,150 +113,236 @@ def extract_strategy_key(text):
             return v, k
     return None, ''
 
-def extract_match_from_text(text):
-    m = re.search(r'[⚽]\s+([^📊\n⏱]+)', text)
-    if m:
-        return m.group(1).strip()
-    # Non-SEÑAL: match name follows strategy line
-    # Try to find a match after a link text
-    m = re.search(r'((?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\s+-\s+(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+))', text)
-    if m:
-        return m.group(1)
-    return ''
-
-def find_csv_row(match_text, link, strategy_key):
-    if not strategy_key:
-        return None, ''
-    # Try via link slug (Betfair ID)
-    if link:
-        slug_match = re.search(r'apuestas-(\d+)', link)
-        if slug_match:
-            bet_id = slug_match.group(1)
-            for mid in all_match_ids:
-                if bet_id in mid:
-                    row = csv_lookup.get((mid, strategy_key))
-                    if row:
-                        return row, mid
-            # Match found but strategy not in CSV
-            for mid in all_match_ids:
-                if bet_id in mid:
-                    return None, mid
-
-    # Fuzzy match on match name
-    if match_text:
-        norm = match_text.lower()
-        norm = re.sub(r'[^a-z0-9 ]', ' ', norm)
-        parts = [p for p in norm.split() if len(p) > 3]
-
-        best_mid = None
-        best_score = 0
-        for mid in all_match_ids:
-            score = sum(1 for p in parts if p in mid)
-            if score > best_score:
-                best_score = score
-                best_mid = mid
-
-        if best_mid and best_score >= 1:
-            row = csv_lookup.get((best_mid, strategy_key))
-            if row:
-                return row, best_mid
-            return None, best_mid
-
-    return None, ''
-
 def extract_minute(text):
     m = re.search(r'Min\s+(\d+)', text)
-    if m:
-        return m.group(1)
-    return ''
+    return m.group(1) if m else ''
 
 def extract_odds(text):
     m = re.search(r'@\s*([\d.]+)\s*@', text)
-    if m:
-        return m.group(1)
+    if m: return m.group(1)
     m = re.search(r'@\s*([\d.]+)', text)
-    if m:
-        return m.group(1)
-    return ''
+    return m.group(1) if m else ''
 
 def extract_score(text):
     m = re.search(r'Score:\s*(\d+-\d+)', text)
-    if m:
-        return m.group(1)
+    if m: return m.group(1)
     m = re.search(r'\|\s*(\d+-\d+)\s*\|', text)
-    if m:
-        return m.group(1)
-    return ''
+    return m.group(1) if m else ''
 
-def extract_market(text):
-    m = re.search(r'[💰]\s+((?:BACK|LAY)\s+[A-Z0-9./\s]+?)\s*@', text)
-    if m:
-        return m.group(1).strip()
-    m = re.search(r'[·]\s+((?:BACK|LAY)\s+[A-Z0-9./\s]+?)\s*@', text)
-    if m:
-        return m.group(1).strip()
-    return ''
+def find_placed_bet(link, strategy_key):
+    if not strategy_key or not link:
+        return None, ''
+    slug_m = re.search(r'apuestas-(\d+)', link)
+    if not slug_m:
+        return None, ''
+    ev_id = slug_m.group(1)
+    row = placed_lookup.get((ev_id, strategy_key))
+    if row:
+        return row, ev_id
+    for k in placed_lookup:
+        if k[0] == ev_id:
+            return None, ev_id
+    return None, ''
 
-# Build results table
-SEP = '-' * 160
-print()
-print(SEP)
-header = f"{'#':>4} | {'Timestamp (UTC+1)':19} | {'Match':28} | {'Strategy Label':28} | {'Mkt':22} | {'Odds':5} | {'Min':4} | {'Scr':5} | {'InCSV':5} | {'Won':5} | {'P/L':6} | match_id_slug"
-print(header)
-print(SEP)
-
+# ── Build results ────────────────────────────────────────────────────────────
 results = []
+seen_bets = set()
+cumpl = 0.0
+
 for i, a in enumerate(bet_alerts):
-    ts = a['ts']
-    text = a['text']
-    link = a['link']
-
+    ts, text, link = a['ts'], a['text'], a['link']
     strat_key, strat_label = extract_strategy_key(text)
-    match_text = extract_match_from_text(text)
     minute = extract_minute(text)
-    odds = extract_odds(text)
-    score = extract_score(text)
-    market = extract_market(text)
+    odds   = extract_odds(text)
+    score  = extract_score(text)
+    hora   = ts[11:16]
 
-    csv_row, found_mid = find_csv_row(match_text, link, strat_key)
+    placed_row, found_ev = find_placed_bet(link, strat_key)
 
-    found = 'YES' if csv_row else ('MID' if found_mid else 'NO')
-    won = csv_row['won'] if csv_row else '-'
-    pl = csv_row['pl'] if csv_row else '-'
-    mid_display = found_mid[:55] if found_mid else '-'
+    slug_m = re.search(r'apuestas-(\d+)', link) if link else None
+    ev_id  = slug_m.group(1) if slug_m else ''
+    dedup_key = (ev_id, strat_key)
+    is_dup = dedup_key in seen_bets and bool(ev_id)
+    if ev_id and strat_key:
+        seen_bets.add(dedup_key)
+
+    # Partido: prefer placed_bets name, then ev_id→name map
+    if placed_row:
+        match_name = placed_row['match_name']
+    elif ev_id and ev_id in ev_to_match:
+        match_name = ev_to_match[ev_id]
+    else:
+        match_name = ''
+
+    paper = 'YES' if placed_row else ('MID' if found_ev else 'NO')
+
+    if placed_row:
+        result  = 'WIN' if placed_row['result'] == 'won' else 'LOSS'
+        pl_val  = float(placed_row['pl'])
+        if not is_dup:
+            cumpl += pl_val
+        pl_str   = f"{pl_val:+.2f}"
+        cumpl_str = f"{cumpl:+.2f}"
+    else:
+        result   = '-'
+        pl_str   = '-'
+        cumpl_str = f"{cumpl:+.2f}"
 
     results.append({
-        'num': i+1, 'ts': ts[:19], 'match': match_text, 'strategy_label': strat_label,
-        'strategy_key': strat_key or '', 'market': market, 'odds': odds, 'minute': minute,
-        'score': score, 'found': found, 'won': won, 'pl': pl, 'match_id': mid_display
+        'num': i+1, 'ts': ts[:19], 'hora': hora, 'match': match_name,
+        'strategy_label': strat_label or '', 'strategy_key': strat_key or '',
+        'odds': odds, 'minute': minute, 'score': score,
+        'paper': paper, 'result': result, 'pl': pl_str, 'cumpl': cumpl_str,
+        'ev_id': ev_id, 'is_dup': is_dup, 'link': link,
     })
 
-    mt = match_text[:26]
-    sl = (strat_label or '-')[:26]
-    mk = market[:20]
-    print(f"{i+1:>4} | {ts[:19]:19} | {mt:28} | {sl:28} | {mk:22} | {odds:5} | {minute:4} | {score:5} | {found:5} | {won:5} | {pl:6} | {mid_display}")
+# ── Summaries ────────────────────────────────────────────────────────────────
+total   = len(results)
+matched = [r for r in results if r['paper'] == 'YES' and not r['is_dup']]
+wins    = sum(1 for r in matched if r['result'] == 'WIN')
+losses  = sum(1 for r in matched if r['result'] == 'LOSS')
+total_pl = sum(float(r['pl']) for r in matched if r['pl'] != '-')
+dups    = sum(1 for r in results if r['is_dup'])
+mid_only = sum(1 for r in results if r['paper'] == 'MID' and not r['is_dup'])
+no_match = sum(1 for r in results if r['paper'] == 'NO' and not r['is_dup'])
 
-print(SEP)
+# ── HTML output ──────────────────────────────────────────────────────────────
+def row_class(r):
+    if r['is_dup']:   return 'dup'
+    if r['paper'] == 'MID': return 'mid'
+    if r['paper'] == 'NO':  return 'no'
+    if r['result'] == 'WIN':  return 'win'
+    if r['result'] == 'LOSS': return 'loss'
+    return ''
 
-total = len(results)
-found_yes = sum(1 for r in results if r['found'] == 'YES')
-found_mid_count = sum(1 for r in results if r['found'] == 'MID')
-found_no = sum(1 for r in results if r['found'] == 'NO')
-won_count = sum(1 for r in results if r['won'] == 'True')
-lost_count = sum(1 for r in results if r['won'] == 'False')
-total_pl = sum(float(r['pl']) for r in results if r['pl'] not in ('-', ''))
+def pl_cell(val):
+    if val == '-': return '<td class="num">—</td>'
+    f = float(val)
+    cls = 'pos' if f > 0 else 'neg'
+    return f'<td class="num {cls}">{val}</td>'
 
-print(f"\nSUMMARY:")
-print(f"  Total Telegram alerts (excl. test): {total}")
-print(f"  Matched in CSV (match+strategy):    {found_yes}")
-print(f"  Match found, strategy not in CSV:   {found_mid_count}")
-print(f"  Not found at all:                   {found_no}")
-print(f"  Won (of matched):                   {won_count}")
-print(f"  Lost (of matched):                  {lost_count}")
-print(f"  Total P/L (of matched):             {total_pl:.2f}")
-
-# Also show unmatched alerts
-print("\nUNMATCHED / MID-ONLY alerts:")
+rows_html = []
 for r in results:
-    if r['found'] != 'YES':
-        print(f"  #{r['num']} [{r['ts']}] {r['match'][:35]} | {r['strategy_label'][:28]} | found={r['found']} | mid={r['match_id']}")
+    rc = row_class(r)
+    link_html = f'<a href="{escape(r["link"])}" target="_blank">{escape(r["match"])}</a>' if r['link'] and r['match'] else escape(r['match'])
+    badge = ''
+    if r['is_dup']:       badge = '<span class="badge dup-b">DUP</span>'
+    elif r['paper']=='MID': badge = '<span class="badge mid-b">NO PLACED</span>'
+    elif r['paper']=='NO':  badge = '<span class="badge no-b">NOT FOUND</span>'
+
+    res_cell = ''
+    if r['result'] == 'WIN':  res_cell = '<td><span class="res win-res">WIN</span></td>'
+    elif r['result'] == 'LOSS': res_cell = '<td><span class="res loss-res">LOSS</span></td>'
+    else:                     res_cell = '<td class="muted">—</td>'
+
+    rows_html.append(f"""
+    <tr class="{rc}">
+      <td class="num muted">{r['num']}</td>
+      <td class="num">{r['hora']}</td>
+      <td class="match-cell">{link_html}{badge}</td>
+      <td>{escape(r['strategy_label'])}</td>
+      <td class="num">{r['odds']}</td>
+      <td class="num">{r['minute']}</td>
+      <td class="num">{r['score']}</td>
+      {res_cell}
+      {pl_cell(r['pl'])}
+      {pl_cell(r['cumpl'])}
+    </tr>""")
+
+pl_color = '#22c55e' if total_pl >= 0 else '#ef4444'
+
+html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Señales Telegram — Resultados</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: #0f1117; color: #e2e8f0; padding: 32px 24px; font-size: 13px; }}
+  h1 {{ font-size: 20px; font-weight: 600; margin-bottom: 4px; color: #f1f5f9; }}
+  .subtitle {{ color: #64748b; margin-bottom: 24px; font-size: 12px; }}
+
+  .stats {{ display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }}
+  .stat {{ background: #1e2130; border: 1px solid #2d3148; border-radius: 10px;
+           padding: 14px 20px; min-width: 120px; }}
+  .stat .label {{ font-size: 11px; color: #64748b; text-transform: uppercase;
+                  letter-spacing: .05em; margin-bottom: 6px; }}
+  .stat .value {{ font-size: 22px; font-weight: 700; }}
+  .stat.pl .value {{ color: {pl_color}; }}
+  .stat.wins .value {{ color: #22c55e; }}
+  .stat.losses .value {{ color: #ef4444; }}
+
+  table {{ width: 100%; border-collapse: collapse; }}
+  thead th {{ background: #1a1d2e; color: #94a3b8; font-size: 11px; font-weight: 600;
+              text-transform: uppercase; letter-spacing: .05em; padding: 10px 12px;
+              text-align: left; border-bottom: 2px solid #2d3148; white-space: nowrap; }}
+  thead th.num {{ text-align: right; }}
+  tbody tr {{ border-bottom: 1px solid #1e2130; transition: background .1s; }}
+  tbody tr:hover {{ background: #1a1d2e; }}
+  td {{ padding: 9px 12px; vertical-align: middle; }}
+  td.num {{ text-align: right; font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'Fira Code', monospace; }}
+  td.muted {{ color: #475569; text-align: center; }}
+
+  tr.win   {{ }}
+  tr.loss  {{ }}
+  tr.dup   {{ opacity: .45; }}
+  tr.mid   {{ opacity: .6; }}
+
+  .match-cell a {{ color: #e2e8f0; text-decoration: none; }}
+  .match-cell a:hover {{ color: #818cf8; text-decoration: underline; }}
+
+  .res {{ display: inline-block; padding: 2px 8px; border-radius: 4px;
+          font-size: 11px; font-weight: 700; letter-spacing: .04em; }}
+  .win-res  {{ background: #14532d; color: #4ade80; }}
+  .loss-res {{ background: #450a0a; color: #f87171; }}
+
+  .badge {{ display: inline-block; margin-left: 8px; padding: 1px 6px; border-radius: 4px;
+            font-size: 10px; font-weight: 600; vertical-align: middle; }}
+  .dup-b {{ background: #1e293b; color: #64748b; }}
+  .mid-b {{ background: #1c1a2e; color: #818cf8; }}
+  .no-b  {{ background: #2d1515; color: #f87171; }}
+
+  .pos {{ color: #4ade80; }}
+  .neg {{ color: #f87171; }}
+</style>
+</head>
+<body>
+<h1>Señales Telegram — Resultados Paper Trading</h1>
+<p class="subtitle">Fuente: placed_bets.csv · {total} alertas detectadas</p>
+
+<div class="stats">
+  <div class="stat"><div class="label">Apuestas</div><div class="value">{len(matched)}</div></div>
+  <div class="stat wins"><div class="label">Ganadas</div><div class="value">{wins}</div></div>
+  <div class="stat losses"><div class="label">Perdidas</div><div class="value">{losses}</div></div>
+  <div class="stat pl"><div class="label">P/L Total</div><div class="value">{total_pl:+.2f}</div></div>
+  <div class="stat"><div class="label">Win Rate</div><div class="value">{wins/(wins+losses)*100:.0f}%</div></div>
+  <div class="stat"><div class="label">No placed</div><div class="value">{mid_only}</div></div>
+</div>
+
+<table>
+<thead>
+  <tr>
+    <th class="num">#</th>
+    <th>Hora</th>
+    <th>Partido</th>
+    <th>Estrategia</th>
+    <th class="num">Odds</th>
+    <th class="num">Min</th>
+    <th class="num">Scr</th>
+    <th>Res</th>
+    <th class="num">P/L</th>
+    <th class="num">P/L Acum</th>
+  </tr>
+</thead>
+<tbody>
+{''.join(rows_html)}
+</tbody>
+</table>
+</body>
+</html>"""
+
+out_path = Path('C:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/auxiliar/signal_results.html')
+out_path.write_text(html, encoding='utf-8')
+print(f"\nHTML generado: {out_path}")
+webbrowser.open(str(out_path))

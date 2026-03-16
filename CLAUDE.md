@@ -104,40 +104,7 @@ borrar/                  → Archivos movidos durante limpieza (red de seguridad
 
 32 estrategias independientes. Cada una tiene su propia clave en `cartera_config.json`, su propio trigger `_detect_<name>_trigger()` en csv_reader.py, deteccion live via `detect_betting_signals()` y backtest via `analyze_cartera()`. No hay categorias ni jerarquias.
 
-| Estrategia | Clave config | Estado |
-|------------|-------------|--------|
-| Back Empate 0-0 | back_draw_00 | Desactivada por IC95 gate |
-| xG Underperformance | xg_underperformance | Activa |
-| Odds Drift Contrarian | odds_drift | Activa |
-| Goal Clustering | goal_clustering | Activa |
-| Pressure Cooker | pressure_cooker | Activa |
-| Momentum xG | momentum_xg | Config-dependiente |
-| Tarde Asia | tarde_asia | Inactiva |
-| BACK Over 2.5 2-Goal Lead | over25_2goal | Activa |
-| BACK Under 3.5 Late | under35_late | Activa |
-| BACK Longshot Leading | longshot | Activa |
-| BACK Correct Score Close | cs_close | Activa |
-| BACK CS 1-0/0-1 | cs_one_goal | Activa |
-| BACK Underdog Leading | ud_leading | Activa |
-| BACK Home Fav Leading | home_fav_leading | Activa |
-| BACK CS 2-0/0-2 | cs_20 | Activa |
-| BACK CS Big Lead | cs_big_lead | Activa |
-| LAY Over 4.5 v3 | lay_over45_v3 | Activa |
-| BACK Draw xG Conv | draw_xg_conv | Activa (pasa gates por los pelos: ROI=12.6%, CI_low=40.5%) |
-| BACK Poss Extreme | poss_extreme | Activa |
-| BACK CS 0-0 | cs_00 | Inactiva (no pasa quality gates) |
-| BACK Over 2.5 2 Goals | over25_2goals | Inactiva (no pasa quality gates) |
-| BACK Draw 1-1 | draw_11 | Activa |
-| BACK Under 3.5 3 Goals | under35_3goals | Activa |
-| BACK Away Fav Leading | away_fav_leading | Activa |
-| BACK Under 4.5 3 Goals | under45_3goals | Activa |
-| BACK CS 1-1 | cs_11 | Inactiva (no pasa quality gates) |
-| BACK Draw Equalizer Late | draw_equalizer | Activa |
-| BACK Draw 2-2 Late | draw_22 | Activa |
-| LAY Over 4.5 Blowout | lay_over45_blowout | Activa |
-| BACK Over 3.5 Early Goals | over35_early_goals | Activa |
-| LAY Draw Away Leading | lay_draw_away_leading | Activa |
-| LAY CS 1-1 at 0-1 | lay_cs11 | Activa |
+**Para consultar qué estrategias están activas y sus parámetros actuales, leer directamente `betfair_scraper/cartera_config.json`** — es la única fuente de verdad. El estado en cualquier documento es siempre potencialmente desactualizado.
 
 Triggers de todas las estrategias en `betfair_scraper/dashboard/backend/utils/csv_reader.py` (32 funciones `_detect_*_trigger`). `sd_strategies.py` contiene solo el evaluador `eval_sd()` para uso del notebook legacy. Generadores auxiliares legacy en `auxiliar/sd_generators.py`.
 
@@ -234,7 +201,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 2. **Cache key parcial**: analyze_cartera() cache incluye min_duration + enabled states de todas las estrategias del registry. Cambios de parametros config distintos de enabled/min_duration requieren invalidacion manual (limpiar _result_cache).
 3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
 4. **Portfolio optimizer auto-desactiva xg/drift**: El optimizer_cli decide que el portfolio optimo no incluye xg_underperformance y odds_drift (mejoran WR y ROI excluyendolos). Es comportamiento correcto del optimizer, no un bug.
-6. **Deduplicacion de mercado** (implementado 2026-03-13): Una sola apuesta por mercado por partido. `_STRATEGY_MARKET` en csv_reader.py define los grupos: under_3.5 (under35_late + under35_3goals), draw (draw_11 + draw_xg_conv), over_2.5 (over25_2goal + goal_clustering + pressure_cooker). Primera estrategia en disparar (por minuto) tiene prioridad. Reduce BT portfolio de 1727 a ~1655 bets. LIVE dedup es siempre-activo via Pass 5 en `_apply_realistic_adjustments()`.
+6. **Deduplicacion de mercado** (implementado 2026-03-13, actualizado 2026-03-16): Una sola apuesta por mercado por partido. `_STRATEGY_MARKET` en csv_reader.py define los grupos. Primera estrategia en disparar (por minuto) tiene prioridad. LIVE dedup es siempre-activo via Pass 5 en `_apply_realistic_adjustments()`. Para ver los grupos actuales, leer `_STRATEGY_MARKET` en csv_reader.py:372.
 
 ## placed_bets.csv — estado 2026-03-13
 

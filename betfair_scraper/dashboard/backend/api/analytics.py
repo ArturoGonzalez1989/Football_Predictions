@@ -32,6 +32,10 @@ _auto_placed_keys: set = set()
 # 0 = se coloca en cuanto la señal alcanza min_dur (sin delay artificial).
 PAPER_REACTION_DELAY_MINS = 0
 
+# ── Evidencias: snapshot de datos CSV al colocar una apuesta paper ──
+_EVIDENCIAS_DIR = Path(__file__).resolve().parent.parent.parent.parent / "evidencias"
+_DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
+
 
 def _auto_place_signal(sig: dict, stake: float) -> None:
     """Registra automáticamente una señal madura como apuesta paper en placed_bets.csv."""
@@ -104,6 +108,9 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
 
         # ── Telegram notification ──
         _tg.send_signal(sig, stake)
+
+        # ── Guardar snapshot de evidencia desde CSV ──
+        _save_evidence_snapshot(sig)
 
         _auto_placed_keys.add(market_key)
     except Exception as e:
@@ -612,6 +619,43 @@ async def clear_cache():
     """Clear analytics cache to force reload of data."""
     csv_reader.clear_analytics_cache()
     return {"status": "ok", "message": "Cache cleared successfully"}
+
+
+def _save_evidence_snapshot(sig: dict) -> None:
+    """Copia el screenshot del minuto exacto de la señal a evidencias/.
+    El scraper guarda screenshot_{match_id}_{minuto}.png en cada ciclo.
+    """
+    import shutil
+
+    match_id = sig.get("match_id", "unknown")
+    minuto   = sig.get("minute", "??")
+    strategy = sig.get("strategy", "unknown")
+
+    # Buscar screenshot del minuto exacto de la señal
+    src = _DATA_DIR / f"screenshot_{match_id}_{minuto}.png"
+    if not src.exists():
+        # Fallback: minuto anterior (por si el ciclo del scraper se adelantó 1 min)
+        try:
+            minuto_prev = str(int(minuto) - 1)
+            src_prev = _DATA_DIR / f"screenshot_{match_id}_{minuto_prev}.png"
+            if src_prev.exists():
+                src = src_prev
+                _log.debug(f"[EVIDENCIA] Usando minuto anterior ({minuto_prev}) para {match_id}")
+            else:
+                _log.warning(f"[EVIDENCIA] Screenshot min {minuto} no disponible para {match_id}")
+                return
+        except (ValueError, TypeError):
+            _log.warning(f"[EVIDENCIA] Screenshot no disponible para {match_id}")
+            return
+
+    try:
+        _EVIDENCIAS_DIR.mkdir(exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{match_id}_min{minuto}_{strategy}_{ts}.png"
+        shutil.copy2(str(src), str(_EVIDENCIAS_DIR / filename))
+        _log.info(f"[EVIDENCIA] Screenshot guardado: {filename}")
+    except Exception as e:
+        _log.warning(f"[EVIDENCIA] Error copiando screenshot: {e}")
 
 
 _BETFAIR_SESSION_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data" / "betfair_session"

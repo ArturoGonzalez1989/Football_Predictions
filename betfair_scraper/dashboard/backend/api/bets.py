@@ -156,29 +156,35 @@ def _get_next_manual_id() -> int:
 def _check_would_win(recommendation: str, gl: float, gv: float) -> bool:
     """Determina si la apuesta ganaria con el marcador actual."""
     rec = recommendation.upper()
+    is_lay = rec.startswith("LAY")
 
-    # BACK DRAW
+    # DRAW
     if "DRAW" in rec:
-        return int(gl) == int(gv)
+        result = int(gl) == int(gv)
+        return (not result) if is_lay else result
 
-    # BACK CS X-Y (Correct Score)
+    # CS X-Y (Correct Score)
     m_cs = re.search(r"CS\s+(\d+)-(\d+)", rec)
     if m_cs:
-        return int(gl) == int(m_cs.group(1)) and int(gv) == int(m_cs.group(2))
+        result = int(gl) == int(m_cs.group(1)) and int(gv) == int(m_cs.group(2))
+        return (not result) if is_lay else result
 
-    # BACK Over X.5
+    # Over X.5
     m = re.search(r"OVER\s+(\d+\.?\d*)", rec)
     if m:
         line = float(m.group(1))
-        return (gl + gv) > line
+        result = (gl + gv) > line
+        return (not result) if is_lay else result
 
-    # BACK HOME
+    # HOME
     if "HOME" in rec:
-        return gl > gv
+        result = gl > gv
+        return (not result) if is_lay else result
 
-    # BACK AWAY
+    # AWAY
     if "AWAY" in rec:
-        return gv > gl
+        result = gv > gl
+        return (not result) if is_lay else result
 
     return False
 
