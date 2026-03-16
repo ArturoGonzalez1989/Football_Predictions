@@ -106,16 +106,12 @@ def send_signal(sig: dict, stake: float, bet_id: int | None = None) -> None:
         odds_line = f"· *{rec_action}* @ {odds_str}{min_str}"
 
         # Context line
-        conf_str = f" | {confidence}" if confidence else ""
-        context_line = f"· Min {minute}' | {score}{conf_str}"
+        context_line = f"· Min {minute}' | {score}"
 
         # Stats line
         stats_parts = []
         if wr:
             stats_parts.append(f"WR {wr:.0f}%")
-        if roi is not None:
-            sign = "+" if roi >= 0 else ""
-            stats_parts.append(f"ROI {sign}{roi:.0f}%")
         if sample_size:
             stats_parts.append(f"N={sample_size}")
         stats_line = f"· {' | '.join(stats_parts)}" if stats_parts else None

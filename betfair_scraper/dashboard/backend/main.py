@@ -221,8 +221,12 @@ async def auto_paper_trading():
         print(f"[{datetime.now()}] [PAPER] Ciclo #{cycle} — detectando señales...")
 
         try:
-            # 1. Detectar y colocar nuevas bets
-            place_result = await loop.run_in_executor(None, run_paper_auto_place)
+            # 1. Detectar y colocar nuevas bets — timeout 45s para evitar hang indefinido
+            # (detect_betting_signals puede bloquearse en rebuild de cache con 1400+ CSVs)
+            place_result = await asyncio.wait_for(
+                loop.run_in_executor(None, run_paper_auto_place),
+                timeout=45,
+            )
             if place_result.get("error"):
                 _paper_trading_errors += 1
                 print(f"[{datetime.now()}] [PAPER] #{cycle} Error en place: {place_result['error']}")
@@ -231,17 +235,26 @@ async def auto_paper_trading():
                 checked = place_result.get("signals_checked", 0)
                 print(f"[{datetime.now()}] [PAPER] #{cycle} Place OK — "
                       f"señales_activas={checked} | colocadas={placed}")
+        except asyncio.TimeoutError:
+            _paper_trading_errors += 1
+            print(f"[{datetime.now()}] [PAPER] #{cycle} TIMEOUT en place (>45s) — ciclo saltado")
         except Exception as e:
             _paper_trading_errors += 1
             print(f"[{datetime.now()}] [PAPER] #{cycle} Place excepción: {e}")
 
         try:
-            # 2. Cashout/settle de bets pendientes
-            co_result = await loop.run_in_executor(None, run_auto_cashout)
+            # 2. Cashout/settle de bets pendientes — timeout 20s
+            co_result = await asyncio.wait_for(
+                loop.run_in_executor(None, run_auto_cashout),
+                timeout=20,
+            )
             if co_result.get("cashed_out", 0) > 0:
                 print(f"[{datetime.now()}] [PAPER] #{cycle} Cashout {co_result['cashed_out']} bet(s)")
             if co_result.get("settled", 0) > 0:
                 print(f"[{datetime.now()}] [PAPER] #{cycle} Settled {co_result['settled']} bet(s)")
+        except asyncio.TimeoutError:
+            _paper_trading_errors += 1
+            print(f"[{datetime.now()}] [PAPER] #{cycle} TIMEOUT en cashout/settle (>20s) — ciclo saltado")
         except Exception as e:
             _paper_trading_errors += 1
             print(f"[{datetime.now()}] [PAPER] #{cycle} Cashout excepción: {e}")

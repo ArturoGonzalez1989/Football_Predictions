@@ -727,13 +727,7 @@ function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; ha
   } else if (riskLevel === "medium") {
     cardBorderColor = "border-orange-500/40"; cardBgColor = "bg-orange-500/5"
   } else {
-    const confidenceColors = {
-      high: { border: "border-green-500/20", bg: "bg-green-500/5" },
-      medium: { border: "border-yellow-500/20", bg: "bg-yellow-500/5" },
-      low: { border: "border-orange-500/20", bg: "bg-orange-500/5" },
-    }
-    const c = confidenceColors[signal.confidence]
-    cardBorderColor = c.border; cardBgColor = c.bg
+    cardBorderColor = "border-zinc-700/40"; cardBgColor = "bg-zinc-800/20"
   }
 
   const verdictColor = isFavorable ? "text-green-400" : isUnfavorable ? "text-red-400" : "text-yellow-400"
@@ -785,11 +779,6 @@ function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; ha
               </span>
             )}
           </div>
-        </div>
-
-        {/* Confidence */}
-        <div className={`text-xs font-bold uppercase shrink-0 ${signal.confidence === 'high' ? 'text-green-400' : signal.confidence === 'medium' ? 'text-yellow-400' : 'text-orange-400'}`}>
-          {signal.confidence}
         </div>
 
         {/* Action buttons */}

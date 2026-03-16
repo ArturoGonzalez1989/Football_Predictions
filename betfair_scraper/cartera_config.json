@@ -273,7 +273,25 @@
   "initial_bankroll": 100,
   "stake_pct": 2.5,
   "min_duration_live": {
-    "goal_clustering": 1
+    "goal_clustering": 0,
+    "over35_early_goals": 0,
+    "draw_11": 0,
+    "draw_22": 0,
+    "draw_equalizer": 0,
+    "cs_one_goal": 0,
+    "cs_20": 0,
+    "cs_big_lead": 0,
+    "cs_close": 0,
+    "cs_11": 0,
+    "ud_leading": 0,
+    "home_fav_leading": 0,
+    "away_fav_leading": 0,
+    "longshot": 0,
+    "lay_over45_blowout": 0,
+    "lay_cs11": 0,
+    "under35_3goals": 0,
+    "under45_3goals": 0,
+    "under35_late": 0
   },
   "_optimizer_stats": {
     "n": 174,

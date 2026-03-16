@@ -103,7 +103,7 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
             logging.getLogger(__name__).warning(f"Audit log failed for bet {next_id}: {e}")
 
         # ── Telegram notification ──
-        _tg.send_signal(sig, stake, bet_id=next_id)
+        _tg.send_signal(sig, stake)
 
         _auto_placed_keys.add(market_key)
     except Exception as e:
