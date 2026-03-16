@@ -24,6 +24,7 @@ Uso:
 """
 
 import sys
+import io
 import os
 import json
 import re
@@ -31,6 +32,8 @@ import subprocess
 import importlib
 import inspect
 import argparse
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 

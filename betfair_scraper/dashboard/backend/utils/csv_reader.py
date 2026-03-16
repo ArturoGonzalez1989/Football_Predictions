@@ -20,7 +20,7 @@ from .csv_loader import (
     _read_csv_rows, _normalize_halftime_minutes, _read_csv_summary,
     _final_match_minute, _final_result_row,
     _check_min_dur, _count_odds_stability, _lookback_val, _compute_synthetic_at_trigger,
-    _clean_odds_outliers,
+    _clean_odds_outliers, _strip_trailing_pre_partido_rows,
     _calculate_match_quality, _calculate_match_gaps, _calculate_gap_segments,
     clear_analytics_cache, _get_cached_finished_data, _get_all_finished_matches, _cached_result,
     _result_cache, _result_cache_time,
@@ -439,12 +439,11 @@ def _analyze_strategy_simple(key: str, trigger_fn, extractor_fn, win_fn,
         if not rows:
             continue
         match_id = match_data["match_id"]
-        last = rows[-1]
-        try:
-            ft_gl = int(float(last.get("goles_local") or ""))
-            ft_gv = int(float(last.get("goles_visitante") or ""))
-        except (ValueError, TypeError):
+        last = _final_result_row(rows)
+        if last is None:
             continue
+        ft_gl = int(float(last["goles_local"]))
+        ft_gv = int(float(last["goles_visitante"]))
 
         # Merge match metadata so triggers that need it (e.g. tarde_asia) can access it.
         effective_cfg = {**cfg,

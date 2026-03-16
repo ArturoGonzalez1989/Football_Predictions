@@ -17,6 +17,35 @@ log = logging.getLogger(__name__)
 _TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 _CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
+_CONFIG_PATH = Path(__file__).resolve().parents[3] / "cartera_config.json"
+_strategy_cfg_cache: dict = {}
+
+
+def _get_strategy_cfg(strategy_key: str) -> dict:
+    """Returns config dict for a strategy key, cached. Empty dict if not found."""
+    global _strategy_cfg_cache
+    if not _strategy_cfg_cache:
+        try:
+            raw = json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
+            _strategy_cfg_cache = raw.get("strategies", {})
+        except Exception:
+            pass
+    return _strategy_cfg_cache.get(strategy_key, {})
+
+
+def _build_valid_until(strategy_key: str, current_minute) -> str | None:
+    """
+    Returns a 'Válida hasta' string based on minuteMax of the strategy.
+    Returns None if no useful info is available.
+    """
+    cfg = _get_strategy_cfg(strategy_key)
+    minute_max = cfg.get("minuteMax")
+
+    if minute_max and minute_max < 90:
+        return f"Min {minute_max}' o cambio de marcador"
+    else:
+        return "cambio de marcador"
+
 
 def _load_env_if_needed() -> None:
     """Load .env file once if TOKEN not already set via environment."""
@@ -54,6 +83,7 @@ def send_signal(sig: dict, stake: float, bet_id: int | None = None) -> None:
         match_name = sig.get("match_name", "")
         match_url = sig.get("match_url", "")
         strategy_name = sig.get("strategy_name", "")
+        strategy_key = sig.get("strategy", "")
         minute = sig.get("minute", "?")
         score = sig.get("score", "?")
         back_odds = sig.get("back_odds", "?")
@@ -101,10 +131,15 @@ def send_signal(sig: dict, stake: float, bet_id: int | None = None) -> None:
             val_str = f"{v:.2f}" if isinstance(v, float) else str(v)
             cond_lines.append(f"  {label}: {val_str}")
 
+        valid_until = _build_valid_until(strategy_key, minute)
+        valid_line = f"· ⏳ Válida hasta: {valid_until}" if valid_until else None
+
         lines = [f"{icon} *{strategy_name}*", "", match_line, odds_line, context_line]
         if stats_line:
             lines.append(stats_line)
         lines.append(stake_line)
+        if valid_line:
+            lines.append(valid_line)
         if cond_lines:
             lines.append("· Params:")
             lines.extend(cond_lines)

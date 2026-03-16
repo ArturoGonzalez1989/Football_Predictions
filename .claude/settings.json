@@ -6,7 +6,8 @@
       "mcp__plugin_claude-mem_mcp-search__get_observations",
       "mcp__plugin_claude-mem_mcp-search__smart_outline",
       "mcp__plugin_playwright_playwright__browser_evaluate",
-      "mcp__plugin_playwright_playwright__browser_snapshot"
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_type"
     ]
   }
 }

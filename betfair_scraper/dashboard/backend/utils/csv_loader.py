@@ -120,6 +120,32 @@ def _final_result_row(rows: list[dict]) -> Optional[dict]:
     return None
 
 
+def _strip_trailing_pre_partido_rows(rows: list[dict]) -> list[dict]:
+    """Remove trailing pre_partido rows with missing scores.
+
+    The scraper sometimes continues polling after a match ends, writing rows
+    where estado_partido='pre_partido' and goles_local/goles_visitante are
+    empty (the API has switched to a different pre-match event on the same tab).
+    These rows contain no useful match data and cause two problems:
+      1. BT reads rows[-1] for the final score → ValueError → entire match skipped.
+      2. NaN minuto values in these rows reset first_seen counters in strategies
+         with min_dur > 1, potentially causing missed bets.
+    """
+    i = len(rows) - 1
+    while i >= 0:
+        row = rows[i]
+        estado = row.get("estado_partido", "").strip()
+        has_score = (
+            _to_float(row.get("goles_local", "")) is not None
+            and _to_float(row.get("goles_visitante", "")) is not None
+        )
+        if estado == "pre_partido" and not has_score:
+            i -= 1
+        else:
+            break
+    return rows[: i + 1] if i >= 0 else rows
+
+
 def _check_min_dur(rows: list[dict], start_idx: int, min_dur: int, condition_fn) -> Optional[dict]:
     """
     Starting at start_idx, check that condition_fn(row) holds for min_dur consecutive rows.
@@ -1026,6 +1052,8 @@ def _get_cached_finished_data() -> list[dict]:
                 rows = _normalize_halftime_minutes(rows)
                 # Clean rows for strategy analysis (removes outlier odds)
                 rows = _clean_odds_outliers(rows)
+                # Strip trailing pre_partido rows with NaN scores (scraper noise after match end)
+                rows = _strip_trailing_pre_partido_rows(rows)
                 # Try to get URL from games.csv mapping by match name
                 game_url = game.get("url") or url_map.get(game["name"], "")
                 finished.append({

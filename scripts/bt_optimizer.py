@@ -50,7 +50,7 @@ from utils.csv_reader import (
     _analyze_strategy_simple,
     _cfg_add_snake_keys,
 )
-from utils.csv_loader import _get_all_finished_matches
+from utils.csv_loader import _get_all_finished_matches, _read_csv_rows
 from api import optimizer_cli
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -62,8 +62,9 @@ RESULTS_FILE  = ROOT / "auxiliar" / "bt_optimizer_results.json"
 PRESETS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Quality gates ─────────────────────────────────────────────────────────────
-G_MIN_ROI    = 10.0   # minimum ROI %
-IC95_MIN_LOW = 40.0   # minimum Wilson CI lower bound
+G_MIN_ROI        = 10.0   # minimum ROI %
+IC95_MIN_LOW     = 40.0   # minimum Wilson CI lower bound
+G_MIN_PL_PER_BET = 0.15   # minimum P/L per bet (units) — filters low risk/reward strategies
 
 # ── Selector ──────────────────────────────────────────────────────────────────
 CRITERIA = ["max_roi", "max_pl", "max_wr", "min_dd"]
@@ -339,6 +340,8 @@ def _eval_bets(bets: list, n_fin: int) -> dict | None:
     roi  = pl / n * 100
     if roi < G_MIN_ROI:
         return None
+    if pl / n < G_MIN_PL_PER_BET:
+        return None
     ci_l, ci_h = _wilson_ci(wins, n)
     if ci_l < IC95_MIN_LOW:
         return None
@@ -367,6 +370,57 @@ def _max_drawdown(pl_list: list) -> float:
         if dd > max_dd:
             max_dd = dd
     return round(max_dd, 2)
+
+
+def _eval_on_matches_subset(key: str, entry: tuple, cfg: dict, min_dur: int,
+                            matches: list) -> list:
+    """Run a strategy on a specific subset of matches. Used by Phase 2.5 crossval."""
+    _, _, trigger_fn, _, extract_fn, win_fn = entry
+    bets = []
+    for match_data in matches:
+        rows = match_data.get("rows") or _read_csv_rows(match_data["csv_path"])
+        if not rows:
+            continue
+        match_id = match_data["match_id"]
+        last = rows[-1]
+        try:
+            ft_gl = int(float(last.get("goles_local") or ""))
+            ft_gv = int(float(last.get("goles_visitante") or ""))
+        except (ValueError, TypeError):
+            continue
+        effective_cfg = {**cfg, "match_id": match_id,
+                         "match_name": match_data.get("name", ""),
+                         "match_url":  match_data.get("url", "")}
+        first_seen = None
+        trig_data  = None
+        for curr_idx in range(len(rows)):
+            trig = trigger_fn(rows, curr_idx, effective_cfg)
+            if trig:
+                if first_seen is None:
+                    first_seen = curr_idx
+                    trig_data  = trig
+                if curr_idx >= first_seen + min_dur - 1:
+                    extracted = extract_fn(trig_data)
+                    if extracted is None:
+                        break
+                    odds, rec, _ = extracted
+                    won   = win_fn(trig_data, ft_gl, ft_gv)
+                    is_lay = rec.upper().startswith("LAY")
+                    pl = round(0.95 if won else -(odds - 1), 2) if is_lay \
+                         else round((odds - 1) * 0.95 if won else -1.0, 2)
+                    bets.append({"won": won, "pl": pl})
+                    break
+    return bets
+
+
+def _crossval_raw_metrics(bets: list) -> dict:
+    """Raw metrics without quality gates — used for per-fold reporting."""
+    n = len(bets)
+    if n == 0:
+        return {"n": 0, "wr": 0.0, "roi": 0.0}
+    wins = sum(1 for b in bets if b["won"])
+    pl   = sum(b["pl"] for b in bets)
+    return {"n": n, "wr": round(wins / n * 100, 1), "roi": round(pl / n * 100, 1)}
 
 
 def _registry_entry(key: str):
@@ -544,6 +598,135 @@ def _snake_to_camel(params: dict) -> dict:
         camel = SNAKE_TO_CAMEL.get(k, k)
         result[camel] = v
     return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 2.5 — Cross-validation robustness filter
+# ─────────────────────────────────────────────────────────────────────────────
+
+def phase2_5_crossval(individual_results: dict, new_strategies: dict,
+                      all_matches: list, k: int = 5, seed: int = 42
+                      ) -> tuple[dict, dict]:
+    """
+    Validate that strategies which passed quality gates (Phase 1+2) are robust
+    across different match subsets. Fragile strategies are removed from
+    individual_results and disabled in new_strategies before Phase 3.
+
+    Robustness criteria:
+      - mean fold ROI >= G_MIN_ROI (10%)
+      - >= 60% of folds have positive ROI
+      - temporal test ROI >= 0% (last 30% of matches by date)
+
+    Returns (updated_individual_results, updated_new_strategies).
+    """
+    import math as _math
+    _log("Phase 2.5 — cross-validation de robustez…")
+
+    if not individual_results:
+        _log("  Nada que validar — saltando Phase 2.5")
+        return individual_results, new_strategies
+
+    # Sort by date for temporal split
+    def _match_date(m):
+        rows = m.get("rows")
+        if not rows:
+            try:
+                rows = _read_csv_rows(m["csv_path"])
+            except Exception:
+                return ""
+        for row in rows:
+            ts = row.get("timestamp_utc", "")
+            if ts:
+                return ts
+        return ""
+
+    sorted_matches = sorted(all_matches, key=_match_date)
+    split_idx  = int(len(sorted_matches) * 0.70)
+    test_temp  = sorted_matches[split_idx:]
+
+    # Build random k folds
+    import random as _random
+    rng = _random.Random(seed)
+    shuffled = sorted_matches[:]
+    rng.shuffle(shuffled)
+    n_total   = len(shuffled)
+    fold_size = n_total // k
+    folds = [shuffled[i * fold_size:(i + 1) * fold_size] for i in range(k)]
+    if n_total % k:
+        folds[-1].extend(shuffled[k * fold_size:])
+
+    cfg_global  = _load_config()
+    min_dur_map = cfg_global.get("min_duration", {})
+    registry    = {e[0]: e for e in _STRATEGY_REGISTRY}
+
+    robust_keys  = []
+    fragile_keys = []
+    cv_details   = {}
+
+    for strat_key, result in individual_results.items():
+        entry = registry.get(strat_key)
+        if entry is None:
+            robust_keys.append(strat_key)
+            continue
+
+        params  = result["params"]
+        cfg     = _cfg_add_snake_keys({**params, "enabled": True})
+        min_dur = min_dur_map.get(strat_key, 1)
+
+        fold_metrics = [
+            _crossval_raw_metrics(
+                _eval_on_matches_subset(strat_key, entry, cfg, min_dur, fold)
+            )
+            for fold in folds
+        ]
+        rois     = [fm["roi"] for fm in fold_metrics]
+        mean_roi = sum(rois) / len(rois)
+        std_roi  = _math.sqrt(sum((r - mean_roi) ** 2 for r in rois) / len(rois))
+        n_pos    = sum(1 for r in rois if r > 0)
+
+        temp_bets    = _eval_on_matches_subset(strat_key, entry, cfg, min_dur, test_temp)
+        temp_metrics = _crossval_raw_metrics(temp_bets)
+
+        is_robust = (
+            mean_roi >= G_MIN_ROI
+            and n_pos >= _math.ceil(k * 0.6)
+            and temp_metrics["roi"] >= 0
+        )
+
+        cv_details[strat_key] = {
+            "folds":     fold_metrics,
+            "mean_roi":  round(mean_roi, 1),
+            "std_roi":   round(std_roi, 1),
+            "n_pos_folds": n_pos,
+            "temporal":  temp_metrics,
+            "robust":    is_robust,
+        }
+
+        fold_str = "  ".join(f"F{i+1}:{fm['roi']:+.0f}%" for i, fm in enumerate(fold_metrics))
+        verdict  = "✓ ROBUSTO" if is_robust else "✗ FRÁGIL"
+        _log(f"  {strat_key:<28} {fold_str}  "
+             f"Mean:{mean_roi:+.1f}%±{std_roi:.1f}  "
+             f"Temp:{temp_metrics['roi']:+.1f}%  {verdict}")
+
+        if is_robust:
+            robust_keys.append(strat_key)
+        else:
+            fragile_keys.append(strat_key)
+            # Disable in new_strategies
+            if strat_key in new_strategies:
+                new_strategies[strat_key] = {
+                    **new_strategies[strat_key], "enabled": False
+                }
+
+    # Remove fragile from individual_results so Phase 3 ignores them
+    updated_individual = {k: v for k, v in individual_results.items()
+                          if k not in fragile_keys}
+
+    _log(f"\n  Robustas ({len(robust_keys)}): {', '.join(robust_keys)}")
+    if fragile_keys:
+        _log(f"  Frágiles ({len(fragile_keys)}) → desactivadas: {', '.join(fragile_keys)}")
+
+    return updated_individual, new_strategies, cv_details
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -845,11 +1028,12 @@ def _xlsx_write_rows(ws, headers: list, rows: list):
 # SAVE / LOAD intermediate results
 # ─────────────────────────────────────────────────────────────────────────────
 
-def save_results(individual: dict, approved_strategies: dict):
+def save_results(individual: dict, approved_strategies: dict, cv_details: dict | None = None):
     data = {
         "timestamp":  datetime.now().isoformat(),
         "individual": individual,
         "approved":   approved_strategies,
+        "crossval":   cv_details or {},
     }
     RESULTS_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False),
                              encoding="utf-8")
@@ -879,6 +1063,8 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--dry-run", action="store_true",
         help="Never write to cartera_config.json")
+    parser.add_argument("--no-crossval", action="store_true",
+        help="Skip Phase 2.5 cross-validation robustness filter")
     args = parser.parse_args()
 
     only = [s.strip() for s in args.strategies.split(",")] if args.strategies else None
@@ -890,22 +1076,32 @@ def main():
     _log("=" * 60)
 
     # ── Phase 0: always load data first ─────────────────────────────────────
-    _, n_fin = phase0_load()
+    all_matches, n_fin = phase0_load()
 
     if args.phase in ("all", "individual"):
         individual = phase1_individual(n_fin, workers=args.workers, only=only)
         new_strats = phase2_build_config(individual)
-        save_results(individual, new_strats)
+
+        # Phase 2.5: cross-validation robustness filter
+        cv_details = {}
+        if not args.no_crossval:
+            individual, new_strats, cv_details = phase2_5_crossval(
+                individual, new_strats, all_matches
+            )
+
+        save_results(individual, new_strats, cv_details)
 
         # Print summary table
-        _log("\n── RESUMEN PHASE 1+2 ──────────────────────────────────────")
+        phase_label = "1+2+CV" if not args.no_crossval else "1+2"
+        _log(f"\n── RESUMEN PHASE {phase_label} ──────────────────────────────────────")
         _log(f"{'Estrategia':<28} {'N':>5} {'WR%':>6} {'ROI%':>7} "
-             f"{'P/L':>8} {'IC95':>12}")
-        _log("-" * 70)
+             f"{'P/L':>8} {'IC95':>12} {'CV':>10}")
+        _log("-" * 82)
         for fam, r in sorted(individual.items(), key=lambda x: -x[1]["score"]):
-            ci = f"[{r['ci_low']}-{r['ci_high']}]"
+            ci  = f"[{r['ci_low']}-{r['ci_high']}]"
+            cv  = f"μ{cv_details[fam]['mean_roi']:+.0f}%" if fam in cv_details else ""
             _log(f"{fam:<28} {r['n']:>5} {r['wr']:>6} {r['roi']:>7} "
-                 f"{r['pl']:>8.1f} {ci:>12}")
+                 f"{r['pl']:>8.1f} {ci:>12} {cv:>10}")
 
         if args.phase == "individual":
             return

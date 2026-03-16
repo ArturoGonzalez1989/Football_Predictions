@@ -65,8 +65,11 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
 
   const handleBulkDelete = async () => {
     setBulkDeleting(true)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60000)
     try {
-      const res = await api.bulkDeleteMatches(Array.from(selected))
+      const res = await api.bulkDeleteMatches(Array.from(selected), controller.signal)
+      clearTimeout(timeout)
       const firstError = res.results?.find((r: any) => !r.ok)?.error ?? undefined
       setBulkResult({ deleted: res.deleted, failed: res.failed, firstError })
       setSelected(new Set())
@@ -74,7 +77,9 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
       await api.clearAnalyticsCache()
       setRefreshKey(k => k + 1)
     } catch (e) {
-      setBulkResult({ deleted: 0, failed: selected.size })
+      clearTimeout(timeout)
+      const msg = e instanceof Error ? e.message : String(e)
+      setBulkResult({ deleted: 0, failed: selected.size, firstError: msg.includes("abort") ? "Timeout: operación cancelada (>60s)" : msg })
       setConfirmBulk(false)
     } finally {
       setBulkDeleting(false)

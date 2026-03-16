@@ -754,7 +754,6 @@ def _log_alerts_to_file(alerts: List[Dict[str, Any]], context: Dict[str, Any]):
         log.warning(f"Failed to write alerts log: {e}")
 
 
-@router.get("/api/alerts")
 def run_alert_checks(include_stats_api: bool = True) -> Dict[str, Any]:
     """Run all alert checks, log results, and return structured response.
 
@@ -799,7 +798,9 @@ def run_alert_checks(include_stats_api: bool = True) -> Dict[str, Any]:
 @router.get("/api/alerts")
 async def get_alerts():
     """Returns all active system alerts. Also logs to alerts.jsonl."""
-    return run_alert_checks()
+    import asyncio
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, run_alert_checks)
 
 
 @router.get("/alerts", response_class=HTMLResponse)

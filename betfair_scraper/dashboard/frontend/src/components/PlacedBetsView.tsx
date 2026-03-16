@@ -320,6 +320,9 @@ function PendingBetRow({ bet, resolving, onResolve, addingManual, isManualAdded,
             </div>
           )}
 
+          {/* Open in Betfair button */}
+          {bet.match_url && <OpenBetButton matchUrl={bet.match_url} recommendation={bet.recommendation} matchName={bet.match_name} />}
+
           {/* Add to manual paper button */}
           <button
             type="button"
@@ -431,6 +434,34 @@ function ResolvedBetRow({ bet }: { bet: PlacedBet }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function OpenBetButton({ matchUrl, recommendation, matchName }: { matchUrl: string; recommendation?: string; matchName?: string }) {
+  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle")
+  const handleClick = async () => {
+    setStatus("loading")
+    try {
+      await api.openBet(matchUrl, recommendation, matchName)
+      setStatus("ok")
+      setTimeout(() => setStatus("idle"), 2000)
+    } catch {
+      window.open(matchUrl, "_blank")
+      setStatus("err")
+      setTimeout(() => setStatus("idle"), 2000)
+    }
+  }
+  const label = status === "loading" ? "..." : status === "ok" ? "✓" : status === "err" ? "↗" : "Abrir"
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={status === "loading"}
+      title={status === "err" ? "Bot falló — abierto en pestaña" : "Abrir en Betfair vía bot"}
+      className="px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-60 bg-green-600 hover:bg-green-500 text-white"
+    >
+      {label}
+    </button>
   )
 }
 

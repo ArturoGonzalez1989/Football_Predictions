@@ -8,8 +8,9 @@ import { DataQualityView } from "./DataQualityView"
 import { PlacedBetsView } from "./PlacedBetsView"
 import { AnalyticsView } from "./AnalyticsView"
 import AlertsView from "./AlertsView"
+import { BacktestView } from "./BacktestView"
 
-type View = "signals" | "bets" | "live" | "upcoming" | "quality" | "analytics" | "alerts"
+type View = "signals" | "bets" | "live" | "upcoming" | "quality" | "analytics" | "alerts" | "backtest"
 
 export function Dashboard() {
   const [view, setView] = useState<View>("signals")
@@ -143,6 +144,17 @@ export function Dashboard() {
           />
 
           <NavItem
+            active={view === "backtest"}
+            onClick={() => setView("backtest")}
+            icon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            }
+            label="Backtest"
+          />
+
+          <NavItem
             active={view === "alerts"}
             onClick={() => setView("alerts")}
             icon={
@@ -205,6 +217,7 @@ export function Dashboard() {
         <div className={view !== "quality" ? "hidden" : ""}><DataQualityView /></div>
         <div className={view !== "analytics" ? "hidden" : ""}><AnalyticsView /></div>
         <div className={view !== "alerts" ? "hidden" : ""}><AlertsView /></div>
+        <div className={view !== "backtest" ? "hidden" : ""}><BacktestView /></div>
       </main>
     </div>
   )

@@ -2,6 +2,7 @@
 Endpoints de la API para partidos.
 """
 
+import asyncio
 from typing import List
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -79,35 +80,83 @@ class BulkDeleteRequest(BaseModel):
     match_ids: List[str]
 
 
+def _force_delete(path) -> tuple:
+    """Force-delete a file, bypassing OneDrive sync locks on Windows.
+
+    Strategy 1 — direct unlink (fast path, works when file is not locked).
+    Strategy 2 — rename to .__del__ then unlink (OneDrive releases the sync lock
+                 on the original filename once the rename is issued; the renamed
+                 file can then be deleted, or is left as orphan if still locked).
+    Strategy 3 — subprocess 'del /f /q' (overrides read-only & some OS locks).
+    """
+    import os, sys, subprocess
+
+    # Strategy 1: plain unlink
+    try:
+        path.unlink()
+        return True, None
+    except Exception:
+        pass
+
+    if sys.platform != "win32":
+        return False, "Archivo bloqueado"
+
+    # Strategy 2: rename → unlink  (bypasses OneDrive sync hold on the original name)
+    tmp = path.with_name(path.name + ".__del__")
+    try:
+        os.rename(str(path), str(tmp))
+    except Exception:
+        tmp = path  # rename failed; try to delete the original name directly
+
+    try:
+        tmp.unlink()
+        return True, None
+    except Exception:
+        pass
+
+    # Strategy 3: cmd del /f /q
+    try:
+        subprocess.run(
+            ["cmd", "/c", "del", "/f", "/q", str(tmp)],
+            capture_output=True, timeout=4,
+        )
+        if not path.exists() and not tmp.exists():
+            return True, None
+    except Exception:
+        pass
+
+    # If the original is gone (renamed away) treat it as success
+    if not path.exists():
+        return True, None
+
+    return False, "Archivo bloqueado por OneDrive — pausa OneDrive e inténtalo de nuevo"
+
+
 @router.post("/bulk-delete")
-def bulk_delete_matches(body: BulkDeleteRequest):
+async def bulk_delete_matches(body: BulkDeleteRequest):
     """Borra los archivos CSV de datos de varios partidos de una vez.
     No toca games.csv — para partidos finalizados (huérfanos) solo importa el CSV."""
-    results = []
-    for match_id in body.match_ids:
-        deleted = False
-        error = None
+
+    async def _delete_one(match_id: str) -> dict:
         try:
-            csv_path = _resolve_csv_path(match_id)
+            csv_path = await asyncio.to_thread(_resolve_csv_path, match_id)
             if not csv_path.exists():
-                error = "Archivo CSV no encontrado"
-            else:
-                try:
-                    csv_path.unlink()
-                    deleted = True
-                except PermissionError:
-                    import gc
-                    gc.collect()
-                    try:
-                        csv_path.unlink()
-                        deleted = True
-                    except PermissionError:
-                        error = "Archivo bloqueado (OneDrive o scraper activo)"
+                return {"match_id": match_id, "ok": False, "error": "Archivo CSV no encontrado"}
+            try:
+                ok, err = await asyncio.wait_for(
+                    asyncio.to_thread(_force_delete, csv_path), timeout=8.0
+                )
+                return {"match_id": match_id, "ok": ok, "error": err}
+            except asyncio.TimeoutError:
+                return {"match_id": match_id, "ok": False, "error": "Timeout (OneDrive no responde)"}
+            except Exception as e:
+                return {"match_id": match_id, "ok": False, "error": str(e)}
         except Exception as e:
-            error = str(e)
-        results.append({"match_id": match_id, "ok": deleted, "error": error})
+            return {"match_id": match_id, "ok": False, "error": str(e)}
+
+    results = await asyncio.gather(*[_delete_one(mid) for mid in body.match_ids])
     return {
-        "results": results,
+        "results": list(results),
         "deleted": sum(1 for r in results if r["ok"]),
         "failed": sum(1 for r in results if not r["ok"]),
     }

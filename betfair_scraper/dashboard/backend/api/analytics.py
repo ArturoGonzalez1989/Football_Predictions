@@ -28,9 +28,9 @@ _PLACED_BETS_HEADERS = [
 # Dedup en memoria: evita escribir el mismo signal dos veces en la misma sesión de backend
 _auto_placed_keys: set = set()
 
-# Minutos de retraso de reacción simulado: la bet se coloca 1 minuto después de madurar
-# (simula el tiempo que tarda un operador humano en confirmar y colocar la apuesta real)
-PAPER_REACTION_DELAY_MINS = 1
+# Retraso adicional tras madurez de señal antes de colocar la apuesta paper.
+# 0 = se coloca en cuanto la señal alcanza min_dur (sin delay artificial).
+PAPER_REACTION_DELAY_MINS = 0
 
 
 def _auto_place_signal(sig: dict, stake: float) -> None:
@@ -302,7 +302,7 @@ def _apply_realistic_adjustments(signals: list, adj: dict, risk_filter: str) -> 
 def run_paper_auto_place() -> dict:
     """Detecta señales live y auto-coloca bets paper maduras.
     Llamado por el background scheduler cada 60s.
-    Usa PAPER_REACTION_DELAY_MINS: solo coloca señales con age >= min_dur + 1 min.
+    Usa PAPER_REACTION_DELAY_MINS: solo coloca señales con age >= min_dur min.
     """
     try:
         cfg = load_config()
@@ -615,67 +615,200 @@ async def clear_cache():
 
 
 _BETFAIR_SESSION_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data" / "betfair_session"
-# Chrome profile with saved Betfair credentials
-_CHROME_USER_DATA = Path(r"C:\Users\agonz\AppData\Local\Google\Chrome\User Data")
-_CHROME_PROFILE = "Default"
 _pw_instance = None
 _pw_context = None
 
 
+_PW_DEFAULT_STAKE = 2.0  # Default stake in £ — user reviews and confirms before placing
+
+
+async def _pw_fill_stake(page) -> None:
+    """Fill stake input. Betfair uses <betslip-size-input> custom element (confirmed via DOM inspection)."""
+    import asyncio
+    await asyncio.sleep(1.0)
+
+    stake_str = str(int(_PW_DEFAULT_STAKE) if _PW_DEFAULT_STAKE == int(_PW_DEFAULT_STAKE) else _PW_DEFAULT_STAKE)
+
+    # Primary: betslip-size-input custom element
+    try:
+        inp = page.locator("betslip-size-input").get_by_role("textbox").first
+        await asyncio.wait_for(inp.wait_for(state="visible"), timeout=4)
+        await inp.click()
+        await inp.fill(stake_str)
+        _log.info(f"Stake {stake_str} filled via betslip-size-input")
+        return
+    except Exception as e:
+        _log.warning(f"betslip-size-input fill failed: {e}")
+
+    # Fallback selectors
+    for sel in [
+        "betslip-size-input input", "betslip-size-input [role='textbox']",
+        ".betslip-bets input", ".betslip input[type='text']",
+        "input[class*='stake' i]", "input[class*='Stake']",
+    ]:
+        try:
+            inp = page.locator(sel).first
+            if await asyncio.wait_for(inp.is_visible(), timeout=1):
+                await inp.click()
+                await inp.fill(stake_str)
+                _log.info(f"Stake {stake_str} filled via {sel}")
+                return
+        except Exception:
+            continue
+
+    _log.warning("Could not fill stake — dumping visible inputs:")
+    try:
+        debug = await page.evaluate("""
+            () => Array.from(document.querySelectorAll('input, betslip-size-input'))
+                       .filter(i => i.getBoundingClientRect().width > 0)
+                       .map(i => i.tagName + '|' + i.className + '|' + (i.placeholder||''))
+                       .join(' /// ')
+        """)
+        _log.info(f"Visible inputs: {debug}")
+    except Exception:
+        pass
+
+
+async def _pw_navigate_to_market(page, recommendation: str) -> None:
+    """Navigate sidebar to Over/Under or Correct Score market when needed."""
+    import asyncio
+    import re
+    rec = recommendation.upper()
+    if "OVER" in rec or "UNDER" in rec:
+        m = re.search(r'(\d+\.?\d*)', rec)
+        if not m:
+            return
+        goal_total = m.group(1)
+        # Betfair ES uses comma as decimal separator (0,5 not 0.5)
+        goal_total_es = goal_total.replace(".", ",")
+        candidates = [
+            goal_total_es, goal_total,  # "0,5" then "0.5"
+            f"de {goal_total_es} Goles", f"de {goal_total} Goles",
+        ]
+        for variant in candidates:
+            try:
+                lnk = page.locator(f"a:has-text('{variant}')").first
+                if await asyncio.wait_for(lnk.is_visible(), timeout=2):
+                    await lnk.click()
+                    await asyncio.sleep(1.5)
+                    _log.info(f"Navigated to market matching: '{variant}'")
+                    return
+            except Exception:
+                continue
+        _log.info(f"Over/Under market for {goal_total} not found in sidebar")
+    elif "CS" in rec:
+        for link_text in ["Resultado correcto", "Correct Score"]:
+            try:
+                lnk = page.locator(f"a:has-text('{link_text}')").first
+                if await asyncio.wait_for(lnk.is_visible(), timeout=2):
+                    await lnk.click()
+                    await asyncio.sleep(1.5)
+                    return
+            except Exception:
+                continue
+
+
 async def _pw_click_odds(page, recommendation: str, match_name: str) -> None:
-    """Click the BACK or LAY odds button for the correct selection. Only handles Match Odds market."""
+    """Click BACK/LAY odds button for the correct selection, then fill stake."""
     import asyncio
     if not recommendation:
         return
     rec = recommendation.upper()
     is_lay = rec.startswith("LAY")
-    if not any(k in rec for k in ("HOME", "AWAY", "DRAW")):
-        return  # CS / Over-Under markets — user clicks manually
+    is_match_odds = any(k in rec for k in ("HOME", "AWAY", "DRAW"))
+    is_over = "OVER" in rec
+    is_under = "UNDER" in rec
 
-    parts = match_name.split(" - ", 1)
-    home_name = parts[0].strip() if parts else ""
-    away_name = parts[1].strip() if len(parts) > 1 else ""
+    # Navigate to the correct sub-market if needed
+    await _pw_navigate_to_market(page, recommendation)
 
+    # Wait for runner rows to be visible (up to 10s for React to render)
     try:
-        runner_rows = page.locator("tr.runner-line")
+        await asyncio.wait_for(page.wait_for_selector("tr.runner-line", state="visible"), timeout=10)
+    except Exception:
+        _log.warning("Runner rows not visible after 10s — page may not have loaded correctly")
+        return
+
+    runner_rows = page.locator("tr.runner-line")
+    try:
         count = await asyncio.wait_for(runner_rows.count(), timeout=5)
     except Exception:
+        _log.warning("Could not count runner rows")
         return
+    _log.info(f"Found {count} runner rows for: {recommendation}")
 
-    target_row = None
-    for i in range(count):
-        row = runner_rows.nth(i)
+    if is_match_odds:
+        parts = match_name.split(" - ", 1)
+        home_name = parts[0].strip() if parts else ""
+        away_name = parts[1].strip() if len(parts) > 1 else ""
+
+        target_row = None
+        for i in range(count):
+            row = runner_rows.nth(i)
+            try:
+                name_text = (await asyncio.wait_for(row.locator(".runner-name").text_content(), timeout=2) or "").lower()
+            except Exception:
+                continue
+            if "HOME" in rec and home_name and home_name.lower() in name_text:
+                target_row = row; break
+            if "AWAY" in rec and away_name and away_name.lower() in name_text:
+                target_row = row; break
+            if "DRAW" in rec and ("empate" in name_text or "draw" in name_text or "the draw" in name_text):
+                target_row = row; break
+
+        # Positional fallback: home=0, away=1, draw=2
+        if target_row is None and count >= 3:
+            idx = 0 if "HOME" in rec else (1 if "AWAY" in rec else 2)
+            target_row = runner_rows.nth(idx)
+            _log.info(f"Using positional fallback row {idx} for: {recommendation}")
+
+        if target_row is None:
+            _log.warning(f"No target row found for: {recommendation}")
+            return
+
+        btn_sel = "td.bet-buttons.lay-cell ours-price-button button" if is_lay else "td.bet-buttons.back-cell ours-price-button button"
         try:
-            name_text = (await asyncio.wait_for(row.locator(".runner-name").text_content(), timeout=2) or "").lower()
-        except Exception:
-            continue
-        if "HOME" in rec and home_name and home_name.lower() in name_text:
-            target_row = row; break
-        if "AWAY" in rec and away_name and away_name.lower() in name_text:
-            target_row = row; break
-        if "DRAW" in rec and ("empate" in name_text or "draw" in name_text):
-            target_row = row; break
+            btn = target_row.locator(btn_sel).first
+            await asyncio.wait_for(btn.wait_for(state="visible"), timeout=4)
+            await btn.click()
+            _log.info(f"Clicked {'LAY' if is_lay else 'BACK'} for: {recommendation}")
+        except Exception as e:
+            _log.warning(f"Could not click odds button ({btn_sel}): {e}")
+            return
 
-    # Positional fallback: home=0, away=1, draw=2
-    if target_row is None and count >= 3:
-        idx = 0 if "HOME" in rec else (1 if "AWAY" in rec else 2)
-        target_row = runner_rows.nth(idx)
-
-    if target_row is None:
+    elif is_over or is_under:
+        target_text = "más" if is_over else "menos"
+        clicked = False
+        for i in range(count):
+            row = runner_rows.nth(i)
+            try:
+                name_text = (await asyncio.wait_for(row.locator(".runner-name").text_content(), timeout=2) or "").lower()
+            except Exception:
+                continue
+            if target_text in name_text:
+                btn_sel = "td.bet-buttons.lay-cell ours-price-button button" if is_lay else "td.bet-buttons.back-cell ours-price-button button"
+                try:
+                    btn = row.locator(btn_sel).first
+                    await asyncio.wait_for(btn.wait_for(state="visible"), timeout=4)
+                    await btn.click()
+                    _log.info(f"Clicked {'LAY' if is_lay else 'BACK'} '{target_text}' for: {recommendation}")
+                    clicked = True
+                except Exception as e:
+                    _log.warning(f"Could not click over/under button: {e}")
+                break
+        if not clicked:
+            _log.warning(f"Runner '{target_text}' not found among {count} rows for: {recommendation}")
+            return
+    else:
+        _log.info(f"Market type not auto-handled for: {recommendation} — user must click manually")
         return
 
-    btn_sel = "td.bet-buttons.lay-cell button.bet-button-price" if is_lay else "td.bet-buttons.back-cell button.bet-button-price"
-    try:
-        btn = target_row.locator(btn_sel).first
-        await asyncio.wait_for(btn.wait_for(state="visible"), timeout=4)
-        await btn.click()
-        _log.info(f"Clicked {'LAY' if is_lay else 'BACK'} for: {recommendation}")
-    except Exception as e:
-        _log.warning(f"Could not click odds button: {e}")
+    # Fill stake after clicking odds
+    await _pw_fill_stake(page)
 
 
 async def _pw_open_and_login(url: str, recommendation: str = "", match_name: str = "") -> None:
-    """Background task: open URL in Playwright using real Chrome profile (with saved credentials), then click odds."""
+    """Open URL in real Chrome profile (saved credentials), login if needed, click odds."""
     import asyncio
     global _pw_instance, _pw_context
     try:
@@ -688,38 +821,57 @@ async def _pw_open_and_login(url: str, recommendation: str = "", match_name: str
             from playwright.async_api import async_playwright
             if _pw_instance is None:
                 _pw_instance = await async_playwright().start()
-            # Use real Chrome profile so saved Betfair credentials are available
+            _BETFAIR_SESSION_DIR.mkdir(parents=True, exist_ok=True)
             _pw_context = await asyncio.wait_for(
                 _pw_instance.chromium.launch_persistent_context(
-                    str(_CHROME_USER_DATA),
+                    str(_BETFAIR_SESSION_DIR),
                     headless=False,
-                    channel="chrome",
-                    args=[f"--profile-directory={_CHROME_PROFILE}", "--start-maximized"],
+                    channel="msedge",
+                    args=[
+                        "--start-maximized",
+                        "--disable-blink-features=AutomationControlled",
+                    ],
                     no_viewport=True,
+                    ignore_default_args=["--enable-automation"],
                 ),
                 timeout=30,
             )
-            _log.info("Betfair Playwright browser launched with real Chrome profile")
+            _log.info(f"Playwright launched with dedicated bot profile: {_BETFAIR_SESSION_DIR}")
+
         page = await _pw_context.new_page()
-        await asyncio.wait_for(page.goto(url, wait_until="domcontentloaded"), timeout=15)
-        # If login page shown, click login button (credentials auto-fill from saved passwords)
+        await asyncio.wait_for(page.goto(url, wait_until="load"), timeout=25)
+        await asyncio.sleep(1.5)
+
+        # Check if login is needed — Betfair uses <input type="submit" id="ssc-lis">
+        login_btn = page.locator("input#ssc-lis, input.ssc-cta-primary").first
+        needs_login = False
         try:
-            login_btn = page.locator("a.btn-login, a:has-text('Iniciar sesión'), button:has-text('Iniciar sesión')")
-            await asyncio.wait_for(login_btn.first.wait_for(state="visible"), timeout=4)
-            await login_btn.first.click()
-            await asyncio.wait_for(page.wait_for_load_state("networkidle"), timeout=8)
-            # Wait for and submit auto-filled login form
-            try:
-                submit_btn = page.locator("button[type='submit'], input[type='submit'], button:has-text('Entrar'), button:has-text('Log In')")
-                await asyncio.wait_for(submit_btn.first.wait_for(state="visible"), timeout=5)
-                await submit_btn.first.click()
-                await asyncio.wait_for(page.wait_for_load_state("networkidle"), timeout=10)
-            except Exception:
-                pass
+            needs_login = await asyncio.wait_for(login_btn.is_visible(), timeout=3)
         except Exception:
             pass
-        # Click the correct odds button
+
+        if needs_login:
+            # Dedicated bot profile — no auto-fill. Wait up to 60s for user to log in manually.
+            # After first login, Betfair session cookies persist for weeks.
+            _log.info("Login required — waiting up to 60s for user to log in manually in the bot window")
+            try:
+                await asyncio.wait_for(login_btn.wait_for(state="hidden"), timeout=60)
+                _log.info("Login detected — session will be reused on next runs")
+            except Exception:
+                _log.warning("Login not detected after 60s — skipping odds click")
+                return
+
+            # Navigate to match URL if redirected after login
+            if url not in page.url:
+                _log.info(f"Navigating back to match: {url}")
+                await asyncio.wait_for(page.goto(url, wait_until="load"), timeout=25)
+                await asyncio.sleep(1)
+        else:
+            _log.info("Already logged in via session cookies — proceeding to click odds")
+
+        # Click odds and fill stake
         await _pw_click_odds(page, recommendation, match_name)
+
     except Exception as e:
         _log.warning(f"Playwright open_bet error: {e}")
         _pw_context = None

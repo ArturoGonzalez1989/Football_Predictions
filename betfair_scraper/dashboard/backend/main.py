@@ -392,7 +392,8 @@ async def _alerts_monitor():
     await asyncio.sleep(45)  # Initial delay to let other services start
     while True:
         try:
-            run_alert_checks(include_stats_api=False)
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, run_alert_checks, False)
         except Exception as e:
             print(f"[{datetime.now()}] [ALERTS MONITOR] Error: {e}")
         await asyncio.sleep(ALERTS_MONITOR_INTERVAL)

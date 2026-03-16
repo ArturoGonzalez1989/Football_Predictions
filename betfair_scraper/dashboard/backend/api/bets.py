@@ -718,6 +718,8 @@ async def get_placed_bets():
 async def get_manual_bets():
     """Obtiene las apuestas del paper manual del usuario."""
     try:
-        return _load_bets_response(PLACED_BETS_MANUAL_CSV)
+        import asyncio
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, _load_bets_response, PLACED_BETS_MANUAL_CSV)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener apuestas manuales: {str(e)}")

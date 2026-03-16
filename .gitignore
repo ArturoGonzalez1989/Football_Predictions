@@ -17,6 +17,7 @@ betfair_scraper/data/.heartbeat
 betfair_scraper/data/*heartbeat
 betfair_scraper/data/.cartera_cache.json
 betfair_scraper/data/html_snapshots/
+betfair_scraper/data/betfair_session/
 
 # Runtime logs (grow indefinitely)
 betfair_scraper/dashboard/signals_log.csv
@@ -59,3 +60,4 @@ _ux*/
 # OS
 .DS_Store
 Thumbs.db
+betfair_creds.txt
