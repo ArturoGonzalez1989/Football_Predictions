@@ -237,10 +237,11 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct:
 
         odds = _to_float(bet.get("back_odds")) or 0
         stake = _to_float(bet.get("stake")) or 10
+        is_lay = recommendation.strip().upper().startswith("LAY")
         if would_win and odds > 1:
-            bet["potential_pl"] = round((odds - 1) * stake * 0.95, 2)
+            bet["potential_pl"] = round(stake * 0.95, 2) if is_lay else round((odds - 1) * stake * 0.95, 2)
         else:
-            bet["potential_pl"] = round(-stake, 2)
+            bet["potential_pl"] = round(-(odds - 1) * stake, 2) if is_lay else round(-stake, 2)
 
         # Cashout recommendation: lay_actual >= entry_back * (1 + cashout_pct/100)
         # Si cashout_pct es None → CO desactivado, no evaluar
@@ -257,10 +258,12 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct:
                     if lay_now >= threshold:
                         bet["cashout_pl"] = round(stake * (odds / lay_now - 1), 2)
 
-        # Auto-settle: match ended if explicitly finalizado OR not in games.csv (removed = finished)
+        # Auto-settle: ONLY when CSV explicitly shows finalizado.
+        # Do NOT settle based on is_match_active alone — clean_games can remove a match
+        # before the scraper writes the finalizado row, causing settlement on interim scores.
         finished_states = ("finalizado", "finished", "ft", "full_time", "ended")
         is_explicitly_finished = estado in finished_states
-        if is_explicitly_finished or not is_match_active:
+        if is_explicitly_finished:
             if would_win:
                 bet["status"] = "won"
                 bet["result"] = "won"
@@ -268,7 +271,7 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct:
             else:
                 bet["status"] = "lost"
                 bet["result"] = "lost"
-                bet["pl"] = round(-stake, 2)
+                bet["pl"] = round(-(odds - 1) * stake, 2) if is_lay else round(-stake, 2)
             bet["_needs_csv_update"] = True
 
     except Exception as e:
@@ -537,10 +540,11 @@ async def resolve_bet(bet_id: int, result: str):
                 found = True
                 stake = _to_float(row.get("stake")) or 0
                 odds = _to_float(row.get("back_odds")) or 0
+                is_lay_bet = row.get("recommendation", "").strip().upper().startswith("LAY")
                 if result == "won":
-                    pl = round((odds - 1) * stake * 0.95, 2) if odds > 1 else round(stake * 0.95, 2)
+                    pl = round(stake * 0.95, 2) if is_lay_bet else (round((odds - 1) * stake * 0.95, 2) if odds > 1 else round(stake * 0.95, 2))
                 else:
-                    pl = round(-stake, 2)
+                    pl = round(-(odds - 1) * stake, 2) if is_lay_bet else round(-stake, 2)
                 row["status"] = result
                 row["result"] = result
                 row["pl"] = str(pl)
@@ -718,6 +722,96 @@ async def get_placed_bets():
         return _load_bets_response(PLACED_BETS_CSV)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener apuestas: {str(e)}")
+
+
+@router.get("/api/bets/settlement-health")
+async def get_settlement_health():
+    """Return settlement health for all placed bets: stuck pending, no CSV, etc."""
+    if not PLACED_BETS_CSV.exists():
+        return {"stuck": [], "no_csv": [], "in_progress": [], "settled_no_finalizado": [], "summary": {}}
+
+    bets = []
+    with open(PLACED_BETS_CSV, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            bets.append(dict(row))
+
+    from datetime import datetime, timezone
+
+    finished_states = {"finalizado", "finished", "ft", "full_time", "ended"}
+    stuck, no_csv_list, in_progress, settled_no_fin = [], [], [], []
+
+    for bet in bets:
+        match_id = bet.get("match_id", "")
+        status = bet.get("status", "")
+        is_pending = status == "pending"
+        is_settled = status in ("won", "lost", "cashout")
+
+        # Find CSV
+        csv_path = _resolve_csv_path(match_id)
+        csv_exists = csv_path is not None and csv_path.exists()
+
+        # Get last CSV row
+        csv_estado = None
+        if csv_exists:
+            try:
+                rows = _read_csv_rows(csv_path)
+                for row in reversed(rows):
+                    est = row.get("estado_partido", "").strip().lower()
+                    if est not in ("pre_partido", "prematch"):
+                        csv_estado = est
+                        break
+            except Exception:
+                csv_estado = None
+
+        # Compute bet age in hours
+        ts_str = bet.get("timestamp_utc", "")
+        bet_age_h = None
+        try:
+            from datetime import timedelta
+            ts = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+            bet_age_h = round((datetime.now(timezone.utc) - ts).total_seconds() / 3600, 1)
+        except Exception:
+            pass
+
+        info = {
+            "id": bet.get("id"),
+            "match_id": match_id,
+            "match_name": bet.get("match_name", ""),
+            "strategy": bet.get("strategy", ""),
+            "recommendation": bet.get("recommendation", ""),
+            "minute": bet.get("minute", ""),
+            "score": bet.get("score", ""),
+            "timestamp_utc": ts_str,
+            "bet_age_h": bet_age_h,
+            "status": status,
+            "csv_estado": csv_estado,
+            "pl": bet.get("pl", ""),
+        }
+
+        if is_pending:
+            if not csv_exists or csv_estado is None:
+                no_csv_list.append(info)
+            elif csv_estado in finished_states:
+                stuck.append(info)
+            else:
+                in_progress.append(info)
+        elif is_settled and csv_estado is not None and csv_estado not in finished_states:
+            # Settled bet but CSV doesn't show finalizado (settled on interim data)
+            settled_no_fin.append({**info, "result": bet.get("result"), "current_pl": bet.get("pl")})
+
+    return {
+        "stuck": stuck,
+        "no_csv": no_csv_list,
+        "in_progress": in_progress,
+        "settled_no_finalizado": settled_no_fin,
+        "summary": {
+            "stuck_count": len(stuck),
+            "no_csv_count": len(no_csv_list),
+            "in_progress_count": len(in_progress),
+            "settled_no_finalizado_count": len(settled_no_fin),
+        },
+    }
 
 
 @router.get("/api/bets/manual")

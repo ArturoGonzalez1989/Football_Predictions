@@ -1096,7 +1096,7 @@ def extraer_over_under_via_mercado(driver) -> dict:
     return resultado
 
 
-def extraer_resultado_correcto_via_mercado(driver) -> dict:
+def extraer_resultado_correcto_via_mercado(driver, match_id: str = None, minuto=None) -> dict:
     """
     Extrae cuotas Resultado Correcto navegando a la URL del mercado individual.
     Esto obtiene cuotas en vivo reales, a diferencia de la página del evento
@@ -1107,7 +1107,8 @@ def extraer_resultado_correcto_via_mercado(driver) -> dict:
     2. Busca el link del mercado Resultado Correcto en el sidebar
     3. Navega a esa URL
     4. Extrae cuotas de todos los runners con formato de marcador
-    5. Navega de vuelta a la página del evento
+    5. Toma screenshot desde la página RC (para evidencias de señales CS)
+    6. Navega de vuelta a la página del evento
     """
     marcadores = [
         "0-0", "1-0", "0-1", "1-1",
@@ -1176,6 +1177,16 @@ def extraer_resultado_correcto_via_mercado(driver) -> dict:
 
     except WebDriverException as e:
         log.debug(f"Error navegando a mercado RC: {e}")
+
+    else:
+        # Screenshot desde la página RC (solo si la navegación fue exitosa)
+        if match_id and minuto is not None:
+            try:
+                screenshot_path = os.path.join(OUTPUT_DIR, f"screenshot_{match_id}_{minuto}_rc.png")
+                driver.save_screenshot(screenshot_path)
+                log.debug(f"[{match_id}] Screenshot RC guardado: min {minuto}")
+            except Exception as _e:
+                log.debug(f"[{match_id}] Screenshot RC omitido: {_e}")
 
     finally:
         # 4. SIEMPRE volver a la página del evento
@@ -2297,7 +2308,7 @@ class MatchDriver:
                             odds_ou[k] = v
 
                 log.debug(f"[{self.match_id}] → Extrayendo cuotas Resultado Correcto (via mercado, cuotas live)...")
-                odds_rc = extraer_resultado_correcto_via_mercado(self.driver)
+                odds_rc = extraer_resultado_correcto_via_mercado(self.driver, match_id=self.match_id, minuto=info.get("minuto"))
                 rc_count_check = sum(1 for v in odds_rc.values() if v)
                 if rc_count_check == 0:
                     log.debug(f"[{self.match_id}] RC via mercado sin datos (mercado no encontrado/suspendido), fallback a página evento...")
@@ -2674,7 +2685,7 @@ def capturar_pestaña(driver: webdriver.Chrome, tab_info: dict) -> dict:
     log.info(f"[Tab {tab_info['index']}]   ✓ Over/Under: {ou_count}/28 valores capturados")
 
     log.info(f"[Tab {tab_info['index']}] → Extrayendo cuotas Resultado Correcto (via mercado, cuotas live)...")
-    odds_rc = extraer_resultado_correcto_via_mercado(driver)
+    odds_rc = extraer_resultado_correcto_via_mercado(driver, match_id=tab_info.get("tab_id"), minuto=info.get("minuto"))
     rc_count = sum([1 for k, v in odds_rc.items() if v])
     if rc_count == 0:
         log.info(f"[Tab {tab_info['index']}]   RC via mercado sin datos (mercado no encontrado/suspendido), fallback a página evento...")

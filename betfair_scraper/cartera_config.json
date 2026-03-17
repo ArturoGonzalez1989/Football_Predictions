@@ -8,15 +8,18 @@
     "odds_drift": 2,
     "goal_clustering": 4,
     "pressure_cooker": 4,
-    "over25_2goal": 1,
-    "under35_late": 1,
+    "over25_2goal": 2,
+    "under35_late": 2,
     "longshot": 1,
     "cs_close": 1,
     "cs_one_goal": 1,
-    "ud_leading": 1,
+    "ud_leading": 2,
     "home_fav_leading": 1,
     "cs_20": 1,
-    "cs_big_lead": 1
+    "cs_big_lead": 1,
+    "away_fav_leading": 2,
+    "under35_3goals": 2,
+    "under45_3goals": 2
   },
   "adjustments": {
     "enabled": true,
@@ -181,7 +184,7 @@
       "oddsMin": 0
     },
     "lay_over45_v3": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 50,
       "minuteMax": 70,
       "goals_max": 1,
@@ -238,7 +241,7 @@
       "oddsMin": 1.5
     },
     "lay_over45_blowout": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 63,
       "minuteMax": 72,
       "post_window": 8,
@@ -262,7 +265,7 @@
       "odds_max": 8.0
     },
     "lay_cs11": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 60,
       "minuteMax": 88,
       "oddsMin": 1.5,
@@ -283,15 +286,10 @@
     "cs_big_lead": 0,
     "cs_close": 0,
     "cs_11": 0,
-    "ud_leading": 0,
     "home_fav_leading": 0,
-    "away_fav_leading": 0,
     "longshot": 0,
     "lay_over45_blowout": 0,
-    "lay_cs11": 0,
-    "under35_3goals": 0,
-    "under45_3goals": 0,
-    "under35_late": 0
+    "lay_cs11": 0
   },
   "_optimizer_stats": {
     "n": 174,

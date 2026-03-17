@@ -249,6 +249,64 @@ export interface OddsCoverage {
   matches: OddsCoverageMatch[]
 }
 
+export interface SettlementHealthItem {
+  id: string
+  match_id: string
+  match_name: string
+  strategy: string
+  recommendation: string
+  minute: string
+  score: string
+  timestamp_utc: string
+  bet_age_h: number | null
+  status: string
+  csv_estado: string | null
+  pl: string
+  result?: string
+  current_pl?: string
+}
+
+export interface OddsInversionExample {
+  minute: string
+  score: string
+  back_home: number
+  back_away: number
+  type: "away_leading" | "home_leading"
+}
+
+export interface OddsInversionCase {
+  match_id: string
+  match_name: string
+  anomalous_rows: number
+  total_en_juego: number
+  pct_affected: number
+  severity: "high" | "medium" | "low"
+  examples: OddsInversionExample[]
+}
+
+export interface OddsInversion {
+  total_matches: number
+  affected_matches: number
+  affected_pct: number
+  high_severity: number
+  medium_severity: number
+  low_severity: number
+  cases: OddsInversionCase[]
+}
+
+export interface SettlementHealth {
+  stuck: SettlementHealthItem[]
+  no_csv: SettlementHealthItem[]
+  in_progress: SettlementHealthItem[]
+  settled_no_finalizado: SettlementHealthItem[]
+  summary: {
+    stuck_count: number
+    no_csv_count: number
+    in_progress_count: number
+    settled_no_finalizado_count: number
+  }
+}
+
 export interface BettingSignal {
   match_id: string
   match_name: string
@@ -455,6 +513,8 @@ export const api = {
   getStatsCoverage: () => get<StatsCoverage>("/analytics/quality/stats-coverage"),
   getGapAnalysis: () => get<GapAnalysis>("/analytics/quality/gaps"),
   getOddsCoverage: () => get<OddsCoverage>("/analytics/quality/odds-coverage"),
+  getOddsInversion: () => get<OddsInversion>("/analytics/quality/odds-inversion"),
+  getSettlementHealth: () => get<SettlementHealth>("/bets/settlement-health"),
   clearAnalyticsCache: () => post<{ status: string; message: string }>("/analytics/cache/clear"),
 
   // Betting signals

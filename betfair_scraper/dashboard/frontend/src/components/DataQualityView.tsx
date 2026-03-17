@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts"
-import { api, type QualityOverview, type StatsCoverage, type GapAnalysis, type OddsCoverage } from "../lib/api"
+import { api, type QualityOverview, type StatsCoverage, type GapAnalysis, type OddsCoverage, type SettlementHealth, type OddsInversion } from "../lib/api"
 
 type OddsSortKey = "name" | "kickoff_time" | "coverage_pct" | "rows_with_odds" | "total_rows" | "outlier_count" | "gap_count" | "avg_gap_size"
 
@@ -18,6 +18,9 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
   const [coverage, setCoverage] = useState<StatsCoverage | null>(null)
   const [gaps, setGaps] = useState<GapAnalysis | null>(null)
   const [oddsCoverage, setOddsCoverage] = useState<OddsCoverage | null>(null)
+  const [settlementHealth, setSettlementHealth] = useState<SettlementHealth | null>(null)
+  const [oddsInversion, setOddsInversion] = useState<OddsInversion | null>(null)
+  const [oddsInversionExpanded, setOddsInversionExpanded] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [confirmDelete, setConfirmDelete] = useState<{ match_id: string; name: string } | null>(null)
@@ -106,16 +109,20 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
     const load = async () => {
       setLoading(true)
       try {
-        const [o, c, g, oc] = await Promise.all([
+        const [o, c, g, oc, sh, oi] = await Promise.all([
           api.getQualityOverview(),
           api.getStatsCoverage(),
           api.getGapAnalysis(),
           api.getOddsCoverage(),
+          api.getSettlementHealth(),
+          api.getOddsInversion(),
         ])
         setOverview(o)
         setCoverage(c)
         setGaps(g)
         setOddsCoverage(oc)
+        setSettlementHealth(sh)
+        setOddsInversion(oi)
       } catch (err) {
         console.error("Failed to load quality data:", err)
       } finally {
@@ -334,6 +341,276 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
         </div>
       )}
 
+      {/* ═══════ SETTLEMENT HEALTH ═══════ */}
+      {settlementHealth && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-300 mb-1">Settlement Health</h2>
+            <p className="text-xs text-zinc-500">
+              Estado de liquidación de apuestas en papel. Detecta apuestas bloqueadas (partido finalizado pero sin liquidar), sin CSV, o liquidadas sin fila finalizado en el CSV.
+            </p>
+          </div>
+
+          {/* Summary pills */}
+          <div className="flex flex-wrap gap-3">
+            <div className={`rounded-lg px-4 py-2 text-center min-w-[110px] ${settlementHealth.summary.stuck_count > 0 ? "bg-red-500/15 border border-red-500/30" : "bg-zinc-800"}`}>
+              <div className={`text-xl font-bold ${settlementHealth.summary.stuck_count > 0 ? "text-red-400" : "text-zinc-400"}`}>{settlementHealth.summary.stuck_count}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">Bloqueadas</div>
+              <div className="text-[9px] text-zinc-600">CSV finalizado, pending</div>
+            </div>
+            <div className={`rounded-lg px-4 py-2 text-center min-w-[110px] ${settlementHealth.summary.no_csv_count > 0 ? "bg-orange-500/10 border border-orange-500/20" : "bg-zinc-800"}`}>
+              <div className={`text-xl font-bold ${settlementHealth.summary.no_csv_count > 0 ? "text-orange-400" : "text-zinc-400"}`}>{settlementHealth.summary.no_csv_count}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">Sin CSV</div>
+              <div className="text-[9px] text-zinc-600">Datos no disponibles</div>
+            </div>
+            <div className="bg-zinc-800 rounded-lg px-4 py-2 text-center min-w-[110px]">
+              <div className="text-xl font-bold text-zinc-400">{settlementHealth.summary.in_progress_count}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">En curso</div>
+              <div className="text-[9px] text-zinc-600">Pending normal</div>
+            </div>
+            <div className={`rounded-lg px-4 py-2 text-center min-w-[110px] ${settlementHealth.summary.settled_no_finalizado_count > 0 ? "bg-amber-500/10 border border-amber-500/20" : "bg-zinc-800"}`}>
+              <div className={`text-xl font-bold ${settlementHealth.summary.settled_no_finalizado_count > 0 ? "text-amber-400" : "text-zinc-400"}`}>{settlementHealth.summary.settled_no_finalizado_count}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">Sin finalizado</div>
+              <div className="text-[9px] text-zinc-600">Liquidadas en dato interim</div>
+            </div>
+          </div>
+
+          {/* Stuck bets table */}
+          {settlementHealth.stuck.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                <h3 className="text-xs font-semibold text-red-400">Apuestas bloqueadas — CSV finalizado pero status pending</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-zinc-500">
+                      <th className="py-1.5 px-2 text-left font-medium">Partido</th>
+                      <th className="py-1.5 px-2 text-left font-medium">Estrategia</th>
+                      <th className="py-1.5 px-2 text-left font-medium">Recomendación</th>
+                      <th className="py-1.5 px-2 text-right font-medium">Min</th>
+                      <th className="py-1.5 px-2 text-right font-medium">Score entrada</th>
+                      <th className="py-1.5 px-2 text-right font-medium">Edad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlementHealth.stuck.map(b => (
+                      <tr key={b.id} className="border-b border-zinc-800/50 bg-red-500/5">
+                        <td className="py-2 px-2 text-zinc-300 max-w-[180px] truncate">{b.match_name}</td>
+                        <td className="py-2 px-2 text-zinc-400">{b.strategy}</td>
+                        <td className="py-2 px-2 text-zinc-300 font-mono">{b.recommendation}</td>
+                        <td className="py-2 px-2 text-right text-zinc-400">{b.minute}</td>
+                        <td className="py-2 px-2 text-right text-zinc-400">{b.score}</td>
+                        <td className="py-2 px-2 text-right text-red-400 font-medium">{b.bet_age_h !== null ? `${b.bet_age_h}h` : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-[10px] text-zinc-600 mt-2">Liquídalas manualmente desde la vista de Apuestas → botón Resolve.</p>
+              </div>
+            </div>
+          )}
+
+          {/* No CSV bets */}
+          {settlementHealth.no_csv.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-orange-500 inline-block" />
+                <h3 className="text-xs font-semibold text-orange-400">Sin datos CSV — no se puede determinar resultado</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-zinc-500">
+                      <th className="py-1.5 px-2 text-left font-medium">Partido</th>
+                      <th className="py-1.5 px-2 text-left font-medium">Estrategia</th>
+                      <th className="py-1.5 px-2 text-left font-medium">Recomendación</th>
+                      <th className="py-1.5 px-2 text-right font-medium">Edad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlementHealth.no_csv.map(b => (
+                      <tr key={b.id} className="border-b border-zinc-800/50 bg-orange-500/5">
+                        <td className="py-2 px-2 text-zinc-300 max-w-[180px] truncate">{b.match_name}</td>
+                        <td className="py-2 px-2 text-zinc-400">{b.strategy}</td>
+                        <td className="py-2 px-2 text-zinc-300 font-mono">{b.recommendation}</td>
+                        <td className="py-2 px-2 text-right text-orange-400">{b.bet_age_h !== null ? `${b.bet_age_h}h` : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Settled without finalizado */}
+          {settlementHealth.settled_no_finalizado.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                <h3 className="text-xs font-semibold text-amber-400">Liquidadas sin fila finalizado — resultado potencialmente incorrecto</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-zinc-500">
+                      <th className="py-1.5 px-2 text-left font-medium">Partido</th>
+                      <th className="py-1.5 px-2 text-left font-medium">Estrategia</th>
+                      <th className="py-1.5 px-2 text-left font-medium">Recomendación</th>
+                      <th className="py-1.5 px-2 text-right font-medium">Resultado</th>
+                      <th className="py-1.5 px-2 text-right font-medium">P/L</th>
+                      <th className="py-1.5 px-2 text-right font-medium">CSV estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlementHealth.settled_no_finalizado.map(b => (
+                      <tr key={b.id} className="border-b border-zinc-800/50 bg-amber-500/5">
+                        <td className="py-2 px-2 text-zinc-300 max-w-[180px] truncate">{b.match_name}</td>
+                        <td className="py-2 px-2 text-zinc-400">{b.strategy}</td>
+                        <td className="py-2 px-2 text-zinc-300 font-mono">{b.recommendation}</td>
+                        <td className={`py-2 px-2 text-right font-medium ${b.result === "won" ? "text-emerald-400" : "text-red-400"}`}>{b.result}</td>
+                        <td className={`py-2 px-2 text-right tabular-nums ${parseFloat(b.current_pl ?? "0") >= 0 ? "text-emerald-400" : "text-red-400"}`}>{b.current_pl}</td>
+                        <td className="py-2 px-2 text-right text-amber-400">{b.csv_estado ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-[10px] text-zinc-600 mt-2">Verificar resultado real contra el marcador final en Betfair. Si el CSV nunca tuvo fila finalizado, el marcador puede ser transitorio.</p>
+              </div>
+            </div>
+          )}
+
+          {settlementHealth.summary.stuck_count === 0 && settlementHealth.summary.no_csv_count === 0 && settlementHealth.summary.settled_no_finalizado_count === 0 && (
+            <div className="flex items-center gap-2 text-xs text-emerald-400">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Todas las apuestas liquidadas correctamente
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════ ODDS INVERSION ═══════ */}
+      {oddsInversion && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-300 mb-1">Inversión de Cuotas</h2>
+            <p className="text-xs text-zinc-500">
+              Detecta partidos donde el equipo ganador muestra cuotas anómalamente altas (&gt;15) mientras el perdedor tiene cuotas bajas (&lt;3.0),
+              indicando un posible desync del selector CSS durante una suspensión de mercado.
+            </p>
+          </div>
+
+          {/* Summary pills */}
+          <div className="flex flex-wrap gap-3">
+            <div className="bg-zinc-800 rounded-lg px-4 py-2 text-center min-w-[110px]">
+              <div className="text-xl font-bold text-zinc-100">{oddsInversion.total_matches}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">Partidos analizados</div>
+            </div>
+            <div className={`rounded-lg px-4 py-2 text-center min-w-[110px] ${oddsInversion.high_severity > 0 ? "bg-red-500/15 border border-red-500/30" : "bg-zinc-800"}`}>
+              <div className={`text-xl font-bold ${oddsInversion.high_severity > 0 ? "text-red-400" : "text-zinc-400"}`}>{oddsInversion.high_severity}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">Severos (≥5 filas)</div>
+            </div>
+            <div className={`rounded-lg px-4 py-2 text-center min-w-[110px] ${oddsInversion.medium_severity > 0 ? "bg-orange-500/10 border border-orange-500/20" : "bg-zinc-800"}`}>
+              <div className={`text-xl font-bold ${oddsInversion.medium_severity > 0 ? "text-orange-400" : "text-zinc-400"}`}>{oddsInversion.medium_severity}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">Medios (3-4 filas)</div>
+            </div>
+            <div className="bg-zinc-800 rounded-lg px-4 py-2 text-center min-w-[110px]">
+              <div className="text-xl font-bold text-zinc-400">{oddsInversion.low_severity}</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">Leves (1-2 filas)</div>
+            </div>
+            <div className="bg-zinc-800 rounded-lg px-4 py-2 text-center min-w-[110px]">
+              <div className="text-xl font-bold text-zinc-400">{oddsInversion.affected_pct}%</div>
+              <div className="text-[10px] text-zinc-500 mt-0.5">% partidos afectados</div>
+            </div>
+          </div>
+
+          {/* Cases table */}
+          {oddsInversion.cases.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-zinc-800">
+                    <th className="text-left py-2 px-3 text-zinc-500 font-medium w-6" aria-label="Expandir"></th>
+                    <th className="text-left py-2 px-3 text-zinc-500 font-medium">Partido</th>
+                    <th className="text-right py-2 px-3 text-zinc-500 font-medium">Filas anómalas</th>
+                    <th className="text-right py-2 px-3 text-zinc-500 font-medium">% afectado</th>
+                    <th className="text-left py-2 px-3 text-zinc-500 font-medium">Severidad</th>
+                    <th className="text-left py-2 px-3 text-zinc-500 font-medium">Ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {oddsInversion.cases.map(c => {
+                    const isExp = oddsInversionExpanded.has(c.match_id)
+                    const sev = c.severity === "high"
+                      ? "text-red-400 bg-red-500/10 border border-red-500/20"
+                      : c.severity === "medium"
+                        ? "text-orange-400 bg-orange-500/10 border border-orange-500/20"
+                        : "text-zinc-400 bg-zinc-800"
+                    return (
+                      <>
+                        <tr key={c.match_id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                          <td className="py-2 px-3">
+                            {c.examples.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setOddsInversionExpanded(prev => {
+                                  const s = new Set(prev)
+                                  s.has(c.match_id) ? s.delete(c.match_id) : s.add(c.match_id)
+                                  return s
+                                })}
+                                className="text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                              >
+                                {isExp ? "▾" : "▸"}
+                              </button>
+                            )}
+                          </td>
+                          <td className="py-2 px-3 text-zinc-300 font-medium max-w-[280px] truncate">{c.match_name}</td>
+                          <td className="py-2 px-3 text-right text-zinc-300">{c.anomalous_rows} / {c.total_en_juego}</td>
+                          <td className="py-2 px-3 text-right text-zinc-400">{c.pct_affected}%</td>
+                          <td className="py-2 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${sev}`}>
+                              {c.severity === "high" ? "Alto" : c.severity === "medium" ? "Medio" : "Leve"}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-zinc-500 font-mono text-[10px]">
+                            {c.examples[0] && (
+                              <span>
+                                min {c.examples[0].minute} · {c.examples[0].score} · H:{c.examples[0].back_home} A:{c.examples[0].back_away}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                        {isExp && c.examples.map((ex, i) => (
+                          <tr key={`${c.match_id}-ex-${i}`} className="bg-zinc-800/20">
+                            <td className="py-1.5 px-3"></td>
+                            <td colSpan={5} className="py-1.5 px-3 text-[10px] text-zinc-500 font-mono">
+                              <span className={ex.type === "away_leading" ? "text-orange-400" : "text-blue-400"}>
+                                {ex.type === "away_leading" ? "visitante liderando" : "local liderando"}
+                              </span>
+                              {" "}· min {ex.minute} · score {ex.score} · back_home={ex.back_home} back_away={ex.back_away}
+                            </td>
+                          </tr>
+                        ))}
+                      </>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-emerald-400">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Sin inversiones de cuotas detectadas
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ═══════ ODDS COVERAGE ═══════ */}
       {oddsCoverage && (
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-5">
@@ -416,10 +693,6 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
 
           {/* Match table */}
           {(oddsCoverage?.matches ?? []).length > 0 && (() => {
-            const allIds = oddsCoverage!.matches.map(m => m.match_id)
-            const allSelected = allIds.every(id => selected.has(id))
-            const someSelected = allIds.some(id => selected.has(id))
-
             const sortedMatches = [...oddsCoverage!.matches].sort((a, b) => {
               let av: string | number, bv: string | number
               if (sortKey === "name") { av = a.name; bv = b.name }
@@ -429,6 +702,10 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
               if (av > bv) return sortDir === "asc" ? 1 : -1
               return 0
             })
+            const displayMatches = sortedMatches.slice(0, 50)
+            const allIds = displayMatches.map(m => m.match_id)
+            const allSelected = allIds.every(id => selected.has(id))
+            const someSelected = allIds.some(id => selected.has(id))
 
             const SortIcon = ({ col }: { col: OddsSortKey }) =>
               sortKey === col
@@ -456,7 +733,7 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
                   <span className="text-xs text-zinc-500">
                     {selected.size > 0
                       ? <span className="text-zinc-300">{selected.size} seleccionados</span>
-                      : `${oddsCoverage!.matches.length} partidos`}
+                      : `Top 50 de ${oddsCoverage!.matches.length} partidos`}
                   </span>
                   {lowQualityIds.length > 0 && (
                     <button
@@ -519,7 +796,7 @@ export function DataQualityView({ onNavigateToMatch }: { onNavigateToMatch?: (ma
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedMatches.map((match) => {
+                    {displayMatches.map((match) => {
                       const hasRange = match.min_back_home !== null && match.max_back_home !== null
                       const rangeRatio = hasRange ? match.max_back_home! / match.min_back_home! : 1
                       const isSelected = selected.has(match.match_id)

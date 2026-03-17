@@ -450,6 +450,117 @@ async def get_odds_coverage() -> Dict[str, Any]:
     return csv_reader.analyze_odds_coverage()
 
 
+@router.get("/quality/odds-inversion")
+async def get_odds_inversion() -> Dict[str, Any]:
+    """Detect matches with suspected home/away odds column inversion.
+
+    An inversion is flagged when the WINNING team's back odds are very high (>15)
+    while the LOSING team's back odds are very low (<3.0), which is physically impossible
+    in a correct market reading and indicates a CSS selector desync during market suspension.
+    """
+    import glob as _glob
+
+    data_dir = Path(__file__).resolve().parent.parent.parent.parent / "data"
+    csv_files = sorted(data_dir.glob("partido_*.csv"))
+
+    total_matches = len(csv_files)
+    cases = []
+
+    for fp in csv_files:
+        try:
+            with open(fp, newline="", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                headers = next(reader)
+                h = {hdr: i for i, hdr in enumerate(headers)}
+                rows = list(reader)
+        except Exception:
+            continue
+
+        anomalous = []
+        en_juego_count = 0
+
+        for row in rows:
+            if len(row) < 8 or (row[4] if len(row) > 4 else "") != "en_juego":
+                continue
+            en_juego_count += 1
+
+            def _g(col: str, _row=row, _h=h) -> float | None:
+                i = _h.get(col)
+                if i is None or i >= len(_row):
+                    return None
+                try:
+                    return float(_row[i])
+                except (ValueError, TypeError):
+                    return None
+
+            gl = _g("goles_local")
+            gv = _g("goles_visitante")
+            bh = _g("back_home")
+            ba = _g("back_away")
+
+            if gl is None or gv is None or bh is None or ba is None:
+                continue
+
+            # Away leading: back_away/back_home ratio > 5 means the winning team's odds
+            # are anomalously high relative to the losing team — regardless of absolute values.
+            # This catches both full column swaps (bh≈1.7, ba≈28) and partial desyncs
+            # (bh≈4.8, ba≈40). Big-favorite-trailing cases are not caught because their
+            # ratio is inverted (ba << bh when away is the big favorite losing).
+            if gv > gl and bh > 0 and ba / bh > 5:
+                anomalous.append({
+                    "minute": row[5] if len(row) > 5 else "",
+                    "score": f"{int(gl)}-{int(gv)}",
+                    "back_home": bh,
+                    "back_away": ba,
+                    "type": "away_leading",
+                })
+            # Home leading: same logic mirrored
+            elif gl > gv and ba > 0 and bh / ba > 5:
+                anomalous.append({
+                    "minute": row[5] if len(row) > 5 else "",
+                    "score": f"{int(gl)}-{int(gv)}",
+                    "back_home": bh,
+                    "back_away": ba,
+                    "type": "home_leading",
+                })
+
+        if not anomalous:
+            continue
+
+        n = len(anomalous)
+        severity = "high" if n >= 5 else "medium" if n >= 3 else "low"
+        from urllib.parse import unquote
+        stem = fp.stem  # partido_team1-team2-apuestas-XXXXX
+        parts = stem.replace("partido_", "").split("-apuestas-")
+        match_name = unquote(parts[0]).replace("-", " ").title() if parts else stem
+
+        cases.append({
+            "match_id": stem,
+            "match_name": match_name,
+            "anomalous_rows": n,
+            "total_en_juego": en_juego_count,
+            "pct_affected": round(n / en_juego_count * 100, 1) if en_juego_count > 0 else 0,
+            "severity": severity,
+            "examples": anomalous[:3],
+        })
+
+    cases.sort(key=lambda x: (-x["anomalous_rows"], x["match_id"]))
+
+    high = sum(1 for c in cases if c["severity"] == "high")
+    medium = sum(1 for c in cases if c["severity"] == "medium")
+    low = sum(1 for c in cases if c["severity"] == "low")
+
+    return {
+        "total_matches": total_matches,
+        "affected_matches": len(cases),
+        "affected_pct": round(len(cases) / total_matches * 100, 1) if total_matches > 0 else 0,
+        "high_severity": high,
+        "medium_severity": medium,
+        "low_severity": low,
+        "cases": cases[:50],
+    }
+
+
 # ==================== STRATEGY CARTERA ENDPOINTS ====================
 
 @router.get("/strategies/cartera")
@@ -623,7 +734,8 @@ async def clear_cache():
 
 def _save_evidence_snapshot(sig: dict) -> None:
     """Copia el screenshot del minuto exacto de la señal a evidencias/.
-    El scraper guarda screenshot_{match_id}_{minuto}.png en cada ciclo.
+    Para señales CS usa screenshot_*_rc.png (capturado desde la página del mercado RC).
+    Para el resto usa screenshot_*.png (capturado desde la página principal).
     """
     import shutil
 
@@ -631,22 +743,25 @@ def _save_evidence_snapshot(sig: dict) -> None:
     minuto   = sig.get("minute", "??")
     strategy = sig.get("strategy", "unknown")
 
-    # Buscar screenshot del minuto exacto de la señal
-    src = _DATA_DIR / f"screenshot_{match_id}_{minuto}.png"
-    if not src.exists():
-        # Fallback: minuto anterior (por si el ciclo del scraper se adelantó 1 min)
+    # Señales CS: usar screenshot desde la página del mercado Resultado Correcto
+    is_cs = strategy.startswith("cs_") or strategy in ("lay_cs11",)
+    suffix = "_rc" if is_cs else ""
+
+    def _find_src(min_str):
+        p = _DATA_DIR / f"screenshot_{match_id}_{min_str}{suffix}.png"
+        return p if p.exists() else None
+
+    src = _find_src(str(minuto))
+    if src is None:
+        # Fallback: minuto anterior
         try:
-            minuto_prev = str(int(minuto) - 1)
-            src_prev = _DATA_DIR / f"screenshot_{match_id}_{minuto_prev}.png"
-            if src_prev.exists():
-                src = src_prev
-                _log.debug(f"[EVIDENCIA] Usando minuto anterior ({minuto_prev}) para {match_id}")
-            else:
-                _log.warning(f"[EVIDENCIA] Screenshot min {minuto} no disponible para {match_id}")
-                return
+            src = _find_src(str(int(minuto) - 1))
         except (ValueError, TypeError):
-            _log.warning(f"[EVIDENCIA] Screenshot no disponible para {match_id}")
-            return
+            src = None
+
+    if src is None:
+        _log.warning(f"[EVIDENCIA] Screenshot{suffix} min {minuto} no disponible para {match_id}")
+        return
 
     try:
         _EVIDENCIAS_DIR.mkdir(exist_ok=True)

@@ -384,6 +384,47 @@ _STRATEGY_MARKET: dict[str, str] = {
     "lay_draw_away_leading": "lay_draw",
     "lay_cs11":       "lay_cs",
 }
+# NOTE: _STRATEGY_MARKET is kept for reconcile.py backward compatibility.
+# BT dedup in analyze_cartera() uses _normalize_mercado() instead (text-based,
+# mirrors _live_market_key() in analytics.py).
+
+
+def _normalize_mercado(mercado: str) -> str:
+    """Normalize a mercado string to a canonical dedup key.
+
+    Mirrors _live_market_key() logic in analytics.py so BT and LIVE dedup
+    operate on the same market boundaries. Works on the mercado field
+    (rec string without odds suffix).
+
+    Examples:
+        "BACK HOME"            → "home"
+        "BACK AWAY"            → "away"
+        "BACK DRAW"            → "draw"
+        "BACK CS 2-1"          → "cs_2_1"
+        "BACK U3.5 Late"       → "under_3.5"
+        "BACK UNDER 3.5"       → "under_3.5"
+        "BACK U4.5 3-Goals..." → "under_4.5"
+        "BACK Over 2.5"        → "over_2.5"
+        "BACK OVER 3.5"        → "over_3.5"
+    """
+    import re as _re
+    m = mercado.upper()
+    # Correct Score: "CS 2-1", "CS 1-1 at 0-1", etc.
+    cs = _re.search(r"\bCS\s+(\d+)[-_](\d+)", m)
+    if cs:
+        return f"cs_{cs.group(1)}_{cs.group(2)}"
+    # Over/Under: "OVER 3.5", "UNDER 3.5", "U3.5", "U4.5"
+    ou = _re.search(r"\b(OVER|UNDER|U)(\d+\.?\d*)", m)
+    if ou:
+        kind = "over" if ou.group(1) == "OVER" else "under"
+        return f"{kind}_{ou.group(2)}"
+    if "HOME" in m:
+        return "home"
+    if "AWAY" in m:
+        return "away"
+    if "DRAW" in m:
+        return "draw"
+    return mercado.lower().replace(" ", "_")
 
 # camelCase config keys → snake_case keys expected by trigger functions.
 # Each value is a list because some camelCase keys map to multiple snake_case aliases
@@ -475,13 +516,23 @@ def _analyze_strategy_simple(key: str, trigger_fn, extractor_fn, win_fn,
                         minuto = int(float(rows[first_seen].get("minuto") or 0))
                     except (ValueError, TypeError):
                         minuto = 0
+                    try:
+                        _gl_bet = int(float(rows[first_seen].get("goles_local") or 0))
+                        _gv_bet = int(float(rows[first_seen].get("goles_visitante") or 0))
+                        score_bet = f"{_gl_bet}-{_gv_bet}"
+                    except (ValueError, TypeError):
+                        score_bet = ""
                     bets.append({
                         "match_id": match_id,
+                        "match_name": match_data.get("name", ""),
                         "strategy": key,
                         "minuto": minuto,
+                        "mercado": rec.split(" @")[0].strip(),
                         "back_odds": round(odds, 2),
                         "won": won,
                         "pl": pl,
+                        "score_bet": score_bet,
+                        "score_final": f"{ft_gl}-{ft_gv}",
                         "País": rows[first_seen].get("País", "Desconocido"),
                         "Liga": rows[first_seen].get("Liga", "Desconocida"),
                         "timestamp_utc": rows[first_seen].get("timestamp_utc", ""),
@@ -862,7 +913,7 @@ def analyze_cartera() -> dict:
         _min_dur = md.get(_key, 1)
         _s_bets = _analyze_strategy_simple(_key, _trigger_fn, _extract_fn, _win_fn, _cfg_add_snake_keys(_s_cfg), _min_dur)
         for b in _s_bets:
-            all_bets.append({**b, "strategy_label": _name})
+            all_bets.append({**b, "strategy_label": _name, "strategy_desc": _desc})
 
     all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))
 
@@ -871,21 +922,20 @@ def analyze_cartera() -> dict:
         all_bets = [b for b in all_bets if (b.get("back_odds") or 0) >= _global_min_odds]
 
     # Deduplicate: one bet per market per match (take earliest by minuto).
-    # Strategies sharing a market group (e.g. under35_late + under35_3goals → under_3.5)
-    # compete for the same slot; only the first trigger wins.
+    # Uses _normalize_mercado() to derive the market key from the bet's mercado
+    # field — mirrors _live_market_key() in analytics.py so BT and LIVE apply
+    # identical dedup boundaries (e.g. ud_leading + odds_drift both producing
+    # BACK HOME compete for the same slot, only earliest wins).
     _seen_market: dict = {}
     _deduped: list = []
     for _b in sorted(all_bets, key=lambda x: x.get("minuto", 0) or 0):
         _mid = _b.get("match_id", "")
-        _mkt = _STRATEGY_MARKET.get(_b.get("strategy", ""), None)
-        if _mkt is None:
-            _deduped.append(_b)  # not in a shared-market group → always keep
-        else:
-            _mkey = (_mid, _mkt)
-            if _mkey not in _seen_market:
-                _seen_market[_mkey] = True
-                _deduped.append(_b)
-            # else: drop — duplicate market bet on the same match
+        _mkt = _normalize_mercado(_b.get("mercado", ""))
+        _mkey = (_mid, _mkt)
+        if _mkey not in _seen_market:
+            _seen_market[_mkey] = True
+            _deduped.append(_b)
+        # else: drop — duplicate market bet on the same match
     all_bets = _deduped
     all_bets.sort(key=lambda x: x.get("timestamp_utc", ""))  # re-sort after dedup
 

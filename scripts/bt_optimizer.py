@@ -61,6 +61,14 @@ RESULTS_FILE  = ROOT / "auxiliar" / "bt_optimizer_results.json"
 
 PRESETS_DIR.mkdir(parents=True, exist_ok=True)
 
+# ── Estrategias permanentemente excluidas del optimizer ───────────────────────
+# Riesgo asimétrico LAY: pérdidas de hasta (odds-1)x stake vs ganancia máx 1x stake
+_PERMANENTLY_DISABLED: set[str] = {
+    "lay_over45_v3",
+    "lay_over45_blowout",
+    "lay_cs11",
+}
+
 # ── Quality gates ─────────────────────────────────────────────────────────────
 G_MIN_ROI        = 10.0   # minimum ROI %
 IC95_MIN_LOW     = 40.0   # minimum Wilson CI lower bound
@@ -502,6 +510,8 @@ def phase1_individual(n_fin: int, workers: int = 4,
 
     for key in SINGLE_STRATEGIES:
         if only and key not in only:
+            continue
+        if key in _PERMANENTLY_DISABLED:
             continue
         space = SEARCH_SPACES.get(key)
         if space is None:
@@ -947,13 +957,31 @@ def phase5_export():
 
     # ── CSV ──────────────────────────────────────────────────────────────────
     import csv as _csv
+    from datetime import timedelta as _td
+
+    def _utc_to_local(ts_str: str, offset_hours: int = 1) -> str:
+        """Convierte timestamp UTC a hora local (GMT+offset)."""
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+            try:
+                dt = datetime.strptime(ts_str, fmt) + _td(hours=offset_hours)
+                return dt.strftime("%Y-%m-%d %H:%M:%S")
+            except (ValueError, TypeError):
+                continue
+        return ts_str
+
+    bets_local = []
+    for b in bets:
+        ts_local = _utc_to_local(b.get("timestamp_utc", ""))
+        bets_local.append({**b, "timestamp_utc": ts_local, "fecha": ts_local[:10]})
+
     csv_path = EXPORTS_DIR / f"bt_results_{ts}.csv"
-    fieldnames = ["match_id", "strategy", "strategy_label", "minuto",
+    fieldnames = ["fecha", "match_id", "match_name", "strategy", "strategy_label", "strategy_desc",
+                  "minuto", "mercado", "score_bet", "score_final",
                   "back_odds", "won", "pl", "País", "Liga", "timestamp_utc"]
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         w = _csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         w.writeheader()
-        w.writerows(bets)
+        w.writerows(bets_local)
     _log(f"  CSV: {csv_path.name}  ({len(bets)} bets)")
 
     # ── XLSX ─────────────────────────────────────────────────────────────────
@@ -968,7 +996,7 @@ def phase5_export():
         ws_bets = wb.active
         ws_bets.title = "Bets"
         _xlsx_write_rows(ws_bets, fieldnames,
-                         [{f: b.get(f, "") for f in fieldnames} for b in bets])
+                         [{f: b.get(f, "") for f in fieldnames} for b in bets_local])
 
         # Sheet 2: strategy summary
         ws_sum = wb.create_sheet("Por Estrategia")
@@ -1000,6 +1028,30 @@ def phase5_export():
             cumul += b["pl"]
             ws_cum.append([i, b.get("strategy",""), b.get("won",""),
                            b.get("pl",""), round(cumul, 2)])
+
+        # Sheet 4: duplicate bets by market
+        ws_dup = wb.create_sheet("Duplicados Mercado")
+        from collections import Counter
+        dup_counter = Counter(
+            (b.get("fecha", ""), b.get("match_name", ""), b.get("mercado", ""))
+            for b in bets_local
+        )
+        dup_rows = sorted(
+            [{"fecha": k[0], "match_name": k[1], "mercado": k[2], "count": v}
+             for k, v in dup_counter.items() if v > 1],
+            key=lambda r: (-r["count"], r["fecha"], r["match_name"])
+        )
+        _xlsx_write_rows(ws_dup,
+                         ["fecha", "match_name", "mercado", "count"],
+                         dup_rows)
+        # highlight rows with count > 1 in orange
+        from openpyxl.styles import PatternFill as _PF
+        orange_fill = _PF("solid", fgColor="FF9900")
+        for row in ws_dup.iter_rows(min_row=2):
+            count_cell = row[3]
+            if isinstance(count_cell.value, int) and count_cell.value > 1:
+                for cell in row:
+                    cell.fill = orange_fill
 
         xlsx_path = EXPORTS_DIR / f"bt_results_{ts}.xlsx"
         wb.save(str(xlsx_path))

@@ -7,6 +7,48 @@ import sys
 # Prevent stale .pyc bytecode cache (OneDrive/Windows can cause mismatch)
 sys.dont_write_bytecode = True
 
+# ==================== BACKEND LOG FILE ====================
+# Mirrors stdout/stderr to logs/backend_YYYYMMDD_HHMMSS.log
+# Captures: all print() calls, uvicorn HTTP logs, FastAPI exceptions
+import logging
+from pathlib import Path as _Path
+from datetime import datetime as _datetime
+
+_logs_dir = _Path(__file__).resolve().parent.parent.parent / "logs"
+_logs_dir.mkdir(exist_ok=True)
+_backend_log_path = _logs_dir / f"backend_{_datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+_log_fh = open(_backend_log_path, "a", encoding="utf-8", buffering=1)
+
+
+class _Tee:
+    """Mirrors writes to both the original stream and a log file."""
+    def __init__(self, original, file):
+        self._orig = original
+        self._file = file
+
+    def write(self, data):
+        self._orig.write(data)
+        self._file.write(data)
+
+    def flush(self):
+        self._orig.flush()
+        self._file.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._orig, name)
+
+
+sys.stdout = _Tee(sys.stdout, _log_fh)
+sys.stderr = _Tee(sys.stderr, _log_fh)
+
+# Capture uvicorn/FastAPI logging records into the same file
+_log_stream_handler = logging.StreamHandler(_log_fh)
+_log_stream_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+logging.getLogger().addHandler(_log_stream_handler)
+logging.getLogger().setLevel(logging.INFO)
+print(f"[{_datetime.now()}] Backend log → {_backend_log_path}")
+# ==========================================================
+
 import asyncio
 import subprocess
 import importlib

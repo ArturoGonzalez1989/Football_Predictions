@@ -34,15 +34,24 @@ _tg_path = _tg_candidates[0]
 print(f"Using Telegram export: {_tg_path}")
 content = _tg_path.read_text(encoding='utf-8')
 
-msg_pattern = re.compile(
-    r'title=\"(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}[^\"]*)\".*?<div class=\"text\">(.*?)</div>\s*</div>\s*</div>',
+# Dividir en bloques por mensaje (más robusto que un único regex multi-div)
+msg_block_pattern = re.compile(
+    r'<div class="message[^"]*"[^>]*>.*?(?=<div class="message[^"]*"[^>]*>|$)',
     re.DOTALL
 )
+title_pattern = re.compile(r'title=\"(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}[^\"]*)\"')
+text_pattern  = re.compile(r'<div class=\"text\">(.*?)</div>', re.DOTALL)
+
 raw_alerts = []
-for m in msg_pattern.finditer(content):
-    ts = m.group(1)
-    raw_text = m.group(2)
-    link_match = re.search(r'href=\"([^\"]+)\"', raw_text)
+for block_m in msg_block_pattern.finditer(content):
+    block = block_m.group(0)
+    t_m = title_pattern.search(block)
+    x_m = text_pattern.search(block)
+    if not t_m or not x_m:
+        continue
+    ts = t_m.group(1)
+    raw_text = x_m.group(1)
+    link_match = re.search(r'href=\"([^\"]+)\"', block)
     link = link_match.group(1) if link_match else ''
     text = re.sub(r'<[^>]+>', ' ', raw_text)
     text = text.replace("&apos;", "'").replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&nbsp;', ' ')
@@ -92,6 +101,7 @@ STRAT_MAP = {
     'BACK O2.5 Two Goals': 'over25_2goals',
     'BACK Draw Equalizer Late': 'draw_equalizer',
     'BACK Over 3.5 Early Goals': 'over35_early_goals',
+    'BACK CS Big Lead': 'cs_big_lead',
 }
 
 def extract_strategy_key(text):
@@ -206,6 +216,31 @@ dups    = sum(1 for r in results if r['is_dup'])
 mid_only = sum(1 for r in results if r['paper'] == 'MID' and not r['is_dup'])
 no_match = sum(1 for r in results if r['paper'] == 'NO' and not r['is_dup'])
 
+n_bets  = len(matched)
+roi     = (total_pl / n_bets * 100) if n_bets else 0
+avg_pl  = (total_pl / n_bets) if n_bets else 0
+gross_wins  = sum(float(r['pl']) for r in matched if r['result'] == 'WIN' and r['pl'] != '-')
+gross_losses = abs(sum(float(r['pl']) for r in matched if r['result'] == 'LOSS' and r['pl'] != '-'))
+profit_factor = (gross_wins / gross_losses) if gross_losses else float('inf')
+placed_odds = [float(r['odds']) for r in matched if r['odds']]
+avg_odds = sum(placed_odds) / len(placed_odds) if placed_odds else 0
+
+# Max drawdown from cumulative P/L
+cumpl_vals = []
+_cum = 0.0
+for r in results:
+    if r['paper'] == 'YES' and not r['is_dup'] and r['pl'] != '-':
+        _cum += float(r['pl'])
+        cumpl_vals.append(_cum)
+max_dd = 0.0
+peak = float('-inf')
+for v in cumpl_vals:
+    if v > peak:
+        peak = v
+    dd = v - peak
+    if dd < max_dd:
+        max_dd = dd
+
 # ── HTML output ──────────────────────────────────────────────────────────────
 def row_class(r):
     if r['is_dup']:   return 'dup'
@@ -309,14 +344,19 @@ html = f"""<!DOCTYPE html>
 </head>
 <body>
 <h1>Señales Telegram — Resultados Paper Trading</h1>
-<p class="subtitle">Fuente: placed_bets.csv · {total} alertas detectadas</p>
+<p class="subtitle">Fuente: Telegram · {total} señales detectadas</p>
 
 <div class="stats">
-  <div class="stat"><div class="label">Apuestas</div><div class="value">{len(matched)}</div></div>
+  <div class="stat"><div class="label">Apuestas</div><div class="value">{n_bets}</div></div>
   <div class="stat wins"><div class="label">Ganadas</div><div class="value">{wins}</div></div>
   <div class="stat losses"><div class="label">Perdidas</div><div class="value">{losses}</div></div>
   <div class="stat pl"><div class="label">P/L Total</div><div class="value">{total_pl:+.2f}</div></div>
   <div class="stat"><div class="label">Win Rate</div><div class="value">{wins/(wins+losses)*100:.0f}%</div></div>
+  <div class="stat pl"><div class="label">ROI</div><div class="value">{roi:+.1f}%</div></div>
+  <div class="stat pl"><div class="label">P/L por apuesta</div><div class="value">{avg_pl:+.2f}</div></div>
+  <div class="stat"><div class="label">Profit Factor</div><div class="value">{profit_factor:.2f}</div></div>
+  <div class="stat"><div class="label">Odds media</div><div class="value">{avg_odds:.2f}</div></div>
+  <div class="stat losses"><div class="label">Max Drawdown</div><div class="value">{max_dd:+.2f}</div></div>
   <div class="stat"><div class="label">No placed</div><div class="value">{mid_only}</div></div>
 </div>
 
