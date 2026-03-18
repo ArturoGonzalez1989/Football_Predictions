@@ -1053,6 +1053,34 @@ def phase5_export():
                 for cell in row:
                     cell.fill = orange_fill
 
+        # Sheet 5: stats by day
+        ws_day = wb.create_sheet("Por Día")
+        from collections import defaultdict as _dd
+        day_map = _dd(lambda: {"bets": 0, "wins": 0, "pl": 0.0})
+        for b in bets_local:
+            d = b.get("fecha", "")
+            day_map[d]["bets"] += 1
+            day_map[d]["wins"] += 1 if b.get("won") else 0
+            day_map[d]["pl"]   += b.get("pl", 0)
+        day_rows = []
+        for d in sorted(day_map):
+            dm = day_map[d]
+            n, w = dm["bets"], dm["wins"]
+            ci_l, ci_h = _wilson_ci(w, n)
+            day_rows.append({
+                "fecha":   d,
+                "bets":    n,
+                "wins":    w,
+                "win_pct": round(w / n * 100, 1) if n else 0,
+                "pl":      round(dm["pl"], 2),
+                "roi":     round(dm["pl"] / n * 100, 1) if n else 0,
+                "ci_low":  ci_l,
+                "ci_high": ci_h,
+            })
+        _xlsx_write_rows(ws_day,
+                         ["fecha", "bets", "wins", "win_pct", "pl", "roi", "ci_low", "ci_high"],
+                         day_rows)
+
         xlsx_path = EXPORTS_DIR / f"bt_results_{ts}.xlsx"
         wb.save(str(xlsx_path))
         _log(f"  XLSX: {xlsx_path.name}")

@@ -258,12 +258,34 @@ def _enrich_with_live_data(bet: dict, is_match_active: bool = True, cashout_pct:
                     if lay_now >= threshold:
                         bet["cashout_pl"] = round(stake * (odds / lay_now - 1), 2)
 
-        # Auto-settle: ONLY when CSV explicitly shows finalizado.
+        # Auto-settle: primary trigger is explicit finalizado state.
         # Do NOT settle based on is_match_active alone — clean_games can remove a match
         # before the scraper writes the finalizado row, causing settlement on interim scores.
         finished_states = ("finalizado", "finished", "ft", "full_time", "ended")
         is_explicitly_finished = estado in finished_states
-        if is_explicitly_finished:
+
+        # Fallback settlement: scraper rarely writes "finalizado" explicitly.
+        # Settle when ALL THREE conditions are met to avoid settling on interim scores:
+        #   1. match not in games.csv (is_match_active=False)
+        #   2. last en_juego minute >= 85 (late enough to be FT)
+        #   3. last row timestamp >= 20 min old (match has had time to end)
+        is_fallback_finished = False
+        if not is_explicitly_finished and not is_match_active and minuto is not None and minuto >= 85:
+            try:
+                from datetime import datetime, timezone as _tz
+                ts_str = last.get("timestamp_utc", "")
+                if ts_str:
+                    last_ts = datetime.fromisoformat(ts_str)
+                    if last_ts.tzinfo is None:
+                        last_ts = last_ts.replace(tzinfo=_tz.utc)
+                    age_minutes = (datetime.now(_tz.utc) - last_ts).total_seconds() / 60
+                    if age_minutes >= 20:
+                        is_fallback_finished = True
+                        bet["live_status"] = "fallback_ft"
+            except Exception:
+                pass
+
+        if is_explicitly_finished or is_fallback_finished:
             if would_win:
                 bet["status"] = "won"
                 bet["result"] = "won"

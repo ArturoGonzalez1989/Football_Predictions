@@ -24,6 +24,13 @@ if _corrupted_file.exists():
             if line and not line.startswith("#"):
                 CORRUPTED_OVER_MATCHES.add(line)
 
+# Cache para load_games() — evita releer 1440+ CSVs en cada ciclo de paper trading
+_load_games_cache: list | None = None
+_load_games_cache_time: datetime | None = None
+_load_games_scanning: bool = False  # Evita scans concurrentes cuando el caché expira
+_LOAD_GAMES_TTL_SECONDS = 120
+
+
 STAT_COLUMNS = [
     "xg_local", "xg_visitante", "posesion_local", "posesion_visitante",
     "tiros_local", "tiros_visitante", "tiros_puerta_local", "tiros_puerta_visitante",
@@ -276,9 +283,33 @@ def _match_id_from_url(url: str) -> str:
     return m.group(1) if m else url.split("/")[-1]
 
 
-def load_games() -> list[dict]:
-    """Lee games.csv y devuelve la lista de partidos con metadatos."""
+def load_games(force_refresh: bool = False) -> list[dict]:
+    """Lee games.csv y devuelve la lista de partidos con metadatos.
+
+    Cachea el resultado 120s para evitar releer los 1440+ CSVs de data/ en cada
+    ciclo de paper trading (detect_betting_signals + detect_watchlist lo llaman
+    por separado, lo que sin caché supone ~2880 lecturas de archivo por ciclo).
+    Usa force_refresh=True para saltarse el caché (p.ej. tras modificar games.csv).
+    Si un scan ya está en curso, devuelve el caché anterior para no bloquear.
+    """
+    global _load_games_cache, _load_games_cache_time, _load_games_scanning
+    now = datetime.now()
+    if (
+        not force_refresh
+        and _load_games_cache is not None
+        and _load_games_cache_time is not None
+        and (now - _load_games_cache_time).total_seconds() < _LOAD_GAMES_TTL_SECONDS
+    ):
+        return _load_games_cache
+
+    # Si otro thread ya está haciendo el scan, no lanzar un segundo scan concurrente
+    if _load_games_scanning:
+        # Devolver caché anterior si existe, o lista vacía si es el primer arranque
+        return _load_games_cache if _load_games_cache is not None else []
+
+    _load_games_scanning = True
     if not GAMES_CSV.exists():
+        _load_games_scanning = False
         return []
 
     games = []
@@ -432,6 +463,9 @@ def load_games() -> list[dict]:
                 "csv_exists": True,
             })
 
+    _load_games_cache = games
+    _load_games_cache_time = datetime.now()
+    _load_games_scanning = False
     return games
 
 
@@ -541,6 +575,7 @@ def delete_match(match_id: str) -> dict:
                 writer.writeheader()
                 writer.writerows(rows)
             deleted_from_csv = True
+            _load_games_cache_time = None  # Invalidar caché
 
     # 2. Borrar CSV de datos
     csv_path = _resolve_csv_path(match_id)

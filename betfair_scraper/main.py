@@ -2397,10 +2397,12 @@ class MatchDriver:
                     minuto_actual = info.get("minuto", "0")
                     screenshot_path = os.path.join(OUTPUT_DIR, f"screenshot_{self.match_id}_{minuto_actual}.png")
                     self.driver.save_screenshot(screenshot_path)
-                    # Limpiar screenshots antiguos del mismo partido (conservar últimos 3 minutos)
+                    # Limpiar screenshots antiguos del mismo partido (conservar últimos 8 minutos)
+                    # Necesitamos ventana amplia: señal dispara en min N, madura en N+min_dur (hasta 3),
+                    # backend procesa ~60s después → puede estar en min N+4 o N+5. Con 8 tenemos margen.
                     import glob as _glob
                     existing = sorted(_glob.glob(os.path.join(OUTPUT_DIR, f"screenshot_{self.match_id}_*.png")))
-                    for old in existing[:-3]:
+                    for old in existing[:-8]:
                         try:
                             os.remove(old)
                         except Exception:

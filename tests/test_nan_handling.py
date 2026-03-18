@@ -207,7 +207,8 @@ def test_affected_matches_now_in_bt():
         "partido_oxford-united-charlton-apuestas-35334820.csv",
         "partido_coventry-southampton-apuestas-35338316.csv",
         "partido_inter-atalanta-apuestas-35323190.csv",
-        "partido_charleroi-oh-leuven-apuestas-35338804.csv",
+        # charleroi-oh-leuven removed: no active BACK strategy triggers for this match
+        # (previously relied on a LAY strategy that has been permanently disabled)
         "partido_red-star-dunkerque-apuestas-35353636.csv",
         "partido_union-st-gilloise-fcv-dender-apuestas-35347631.csv",
     ]

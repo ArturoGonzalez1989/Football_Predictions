@@ -264,53 +264,53 @@ def restart_backend():
 
 @router.post("/chrome/cleanup")
 def cleanup_chrome():
-    """Mata procesos Chrome huérfanos (no hijos del scraper activo)."""
-    if not HAS_PSUTIL:
-        return {"ok": False, "killed": 0, "message": "psutil no disponible"}
+    """Mata procesos Chrome huérfanos (no hijos del scraper activo).
 
-    import time
+    Usa taskkill /F por PID en lote — evita iterar 1700+ procesos uno a uno.
+    """
+    import subprocess
 
     # Proteger los Chrome que son hijos del scraper activo
-    scraper_proc = _find_scraper_process()
     protected_pids: set = set()
-    if scraper_proc:
+    if HAS_PSUTIL:
+        scraper_proc = _find_scraper_process()
+        if scraper_proc:
+            try:
+                protected_pids.add(scraper_proc.pid)
+                for child in scraper_proc.children(recursive=True):
+                    protected_pids.add(child.pid)
+            except Exception:
+                pass
+
+    # Recoger PIDs Chrome huérfanos
+    orphan_pids: list[int] = []
+    if HAS_PSUTIL:
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                if proc.info["name"] and "chrome" in proc.info["name"].lower():
+                    if proc.pid not in protected_pids:
+                        orphan_pids.append(proc.pid)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+
+    if not orphan_pids:
+        return {"ok": True, "killed": 0, "protected": len(protected_pids),
+                "message": "No hay procesos Chrome huérfanos"}
+
+    # Matar en lote con taskkill — mucho más rápido que psutil one-by-one
+    killed = 0
+    BATCH = 50  # taskkill acepta múltiples /PID en un solo comando
+    for i in range(0, len(orphan_pids), BATCH):
+        batch = orphan_pids[i:i + BATCH]
+        args = ["taskkill", "/F"]
+        for pid in batch:
+            args += ["/PID", str(pid)]
         try:
-            protected_pids.add(scraper_proc.pid)
-            for child in scraper_proc.children(recursive=True):
-                protected_pids.add(child.pid)
+            subprocess.run(args, capture_output=True, timeout=10)
+            killed += len(batch)
         except Exception:
             pass
 
-    # Recoger procs Chrome huérfanos
-    to_kill = []
-    for proc in psutil.process_iter(["pid", "name"]):
-        try:
-            if proc.info["name"] and "chrome" in proc.info["name"].lower():
-                if proc.pid not in protected_pids:
-                    to_kill.append(proc)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
-
-    # Terminate suavemente
-    for proc in to_kill:
-        try:
-            proc.terminate()
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-
-    time.sleep(1.5)
-
-    # Force-kill los que sobrevivan
-    force_killed = 0
-    for proc in to_kill:
-        try:
-            if proc.is_running():
-                proc.kill()
-                force_killed += 1
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-
-    killed = len(to_kill)
     protected = len(protected_pids)
     return {
         "ok": True,

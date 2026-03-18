@@ -64,7 +64,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.matches import router as matches_router
-from api.system import router as system_router
+from api.system import router as system_router, cleanup_chrome
 from api.analytics import router as analytics_router, run_paper_auto_place
 from api.bets import router as bets_router, run_auto_cashout
 from api.config import router as config_router
@@ -101,6 +101,7 @@ app.include_router(scripts_router)
 # ==================== AUTO REFRESH SCHEDULER ====================
 
 # Global state for scheduler
+_background_tasks: set = set()  # Registro de todas las tareas background propias
 _scheduler_task = None
 _is_refreshing = False
 _refresh_started_at = None  # Track when refresh started to detect stuck state
@@ -460,6 +461,26 @@ async def _alerts_monitor():
 async def start_scheduler():
     """Start the auto-refresh scheduler and scraper watchdog on app startup."""
     global _scheduler_task, _scraper_watchdog_task, _paper_trading_task
+    # Limpiar procesos Chrome huérfanos en background — no bloquear el event loop
+    async def _startup_chrome_cleanup():
+        try:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, cleanup_chrome)
+            if result.get("killed", 0) > 0:
+                print(f"[{datetime.now()}] STARTUP CLEANUP: eliminados {result['killed']} procesos Chrome huérfanos")
+            else:
+                print(f"[{datetime.now()}] STARTUP CLEANUP: sin procesos Chrome huérfanos")
+        except Exception as e:
+            print(f"[{datetime.now()}] STARTUP CLEANUP: error limpiando Chrome: {e}")
+    def _bg(coro):
+        """Crea una tarea background y la registra para cancelarla limpiamente en shutdown."""
+        t = asyncio.create_task(coro)
+        _background_tasks.add(t)
+        t.add_done_callback(_background_tasks.discard)
+        return t
+
+    _bg(_startup_chrome_cleanup())
+
     print(f"\n{'='*60}")
     print(f"[{datetime.now()}] STARTING AUTO-REFRESH SCHEDULER")
     print(f"  Interval: {REFRESH_INTERVAL_SECONDS // 60} minutes")
@@ -469,38 +490,30 @@ async def start_scheduler():
     print(f"  find_matches.py exists: {(SCRIPTS_DIR / 'find_matches.py').exists()}")
     print(f"  Python: {sys.executable}")
     print(f"{'='*60}\n")
-    _scheduler_task = asyncio.create_task(auto_refresh_matches())
-    # Watchdog to auto-restart if scheduler crashes
-    asyncio.create_task(_scheduler_watchdog())
-    # Scraper watchdog: auto-restart if scraper dies
-    _scraper_watchdog_task = asyncio.create_task(_scraper_watchdog())
+    _scheduler_task = _bg(auto_refresh_matches())
+    _bg(_scheduler_watchdog())
+    _scraper_watchdog_task = _bg(_scraper_watchdog())
     print(f"[{datetime.now()}] Scraper watchdog started (checks every {SCRAPER_WATCHDOG_INTERVAL}s)")
-    # Paper trading auto-poller: detecta señales y coloca bets sin necesidad de abrir el dashboard
-    _paper_trading_task = asyncio.create_task(auto_paper_trading())
+    _paper_trading_task = _bg(auto_paper_trading())
     print(f"[{datetime.now()}] Paper auto-poller started (cada {PAPER_TRADING_INTERVAL_SECONDS}s, delay reacción +1min)")
-    # Watchdog para el paper trading task — lo reinicia si muere inesperadamente
-    asyncio.create_task(_paper_trading_watchdog())
+    _bg(_paper_trading_watchdog())
     print(f"[{datetime.now()}] Paper trading watchdog started")
-    # Alerts monitor: logs system alerts every 60s (even when nobody is viewing the dashboard)
-    asyncio.create_task(_alerts_monitor())
+    _bg(_alerts_monitor())
     print(f"[{datetime.now()}] Alerts monitor started (logs to alerts.jsonl every 60s)")
-    # Telegram bot callback polling: handles "Añadir a MI PAPER" inline button
     from utils import telegram_poller as _tg_poller
-    asyncio.create_task(_tg_poller.start_polling())
+    _bg(_tg_poller.start_polling())
     print(f"[{datetime.now()}] Telegram callback polling started")
 
 
 @app.on_event("shutdown")
 async def stop_scheduler():
-    """Stop the auto-refresh scheduler on app shutdown."""
-    global _scheduler_task
-    if _scheduler_task:
-        print(f"[{datetime.now()}] Stopping auto-refresh scheduler...")
-        _scheduler_task.cancel()
-        try:
-            await _scheduler_task
-        except asyncio.CancelledError:
-            pass
+    """Cancela solo las tareas background propias — no toca las internas de uvicorn."""
+    tasks = [t for t in _background_tasks if not t.done()]
+    for t in tasks:
+        t.cancel()
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
+    print(f"[{datetime.now()}] Shutdown: {len(tasks)} tareas canceladas")
 
 
 # ==================== HEALTH CHECK ====================
