@@ -71,11 +71,12 @@ def _load_env_if_needed() -> None:
         log.debug(f"Telegram: could not load .env: {e}")
 
 
-def send_signal(sig: dict, stake: float, bet_id: int | None = None) -> None:
-    """Send a Telegram message for a newly placed signal. Never raises."""
+def send_signal(sig: dict, stake: float) -> bool:
+    """Send a Telegram message for a newly placed signal. Never raises.
+    Returns True if message was sent successfully, False otherwise."""
     _load_env_if_needed()
     if not _TOKEN or not _CHAT_ID:
-        return
+        return False
 
     try:
         bet_type = sig.get("bet_type", "BACK").upper()
@@ -102,7 +103,11 @@ def send_signal(sig: dict, stake: float, bet_id: int | None = None) -> None:
         # Odds line — rec already contains "@ X.XX" from the backend, strip it to avoid duplicate
         rec_action = rec.rsplit(" @ ", 1)[0]  # e.g. "BACK Over 2.5" without the odds suffix
         odds_str = f"{back_odds:.2f}" if isinstance(back_odds, (int, float)) else str(back_odds)
-        min_str = f" | mín: {min_odds:.2f}" if min_odds is not None else ""
+        if min_odds is not None:
+            _min_fmt = str(int(min_odds)) if min_odds == int(min_odds) else f"{min_odds:.2f}"
+            min_str = f" | mín: {_min_fmt}"
+        else:
+            min_str = ""
         odds_line = f"· *{rec_action}* @ {odds_str}{min_str}"
 
         # Context line
@@ -149,12 +154,6 @@ def send_signal(sig: dict, stake: float, bet_id: int | None = None) -> None:
             "parse_mode": "Markdown",
             "disable_web_page_preview": True,
         }
-        if bet_id is not None:
-            msg["reply_markup"] = {
-                "inline_keyboard": [[
-                    {"text": "✅ Añadir a MI PAPER", "callback_data": f"add_manual:{bet_id}"}
-                ]]
-            }
         payload = json.dumps(msg).encode("utf-8")
 
         req = urllib.request.Request(
@@ -166,6 +165,9 @@ def send_signal(sig: dict, stake: float, bet_id: int | None = None) -> None:
         with urllib.request.urlopen(req, timeout=5) as resp:
             if resp.status != 200:
                 log.warning(f"Telegram sendMessage returned {resp.status}")
+                return False
+        return True
 
     except Exception as e:
         log.debug(f"Telegram notification failed (non-critical): {e}")
+        return False

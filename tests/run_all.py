@@ -17,10 +17,11 @@ ROOT   = Path(__file__).resolve().parent.parent
 TESTS  = Path(__file__).resolve().parent
 
 SUITES = [
-    ("NaN Handling",       TESTS / "test_nan_handling.py",       []),
-    ("Registry Collapse",  TESTS / "test_registry_collapse.py",  []),
-    ("System Integrity",   TESTS / "test_system_integrity.py",   ["--verbose"] if "--verbose" in sys.argv else []),
-    ("Param Fidelity",     TESTS / "test_param_fidelity.py",     []),
+    ("NaN Handling",       TESTS / "test_nan_handling.py",           []),
+    ("Null Stats",         TESTS / "test_null_stats_handling.py",    []),
+    ("Registry Collapse",  TESTS / "test_registry_collapse.py",      []),
+    ("System Integrity",   TESTS / "test_system_integrity.py",       ["--verbose"] if "--verbose" in sys.argv else []),
+    ("Param Fidelity",     TESTS / "test_param_fidelity.py",         []),
 ]
 
 SEP = "─" * 70

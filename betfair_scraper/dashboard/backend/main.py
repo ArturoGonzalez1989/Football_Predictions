@@ -500,9 +500,6 @@ async def start_scheduler():
     print(f"[{datetime.now()}] Paper trading watchdog started")
     _bg(_alerts_monitor())
     print(f"[{datetime.now()}] Alerts monitor started (logs to alerts.jsonl every 60s)")
-    from utils import telegram_poller as _tg_poller
-    _bg(_tg_poller.start_polling())
-    print(f"[{datetime.now()}] Telegram callback polling started")
 
 
 @app.on_event("shutdown")

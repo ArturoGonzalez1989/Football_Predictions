@@ -535,10 +535,8 @@ export const api = {
   // Placed bets tracking
   placeBet: (bet: PlaceBetRequest) => post<PlacedBet>("/bets/place", bet),
   getPlacedBets: () => get<PlacedBetsResponse>("/bets/placed"),
-  getManualBets: () => get<PlacedBetsResponse>("/bets/manual"),
   clearBets: () => del<{ status: string; message: string }>("/bets/clear"),
   resolveBet: (id: number, result: "won" | "lost") => post<{ ok: boolean; bet_id: number; result: string }>(`/bets/${id}/resolve?result=${result}`, {}),
-  addToManualPaper: (betId: number) => post<{ ok: boolean; manual_bet_id: number }>(`/bets/${betId}/add-to-manual`, {}),
 
   // Cartera configuration
   getConfig: () => get<CarteraConfig>("/config/cartera"),

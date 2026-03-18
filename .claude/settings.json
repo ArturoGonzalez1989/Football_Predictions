@@ -1,14 +1,31 @@
 {
   "permissions": {
     "allow": [
-      "mcp__plugin_playwright_playwright__browser_resize",
-      "WebFetch(domain:simonwillison.net)",
-      "mcp__plugin_claude-mem_mcp-search__get_observations",
-      "mcp__plugin_claude-mem_mcp-search__smart_outline",
-      "mcp__plugin_playwright_playwright__browser_evaluate",
-      "mcp__plugin_playwright_playwright__browser_snapshot",
-      "mcp__plugin_playwright_playwright__browser_type",
-      "mcp__plugin_playwright_playwright__browser_console_messages"
+      "Bash(python3 -c \":*)",
+      "Bash(python -c \"import api.bets; import api.analytics; import utils.telegram_notifier; print\\(''OK''\\)\")",
+      "Bash(python -c \":*)",
+      "Bash(python auxiliar/odds_threshold_analysis.py)",
+      "Bash(find c:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/dashboard/backend/utils/ -name *.py)",
+      "Bash(python.exe -c \":*)",
+      "Bash(python.exe tests/test_null_stats_handling.py)",
+      "Bash(python.exe -c \"import io, sys; sys.stdout = io.TextIOWrapper\\(sys.stdout.buffer, encoding=''''utf-8''''\\)\")",
+      "Bash(python.exe tests/run_all.py)",
+      "Bash(python scripts/bt_optimizer.py --help)",
+      "Bash(find betfair_scraper/data -name *seattle* -o -name *sounders* -o -name *colorado*)",
+      "Bash(powershell -Command \"Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,StartTime | Format-Table -AutoSize\")",
+      "Bash(powershell -Command \"Get-ChildItem ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\scraper_*.log'' | Sort-Object LastWriteTime -Descending | Select-Object -First 5 | Select-Object Name, LastWriteTime\")",
+      "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\scraper_20260318_011005.log'' -Tail 150 | Out-String\")",
+      "Bash(powershell -Command \"Get-ChildItem ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\'' | Sort-Object LastWriteTime -Descending | Select-Object -First 15 | Select-Object Name, LastWriteTime, Length\")",
+      "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\alerts.jsonl'' -Tail 30 | Out-String\")",
+      "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\backend_20260318_033729.log'' | Select-String ''10:50|10:51|signal|place|PAPER|telegram|senal|señal'' | Select-Object -First 60 | Out-String\")",
+      "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\placed_bets.csv'' | Out-String\")",
+      "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\backend_20260318_033729.log'' | Select-String ''10:50|10:51|Machida|odds_drift|telegram|Telegram|notif|placed|colocad'' | Out-String\")",
+      "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\backend_20260318_033729.log'' | Select-String ''Machida|odds_drift|telegram|Telegram|notif|PLACE|Place OK.*[1-9]'' | Out-String\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(ls /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/analisis/bt_results_*.csv)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\dashboard\\frontend\\src\\components"
     ]
   }
 }

@@ -22,11 +22,19 @@ _PLACED_BETS_HEADERS = [
     'strategy', 'strategy_name', 'minute', 'score', 'recommendation',
     'back_odds', 'min_odds', 'expected_value', 'confidence',
     'win_rate_historical', 'roi_historical', 'sample_size',
-    'bet_type', 'stake', 'notes', 'status', 'result', 'pl'
+    'bet_type', 'stake', 'notes', 'status', 'result', 'pl', 'telegram_sent'
 ]
 
 # Dedup en memoria: evita escribir el mismo signal dos veces en la misma sesión de backend
 _auto_placed_keys: set = set()
+
+# Dedup para capture requests: evita escribir el mismo trigger más de una vez por señal
+_capture_requested_keys: set = set()
+
+# Tracking del ciclo de vida de señales activas:
+#   clave  → signal_key (match_id + strategy)
+#   valor  → dict con {first_seen_utc, last_seen_utc, cycles, sig_snapshot}
+_active_signal_tracker: dict = {}  # type: dict[str, dict]
 
 # Retraso adicional tras madurez de señal antes de colocar la apuesta paper.
 # 0 = se coloca en cuanto la señal alcanza min_dur (sin delay artificial).
@@ -85,7 +93,7 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
             "paper",
             stake,
             "auto",   # notas: marca automático
-            "pending", "", "",
+            "pending", "", "", 0,  # telegram_sent=0: pendiente de notificar
         ]
 
         # Atomic write: write to temp file, then rename
@@ -107,7 +115,17 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
             logging.getLogger(__name__).warning(f"Audit log failed for bet {next_id}: {e}")
 
         # ── Telegram notification ──
-        _tg.send_signal(sig, stake)
+        if _tg.send_signal(sig, stake):
+            _mark_telegram_sent(next_id)
+            try:
+                _audit.log_telegram_sent(next_id, match_id, strategy)
+            except Exception:
+                pass
+        else:
+            try:
+                _audit.log_telegram_failed(next_id, match_id, strategy)
+            except Exception:
+                pass
 
         # ── Guardar snapshot de evidencia desde CSV ──
         _save_evidence_snapshot(sig)
@@ -124,6 +142,112 @@ def _auto_place_signal(sig: dict, stake: float) -> None:
                 )
         except Exception:
             pass
+
+def _mark_telegram_sent(bet_id: int) -> None:
+    """Actualiza telegram_sent=1 para la apuesta indicada en placed_bets.csv."""
+    try:
+        if not _PLACED_BETS_CSV.exists():
+            return
+        with open(_PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+            rows = list(csv.DictReader(f))
+        for row in rows:
+            if row.get('id', '') == str(bet_id):
+                row['telegram_sent'] = '1'
+                break
+        tmp_path = _PLACED_BETS_CSV.with_suffix('.csv.tmp')
+        with open(tmp_path, 'w', newline='', encoding='utf-8') as f:
+            w = csv.DictWriter(f, fieldnames=_PLACED_BETS_HEADERS, extrasaction='ignore', restval='')
+            w.writeheader()
+            w.writerows(rows)
+        import shutil
+        shutil.move(str(tmp_path), str(_PLACED_BETS_CSV))
+    except Exception as e:
+        logging.getLogger(__name__).debug(f"_mark_telegram_sent failed for bet {bet_id}: {e}")
+
+
+# Contador de reintentos Telegram por bet_id para loguear attempt_n
+_telegram_retry_counts: dict = {}  # type: dict[str, int]
+
+
+def _retry_telegram_notifications() -> None:
+    """Reintenta el envío de Telegram para bets recientes (< 2h) con telegram_sent=0.
+    Llamado al inicio de cada ciclo de paper trading.
+    """
+    try:
+        if not _PLACED_BETS_CSV.exists():
+            return
+        with open(_PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
+            rows = list(csv.DictReader(f))
+
+        now = datetime.utcnow()
+        updated = False
+        for row in rows:
+            # Solo filas explícitamente marcadas como no enviadas
+            if row.get('telegram_sent', '') != '0':
+                continue
+            bet_id_str = row.get('id', '?')
+            try:
+                ts = datetime.strptime(row['timestamp_utc'], "%Y-%m-%d %H:%M:%S")
+                age_secs = (now - ts).total_seconds()
+                if age_secs > 7200:  # ventana 2h
+                    continue
+            except Exception:
+                continue
+
+            _telegram_retry_counts[bet_id_str] = _telegram_retry_counts.get(bet_id_str, 0) + 1
+            attempt_n = _telegram_retry_counts[bet_id_str]
+
+            sig = {
+                'match_id':            row.get('match_id', ''),
+                'match_name':          row.get('match_name', ''),
+                'match_url':           row.get('match_url', ''),
+                'strategy':            row.get('strategy', ''),
+                'strategy_name':       row.get('strategy_name', ''),
+                'minute':              row.get('minute', ''),
+                'score':               row.get('score', ''),
+                'recommendation':      row.get('recommendation', ''),
+                'back_odds':           float(row['back_odds']) if row.get('back_odds') else None,
+                'min_odds':            float(row['min_odds']) if row.get('min_odds') else None,
+                'win_rate_historical': float(row['win_rate_historical']) if row.get('win_rate_historical') else None,
+                'roi_historical':      float(row['roi_historical']) if row.get('roi_historical') else None,
+                'sample_size':         int(row['sample_size']) if row.get('sample_size') else None,
+                'confidence':          row.get('confidence', ''),
+                'bet_type':            row.get('bet_type', 'paper'),
+            }
+            stake = float(row['stake']) if row.get('stake') else 1.0
+            sent = _tg.send_signal(sig, stake)
+            match_id = row.get('match_id', '?')
+            strategy = row.get('strategy', '?')
+
+            try:
+                _audit.log_telegram_retry(
+                    bet_id=int(bet_id_str) if bet_id_str.isdigit() else 0,
+                    match_id=match_id,
+                    strategy=strategy,
+                    success=sent,
+                    attempt_n=attempt_n,
+                )
+            except Exception:
+                pass
+
+            if sent:
+                row['telegram_sent'] = '1'
+                updated = True
+                _log.info(f"[TG-RETRY] OK bet={bet_id_str} attempt={attempt_n} ({row.get('match_name')})")
+            else:
+                _log.warning(f"[TG-RETRY] FAIL bet={bet_id_str} attempt={attempt_n} — will retry next cycle")
+
+        if updated:
+            tmp_path = _PLACED_BETS_CSV.with_suffix('.csv.tmp')
+            with open(tmp_path, 'w', newline='', encoding='utf-8') as f:
+                w = csv.DictWriter(f, fieldnames=_PLACED_BETS_HEADERS, extrasaction='ignore', restval='')
+                w.writeheader()
+                w.writerows(rows)
+            import shutil
+            shutil.move(str(tmp_path), str(_PLACED_BETS_CSV))
+    except Exception as e:
+        _log.debug(f"_retry_telegram_notifications failed: {e}")
+
 
 def _live_market_key(sig: dict) -> str:
     """Derive a dedup key from a live signal: match_id + market type (strips odds).
@@ -311,6 +435,9 @@ def run_paper_auto_place() -> dict:
     Llamado por el background scheduler cada 60s.
     Usa PAPER_REACTION_DELAY_MINS: solo coloca señales con age >= min_dur min.
     """
+    # Reintentar notificaciones Telegram pendientes de ciclos anteriores
+    _retry_telegram_notifications()
+
     try:
         cfg = load_config()
         s   = cfg.get("strategies", {})
@@ -361,18 +488,62 @@ def run_paper_auto_place() -> dict:
             _watchlist = []
 
         raw_signals = result.get("signals", [])
+        current_signal_keys = {f"{s.get('match_id')}_{s.get('strategy')}" for s in raw_signals}
 
-        # ── Audit: loguear todas las señales activas antes de filtrar ──
+        # ── Audit: ciclo de vida de señales — SIGNAL_NEW, SIGNAL_ACTIVE, SIGNAL_EXPIRED ──
+        for sig in raw_signals:
+            sig_key = f"{sig.get('match_id')}_{sig.get('strategy')}"
+            age = sig.get("signal_age_minutes") or 0
+            try:
+                if sig_key not in _active_signal_tracker:
+                    # Primera vez que vemos esta señal en esta sesión
+                    _active_signal_tracker[sig_key] = {
+                        "first_seen_utc": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                        "cycles": 1,
+                        "sig_snapshot": sig,
+                    }
+                    _audit.log_signal_new(sig)
+                else:
+                    _active_signal_tracker[sig_key]["cycles"] += 1
+                    _active_signal_tracker[sig_key]["sig_snapshot"] = sig
+                    _audit.log_signal_active(sig)
+            except Exception as e:
+                _log.debug(f"Audit signal lifecycle failed: {e}")
+
+        # ── Detectar señales que desaparecieron sin haber sido colocadas (SIGNAL_EXPIRED) ──
+        expired_keys = set(_active_signal_tracker.keys()) - current_signal_keys - _auto_placed_keys
+        for exp_key in expired_keys:
+            try:
+                snap = _active_signal_tracker[exp_key].get("sig_snapshot", {})
+                _audit.log_signal_expired(snap)
+            except Exception as e:
+                _log.debug(f"Audit signal_expired failed: {e}")
+            del _active_signal_tracker[exp_key]
+
+        # ── Capture request: señales nuevas (age < 1 min) → trigger screenshot al scraper ──
         for sig in raw_signals:
             try:
-                _audit.log_signal_active(sig)
+                cap_key = f"{sig.get('match_id')}_{sig.get('strategy')}"
+                if cap_key not in _capture_requested_keys and sig.get("signal_age_minutes", 99) < 1:
+                    import json as _json
+                    req = {
+                        "match_id": sig.get("match_id"),
+                        "strategy": sig.get("strategy"),
+                        "minute": sig.get("minute"),
+                        "score": sig.get("score"),
+                        "odds": sig.get("back_odds"),
+                    }
+                    req_path = _DATA_DIR / f"capture_request_{sig.get('match_id')}_{sig.get('strategy')}.json"
+                    req_path.write_text(_json.dumps(req), encoding="utf-8")
+                    _capture_requested_keys.add(cap_key)
+                    _log.info(f"[EVIDENCIA] Capture request escrito: {req_path.name}")
             except Exception as e:
-                _log.debug(f"Audit log_signal_active failed: {e}")
+                _log.debug(f"Capture request write failed: {e}")
 
         # ── Aplicar TODOS los filtros realistas (mirrors frontend applyRealisticAdjustments) ──
         filtered_signals, skip_reasons = _apply_realistic_adjustments(raw_signals, adj, risk_filter)
 
-        # ── Audit: loguear señales filtradas con su motivo ──
+        # ── Audit: loguear señales descartadas por filtros reales ──
         for sig in raw_signals:
             reason = skip_reasons.get(id(sig))
             if reason:
@@ -389,18 +560,22 @@ def run_paper_auto_place() -> dict:
             checked += 1
             sig_age     = sig.get("signal_age_minutes", 0)
             sig_min_dur = sig.get("min_duration_caps", 1)
-            if sig.get("odds_favorable", True) and sig_age >= sig_min_dur + PAPER_REACTION_DELAY_MINS:
+            needed = sig_min_dur + PAPER_REACTION_DELAY_MINS
+            if sig.get("odds_favorable", True) and sig_age >= needed:
                 _auto_place_signal(sig, flat_stake)
                 placed += 1
             else:
-                _not_mature = (
-                    "odds_not_favorable" if not sig.get("odds_favorable", True)
-                    else f"not_mature_yet(age={sig_age:.1f}min,need={sig_min_dur + PAPER_REACTION_DELAY_MINS})"
-                )
-                try:
-                    _audit.log_signal_filtered(sig, _not_mature)
-                except Exception as e:
-                    _log.debug(f"Audit log_signal_filtered failed: {e}")
+                # Señal activa pero no madura aún (espera min_duration) o cuota desfavorable
+                if not sig.get("odds_favorable", True):
+                    try:
+                        _audit.log_signal_filtered(sig, "odds_not_favorable")
+                    except Exception as e:
+                        _log.debug(f"Audit log_signal_filtered failed: {e}")
+                else:
+                    try:
+                        _audit.log_signal_maturing(sig, age=sig_age, needed=needed)
+                    except Exception as e:
+                        _log.debug(f"Audit log_signal_maturing failed: {e}")
                 _n_filtered_audit += 1
 
         # ── Audit: fin de ciclo ──

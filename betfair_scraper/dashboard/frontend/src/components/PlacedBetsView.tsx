@@ -53,18 +53,11 @@ export function PlacedBetsView() {
   const [data, setData] = useState<PlacedBetsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [resolving, setResolving] = useState<number | null>(null)
-  const [addingManual, setAddingManual] = useState<number | null>(null)
-  // Key: `${match_id}::${recommendation}` — mirrors backend dedup logic
-  const [manualKeys, setManualKeys] = useState<Set<string>>(new Set())
-  const [addManualError, setAddManualError] = useState<number | null>(null)
-
-  const manualKey = (b: PlacedBet) => `${b.match_id}::${b.recommendation}`
 
   const reload = async () => {
     try {
-      const [auto, manual] = await Promise.all([api.getPlacedBets(), api.getManualBets()])
+      const auto = await api.getPlacedBets()
       setData(auto)
-      setManualKeys(new Set(manual.bets.map(manualKey)))
     } catch { /* ignore */ }
   }
 
@@ -78,32 +71,11 @@ export function PlacedBetsView() {
     }
   }
 
-  const handleAddToManual = async (bet: PlacedBet) => {
-    setAddingManual(bet.id)
-    setAddManualError(null)
-    try {
-      await api.addToManualPaper(bet.id)
-      setManualKeys(prev => new Set(prev).add(manualKey(bet)))
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : ""
-      // 409 = already added (treat as success)
-      if (msg.includes("409")) {
-        setManualKeys(prev => new Set(prev).add(manualKey(bet)))
-      } else {
-        setAddManualError(bet.id)
-        setTimeout(() => setAddManualError(null), 2500)
-      }
-    } finally {
-      setAddingManual(null)
-    }
-  }
-
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [auto, manual] = await Promise.all([api.getPlacedBets(), api.getManualBets()])
+        const auto = await api.getPlacedBets()
         setData(auto)
-        setManualKeys(new Set(manual.bets.map(manualKey)))
       } catch {
         /* silently ignore */
       } finally {
@@ -176,10 +148,6 @@ export function PlacedBetsView() {
                 bet={b}
                 resolving={resolving}
                 onResolve={handleResolve}
-                addingManual={addingManual}
-                isManualAdded={manualKeys.has(manualKey(b))}
-                hasManualError={addManualError === b.id}
-                onAddToManual={handleAddToManual}
               />
             ))}
           </div>
@@ -240,20 +208,15 @@ function StatCard({ label, value, color }: { label: string; value: number | stri
   )
 }
 
-function PendingBetRow({ bet, resolving, onResolve, addingManual, isManualAdded, hasManualError, onAddToManual }: {
+function PendingBetRow({ bet, resolving, onResolve }: {
   bet: PlacedBet
   resolving: number | null
   onResolve: (id: number, result: "won" | "lost") => Promise<void>
-  addingManual: number | null
-  isManualAdded: boolean
-  hasManualError: boolean
-  onAddToManual: (bet: PlacedBet) => Promise<void>
 }) {
   const favorable = bet.would_win_now === true
   const borderColor = favorable ? "border-green-500/30" : "border-red-500/30"
   const bgColor = favorable ? "bg-green-900/10" : "bg-red-900/10"
   const isResolving = resolving === bet.id
-  const isAddingManual = addingManual === bet.id
   const odds = Number(bet.back_odds) || 0
 
   return (
@@ -322,23 +285,6 @@ function PendingBetRow({ bet, resolving, onResolve, addingManual, isManualAdded,
 
           {/* Open in Betfair button */}
           {bet.match_url && <OpenBetButton matchUrl={bet.match_url} recommendation={bet.recommendation} matchName={bet.match_name} />}
-
-          {/* Add to manual paper button */}
-          <button
-            type="button"
-            disabled={isAddingManual || isManualAdded}
-            onClick={() => onAddToManual(bet)}
-            className={`px-2 py-1.5 text-[10px] font-bold rounded border transition-colors cursor-pointer disabled:opacity-40 ${
-              hasManualError
-                ? "bg-red-500/20 border-red-500/40 text-red-300"
-                : isManualAdded
-                  ? "bg-violet-500/20 border-violet-500/40 text-violet-300"
-                  : "bg-zinc-800 border-zinc-600 text-zinc-400 hover:bg-violet-500/15 hover:border-violet-500/40 hover:text-violet-300"
-            }`}
-            title="Añadir esta apuesta a tu paper manual"
-          >
-            {isAddingManual ? "…" : hasManualError ? "ERROR" : isManualAdded ? "✓ MI PAPER" : "+ MI PAPER"}
-          </button>
 
           {/* Manual resolve buttons */}
           <div className="flex flex-col gap-1">

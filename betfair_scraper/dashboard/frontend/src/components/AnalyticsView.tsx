@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react"
 import { api, type PlacedBetsResponse, type PlacedBet } from "../lib/api"
 
-type TabId = "auto" | "manual"
-
 export function AnalyticsView() {
-  const [tab, setTab] = useState<TabId>("auto")
   const [autoData, setAutoData] = useState<PlacedBetsResponse | null>(null)
-  const [manualData, setManualData] = useState<PlacedBetsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [bankrollInit, setBankrollInit] = useState(100)
   const [stakePercent, setStakePercent] = useState(2)
@@ -14,9 +10,8 @@ export function AnalyticsView() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [auto, manual] = await Promise.all([api.getPlacedBets(), api.getManualBets()])
+        const auto = await api.getPlacedBets()
         setAutoData(auto)
-        setManualData(manual)
       } catch {
         /* silently ignore */
       } finally {
@@ -32,7 +27,7 @@ export function AnalyticsView() {
     return <div className="p-6 text-zinc-400">Cargando analytics...</div>
   }
 
-  const data = tab === "auto" ? autoData : manualData
+  const data = autoData
   const bets = data?.bets ?? []
   const resolvedBets = bets.filter((b) => b.status !== "pending")
 
@@ -64,26 +59,12 @@ export function AnalyticsView() {
           </p>
         </div>
         <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1">
-          {(["auto", "manual"] as TabId[]).map((t) => {
-            const count = t === "auto" ? autoData?.bets.length : manualData?.bets.length
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTab(t)}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  tab === t
-                    ? "bg-zinc-700 text-zinc-100"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                {t === "auto" ? "Automático" : "Manual"}
-                {count != null && count > 0 && (
-                  <span className="ml-1.5 text-[11px] text-zinc-500">({count})</span>
-                )}
-              </button>
-            )
-          })}
+          <div className="px-4 py-1.5 rounded-md text-sm font-medium bg-zinc-700 text-zinc-100">
+            Automático
+            {autoData != null && autoData.bets.length > 0 && (
+              <span className="ml-1.5 text-[11px] text-zinc-500">({autoData.bets.length})</span>
+            )}
+          </div>
         </div>
       </div>
 

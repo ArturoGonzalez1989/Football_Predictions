@@ -10,11 +10,11 @@
     "br": "fixed"
   },
   "risk_filter": "all",
-  "best_score": 92.61083333333333,
+  "best_score": 74.08,
   "adj": {
     "dedup": false,
     "minOdds": null,
-    "maxOdds": 10.0,
+    "maxOdds": 6.0,
     "slippagePct": 2,
     "conflictFilter": false,
     "allowContrarias": true,
@@ -23,13 +23,13 @@
     "globalMinuteMin": null,
     "globalMinuteMax": null
   },
-  "n_bets": 55,
-  "wins": 34,
-  "win_pct": 61.8,
-  "flat_roi": 101.03,
-  "flat_pl": 555.64,
-  "ci_low": 48.6,
-  "ci_high": 73.5,
+  "n_bets": 48,
+  "wins": 29,
+  "win_pct": 60.4,
+  "flat_roi": 92.6,
+  "flat_pl": 444.49,
+  "ci_low": 46.3,
+  "ci_high": 73.0,
   "csv_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_max_roi.csv",
   "config_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_max_roi_config.json"
 }

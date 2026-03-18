@@ -2410,6 +2410,30 @@ class MatchDriver:
                 except Exception as _e:
                     log.debug(f"[{self.match_id}] Screenshot omitido: {_e}")
 
+                # Procesar capture requests del backend: señales nuevas que necesitan evidencia inmediata
+                try:
+                    import glob as _glob2, json as _json2, shutil as _shutil2
+                    _evidencias_dir = os.path.join(os.path.dirname(OUTPUT_DIR) if os.path.dirname(OUTPUT_DIR) else ".", "evidencias")
+                    os.makedirs(_evidencias_dir, exist_ok=True)
+                    _req_pattern = os.path.join(OUTPUT_DIR, f"capture_request_{self.match_id}_*.json")
+                    for _req_path in _glob2.glob(_req_pattern):
+                        try:
+                            with open(_req_path, "r", encoding="utf-8") as _f:
+                                _req = _json2.load(_f)
+                            _ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            _fname = f"{self.match_id}_min{_req.get('minute')}_{_req.get('strategy')}_{_ts}.png"
+                            # Usar screenshot del minuto exacto de la señal (no el actual)
+                            _req_min = _req.get('minute')
+                            _exact_shot = os.path.join(OUTPUT_DIR, f"screenshot_{self.match_id}_{_req_min}.png")
+                            _src_shot = _exact_shot if os.path.exists(_exact_shot) else screenshot_path
+                            _shutil2.copy2(_src_shot, os.path.join(_evidencias_dir, _fname))
+                            os.remove(_req_path)
+                            log.info(f"[EVIDENCIA] Captura de señal guardada: {_fname}")
+                        except Exception as _re:
+                            log.debug(f"[{self.match_id}] Capture request error: {_re}")
+                except Exception as _ce:
+                    log.debug(f"[{self.match_id}] Capture requests omitidos: {_ce}")
+
                 return datos
 
             except WebDriverException as e:

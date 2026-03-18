@@ -15,13 +15,11 @@ log = logging.getLogger(__name__)
 
 from utils.csv_reader import _resolve_csv_path, _read_csv_rows, _to_float
 from utils import signals_audit_logger as _audit
-from utils import telegram_notifier as _tg
 
 router = APIRouter()
 
 # Path to placed bets CSV
 PLACED_BETS_CSV = Path(__file__).parent.parent.parent.parent / "placed_bets.csv"
-PLACED_BETS_MANUAL_CSV = Path(__file__).parent.parent.parent.parent / "placed_bets_manual.csv"
 GAMES_CSV = Path(__file__).parent.parent.parent.parent / "games.csv"
 
 CSV_HEADERS = [
@@ -29,7 +27,7 @@ CSV_HEADERS = [
     'strategy', 'strategy_name', 'minute', 'score', 'recommendation',
     'back_odds', 'min_odds', 'expected_value', 'confidence',
     'win_rate_historical', 'roi_historical', 'sample_size',
-    'bet_type', 'stake', 'notes', 'status', 'result', 'pl'
+    'bet_type', 'stake', 'notes', 'status', 'result', 'pl', 'telegram_sent'
 ]
 
 
@@ -119,13 +117,6 @@ def _ensure_csv_exists():
             writer.writerow(CSV_HEADERS)
 
 
-def _ensure_manual_csv_exists():
-    """Crea el CSV manual con headers si no existe"""
-    if not PLACED_BETS_MANUAL_CSV.exists():
-        with open(PLACED_BETS_MANUAL_CSV, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(CSV_HEADERS)
-
 
 def _get_next_id() -> int:
     """Obtiene el siguiente ID disponible"""
@@ -139,18 +130,6 @@ def _get_next_id() -> int:
             return 1
         return max(int(row['id']) for row in rows if row.get('id', '').isdigit()) + 1
 
-
-def _get_next_manual_id() -> int:
-    """Obtiene el siguiente ID disponible para el CSV manual"""
-    if not PLACED_BETS_MANUAL_CSV.exists():
-        return 1
-
-    with open(PLACED_BETS_MANUAL_CSV, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        rows = list(reader)
-        if not rows:
-            return 1
-        return max(int(row['id']) for row in rows if row.get('id', '').isdigit()) + 1
 
 
 def _check_would_win(recommendation: str, gl: float, gv: float) -> bool:
@@ -507,26 +486,10 @@ async def place_bet(bet: PlaceBetRequest):
                 bet.notes or '',
                 'pending',
                 '',
-                ''
+                '',
+                1  # telegram_sent=1: apuesta manual, no requiere notificación
             ])
 
-        # ── Telegram notification ──
-        _tg.send_signal({
-            "bet_type": bet.bet_type,
-            "recommendation": bet.recommendation,
-            "match_name": bet.match_name,
-            "match_url": bet.match_url,
-            "strategy_name": bet.strategy_name,
-            "minute": bet.minute,
-            "score": bet.score,
-            "back_odds": bet.back_odds,
-            "min_odds": bet.min_odds,
-            "win_rate_historical": bet.win_rate_historical,
-            "roi_historical": bet.roi_historical,
-            "sample_size": bet.sample_size,
-            "confidence": bet.confidence,
-            "entry_conditions": bet.entry_conditions,
-        }, bet.stake, bet_id=bet_id)
 
         return PlacedBet(
             id=bet_id,
@@ -540,6 +503,8 @@ async def place_bet(bet: PlaceBetRequest):
             status="pending"
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al guardar apuesta: {str(e)}")
 
@@ -583,66 +548,6 @@ async def resolve_bet(bet_id: int, result: str):
     return {"ok": True, "bet_id": bet_id, "result": result}
 
 
-def _add_to_manual_impl(bet_id: int) -> dict:
-    """Lógica central de add-to-manual. Llamable desde la API y desde el bot de Telegram.
-    Raises ValueError con el mensaje de error (prefijo '409:' para duplicados).
-    Returns {"ok": True, "manual_bet_id": int}.
-    """
-    if not PLACED_BETS_CSV.exists():
-        raise ValueError("No hay apuestas registradas")
-
-    with open(PLACED_BETS_CSV, 'r', encoding='utf-8') as f:
-        rows = list(csv.DictReader(f))
-
-    original = next((r for r in rows if r.get('id', '') == str(bet_id)), None)
-    if not original:
-        raise ValueError(f"Apuesta {bet_id} no encontrada")
-
-    if original.get('status') != 'pending':
-        raise ValueError("Solo se pueden añadir apuestas en juego al paper manual")
-
-    _ensure_manual_csv_exists()
-
-    with open(PLACED_BETS_MANUAL_CSV, 'r', encoding='utf-8') as f:
-        manual_rows = list(csv.DictReader(f))
-    if any(r.get('match_id') == original['match_id'] and r.get('recommendation') == original['recommendation'] for r in manual_rows):
-        raise ValueError("409:Esta apuesta ya está en tu paper manual")
-
-    new_id = _get_next_manual_id()
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-
-    with open(PLACED_BETS_MANUAL_CSV, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow([
-            new_id, timestamp,
-            original.get('match_id', ''), original.get('match_name', ''),
-            original.get('match_url', ''), original.get('strategy', ''),
-            original.get('strategy_name', ''), original.get('minute', ''),
-            original.get('score', ''), original.get('recommendation', ''),
-            original.get('back_odds', ''), original.get('min_odds', ''),
-            original.get('expected_value', ''), original.get('confidence', ''),
-            original.get('win_rate_historical', ''), original.get('roi_historical', ''),
-            original.get('sample_size', ''), original.get('bet_type', 'paper'),
-            original.get('stake', ''), original.get('notes', ''),
-            'pending', '', ''
-        ])
-
-    return {"ok": True, "manual_bet_id": new_id}
-
-
-@router.post("/api/bets/{bet_id}/add-to-manual")
-async def add_to_manual_paper(bet_id: int):
-    """Copia una apuesta del sistema automático al paper manual del usuario."""
-    try:
-        result = _add_to_manual_impl(bet_id)
-        return result
-    except ValueError as e:
-        msg = str(e)
-        if msg.startswith("409:"):
-            raise HTTPException(status_code=409, detail=msg[4:])
-        raise HTTPException(status_code=404, detail=msg)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al añadir al paper manual: {str(e)}")
 
 
 @router.delete("/api/bets/clear")
@@ -836,12 +741,3 @@ async def get_settlement_health():
     }
 
 
-@router.get("/api/bets/manual")
-async def get_manual_bets():
-    """Obtiene las apuestas del paper manual del usuario."""
-    try:
-        import asyncio
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, _load_bets_response, PLACED_BETS_MANUAL_CSV)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener apuestas manuales: {str(e)}")

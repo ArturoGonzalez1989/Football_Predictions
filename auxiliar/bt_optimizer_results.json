@@ -1,409 +1,61 @@
 {
-  "timestamp": "2026-03-15T22:40:50.721539",
+  "timestamp": "2026-03-18T03:29:53.628182",
   "individual": {
     "odds_drift": {
-      "n": 57,
-      "wins": 34,
-      "wr": 59.6,
-      "pl": 71.08,
-      "roi": 124.7,
-      "ci_low": 46.7,
-      "ci_high": 71.4,
-      "max_dd": 4.16,
-      "score": 58.2357,
+      "n": 76,
+      "wins": 46,
+      "wr": 60.5,
+      "pl": 73.44,
+      "roi": 96.6,
+      "ci_low": 49.3,
+      "ci_high": 70.8,
+      "max_dd": 5.78,
+      "score": 47.6394,
       "params": {
-        "drift_min_pct": 20,
+        "drift_min_pct": 15,
         "max_odds": 999,
         "goal_diff_min": 0,
         "min_minute": 0,
         "max_minute": 90,
-        "odds_min": 1.4
+        "odds_min": 1.3
       },
       "key": "odds_drift"
     },
-    "goal_clustering": {
-      "n": 68,
-      "wins": 65,
-      "wr": 95.6,
-      "pl": 28.78,
-      "roi": 42.3,
-      "ci_low": 87.8,
-      "ci_high": 98.5,
-      "max_dd": 1.0,
-      "score": 37.1601,
-      "params": {
-        "sot_min": 0,
-        "min_minute": 20,
-        "max_minute": 65,
-        "xg_rem_min": 0.0,
-        "odds_min": 0
-      },
-      "key": "goal_clustering"
-    },
-    "under35_late": {
-      "n": 102,
-      "wins": 69,
-      "wr": 67.6,
-      "pl": 40.72,
-      "roi": 39.9,
-      "ci_low": 58.1,
-      "ci_high": 75.9,
-      "max_dd": 3.57,
-      "score": 23.1944,
-      "params": {
-        "m_min": 65,
-        "m_max": 81,
-        "xg_max": 2.5,
-        "goals_min": 2,
-        "goals_max": 3,
-        "odds_min": 1.4
-      },
-      "key": "under35_late"
-    },
-    "longshot": {
-      "n": 86,
-      "wins": 55,
-      "wr": 64.0,
-      "pl": 37.91,
-      "roi": 44.1,
-      "ci_low": 53.4,
-      "ci_high": 73.3,
-      "max_dd": 3.9,
-      "score": 23.5395,
-      "params": {
-        "m_min": 70,
-        "m_max": 86,
-        "odds_min": 1.5,
-        "odds_max": 10.0
-      },
-      "key": "longshot"
-    },
     "cs_close": {
-      "n": 56,
-      "wins": 31,
-      "wr": 55.4,
-      "pl": 126.92,
-      "roi": 226.6,
-      "ci_low": 42.4,
-      "ci_high": 67.6,
-      "max_dd": 9.01,
-      "score": 96.0966,
+      "n": 134,
+      "wins": 67,
+      "wr": 50.0,
+      "pl": 123.85,
+      "roi": 92.4,
+      "ci_low": 41.7,
+      "ci_high": 58.3,
+      "max_dd": 16.58,
+      "score": 38.5414,
       "params": {
         "m_min": 65,
         "m_max": 85,
-        "odds_min": 3.0
+        "odds_min": 1.3,
+        "odds_max": 8.0
       },
       "key": "cs_close"
     },
     "cs_one_goal": {
-      "n": 194,
-      "wins": 108,
-      "wr": 55.7,
-      "pl": 69.12,
-      "roi": 35.6,
-      "ci_low": 48.6,
-      "ci_high": 62.5,
-      "max_dd": 7.43,
-      "score": 17.3156,
-      "params": {
-        "m_min": 70,
-        "m_max": 85,
-        "odds_min": 0
-      },
-      "key": "cs_one_goal"
-    },
-    "ud_leading": {
-      "n": 191,
-      "wins": 113,
-      "wr": 59.2,
-      "pl": 273.24,
-      "roi": 143.1,
-      "ci_low": 52.1,
-      "ci_high": 65.9,
-      "max_dd": 6.0,
-      "score": 74.533,
-      "params": {
-        "m_min": 58,
-        "m_max": 85,
-        "ud_min_pre_odds": 1.3,
-        "max_lead": 3,
-        "odds_min": 1.6
-      },
-      "key": "ud_leading"
-    },
-    "home_fav_leading": {
-      "n": 56,
-      "wins": 48,
-      "wr": 85.7,
-      "pl": 70.44,
-      "roi": 125.8,
-      "ci_low": 74.3,
-      "ci_high": 92.6,
-      "max_dd": 2.43,
-      "score": 93.4588,
-      "params": {
-        "m_min": 60,
-        "m_max": 83,
-        "max_lead": 3,
-        "fav_max": 2.0,
-        "odds_min": 1.4
-      },
-      "key": "home_fav_leading"
-    },
-    "cs_20": {
-      "n": 80,
-      "wins": 46,
-      "wr": 57.5,
-      "pl": 29.62,
-      "roi": 37.0,
+      "n": 206,
+      "wins": 110,
+      "wr": 53.4,
+      "pl": 88.12,
+      "roi": 42.8,
       "ci_low": 46.6,
-      "ci_high": 67.7,
-      "max_dd": 7.28,
-      "score": 17.2537,
-      "params": {
-        "m_min": 75,
-        "m_max": 90,
-        "odds_max": 10.0,
-        "odds_min": 0
-      },
-      "key": "cs_20"
-    },
-    "cs_big_lead": {
-      "n": 62,
-      "wins": 44,
-      "wr": 71.0,
-      "pl": 47.55,
-      "roi": 76.7,
-      "ci_low": 58.7,
-      "ci_high": 80.8,
-      "max_dd": 4.0,
-      "score": 45.0191,
-      "params": {
-        "m_min": 70,
-        "m_max": 85,
-        "odds_max": 8.0,
-        "odds_min": 0
-      },
-      "key": "cs_big_lead"
-    },
-    "lay_over45_v3": {
-      "n": 100,
-      "wins": 99,
-      "wr": 99.0,
-      "pl": 84.05,
-      "roi": 84.0,
-      "ci_low": 94.6,
-      "ci_high": 99.8,
-      "max_dd": 10.0,
-      "score": 79.5113,
-      "params": {
-        "m_min": 50,
-        "m_max": 70,
-        "goals_max": 1,
-        "odds_max": 20.0
-      },
-      "key": "lay_over45_v3"
-    },
-    "draw_xg_conv": {
-      "n": 84,
-      "wins": 45,
-      "wr": 53.6,
-      "pl": 64.23,
-      "roi": 76.5,
-      "ci_low": 43.0,
-      "ci_high": 63.8,
-      "max_dd": 5.9,
-      "score": 32.8796,
-      "params": {
-        "m_min": 65,
-        "m_max": 83,
-        "xg_diff_max": 1.3,
-        "odds_min": 2.1
-      },
-      "key": "draw_xg_conv"
-    },
-    "draw_11": {
-      "n": 247,
-      "wins": 143,
-      "wr": 57.9,
-      "pl": 105.4,
-      "roi": 42.7,
-      "ci_low": 51.7,
-      "ci_high": 63.9,
-      "max_dd": 7.35,
-      "score": 22.0615,
-      "params": {
-        "m_min": 70,
-        "m_max": 90,
-        "odds_min": 1.2
-      },
-      "key": "draw_11"
-    },
-    "under35_3goals": {
-      "n": 287,
-      "wins": 152,
-      "wr": 53.0,
-      "pl": 63.53,
-      "roi": 22.1,
-      "ci_low": 47.2,
-      "ci_high": 58.7,
-      "max_dd": 12.88,
-      "score": 10.4481,
-      "params": {
-        "m_min": 60,
-        "m_max": 83,
-        "xg_max": 2.0,
-        "odds_min": 1.4
-      },
-      "key": "under35_3goals"
-    },
-    "away_fav_leading": {
-      "n": 91,
-      "wins": 76,
-      "wr": 83.5,
-      "pl": 43.61,
-      "roi": 47.9,
-      "ci_low": 74.6,
-      "ci_high": 89.7,
-      "max_dd": 3.57,
-      "score": 35.7506,
+      "ci_high": 60.1,
+      "max_dd": 6.0,
+      "score": 19.9339,
       "params": {
         "m_min": 68,
-        "m_max": 85,
-        "max_lead": 3,
-        "fav_max": 2.0,
-        "odds_min": 1.2
-      },
-      "key": "away_fav_leading"
-    },
-    "under45_3goals": {
-      "n": 55,
-      "wins": 50,
-      "wr": 90.9,
-      "pl": 12.75,
-      "roi": 23.2,
-      "ci_low": 80.4,
-      "ci_high": 96.1,
-      "max_dd": 2.33,
-      "score": 18.6382,
-      "params": {
-        "m_min": 58,
-        "m_max": 83,
-        "xg_max": 2.5,
-        "odds_min": 1.2
-      },
-      "key": "under45_3goals"
-    },
-    "cs_11": {
-      "n": 121,
-      "wins": 60,
-      "wr": 49.6,
-      "pl": 26.25,
-      "roi": 21.7,
-      "ci_low": 40.8,
-      "ci_high": 58.4,
-      "max_dd": 7.42,
-      "score": 8.8512,
-      "params": {
-        "m_min": 70,
-        "m_max": 90,
-        "odds_min": 0
-      },
-      "key": "cs_11"
-    },
-    "draw_equalizer": {
-      "n": 58,
-      "wins": 41,
-      "wr": 70.7,
-      "pl": 147.98,
-      "roi": 255.1,
-      "ci_low": 58.0,
-      "ci_high": 80.8,
-      "max_dd": 2.0,
-      "score": 147.98,
-      "params": {
-        "m_min": 65,
-        "m_max": 90,
-        "fav_pre_max": 3.0,
-        "min_goals_each": 1,
-        "odds_max": 10.0,
-        "odds_min": 2.5
-      },
-      "key": "draw_equalizer"
-    },
-    "draw_22": {
-      "n": 64,
-      "wins": 37,
-      "wr": 57.8,
-      "pl": 59.11,
-      "roi": 92.4,
-      "ci_low": 45.6,
-      "ci_high": 69.1,
-      "max_dd": 6.01,
-      "score": 42.1159,
-      "params": {
-        "m_min": 72,
-        "m_max": 90,
-        "odds_max": 8.0,
-        "odds_min": 1.5
-      },
-      "key": "draw_22"
-    },
-    "lay_over45_blowout": {
-      "n": 65,
-      "wins": 46,
-      "wr": 70.8,
-      "pl": 15.86,
-      "roi": 24.4,
-      "ci_low": 58.8,
-      "ci_high": 80.4,
-      "max_dd": 6.4,
-      "score": 14.3472,
-      "params": {
-        "m_min": 63,
-        "m_max": 72,
-        "post_window": 8,
-        "sot_max": 0,
-        "odds_max": 10.0,
-        "include_31": 1
-      },
-      "key": "lay_over45_blowout"
-    },
-    "over35_early_goals": {
-      "n": 55,
-      "wins": 37,
-      "wr": 67.3,
-      "pl": 55.65,
-      "roi": 101.2,
-      "ci_low": 54.1,
-      "ci_high": 78.2,
-      "max_dd": 4.0,
-      "score": 54.7394,
-      "params": {
-        "m_min": 45,
-        "m_max": 60,
-        "odds_min": 2.0,
-        "odds_max": 6.0
-      },
-      "key": "over35_early_goals"
-    },
-    "lay_cs11": {
-      "n": 102,
-      "wins": 91,
-      "wr": 89.2,
-      "pl": 28.75,
-      "roi": 28.2,
-      "ci_low": 81.7,
-      "ci_high": 93.9,
-      "max_dd": 20.9,
-      "score": 23.0282,
-      "params": {
-        "m_min": 60,
         "m_max": 88,
-        "odds_min": 1.5,
-        "odds_max": 20.0
+        "odds_min": 1.8,
+        "odds_max": 8.0
       },
-      "key": "lay_cs11"
+      "key": "cs_one_goal"
     }
   },
   "approved": {
@@ -425,20 +77,32 @@
     },
     "odds_drift": {
       "enabled": true,
-      "driftMin": 20,
+      "driftMin": 15,
       "oddsMax": 999,
       "goalDiffMin": 0,
       "minuteMin": 0,
       "minuteMax": 90,
-      "oddsMin": 1.4
+      "oddsMin": 1.3,
+      "_stats": {
+        "wr": 60.5,
+        "roi": 96.6,
+        "n": 76,
+        "ci_low": 49.3
+      }
     },
     "goal_clustering": {
-      "enabled": true,
+      "enabled": false,
       "sotMin": 0,
       "minuteMin": 20,
       "minuteMax": 65,
       "xgRemMin": 0.0,
-      "oddsMin": 0
+      "oddsMin": 0,
+      "_stats": {
+        "wr": 95.7,
+        "roi": 44.2,
+        "n": 70,
+        "ci_low": 88.1
+      }
     },
     "pressure_cooker": {
       "enabled": false,
@@ -465,75 +129,137 @@
     "over25_2goal": {
       "enabled": false,
       "minuteMin": 45,
-      "minuteMax": 78,
+      "minuteMax": 81,
       "goalDiffMin": 2,
       "sot_total_min": 5,
-      "oddsMin": 1.6
+      "oddsMin": 1.6,
+      "_stats": {
+        "wr": 56.8,
+        "roi": 17.8,
+        "n": 81,
+        "ci_low": 45.9
+      }
     },
     "under35_late": {
-      "enabled": true,
-      "minuteMin": 65,
-      "minuteMax": 81,
+      "enabled": false,
+      "minuteMin": 60,
+      "minuteMax": 85,
       "xgMax": 2.5,
-      "goals_min": 2,
+      "goals_min": 3,
       "goals_max": 3,
-      "oddsMin": 1.4
+      "oddsMin": 1.5,
+      "_stats": {
+        "wr": 59.1,
+        "roi": 41.9,
+        "n": 93,
+        "ci_low": 49.0
+      }
     },
     "longshot": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 70,
       "minuteMax": 86,
       "oddsMin": 1.5,
-      "odds_max": 10.0
+      "odds_max": 10.0,
+      "_stats": {
+        "wr": 65.2,
+        "roi": 46.8,
+        "n": 92,
+        "ci_low": 55.1
+      }
     },
     "cs_close": {
       "enabled": true,
       "minuteMin": 65,
       "minuteMax": 85,
-      "oddsMin": 3.0
+      "oddsMin": 1.3,
+      "odds_max": 8.0,
+      "_stats": {
+        "wr": 50.0,
+        "roi": 92.4,
+        "n": 134,
+        "ci_low": 41.7
+      }
     },
     "cs_one_goal": {
       "enabled": true,
-      "minuteMin": 70,
-      "minuteMax": 85,
-      "oddsMin": 0
+      "minuteMin": 68,
+      "minuteMax": 88,
+      "oddsMin": 1.8,
+      "odds_max": 8.0,
+      "_stats": {
+        "wr": 53.4,
+        "roi": 42.8,
+        "n": 206,
+        "ci_low": 46.6
+      }
     },
     "ud_leading": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 58,
       "minuteMax": 85,
       "ud_min_pre_odds": 1.3,
       "max_lead": 3,
-      "oddsMin": 1.6
+      "oddsMin": 1.6,
+      "_stats": {
+        "wr": 63.7,
+        "roi": 49.7,
+        "n": 262,
+        "ci_low": 57.8
+      }
     },
     "home_fav_leading": {
-      "enabled": true,
-      "minuteMin": 60,
+      "enabled": false,
+      "minuteMin": 55,
       "minuteMax": 83,
       "max_lead": 3,
       "fav_max": 2.0,
-      "oddsMin": 1.4
+      "oddsMin": 0.0,
+      "_stats": {
+        "wr": 86.0,
+        "roi": 15.5,
+        "n": 286,
+        "ci_low": 81.5
+      }
     },
     "cs_20": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 75,
       "minuteMax": 90,
       "odds_max": 10.0,
-      "oddsMin": 0
+      "oddsMin": 1.5,
+      "_stats": {
+        "wr": 56.2,
+        "roi": 43.1,
+        "n": 73,
+        "ci_low": 44.8
+      }
     },
     "cs_big_lead": {
-      "enabled": true,
-      "minuteMin": 70,
+      "enabled": false,
+      "minuteMin": 65,
       "minuteMax": 85,
       "odds_max": 8.0,
-      "oddsMin": 0
+      "oddsMin": 1.3,
+      "_stats": {
+        "wr": 63.2,
+        "roi": 71.2,
+        "n": 76,
+        "ci_low": 51.9
+      }
     },
     "draw_xg_conv": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 65,
       "minuteMax": 83,
       "xg_diff_max": 1.3,
-      "oddsMin": 2.1
+      "oddsMin": 1.3,
+      "_stats": {
+        "wr": 54.7,
+        "roi": 26.4,
+        "n": 234,
+        "ci_low": 48.3
+      }
     },
     "cs_00": {
       "enabled": false,
@@ -548,13 +274,19 @@
       "oddsMin": 1.4
     },
     "cs_11": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 70,
       "minuteMax": 90,
-      "oddsMin": 0
+      "oddsMin": 0,
+      "_stats": {
+        "wr": 50.0,
+        "roi": 23.5,
+        "n": 128,
+        "ci_low": 41.5
+      }
     },
     "lay_over45_v3": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 50,
       "minuteMax": 70,
       "goals_max": 1,
@@ -567,51 +299,87 @@
       "poss_min": 60
     },
     "draw_11": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 70,
       "minuteMax": 90,
-      "oddsMin": 1.2
+      "oddsMin": 0.0,
+      "_stats": {
+        "wr": 58.5,
+        "roi": 44.5,
+        "n": 258,
+        "ci_low": 52.4
+      }
     },
     "under35_3goals": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 60,
-      "minuteMax": 83,
+      "minuteMax": 90,
       "xgMax": 2.0,
-      "oddsMin": 1.4
+      "oddsMin": 1.8,
+      "_stats": {
+        "wr": 50.7,
+        "roi": 30.3,
+        "n": 211,
+        "ci_low": 44.0
+      }
     },
     "away_fav_leading": {
-      "enabled": true,
-      "minuteMin": 68,
+      "enabled": false,
+      "minuteMin": 60,
       "minuteMax": 85,
       "max_lead": 3,
       "fav_max": 2.0,
-      "oddsMin": 1.2
+      "oddsMin": 0.0,
+      "_stats": {
+        "wr": 84.8,
+        "roi": 22.8,
+        "n": 165,
+        "ci_low": 78.6
+      }
     },
     "under45_3goals": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 58,
-      "minuteMax": 83,
-      "xgMax": 2.5,
-      "oddsMin": 1.2
+      "minuteMax": 75,
+      "xgMax": 3.0,
+      "oddsMin": 1.2,
+      "_stats": {
+        "wr": 85.0,
+        "roi": 17.2,
+        "n": 60,
+        "ci_low": 73.9
+      }
     },
     "draw_equalizer": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 65,
       "minuteMax": 90,
       "fav_pre_max": 3.0,
       "min_goals_each": 1,
       "odds_max": 10.0,
-      "oddsMin": 2.5
+      "oddsMin": 1.3,
+      "_stats": {
+        "wr": 56.9,
+        "roi": 74.7,
+        "n": 197,
+        "ci_low": 49.9
+      }
     },
     "draw_22": {
-      "enabled": true,
-      "minuteMin": 72,
+      "enabled": false,
+      "minuteMin": 68,
       "minuteMax": 90,
       "odds_max": 8.0,
-      "oddsMin": 1.5
+      "oddsMin": 1.3,
+      "_stats": {
+        "wr": 59.5,
+        "roi": 89.8,
+        "n": 84,
+        "ci_low": 48.8
+      }
     },
     "lay_over45_blowout": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 63,
       "minuteMax": 72,
       "post_window": 8,
@@ -620,11 +388,17 @@
       "include_31": 1
     },
     "over35_early_goals": {
-      "enabled": true,
-      "minuteMin": 45,
+      "enabled": false,
+      "minuteMin": 40,
       "minuteMax": 60,
-      "oddsMin": 2.0,
-      "odds_max": 6.0
+      "oddsMin": 1.8,
+      "odds_max": 6.0,
+      "_stats": {
+        "wr": 67.2,
+        "roi": 89.7,
+        "n": 67,
+        "ci_low": 55.3
+      }
     },
     "lay_draw_away_leading": {
       "enabled": false,
@@ -635,7 +409,7 @@
       "odds_max": 8.0
     },
     "lay_cs11": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 60,
       "minuteMax": 88,
       "oddsMin": 1.5,
@@ -646,874 +420,114 @@
     "odds_drift": {
       "folds": [
         {
-          "n": 18,
-          "wr": 55.6,
-          "roi": 57.6
+          "n": 20,
+          "wr": 65.0,
+          "roi": 79.5
         },
         {
-          "n": 9,
-          "wr": 55.6,
-          "roi": 24.2
-        },
-        {
-          "n": 9,
-          "wr": 55.6,
-          "roi": 214.8
-        },
-        {
-          "n": 18,
+          "n": 21,
           "wr": 66.7,
-          "roi": 128.3
-        },
-        {
-          "n": 15,
-          "wr": 80.0,
-          "roi": 141.3
-        }
-      ],
-      "mean_roi": 113.2,
-      "std_roi": 66.9,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 15,
-        "wr": 60.0,
-        "roi": 121.7
-      },
-      "robust": true
-    },
-    "goal_clustering": {
-      "folds": [
-        {
-          "n": 53,
-          "wr": 98.1,
-          "roi": 73.0
-        },
-        {
-          "n": 58,
-          "wr": 96.6,
-          "roi": 54.5
-        },
-        {
-          "n": 52,
-          "wr": 98.1,
-          "roi": 45.7
-        },
-        {
-          "n": 61,
-          "wr": 96.7,
-          "roi": 37.9
-        },
-        {
-          "n": 54,
-          "wr": 98.1,
-          "roi": 42.7
-        }
-      ],
-      "mean_roi": 50.8,
-      "std_roi": 12.4,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 15,
-        "wr": 100.0,
-        "roi": 99.6
-      },
-      "robust": true
-    },
-    "over25_2goal": {
-      "folds": [
-        {
-          "n": 16,
-          "wr": 56.2,
-          "roi": 14.9
-        },
-        {
-          "n": 19,
-          "wr": 52.6,
-          "roi": 0.4
-        },
-        {
-          "n": 20,
-          "wr": 80.0,
-          "roi": 83.7
-        },
-        {
-          "n": 15,
-          "wr": 53.3,
-          "roi": -6.2
-        },
-        {
-          "n": 21,
-          "wr": 61.9,
-          "roi": 14.9
-        }
-      ],
-      "mean_roi": 21.5,
-      "std_roi": 32.2,
-      "n_pos_folds": 4,
-      "temporal": {
-        "n": 33,
-        "wr": 45.5,
-        "roi": -9.9
-      },
-      "robust": false
-    },
-    "under35_late": {
-      "folds": [
-        {
-          "n": 21,
-          "wr": 57.1,
-          "roi": 22.6
-        },
-        {
-          "n": 13,
-          "wr": 84.6,
-          "roi": 89.0
-        },
-        {
-          "n": 20,
-          "wr": 70.0,
-          "roi": 27.7
-        },
-        {
-          "n": 19,
-          "wr": 68.4,
-          "roi": 40.5
-        },
-        {
-          "n": 28,
-          "wr": 67.9,
-          "roi": 43.5
-        }
-      ],
-      "mean_roi": 44.7,
-      "std_roi": 23.5,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 28,
-        "wr": 57.1,
-        "roi": 22.1
-      },
-      "robust": true
-    },
-    "longshot": {
-      "folds": [
-        {
-          "n": 21,
-          "wr": 76.2,
-          "roi": 60.9
-        },
-        {
-          "n": 17,
-          "wr": 52.9,
-          "roi": -4.0
+          "roi": 112.1
         },
         {
           "n": 13,
           "wr": 53.8,
-          "roi": 20.9
+          "roi": 128.0
         },
         {
-          "n": 13,
-          "wr": 69.2,
-          "roi": 63.3
+          "n": 20,
+          "wr": 60.0,
+          "roi": 87.9
         },
         {
-          "n": 22,
-          "wr": 63.6,
-          "roi": 67.5
+          "n": 24,
+          "wr": 62.5,
+          "roi": 11.8
         }
       ],
-      "mean_roi": 41.7,
-      "std_roi": 28.4,
-      "n_pos_folds": 4,
+      "mean_roi": 83.9,
+      "std_roi": 39.9,
+      "n_pos_folds": 5,
       "temporal": {
-        "n": 27,
-        "wr": 59.3,
-        "roi": 9.6
+        "n": 18,
+        "wr": 61.1,
+        "roi": 99.4
       },
       "robust": true
     },
     "cs_close": {
       "folds": [
         {
-          "n": 7,
-          "wr": 28.6,
-          "roi": 61.6
+          "n": 24,
+          "wr": 58.3,
+          "roi": 93.8
         },
         {
-          "n": 8,
-          "wr": 50.0,
-          "roi": 150.6
+          "n": 33,
+          "wr": 57.6,
+          "roi": 73.8
         },
         {
-          "n": 13,
-          "wr": 61.5,
-          "roi": 257.5
+          "n": 30,
+          "wr": 40.0,
+          "roi": 56.7
         },
         {
-          "n": 12,
-          "wr": 50.0,
-          "roi": 162.8
+          "n": 22,
+          "wr": 36.4,
+          "roi": 64.8
         },
         {
-          "n": 16,
-          "wr": 68.8,
-          "roi": 359.7
+          "n": 25,
+          "wr": 56.0,
+          "roi": 183.0
         }
       ],
-      "mean_roi": 198.4,
-      "std_roi": 101.8,
+      "mean_roi": 94.4,
+      "std_roi": 46.0,
       "n_pos_folds": 5,
       "temporal": {
-        "n": 11,
-        "wr": 54.5,
-        "roi": 130.2
+        "n": 53,
+        "wr": 43.4,
+        "roi": 18.7
       },
       "robust": true
     },
     "cs_one_goal": {
       "folds": [
         {
-          "n": 33,
-          "wr": 63.6,
-          "roi": 52.9
-        },
-        {
-          "n": 45,
-          "wr": 57.8,
-          "roi": 34.0
-        },
-        {
-          "n": 38,
-          "wr": 50.0,
-          "roi": 27.0
-        },
-        {
-          "n": 32,
-          "wr": 46.9,
-          "roi": 18.7
-        },
-        {
-          "n": 46,
-          "wr": 58.7,
-          "roi": 43.8
-        }
-      ],
-      "mean_roi": 35.3,
-      "std_roi": 12.1,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 88,
-        "wr": 51.1,
-        "roi": 5.0
-      },
-      "robust": true
-    },
-    "ud_leading": {
-      "folds": [
-        {
-          "n": 49,
-          "wr": 69.4,
-          "roi": 230.5
-        },
-        {
           "n": 31,
-          "wr": 51.6,
-          "roi": 89.7
-        },
-        {
-          "n": 32,
-          "wr": 46.9,
-          "roi": 123.8
-        },
-        {
-          "n": 32,
-          "wr": 65.6,
-          "roi": 121.3
-        },
-        {
-          "n": 46,
-          "wr": 56.5,
-          "roi": 116.0
-        }
-      ],
-      "mean_roi": 136.3,
-      "std_roi": 48.7,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 64,
-        "wr": 51.6,
-        "roi": 84.9
-      },
-      "robust": true
-    },
-    "home_fav_leading": {
-      "folds": [
-        {
-          "n": 12,
-          "wr": 75.0,
-          "roi": 116.9
-        },
-        {
-          "n": 13,
-          "wr": 84.6,
-          "roi": 94.1
-        },
-        {
-          "n": 10,
-          "wr": 70.0,
-          "roi": 58.5
-        },
-        {
-          "n": 11,
-          "wr": 100.0,
-          "roi": 226.3
-        },
-        {
-          "n": 10,
-          "wr": 100.0,
-          "roi": 134.4
-        }
-      ],
-      "mean_roi": 126.0,
-      "std_roi": 56.2,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 15,
-        "wr": 66.7,
-        "roi": 49.9
-      },
-      "robust": true
-    },
-    "cs_20": {
-      "folds": [
-        {
-          "n": 17,
-          "wr": 64.7,
-          "roi": 21.6
-        },
-        {
-          "n": 18,
-          "wr": 55.6,
-          "roi": 66.5
-        },
-        {
-          "n": 18,
-          "wr": 50.0,
-          "roi": 1.3
-        },
-        {
-          "n": 18,
-          "wr": 50.0,
-          "roi": 5.8
-        },
-        {
-          "n": 9,
-          "wr": 77.8,
-          "roi": 141.1
-        }
-      ],
-      "mean_roi": 47.3,
-      "std_roi": 52.3,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 40,
-        "wr": 67.5,
-        "roi": 10.8
-      },
-      "robust": true
-    },
-    "cs_big_lead": {
-      "folds": [
-        {
-          "n": 16,
-          "wr": 75.0,
-          "roi": 71.8
-        },
-        {
-          "n": 11,
-          "wr": 72.7,
-          "roi": 82.4
-        },
-        {
-          "n": 7,
-          "wr": 71.4,
-          "roi": 115.0
-        },
-        {
-          "n": 16,
-          "wr": 62.5,
-          "roi": 39.8
-        },
-        {
-          "n": 12,
-          "wr": 75.0,
-          "roi": 105.0
-        }
-      ],
-      "mean_roi": 82.8,
-      "std_roi": 26.5,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 23,
-        "wr": 69.6,
-        "roi": 79.8
-      },
-      "robust": true
-    },
-    "lay_over45_v3": {
-      "folds": [
-        {
-          "n": 22,
-          "wr": 100.0,
-          "roi": 95.0
-        },
-        {
-          "n": 20,
-          "wr": 100.0,
-          "roi": 95.0
-        },
-        {
-          "n": 16,
-          "wr": 100.0,
-          "roi": 95.0
-        },
-        {
-          "n": 22,
-          "wr": 100.0,
-          "roi": 95.0
-        },
-        {
-          "n": 20,
-          "wr": 95.0,
-          "roi": 40.2
-        }
-      ],
-      "mean_roi": 84.0,
-      "std_roi": 21.9,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 17,
-        "wr": 100.0,
-        "roi": 95.0
-      },
-      "robust": true
-    },
-    "draw_xg_conv": {
-      "folds": [
-        {
-          "n": 14,
-          "wr": 50.0,
-          "roi": 27.2
-        },
-        {
-          "n": 22,
-          "wr": 59.1,
-          "roi": 99.5
-        },
-        {
-          "n": 16,
-          "wr": 56.2,
-          "roi": 112.1
-        },
-        {
-          "n": 13,
-          "wr": 53.8,
-          "roi": 66.8
-        },
-        {
-          "n": 19,
-          "wr": 47.4,
-          "roi": 62.7
-        }
-      ],
-      "mean_roi": 73.7,
-      "std_roi": 29.9,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 38,
-        "wr": 52.6,
-        "roi": 84.4
-      },
-      "robust": true
-    },
-    "draw_11": {
-      "folds": [
-        {
-          "n": 41,
-          "wr": 53.7,
-          "roi": 33.0
-        },
-        {
-          "n": 54,
-          "wr": 66.7,
-          "roi": 61.8
+          "wr": 61.3,
+          "roi": 74.8
         },
         {
           "n": 48,
-          "wr": 60.4,
-          "roi": 43.4
+          "wr": 52.1,
+          "roi": 62.4
         },
         {
-          "n": 44,
-          "wr": 54.5,
-          "roi": 23.7
+          "n": 31,
+          "wr": 45.2,
+          "roi": 1.8
         },
         {
-          "n": 59,
-          "wr": 52.5,
-          "roi": 45.1
-        }
-      ],
-      "mean_roi": 41.4,
-      "std_roi": 12.8,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 82,
-        "wr": 54.9,
-        "roi": 34.3
-      },
-      "robust": true
-    },
-    "under35_3goals": {
-      "folds": [
+          "n": 40,
+          "wr": 45.0,
+          "roi": 16.2
+        },
         {
           "n": 56,
-          "wr": 53.6,
-          "roi": 29.3
-        },
-        {
-          "n": 47,
-          "wr": 61.7,
-          "roi": 45.4
-        },
-        {
-          "n": 63,
-          "wr": 49.2,
-          "roi": 10.0
-        },
-        {
-          "n": 53,
-          "wr": 49.1,
-          "roi": 15.9
-        },
-        {
-          "n": 67,
-          "wr": 53.7,
-          "roi": 18.0
+          "wr": 60.7,
+          "roi": 49.9
         }
       ],
-      "mean_roi": 23.7,
-      "std_roi": 12.5,
+      "mean_roi": 41.0,
+      "std_roi": 27.7,
       "n_pos_folds": 5,
       "temporal": {
-        "n": 82,
-        "wr": 48.8,
-        "roi": 16.8
-      },
-      "robust": true
-    },
-    "away_fav_leading": {
-      "folds": [
-        {
-          "n": 13,
-          "wr": 92.3,
-          "roi": 87.8
-        },
-        {
-          "n": 19,
-          "wr": 78.9,
-          "roi": 44.6
-        },
-        {
-          "n": 19,
-          "wr": 94.7,
-          "roi": 41.2
-        },
-        {
-          "n": 19,
-          "wr": 84.2,
-          "roi": 66.0
-        },
-        {
-          "n": 21,
-          "wr": 71.4,
-          "roi": 16.0
-        }
-      ],
-      "mean_roi": 51.1,
-      "std_roi": 24.3,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 25,
-        "wr": 92.0,
-        "roi": 35.0
-      },
-      "robust": true
-    },
-    "under45_3goals": {
-      "folds": [
-        {
-          "n": 12,
-          "wr": 83.3,
-          "roi": 11.2
-        },
-        {
-          "n": 10,
-          "wr": 90.0,
-          "roi": 19.5
-        },
-        {
-          "n": 10,
-          "wr": 100.0,
-          "roi": 34.4
-        },
-        {
-          "n": 8,
-          "wr": 100.0,
-          "roi": 40.9
-        },
-        {
-          "n": 15,
-          "wr": 86.7,
-          "roi": 18.3
-        }
-      ],
-      "mean_roi": 24.9,
-      "std_roi": 11.0,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 7,
-        "wr": 85.7,
-        "roi": 16.0
-      },
-      "robust": true
-    },
-    "cs_11": {
-      "folds": [
-        {
-          "n": 20,
-          "wr": 50.0,
-          "roi": 15.4
-        },
-        {
-          "n": 21,
-          "wr": 57.1,
-          "roi": 106.5
-        },
-        {
-          "n": 27,
-          "wr": 48.1,
-          "roi": 11.2
-        },
-        {
-          "n": 20,
-          "wr": 45.0,
-          "roi": -23.0
-        },
-        {
-          "n": 32,
-          "wr": 46.9,
-          "roi": 5.1
-        }
-      ],
-      "mean_roi": 23.0,
-      "std_roi": 43.8,
-      "n_pos_folds": 4,
-      "temporal": {
-        "n": 62,
-        "wr": 51.6,
-        "roi": 30.8
-      },
-      "robust": true
-    },
-    "draw_equalizer": {
-      "folds": [
-        {
-          "n": 8,
-          "wr": 62.5,
-          "roi": 255.3
-        },
-        {
-          "n": 11,
-          "wr": 72.7,
-          "roi": 257.8
-        },
-        {
-          "n": 12,
-          "wr": 75.0,
-          "roi": 239.5
-        },
-        {
-          "n": 9,
-          "wr": 77.8,
-          "roi": 263.8
-        },
-        {
-          "n": 18,
-          "wr": 66.7,
-          "roi": 259.6
-        }
-      ],
-      "mean_roi": 255.2,
-      "std_roi": 8.3,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 21,
-        "wr": 57.1,
-        "roi": 176.4
-      },
-      "robust": true
-    },
-    "draw_22": {
-      "folds": [
-        {
-          "n": 16,
-          "wr": 43.8,
-          "roi": 33.4
-        },
-        {
-          "n": 7,
-          "wr": 57.1,
-          "roi": 97.9
-        },
-        {
-          "n": 15,
-          "wr": 60.0,
-          "roi": 164.2
-        },
-        {
-          "n": 12,
-          "wr": 58.3,
-          "roi": 15.8
-        },
-        {
-          "n": 13,
-          "wr": 76.9,
-          "roi": 164.5
-        }
-      ],
-      "mean_roi": 95.2,
-      "std_roi": 62.8,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 20,
-        "wr": 55.0,
-        "roi": 83.5
-      },
-      "robust": true
-    },
-    "lay_over45_blowout": {
-      "folds": [
-        {
-          "n": 11,
-          "wr": 72.7,
-          "roi": 8.9
-        },
-        {
-          "n": 17,
-          "wr": 76.5,
-          "roi": 22.8
-        },
-        {
-          "n": 13,
-          "wr": 69.2,
-          "roi": 8.5
-        },
-        {
-          "n": 12,
-          "wr": 41.7,
-          "roi": 2.7
-        },
-        {
-          "n": 12,
-          "wr": 91.7,
-          "roi": 79.8
-        }
-      ],
-      "mean_roi": 24.5,
-      "std_roi": 28.4,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 17,
-        "wr": 52.9,
-        "roi": 16.5
-      },
-      "robust": true
-    },
-    "over35_early_goals": {
-      "folds": [
-        {
-          "n": 11,
-          "wr": 63.6,
-          "roi": 101.7
-        },
-        {
-          "n": 14,
-          "wr": 71.4,
-          "roi": 114.4
-        },
-        {
-          "n": 13,
-          "wr": 76.9,
-          "roi": 115.4
-        },
-        {
-          "n": 6,
-          "wr": 66.7,
-          "roi": 116.7
-        },
-        {
-          "n": 11,
-          "wr": 54.5,
-          "roi": 58.6
-        }
-      ],
-      "mean_roi": 101.4,
-      "std_roi": 22.0,
-      "n_pos_folds": 5,
-      "temporal": {
-        "n": 4,
-        "wr": 75.0,
-        "roi": 108.5
-      },
-      "robust": true
-    },
-    "lay_cs11": {
-      "folds": [
-        {
-          "n": 17,
-          "wr": 88.2,
-          "roi": 49.7
-        },
-        {
-          "n": 18,
-          "wr": 88.9,
-          "roi": -47.8
-        },
-        {
-          "n": 21,
-          "wr": 95.2,
-          "roi": 77.1
-        },
-        {
-          "n": 19,
-          "wr": 78.9,
-          "roi": -9.7
-        },
-        {
-          "n": 27,
-          "wr": 92.6,
-          "roi": 53.9
-        }
-      ],
-      "mean_roi": 24.6,
-      "std_roi": 46.2,
-      "n_pos_folds": 3,
-      "temporal": {
-        "n": 45,
-        "wr": 93.3,
-        "roi": 69.6
+        "n": 103,
+        "wr": 48.5,
+        "roi": 15.5
       },
       "robust": true
     }

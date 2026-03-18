@@ -198,14 +198,14 @@ def _detect_draw_filters(
         passes : bool  — all cfg filters pass
 
     Null handling:
-        - null xG passes the xg_max filter (mirrors _filter_draw sentinel behaviour)
+        - null xG blocks when xg_max < 1.0 (filter is active); passes when >= 1.0 (sentinel/off)
         - null poss/shots pass their respective filters
     """
     xg_max = cfg.get("xg_max", 1.0)
     poss_max = cfg.get("poss_max", 100.0)
     shots_max = cfg.get("shots_max", 20.0)
 
-    _xg_ok  = xg_max >= 1.0   or xg_total is None   or xg_total   < xg_max
+    _xg_ok  = xg_max >= 1.0   or (xg_total is not None and xg_total   < xg_max)
     _pos_ok = poss_max >= 100  or poss_diff is None   or poss_diff  < poss_max
     _sht_ok = shots_max >= 20  or shots_total is None or shots_total < shots_max
 
@@ -892,9 +892,9 @@ def _detect_under35_late_trigger(rows: list, curr_idx: int, cfg: dict) -> Option
             return None
     xg_l = _to_float(row.get("xg_local", ""))
     xg_v = _to_float(row.get("xg_visitante", ""))
-    if xg_l is None and xg_v is None:
+    if xg_l is None or xg_v is None:
         return None
-    xg_total = (xg_l or 0) + (xg_v or 0)
+    xg_total = xg_l + xg_v
     if xg_total > xg_max:
         return None
     odds = _to_float(row.get("back_under35", ""))
@@ -1111,8 +1111,10 @@ def _detect_cs_00_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[dict
         return None
     if int(gl_f) != 0 or int(gv_f) != 0:
         return None
-    xg_l = _to_float(row.get("xg_local", "")) or 0
-    xg_v = _to_float(row.get("xg_visitante", "")) or 0
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    if xg_l is None or xg_v is None:
+        return None
     xg_total = xg_l + xg_v
     if xg_total > xg_max:
         return None
@@ -1202,6 +1204,9 @@ def _detect_cs_close_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional[d
     odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
     if odds_min > 0 and odds < odds_min:
         return None
+    odds_max = float(cfg.get("odds_max", cfg.get("max_odds", 999)))
+    if odds > odds_max:
+        return None
     return {
         "minuto": m,
         col: odds,
@@ -1235,6 +1240,9 @@ def _detect_cs_one_goal_trigger(rows: list, curr_idx: int, cfg: dict) -> Optiona
         return None
     odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
     if odds_min > 0 and odds < odds_min:
+        return None
+    odds_max = float(cfg.get("odds_max", cfg.get("max_odds", 999)))
+    if odds > odds_max:
         return None
     return {
         "minuto": m,
@@ -1324,6 +1332,10 @@ def _detect_ud_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Optional
         return None
     if odds is None or odds <= 1.0:
         return None
+    # Sanity check: if underdog is leading, live odds must be below pre-match odds.
+    # If odds >= ud_pre_odds, the scraper likely swapped home/away selections.
+    if odds >= ud_pre_odds:
+        return None
     odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
     if odds_min > 0 and odds < odds_min:
         return None
@@ -1355,7 +1367,11 @@ def _detect_under35_3goals_trigger(rows: list, curr_idx: int, cfg: dict) -> Opti
         return None
     if int(gl_f) + int(gv_f) != 3:
         return None
-    xg_total = (_to_float(row.get("xg_local", "")) or 0) + (_to_float(row.get("xg_visitante", "")) or 0)
+    xg_l = _to_float(row.get("xg_local", ""))
+    xg_v = _to_float(row.get("xg_visitante", ""))
+    if xg_l is None or xg_v is None:
+        return None
+    xg_total = xg_l + xg_v
     if xg_total > xg_max:
         return None
     odds = _to_float(row.get("back_under35", ""))

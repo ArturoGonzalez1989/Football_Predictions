@@ -83,8 +83,8 @@ export function BettingSignalsView() {
   useEffect(() => {
     if (configLoadedRef.current) return
     configLoadedRef.current = true
-    Promise.all([api.getConfig(), api.getManualBets().catch(() => null)])
-      .then(([cfg, manualData]) => {
+    api.getConfig()
+      .then((cfg) => {
         setActiveConfig(cfg)
         activeConfigRef.current = cfg
         const initBr = cfg.initial_bankroll ?? 100
@@ -92,11 +92,7 @@ export function BettingSignalsView() {
         if (cfg.stake_pct != null) setStakePct(cfg.stake_pct)
         if ((cfg as any).stake_fixed != null) setStakeFixed((cfg as any).stake_fixed)
         if ((cfg as any).stake_mode === "fixed") setStakeMode("fixed")
-        // Effective bankroll = initial + cumulative P/L from resolved manual bets
-        const manualPL = (manualData?.bets ?? [])
-          .filter(b => b.status !== "pending" && b.pl != null)
-          .reduce((sum, b) => sum + (b.pl ?? 0), 0)
-        const effBr = Math.max(1, Math.round((initBr + manualPL) * 100) / 100)
+        const effBr = Math.max(1, Math.round(initBr * 100) / 100)
         setEffectiveBankroll(effBr)
         effectiveBankrollRef.current = effBr
         const s = cfg.strategies ?? {}
@@ -401,52 +397,92 @@ export function BettingSignalsView() {
         </button>
       </div>
 
-      {/* Main content + Watchlist sidebar */}
-      <div className="flex gap-6">
-        {/* Main column */}
-        <div className="flex-1 min-w-0 space-y-6">
-          {/* Active Signals */}
-          {activeSignals.length === 0 ? (
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-8 text-center">
-              <div className="text-zinc-500 text-sm">
-                No hay señales de apuesta activas en este momento.
-                <br />
-                El sistema está monitoreando {liveMatches} {liveMatches === 1 ? "partido" : "partidos"} en vivo.
+      {/* Signals two-column layout + Watchlist sidebar */}
+      {(() => {
+        // Conflict detection — shared across both columns
+        const matchesWithXGUnderf = new Set(
+          activeSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
+        )
+        const matchesWithMomXG = new Set(
+          activeSignals.filter(s => s.strategy === "momentum_xg").map(s => s.match_id)
+        )
+        const conflictMatchIds = new Set(
+          [...matchesWithXGUnderf].filter(id => matchesWithMomXG.has(id))
+        )
+        const maturingSignals = activeSignals.filter(s => s.is_mature !== true)
+        const matureSignals = activeSignals.filter(s => s.is_mature === true)
+
+        return (
+          <div className="flex gap-4">
+            {/* Column 1 — Maturing */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-amber-400/70 shrink-0" />
+                <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">En maduración</h2>
+                <span className="text-[10px] text-zinc-600">confirmación pendiente</span>
+                {maturingSignals.length > 0 && (
+                  <span className="ml-auto text-[10px] font-mono text-zinc-500">{maturingSignals.length}</span>
+                )}
               </div>
+              {maturingSignals.length === 0 ? (
+                <div className="bg-zinc-900/20 border border-zinc-800/40 border-dashed rounded-lg p-6 text-center">
+                  <div className="text-zinc-700 text-xs">Sin señales madurando</div>
+                  {activeSignals.length === 0 && (
+                    <div className="text-zinc-600 text-xs mt-1">
+                      Monitoreando {liveMatches} {liveMatches === 1 ? "partido" : "partidos"} en vivo
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {maturingSignals.map((signal, idx) => (
+                    <SignalCard
+                      key={`${signal.match_id}-${signal.strategy}-${idx}`}
+                      signal={signal}
+                      hasConflict={conflictMatchIds.has(signal.match_id) && signal.strategy === "momentum_xg"}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {(() => {
-                // Detect conflict: matches where both momentum_xg AND xg_underperformance fire
-                const matchesWithXGUnderf = new Set(
-                  activeSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
-                )
-                const matchesWithMomXG = new Set(
-                  activeSignals.filter(s => s.strategy === "momentum_xg").map(s => s.match_id)
-                )
-                const conflictMatchIds = new Set(
-                  [...matchesWithXGUnderf].filter(id => matchesWithMomXG.has(id))
-                )
-                return activeSignals.map((signal, idx) => {
-                  const hasConflict = conflictMatchIds.has(signal.match_id) &&
-                    signal.strategy === "momentum_xg"
-                  return (
-                    <SignalCard key={`${signal.match_id}-${signal.strategy}-${idx}`} signal={signal} hasConflict={hasConflict} />
-                  )
-                })
-              })()}
+
+            {/* Column 2 — Mature / Active */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0" />
+                <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Activas</h2>
+                <span className="text-[10px] text-zinc-600">señales confirmadas</span>
+                {matureSignals.length > 0 && (
+                  <span className="ml-auto text-[10px] font-mono text-green-500">{matureSignals.length}</span>
+                )}
+              </div>
+              {matureSignals.length === 0 ? (
+                <div className="bg-zinc-900/20 border border-zinc-800/40 border-dashed rounded-lg p-6 text-center">
+                  <div className="text-zinc-700 text-xs">Sin señales activas</div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {matureSignals.map((signal, idx) => (
+                    <SignalCard
+                      key={`${signal.match_id}-${signal.strategy}-${idx}`}
+                      signal={signal}
+                      hasConflict={conflictMatchIds.has(signal.match_id) && signal.strategy === "momentum_xg"}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Active Strategy Criteria (read from saved cartera config) */}
-          <ActiveCriteriaBlock activeConfig={activeConfig} />
-        </div>
+            {/* Watchlist sidebar */}
+            <div className="w-64 shrink-0">
+              <WatchlistSidebar items={watchlist} />
+            </div>
+          </div>
+        )
+      })()}
 
-        {/* Watchlist sidebar */}
-        <div className="w-72 shrink-0">
-          <WatchlistSidebar items={watchlist} />
-        </div>
-      </div>
+      {/* Active Strategy Criteria */}
+      <ActiveCriteriaBlock activeConfig={activeConfig} />
     </div>
   )
 }
@@ -692,7 +728,7 @@ function OpenBetButton({ matchUrl, isFavorable, recommendation, matchName }: { m
       setTimeout(() => setStatus("idle"), 2000)
     }
   }
-  const label = status === "loading" ? "..." : status === "ok" ? "✓" : status === "err" ? "↗" : "Abrir"
+  const label = status === "loading" ? "..." : status === "ok" ? "✓" : status === "err" ? "↗" : "Abrir Bot"
   const cls = isFavorable ? "bg-green-600 hover:bg-green-500 text-white" : "bg-zinc-700 hover:bg-zinc-600 text-zinc-300"
   return (
     <button
@@ -759,19 +795,26 @@ function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; ha
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-zinc-500">{signal.strategy_name}</span>
             <span className="text-xs font-mono text-zinc-300">{signal.recommendation}</span>
-            {hasOdds && signal.min_odds && (
+            {hasOdds && signal.min_odds != null && (
               <span className="text-xs text-zinc-500">
                 <span className={isFavorable ? "text-green-400 font-bold" : "text-red-400 font-bold"}>{signal.back_odds?.toFixed(2)}</span>
-                <span className="text-zinc-600"> / min </span>
-                <span className="text-zinc-400">{signal.min_odds.toFixed(2)}</span>
-                {isFavorable && (
+                <span className="text-zinc-600"> / mín </span>
+                <span className="text-zinc-400">{signal.min_odds === 0 ? "0" : signal.min_odds.toFixed(2)}</span>
+                {isFavorable && signal.min_odds > 0 && (
                   <span className="text-green-500 ml-1">(+{(((signal.back_odds! - signal.min_odds) / signal.min_odds) * 100).toFixed(0)}%)</span>
                 )}
               </span>
             )}
-            {signal.win_rate_historical && (
-              <span className="text-[10px] text-zinc-500">WR {signal.win_rate_historical}% · ROI +{signal.roi_historical}%</span>
-            )}
+            {signal.win_rate_historical ? (
+              <span className="text-[10px] text-zinc-500">
+                WR {signal.win_rate_historical}%
+                {signal.expected_value != null && signal.expected_value !== 0 && (
+                  <span className={signal.expected_value >= 0 ? " text-green-500" : " text-red-500"}>
+                    {" "}· EV {signal.expected_value >= 0 ? "+" : ""}{signal.expected_value.toFixed(3)}
+                  </span>
+                )}
+              </span>
+            ) : null}
             {isMature && (
               <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0 rounded-full font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
                 <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -784,6 +827,15 @@ function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; ha
         {/* Action buttons */}
         <div className="flex items-center gap-1.5 shrink-0">
           <OpenBetButton matchUrl={signal.match_url} isFavorable={isFavorable} recommendation={signal.recommendation} matchName={signal.match_name} />
+          <a
+            href={signal.match_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors bg-[#FFD200] hover:bg-[#FFE040] text-black"
+            title="Abrir partido en Betfair"
+          >
+            Betfair
+          </a>
           <button
             type="button"
             onClick={() => setExpanded(v => !v)}
@@ -810,16 +862,28 @@ function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; ha
           )}
           {/* Historical + conditions */}
           <div className="grid grid-cols-2 gap-3">
-            {signal.win_rate_historical && (
+            {signal.win_rate_historical ? (
               <div>
                 <div className="text-xs text-zinc-500 mb-1.5">Rendimiento Histórico</div>
                 <div className="flex gap-4 text-xs">
                   <div><span className="text-zinc-500">WR </span><span className="font-bold text-zinc-100">{signal.win_rate_historical}%</span></div>
                   <div><span className="text-zinc-500">ROI </span><span className="font-bold text-green-400">+{signal.roi_historical}%</span></div>
+                  <div title={`Ganancia media por €1 apostado en backtest (${signal.sample_size} apuestas)`}>
+                    <span className="text-zinc-500">+€/€ </span>
+                    <span className="font-bold text-emerald-400">+{((signal.roi_historical ?? 0) / 100).toFixed(2)}</span>
+                  </div>
+                  {signal.expected_value != null && signal.expected_value !== 0 && (
+                    <div title="Valor esperado por €1 apostado con las cuotas actuales (WR histórico × cuota actual, neto de comisión 5%)">
+                      <span className="text-zinc-500">EV </span>
+                      <span className={`font-bold ${signal.expected_value >= 0 ? "text-green-400" : "text-red-400"}`}>
+                        {signal.expected_value >= 0 ? "+" : ""}{signal.expected_value.toFixed(3)}
+                      </span>
+                    </div>
+                  )}
                   <div><span className="text-zinc-500">N </span><span className="font-mono text-zinc-300">{signal.sample_size}</span></div>
                 </div>
               </div>
-            )}
+            ) : null}
             <div>
               <div className="text-xs text-zinc-500 mb-1.5">Condiciones</div>
               <div className="flex flex-wrap gap-x-3 gap-y-0.5">

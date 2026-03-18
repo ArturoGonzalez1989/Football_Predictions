@@ -2003,8 +2003,11 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         _xg_total = (xg_local + xg_visitante) if (xg_local is not None and xg_visitante is not None) else None
         _m = int(minuto) if minuto is not None else 0
 
-        def _sd_signal(strategy_key, strategy_name, recommendation, odds, description, entry_cond, cfg_min_odds=None):
+        def _sd_signal(strategy_key, strategy_name, recommendation, odds, description, entry_cond, cfg_min_odds=None, stats=None):
             """Helper to build and emit an SD signal."""
+            _bt = stats or {}
+            _wr_pct = _bt.get("wr", 0)
+            _ev = round(calculate_ev(odds, _wr_pct / 100, stake=1.0), 3) if (_wr_pct and odds) else 0
             sig = {
                 "match_id": match_id,
                 "match_name": match["name"],
@@ -2015,13 +2018,13 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 "score": f"{_gl}-{_gv}",
                 "recommendation": recommendation,
                 "back_odds": round(odds, 2) if odds else None,
-                "min_odds": cfg_min_odds if cfg_min_odds else None,
-                "expected_value": 0,
+                "min_odds": cfg_min_odds if cfg_min_odds is not None else None,
+                "expected_value": _ev,
                 "odds_favorable": (odds >= cfg_min_odds) if (cfg_min_odds and odds) else True,
                 "confidence": "medium",
-                "win_rate_historical": 0,
-                "roi_historical": 0,
-                "sample_size": 0,
+                "win_rate_historical": round(_wr_pct, 1),
+                "roi_historical": round(_bt.get("roi", 0), 1),
+                "sample_size": _bt.get("n", 0),
                 "description": description,
                 "entry_conditions": entry_cond,
                 "thresholds": {},
@@ -2059,8 +2062,12 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             if _extracted is None:
                 continue
             _odds_val, _rec_str, _entry_cond = _extracted
-            _cfg_odds_min = _cfg_entry.get("odds_min") or _cfg_entry.get("min_odds") or None
-            _sd_signal(_key, _name, _rec_str, _odds_val, _desc, _entry_cond, cfg_min_odds=_cfg_odds_min)
+            _odds_min_val = _cfg_entry.get("odds_min")
+            if _odds_min_val is None:
+                _odds_min_val = _cfg_entry.get("min_odds")
+            _cfg_odds_min = _odds_min_val
+            _sd_signal(_key, _name, _rec_str, _odds_val, _desc, _entry_cond,
+                       cfg_min_odds=_cfg_odds_min, stats=_cfg_entry.get("_stats"))
 
     # --- Enrich signals with age and maturity info ---
     _now = datetime.utcnow()

@@ -111,7 +111,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "odds_min":      [0, 1.20, 1.30, 1.40],
     },
     "odds_drift": {           "drift_min_pct": [15, 20, 30],
-        "max_odds":      [5.0, 999],
+        "max_odds":      [5.0, 10.0, 15.0, 20.0, 999],
         "goal_diff_min": [0, 1],
         "min_minute":    [0, 30],
         "max_minute":    [85, 90],
@@ -160,11 +160,13 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "m_min":    [60, 65, 67, 70],
         "m_max":    [78, 80, 83, 85],
         "odds_min": [0, 3.0, 4.0, 5.0],
+        "odds_max": [8.0, 10.0, 12.0, 15.0, 999],
     },
     "cs_one_goal": {
         "m_min":    [60, 65, 68, 70],
         "m_max":    [82, 85, 88, 90],
         "odds_min": [0, 2.5, 3.0, 3.5],
+        "odds_max": [8.0, 10.0, 12.0, 15.0, 999],
     },
     "ud_leading": {
         "m_min":            [45, 50, 53, 58],
@@ -466,6 +468,86 @@ def phase0_load() -> tuple[list, int]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# PHASE 1.5 — Odds-minimum calibration (analytical edge threshold)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Buckets: (lower_inclusive, upper_exclusive, midpoint_for_implied_wr)
+# Midpoint used to compute market-implied win probability (1/midpoint).
+_ODDS_BUCKETS = [
+    (1.00, 1.30, 1.15),
+    (1.30, 1.50, 1.40),
+    (1.50, 1.65, 1.575),
+    (1.65, 1.80, 1.725),
+    (1.80, 2.10, 1.95),
+    (2.10, 3.00, 2.55),
+    (3.00, float("inf"), 4.50),
+]
+_MIN_BUCKET_N = 5  # minimum bets per bucket to trust its win-rate estimate
+
+
+def _calibrate_odds_min(key: str, best_params: dict, min_dur: int) -> float | None:
+    """Determine the minimum entry odds for a strategy from first principles.
+
+    Runs the strategy with odds_min=0 (no filter) using the best non-odds params
+    found by the grid search, then computes actual WR per odds bucket and compares
+    it to the market-implied win probability (1 / bucket_midpoint_odds).
+
+    Returns the lower bound of the lowest bucket where actual WR > implied WR
+    (i.e. where the strategy has a positive edge), or 0.0 if edge exists even
+    at very low odds.  Returns None if calibration does not apply (LAY strategy,
+    no data, etc.).
+
+    Why this complements the grid search:
+      The grid maximises a composite score (ci_low × roi) over a coarse discrete
+      search space.  This function instead asks the fundamental question: "at what
+      odds level does our historical win-rate exceed the market's implied
+      probability?"  The answer is strategy-specific and data-driven rather than
+      dependent on the grid's granularity.
+    """
+    # LAY strategies have asymmetric P/L — WR vs implied-WR comparison is invalid.
+    if "lay" in key.lower() or key in _PERMANENTLY_DISABLED:
+        return None
+
+    entry = _registry_entry(key)
+    if entry is None:
+        return None
+    _, _, trigger_fn, _, extract_fn, win_fn = entry
+
+    # Run with no odds floor (odds_min=0) using all other best params.
+    params_no_odds = {k: v for k, v in best_params.items()
+                      if k not in ("odds_min", "min_odds")}
+    cfg = _cfg_add_snake_keys({**params_no_odds, "odds_min": 0, "enabled": True})
+    bets = _analyze_strategy_simple(key, trigger_fn, extract_fn, win_fn, cfg, min_dur)
+    if not bets:
+        return None
+
+    # Compute WR and edge per odds bucket (scan from lowest to highest odds).
+    _first_bucket_lo = _ODDS_BUCKETS[0][0]
+    calibrated_min = 0.0
+    found_any_bucket = False
+    for lo, hi, mid in _ODDS_BUCKETS:
+        bucket = [b for b in bets if lo <= (b.get("back_odds") or 0) < hi]
+        n = len(bucket)
+        if n < _MIN_BUCKET_N:
+            # Too few bets to be statistically meaningful — skip this bucket.
+            continue
+        found_any_bucket = True
+        wr = sum(1 for b in bucket if b["won"]) / n
+        implied_wr = 1.0 / mid
+        edge = wr - implied_wr
+        if edge > 0:
+            # First bucket with positive edge found.
+            # If it's the very first bucket (lo == 1.0), no minimum is needed.
+            calibrated_min = 0.0 if lo <= _first_bucket_lo else lo
+            break
+        else:
+            # No edge at these odds — minimum must be at least the top of this bucket.
+            calibrated_min = hi if hi != float("inf") else calibrated_min
+
+    return round(calibrated_min, 2)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PHASE 1 — Individual grid search
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -527,6 +609,32 @@ def phase1_individual(n_fin: int, workers: int = 4,
     for key, space, min_dur in tasks:
         best = _run_single_strategy(key, space, min_dur, n_fin)
         if best:
+            # Phase 1.5 — refine odds_min analytically (WR vs implied WR per bucket).
+            cal_min = _calibrate_odds_min(key, best["params"], min_dur)
+            if cal_min is not None:
+                grid_min = best["params"].get("odds_min", 0)
+                if cal_min != grid_min:
+                    # Validate the calibrated minimum still passes quality gates.
+                    entry = _registry_entry(key)
+                    if entry is not None:
+                        _, _, trigger_fn, _, extract_fn, win_fn = entry
+                        cal_cfg = _cfg_add_snake_keys(
+                            {**best["params"], "odds_min": cal_min, "enabled": True}
+                        )
+                        cal_bets = _analyze_strategy_simple(
+                            key, trigger_fn, extract_fn, win_fn, cal_cfg, min_dur
+                        )
+                        cal_metrics = _eval_bets(cal_bets, n_fin)
+                        if cal_metrics:
+                            _log(f"    → oddsMin calibrado: {grid_min} → {cal_min} "
+                                 f"(N={cal_metrics['n']} ROI={cal_metrics['roi']}% "
+                                 f"WR={cal_metrics['wr']}%)")
+                            best["params"]["odds_min"] = cal_min
+                            best.update(cal_metrics)
+                        else:
+                            _log(f"    → oddsMin calibrado {cal_min} no pasa quality gates "
+                                 f"— se mantiene grid: {grid_min}")
+
             results[key] = best
             _log(f"  ✓ {key}: N={best['n']} ROI={best['roi']}% "
                  f"IC=[{best['ci_low']}-{best['ci_high']}] "
@@ -562,6 +670,12 @@ def phase2_build_config(individual_results: dict) -> dict:
         new_strategies[family] = {
             "enabled": True,
             **camel_params,
+            "_stats": {
+                "wr": round(result["wr"], 1),
+                "roi": round(result["roi"], 1),
+                "n": result["n"],
+                "ci_low": round(result["ci_low"], 1),
+            },
         }
         approved.append(family)
 
