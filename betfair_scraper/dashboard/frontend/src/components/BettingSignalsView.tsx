@@ -63,8 +63,6 @@ export function BettingSignalsView() {
   const [stakeConfigSaved, setStakeConfigSaved] = useState(false)
   const [autoOpenBets, setAutoOpenBets] = useState(false)
   const prevSignalKeys = useRef<Set<string> | null>(null)
-  // Track auto-registered paper bets to avoid duplicates across polling cycles
-  const autoRegisteredRef = useRef<Set<string>>(new Set())
   // Track auto-opened browser tabs to avoid duplicates across polling cycles
   const autoOpenedRef = useRef<Set<string>>(new Set())
   // On first fetch, pre-populate autoRegistered with already-mature signals so we don't retroactively register them
@@ -142,67 +140,16 @@ export function BettingSignalsView() {
       }
       prevSignalKeys.current = currentKeys
 
-      // Auto-register mature signals as paper bets — ONLY when odds are favorable (green, not red)
-      // On first fetch, mark ALL mature signals (favorable or not) as already seen to avoid retroactive registration
+      // Auto-open browser: open Betfair match URL for each new mature+favorable signal
+      // Paper bet placement is handled exclusively by the backend background task (run_paper_auto_place)
       const allMature = (data.signals || []).filter(s => s.is_mature === true)
       const matureSignals = allMature.filter(s => s.odds_favorable === true)
       if (!firstFetchDoneRef.current) {
         firstFetchDoneRef.current = true
         allMature.forEach(s => {
-          const key = signalMarketKey(s.match_id, s.recommendation)
-          autoRegisteredRef.current.add(key)
-          autoOpenedRef.current.add(key)
+          autoOpenedRef.current.add(signalMarketKey(s.match_id, s.recommendation))
         })
       } else {
-        const cfg = activeConfigRef.current
-        const bl = effectiveBankrollRef.current
-        const pct = cfg?.stake_pct ?? 1
-        const stake = (cfg as any)?.stake_mode === "fixed"
-          ? Math.max(0.01, (cfg as any)?.stake_fixed ?? 2)
-          : Math.max(0.01, Math.round(bl * pct / 100 * 100) / 100)
-        // Conflict filter: skip Momentum XG when xG Underperf is also mature for the same match (0% WR pair)
-        const matureXGUnderperf = new Set(
-          matureSignals.filter(s => s.strategy === "xg_underperformance").map(s => s.match_id)
-        )
-        for (const sig of matureSignals) {
-          if (sig.strategy === "momentum_xg"
-              && matureXGUnderperf.has(sig.match_id)) {
-            continue
-          }
-          const key = signalMarketKey(sig.match_id, sig.recommendation)
-          if (autoRegisteredRef.current.has(key)) continue
-          autoRegisteredRef.current.add(key)
-          api.placeBet({
-          match_id: sig.match_id,
-          match_name: sig.match_name,
-          match_url: sig.match_url,
-          strategy: sig.strategy,
-          strategy_name: sig.strategy_name,
-          minute: sig.minute,
-          score: sig.score,
-          recommendation: sig.recommendation,
-          back_odds: sig.back_odds,
-          min_odds: sig.min_odds,
-          expected_value: sig.expected_value,
-          confidence: sig.confidence,
-          win_rate_historical: sig.win_rate_historical,
-          roi_historical: sig.roi_historical,
-          sample_size: sig.sample_size,
-          entry_conditions: sig.entry_conditions,
-          thresholds: sig.thresholds,
-          bet_type: "paper",
-          stake,
-          notes: "Auto-registrado",
-          }).catch((err) => {
-            // 409 = duplicate (backend dedup) — keep in set to avoid retrying
-            // Any other error: remove from set so it retries next cycle
-            if (!String(err?.message).includes("409")) {
-              autoRegisteredRef.current.delete(key)
-            }
-          })
-        }
-
-        // Auto-open browser: open Betfair match URL for each new mature+favorable signal
         if (autoOpenBetsRef.current) {
           for (const sig of matureSignals) {
             const key = signalMarketKey(sig.match_id, sig.recommendation)
@@ -753,8 +700,7 @@ function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; ha
   const isMature = signal.is_mature === true
   const isFavorable = signal.odds_favorable === true
   const isUnfavorable = signal.odds_favorable === false
-  const hasOdds = signal.back_odds != null
-  const riskLevel = signal.risk_info?.risk_level || "none"
+const riskLevel = signal.risk_info?.risk_level || "none"
 
   let cardBorderColor: string
   let cardBgColor: string
@@ -795,14 +741,9 @@ function SignalCard({ signal, hasConflict = false }: { signal: BettingSignal; ha
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-zinc-500">{signal.strategy_name}</span>
             <span className="text-xs font-mono text-zinc-300">{signal.recommendation}</span>
-            {hasOdds && signal.min_odds != null && (
+            {signal.min_odds != null && (
               <span className="text-xs text-zinc-500">
-                <span className={isFavorable ? "text-green-400 font-bold" : "text-red-400 font-bold"}>{signal.back_odds?.toFixed(2)}</span>
-                <span className="text-zinc-600"> / mín </span>
-                <span className="text-zinc-400">{signal.min_odds === 0 ? "0" : signal.min_odds.toFixed(2)}</span>
-                {isFavorable && signal.min_odds > 0 && (
-                  <span className="text-green-500 ml-1">(+{(((signal.back_odds! - signal.min_odds) / signal.min_odds) * 100).toFixed(0)}%)</span>
-                )}
+                mín: <span className="text-zinc-400">{signal.min_odds === 0 ? "0" : signal.min_odds.toFixed(2)}</span>
               </span>
             )}
             {signal.win_rate_historical ? (

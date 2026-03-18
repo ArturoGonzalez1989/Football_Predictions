@@ -375,6 +375,15 @@ def _detect_odds_drift_trigger(
     curr_bh = _to_float(curr_row.get("back_home", ""))
     curr_ba = _to_float(curr_row.get("back_away", ""))
 
+    # Sanity check: the leading team (by score) should have shorter odds than the trailing team.
+    # If back_home > back_away while local is leading (or vice versa), the URL team order
+    # doesn't match Betfair's home/away designation — skip to avoid evaluating the wrong team.
+    if curr_bh is not None and curr_ba is not None:
+        if gl_i > gv_i and curr_bh > curr_ba:
+            return None
+        if gv_i > gl_i and curr_ba > curr_bh:
+            return None
+
     # Determine winning team
     if gl_i > gv_i:
         team = "home"

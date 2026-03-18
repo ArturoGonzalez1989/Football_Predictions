@@ -22,6 +22,7 @@ SUITES = [
     ("Registry Collapse",  TESTS / "test_registry_collapse.py",      []),
     ("System Integrity",   TESTS / "test_system_integrity.py",       ["--verbose"] if "--verbose" in sys.argv else []),
     ("Param Fidelity",     TESTS / "test_param_fidelity.py",         []),
+    ("Home/Away Odds",     TESTS / "test_home_away_consistency.py",  []),
 ]
 
 SEP = "─" * 70

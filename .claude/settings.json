@@ -22,7 +22,18 @@
       "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\backend_20260318_033729.log'' | Select-String ''10:50|10:51|Machida|odds_drift|telegram|Telegram|notif|placed|colocad'' | Out-String\")",
       "Bash(powershell -Command \"Get-Content ''c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\logs\\\\backend_20260318_033729.log'' | Select-String ''Machida|odds_drift|telegram|Telegram|notif|PLACE|Place OK.*[1-9]'' | Out-String\")",
       "Bash(grep -v \"^$\")",
-      "Bash(ls /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/analisis/bt_results_*.csv)"
+      "Bash(ls /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/analisis/bt_results_*.csv)",
+      "Bash(wc -l betfair_scraper/data/partido_*.csv)",
+      "Bash(head -2 /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/data/partido_ac-mil*.csv)",
+      "Bash(tail -n +2 /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/data/partido_*.csv)",
+      "Read(//c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/**)",
+      "Bash(for f:*)",
+      "Bash(do tail:*)",
+      "Bash(done)",
+      "Bash(python auxiliar/league_analysis.py)",
+      "Bash(python auxiliar/tier_analysis.py)",
+      "Bash(ls -t auxiliar/bt_optimizer_results* auxiliar/bt_optimizer*)",
+      "Bash(python tests/test_home_away_consistency.py --verbose)"
     ],
     "additionalDirectories": [
       "c:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\dashboard\\frontend\\src\\components"
