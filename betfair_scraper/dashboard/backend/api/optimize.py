@@ -1,9 +1,12 @@
 """
 Preset optimizer — Python backend.
 
-Phase 1 (~2,048 combos): finds best on/off strategy combo + BankrollMode + RiskFilter.
-Phase 2 (~7,776 combos): finds best RealisticAdjustments given Phase 1 result.
-Phase 2.5: steepest-descent strategy disabling refinement.
+Dynamic portfolio optimizer: uses steepest descent over ALL strategies
+from the registry (no hardcoded strategy lists).
+
+Phase 1: steepest descent on/off over all strategies + best risk_filter
+          (bankroll_mode only tested for min_dd criterion).
+Phase 2 (~7,776 combos): finds best RealisticAdjustments.
 Phase 3 (5 combos): momentum minute range.
 Phase 4: cashout percentage optimization.
 """
@@ -34,43 +37,10 @@ router = APIRouter()
 # Pre-computed preset CSVs live here (written by optimizer_cli.py after each run).
 _PRESETS_DIR = _backend_dir.parent.parent / "data" / "presets"
 
-# ── Min odds per strategy ────────────────────────────────────────────────────
-MIN_ODDS: Dict[str, float] = {
-    "back_draw_00":        1.93,
-    "xg_underperformance": 1.51,
-    "odds_drift":          1.65,
-    "goal_clustering":     1.73,
-    "pressure_cooker":     1.83,
-    "tarde_asia":          1.83,
-    "momentum_xg":         1.65,
-}
+# ── Options ──────────────────────────────────────────────────────────────────
+BR_OPTS  = ["fixed", "half_kelly", "dd_protection", "anti_racha"]
+RISK_OPTS = ["all", "no_risk", "with_risk", "medium"]
 
-# Opts arrays — on/off toggles per strategy (versions eliminated)
-DRAW_OPTS         = ["on", "off"]
-XG_OPTS           = ["on", "off"]
-DRIFT_OPTS        = ["on", "off"]
-CLUSTERING_OPTS   = ["on", "off"]
-PRESSURE_OPTS     = ["on", "off"]
-TARDESIA_OPTS     = ["on", "off"]
-MOMENTUM_OPTS     = ["on", "off"]
-BR_OPTS           = ["fixed", "half_kelly", "dd_protection", "anti_racha"]
-RISK_OPTS         = ["all", "no_risk", "with_risk", "medium"]
-
-# All (draw, xg) pairs — 2×2 = 4 combinations.
-# Used to split work across workers.
-ALL_DRAW_XG_PAIRS = [(d, x) for d in DRAW_OPTS for x in XG_OPTS]
-
-_PHASE1_TOTAL = (
-    len(DRAW_OPTS) *        # 2
-    len(XG_OPTS) *          # 2
-    len(DRIFT_OPTS) *       # 2
-    len(CLUSTERING_OPTS) *  # 2
-    len(PRESSURE_OPTS) *    # 2
-    len(TARDESIA_OPTS) *    # 2
-    len(MOMENTUM_OPTS) *    # 2
-    len(BR_OPTS) *          # 4
-    len(RISK_OPTS)          # 4
-)  # = 2,048
 _PHASE2_TOTAL = 2 * 3 * 3 * 3 * 2 * 2 * 3 * 3 * 3  # = 7776
 
 # Module-level state — updated from the worker thread, read by GET endpoints.
@@ -81,12 +51,6 @@ _opt_progress: Dict[str, Any] = {
     "phase": "",
     "pct": 0,
     "message": "",
-}
-
-MAX_BETS_COMBO = {
-    "draw": "on", "xg": "on", "drift": "on", "clustering": "on",
-    "pressure": "on", "tardeAsia": "on", "momentumXG": "on",
-    "br": "fixed",
 }
 
 # ── Wilson CI helper ─────────────────────────────────────────────────────────
@@ -127,11 +91,6 @@ def _get_bet_odds(b: Dict) -> float:
     return 2.0
 
 
-def _meets_min_odds(b: Dict) -> bool:
-    odds = _get_bet_odds(b)
-    return odds >= MIN_ODDS.get(b.get("strategy", ""), 1.0)
-
-
 def _fv(b: Dict, key: str) -> Optional[float]:
     """Safe float extraction from a bet field (None if missing/invalid)."""
     v = b.get(key)
@@ -143,48 +102,76 @@ def _fv(b: Dict, key: str) -> Optional[float]:
         return None
 
 
-# ── Filter functions (mirrors cartera.ts filter*Bets exactly) ───────────────
+# ── Dynamic bet collection ────────────────────────────────────────────────────
 
-def _filter_draw(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "back_draw_00"]
-
-
-def _filter_xg(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "xg_underperformance"]
+def _collect_bets_dynamic(bets: List[Dict], disabled: set) -> List[Dict]:
+    """Return bets excluding disabled strategies, sorted chronologically."""
+    cb = [b for b in bets if b.get("strategy") not in disabled]
+    cb.sort(key=lambda b: b.get("timestamp_utc") or "")
+    return cb
 
 
-def _filter_drift(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "odds_drift"]
+def _eval_dynamic(bets: List[Dict], disabled: set, adj: Optional[Dict],
+                  risk: str, bankroll_init: float, br: str, criterion: str) -> float:
+    """Score a portfolio with a given set of disabled strategies."""
+    cb = _collect_bets_dynamic(bets, disabled)
+    if adj:
+        cb = _apply_realistic_adj(cb, adj)
+    cb = _filter_by_risk(cb, risk)
+    if len(cb) < 15:
+        return -math.inf
+    sim = _simulate_cartera_py(cb, bankroll_init, br)
+    return _score_of(sim, criterion)
 
 
-def _filter_clustering(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "goal_clustering"]
+def _steepest_descent(bets: List[Dict], strategy_keys: List[str],
+                      adj: Optional[Dict], risk: str, bankroll_init: float,
+                      br: str, criterion: str, max_passes: int = 10) -> set:
+    """Forward+backward steepest descent over strategy on/off.
 
+    Backward pass: start with all on, iteratively disable the strategy
+    whose removal improves the portfolio score the most.
+    Forward pass: try re-enabling each disabled strategy — if it improves,
+    re-enable it. Breaks local optima where removing A was good but
+    removing A+B together was excessive.
 
-def _filter_pressure(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "pressure_cooker"]
+    Returns the set of disabled strategy keys."""
+    disabled = set()
+    current_score = _eval_dynamic(bets, disabled, adj, risk, bankroll_init, br, criterion)
 
+    # Backward pass: disable strategies that hurt the portfolio
+    for _pass in range(max_passes):
+        best_key = None
+        best_score = current_score
+        for key in strategy_keys:
+            if key in disabled:
+                continue
+            trial = disabled | {key}
+            score = _eval_dynamic(bets, trial, adj, risk, bankroll_init, br, criterion)
+            if score > best_score:
+                best_score = score
+                best_key = key
+        if best_key is None:
+            break
+        disabled.add(best_key)
+        current_score = best_score
 
-def _filter_tardesia(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "tarde_asia"]
+    # Forward pass: try re-enabling each disabled strategy
+    for _pass in range(max_passes):
+        best_key = None
+        best_score = current_score
+        for key in list(disabled):
+            trial = disabled - {key}
+            score = _eval_dynamic(bets, trial, adj, risk, bankroll_init, br, criterion)
+            if score > best_score:
+                best_score = score
+                best_key = key
+        if best_key is None:
+            break
+        disabled.remove(best_key)
+        current_score = best_score
 
-
-def _filter_momentum(bets: List[Dict], v: str) -> List[Dict]:
-    if v == "off":
-        return []
-    return [b for b in bets if b.get("strategy") == "momentum_xg"]
+    return disabled
 
 
 
@@ -472,72 +459,6 @@ def _score_of(sim: Dict, criterion: str) -> float:
     return sim["flat_pl"] * conf
 
 
-# ── Phase 1 worker — must be top-level for Windows ProcessPoolExecutor/spawn ─
-
-def _phase1_worker(args: tuple) -> tuple:
-    """
-    Runs Phase 1 search for a subset of (draw, xg) pairs.
-    Each strategy is on/off — 7 strategies × 4 BR × 4 risk = 2,048 combos total.
-    Returns (best_combo_dict, best_risk, best_score).
-    """
-    if sys.platform == "win32":
-        import ctypes
-        ctypes.windll.kernel32.SetPriorityClass(
-            ctypes.windll.kernel32.GetCurrentProcess(), 0x00004000)  # BELOW_NORMAL
-
-    (bets, draw_xg_pairs, drift_opts, clustering_opts, pressure_opts,
-     tardesia_opts, momentum_opts, br_opts, risk_opts,
-     criterion, bankroll_init) = args
-
-    best_combo = None
-    best_risk = "all"
-    best_score = -math.inf
-
-    for draw, xg in draw_xg_pairs:
-        draw_bets = _filter_draw(bets, draw)
-        xg_bets   = _filter_xg(bets, xg)
-        for drift in drift_opts:
-            drift_bets = _filter_drift(bets, drift)
-            for clustering in clustering_opts:
-                clustering_bets = _filter_clustering(bets, clustering)
-                for pressure in pressure_opts:
-                    pressure_bets = _filter_pressure(bets, pressure)
-                    for tardesia in tardesia_opts:
-                        tardesia_bets = _filter_tardesia(bets, tardesia)
-                        for momentum in momentum_opts:
-                            momentum_bets = _filter_momentum(bets, momentum)
-                            combined = [
-                                b for b in (
-                                    draw_bets + xg_bets + drift_bets +
-                                    clustering_bets + pressure_bets +
-                                    tardesia_bets + momentum_bets
-                                )
-                                if _meets_min_odds(b)
-                            ]
-                            combined.sort(key=lambda b: b.get("timestamp_utc") or "")
-                            for br in br_opts:
-                                for risk in risk_opts:
-                                    filtered = _filter_by_risk(combined, risk)
-                                    if len(filtered) < 15:
-                                        continue
-                                    sim = _simulate_cartera_py(filtered, bankroll_init, br)
-                                    score = _score_of(sim, criterion)
-                                    if score > best_score:
-                                        best_score = score
-                                        best_risk = risk
-                                        best_combo = {
-                                            "draw": draw, "xg": xg,
-                                            "drift": drift,
-                                            "clustering": clustering,
-                                            "pressure": pressure,
-                                            "tardeAsia": tardesia,
-                                            "momentumXG": momentum,
-                                            "br": br,
-                                        }
-
-    return best_combo, best_risk, best_score
-
-
 def _phase2_worker(args: tuple) -> tuple:
     """
     Runs Phase 2 search: 7776 realistic adjustment candidates given the fixed Phase 1 combo.
@@ -603,15 +524,10 @@ _N_WORKERS   = int(os.environ.get("PRESET_WORKERS", "3"))   # default 3 (~12 min
 
 def _parse_progress_line(line: str) -> None:
     """Update _opt_progress by parsing a stdout line from optimizer_cli.py."""
-    if "Phase 1 —" in line and "workers" in line:
+    if "Phase 1 —" in line:
         _opt_progress.update({"phase": "Phase 1", "pct": 0, "message": line})
-    elif "Worker" in line and "terminado" in line:
-        m = re.search(r"\((\d+)/(\d+) listos\)", line)
-        if m:
-            done, total = int(m.group(1)), int(m.group(2))
-            pct = min(98, round(done / total * 99))
-            _opt_progress.update({"pct": pct,
-                                   "message": f"Phase 1 — {pct}% ({done}/{total} workers)"})
+    elif "Steepest descent" in line and "desactiv" in line:
+        _opt_progress.update({"message": line})
     elif "Phase 1 completada" in line:
         _opt_progress.update({"phase": "Phase 1", "pct": 99, "message": line})
     elif "Phase 2 —" in line or "Phase 2b —" in line:
@@ -741,7 +657,7 @@ async def optimize_preset(body: OptimizeRequest) -> Dict[str, Any]:
     global _opt_result
 
     if body.criterion == "max_bets":
-        _opt_result = {"combo": MAX_BETS_COMBO, "risk_filter": "all", "best_score": 0.0}
+        _opt_result = {"disabled": set(), "risk_filter": "all", "best_score": 0.0, "br": "fixed"}
         return {"status": "done", **_opt_result}
 
     if _opt_progress.get("running"):

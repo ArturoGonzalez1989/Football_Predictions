@@ -390,10 +390,10 @@
   "adjustments": {
     "enabled": true,
     "dedup": false,
-    "max_odds": null,
+    "max_odds": 10.0,
     "min_odds": null,
     "drift_min_minute": 0,
-    "slippage_pct": 0,
+    "slippage_pct": 2,
     "conflict_filter": false,
     "allow_contrarias": true,
     "stability": 1,
@@ -403,10 +403,10 @@
     "cashout_pct": 0
   },
   "_optimizer_stats": {
-    "n": 12,
-    "wr": 91.7,
-    "ci_low": 64.6,
-    "ci_high": 98.5,
-    "roi": 10.84
+    "n": 1697,
+    "wr": 61.8,
+    "ci_low": 59.4,
+    "ci_high": 64.0,
+    "roi": 74.42
   }
 }

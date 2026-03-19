@@ -372,9 +372,6 @@ def t5_live_path():
 # T6 — Portfolio optimizer integrity
 # ─────────────────────────────────────────────────────────────────────────────
 
-EXPECTED_PHASE1_COMBOS = 2048
-
-
 def t6_optimizer():
     section("T6 — Portfolio optimizer integrity")
 
@@ -384,28 +381,36 @@ def t6_optimizer():
 
     check("optimize importable", True)
 
-    # Phase1 total
-    check(f"_PHASE1_TOTAL == {EXPECTED_PHASE1_COMBOS}",
-          _optimize._PHASE1_TOTAL == EXPECTED_PHASE1_COMBOS,
-          f"actual={_optimize._PHASE1_TOTAL}")
+    # Dynamic optimizer: no hardcoded strategy lists
+    check("No _PHASE1_TOTAL (brute force removed)",
+          not hasattr(_optimize, '_PHASE1_TOTAL'))
+    check("No _phase1_worker (brute force removed)",
+          not hasattr(_optimize, '_phase1_worker'))
+    check("No MIN_ODDS hardcoded dict",
+          not hasattr(_optimize, 'MIN_ODDS'))
+    check("No MAX_BETS_COMBO hardcoded dict",
+          not hasattr(_optimize, 'MAX_BETS_COMBO'))
 
-    # OPTS arrays are binary on/off
-    for opts_name in ("DRAW_OPTS", "XG_OPTS", "DRIFT_OPTS",
-                      "CLUSTERING_OPTS", "PRESSURE_OPTS", "TARDESIA_OPTS", "MOMENTUM_OPTS"):
-        opts = getattr(_optimize, opts_name, None)
-        if opts is not None:
-            check(f"{opts_name} == ['on','off']",
-                  set(opts) == {"on", "off"},
-                  f"actual={opts}")
+    # Dynamic helpers exist
+    check("_collect_bets_dynamic exists",
+          hasattr(_optimize, '_collect_bets_dynamic'))
+    check("_steepest_descent exists",
+          hasattr(_optimize, '_steepest_descent'))
+    check("_eval_dynamic exists",
+          hasattr(_optimize, '_eval_dynamic'))
 
-    # No legacy param dicts
-    for dead_name in ("DRAW_PARAMS", "XG_PARAMS", "DRIFT_PARAMS", "CLUSTERING_PARAMS",
-                      "LAY15_OPTS", "LAY_DA_OPTS", "LAY25_OPTS", "BSD_OPTS",
-                      "BO15E_OPTS", "LFF_OPTS"):
+    # No hardcoded per-strategy filter functions
+    for dead_name in ("_filter_draw", "_filter_xg", "_filter_drift",
+                      "_filter_clustering", "_filter_pressure",
+                      "_filter_tardesia", "_filter_momentum",
+                      "DRAW_OPTS", "XG_OPTS", "DRIFT_OPTS",
+                      "CLUSTERING_OPTS", "PRESSURE_OPTS", "TARDESIA_OPTS", "MOMENTUM_OPTS",
+                      "ALL_DRAW_XG_PAIRS",
+                      "DRAW_PARAMS", "XG_PARAMS", "DRIFT_PARAMS", "CLUSTERING_PARAMS"):
         check(f"No {dead_name} in optimize.py",
               not hasattr(_optimize, dead_name))
 
-    # Filter functions use correct strategy names (no legacy)
+    # No legacy versioned strategy names
     src = inspect.getsource(_optimize)
     legacy_in_optimize = re.findall(
         r'momentum_xg_v[12]|odds_drift_v[1-6]|back_draw_00_v|xg_underperformance_base',
@@ -415,17 +420,19 @@ def t6_optimizer():
           len(legacy_in_optimize) == 0,
           f"legacy refs: {legacy_in_optimize}")
 
-    # _build_preset_config reads from cartera_config, not hardcoded version dicts
+    # _build_preset_config uses dynamic disabled set, not hardcoded combo mapping
     if OPTIMIZER_CLI_OK:
         cli_src = inspect.getsource(_optimizer_cli)
-        check("_build_preset_config has _COMBO_TO_REGISTRY mapping",
-              "_COMBO_TO_REGISTRY" in cli_src)
+        check("_build_preset_config uses 'disabled' parameter (dynamic)",
+              "disabled" in inspect.signature(_optimizer_cli._build_preset_config).parameters)
+        check("No _COMBO_TO_REGISTRY (hardcoded mapping removed)",
+              "_COMBO_TO_REGISTRY" not in cli_src)
         # Must not reference legacy version dicts
         legacy_in_cli = re.findall(
             r'DRAW_PARAMS\[|XG_PARAMS\[|DRIFT_PARAMS\[|CLUSTERING_PARAMS\[',
             cli_src
         )
-        check("_build_preset_config doesn't use legacy DRAW_PARAMS/XG_PARAMS",
+        check("No legacy DRAW_PARAMS/XG_PARAMS in optimizer_cli.py",
               len(legacy_in_cli) == 0,
               f"refs found: {legacy_in_cli}")
 
@@ -752,11 +759,11 @@ def t12_search_spaces():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# T13 — _COMBO_TO_REGISTRY values are valid registry keys
+# T13 — Dynamic optimizer architecture (replaces _COMBO_TO_REGISTRY check)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def t13_combo_to_registry():
-    section("T13 — _COMBO_TO_REGISTRY integrity")
+    section("T13 — Dynamic optimizer architecture")
 
     if not OPTIMIZER_CLI_OK:
         check("optimizer_cli importable", False,
@@ -765,50 +772,24 @@ def t13_combo_to_registry():
 
     check("optimizer_cli importable", True)
 
-    if not CSV_READER_OK:
-        check("SKIP T13 (csv_reader not loaded)", False)
-        return
-
-    # _COMBO_TO_REGISTRY is defined inside _build_preset_config, inspect source
+    # Verify the old hardcoded mapping is gone
     cli_src = inspect.getsource(_optimizer_cli)
-    registry_keys = {e[0] for e in _cr._STRATEGY_REGISTRY}
+    check("No _COMBO_TO_REGISTRY (hardcoded mapping removed)",
+          "_COMBO_TO_REGISTRY" not in cli_src)
 
-    # Extract the mapping values from source via regex
-    combo_map_match = re.search(
-        r'_COMBO_TO_REGISTRY\s*=\s*\{([^}]+)\}',
-        cli_src, re.DOTALL
-    )
-    if not combo_map_match:
-        check("_COMBO_TO_REGISTRY found in optimizer_cli source", False,
-              "Could not parse _COMBO_TO_REGISTRY dict from source")
-        return
+    # Verify dynamic architecture is in place
+    check("_build_preset_config accepts 'disabled' parameter",
+          "disabled" in inspect.signature(_optimizer_cli._build_preset_config).parameters)
 
-    check("_COMBO_TO_REGISTRY found in optimizer_cli source", True)
+    check("_run_phase1 exists and is dynamic",
+          hasattr(_optimizer_cli, '_run_phase1'))
 
-    # Parse the key: "value" pairs
-    block = combo_map_match.group(1)
-    pairs = re.findall(r'"(\w+)"\s*:\s*"(\w+)"', block)
-    if not pairs:
-        check("_COMBO_TO_REGISTRY has entries", False, "No pairs found in dict")
-        return
-
-    check(f"_COMBO_TO_REGISTRY has entries ({len(pairs)})", len(pairs) >= 7,
-          f"expected >=7, found {len(pairs)}: {pairs}")
-
-    # All values must be valid registry keys
-    invalid_values = [(ck, rv) for ck, rv in pairs if rv not in registry_keys]
-    check("All _COMBO_TO_REGISTRY values are valid registry keys",
-          len(invalid_values) == 0,
-          f"invalid values: {invalid_values}")
-
-    # Expected combo keys must be present
-    expected_combo_keys = {"draw", "xg", "drift", "clustering",
-                           "pressure", "tardeAsia", "momentumXG"}
-    actual_combo_keys = {ck for ck, _ in pairs}
-    missing_combo_keys = expected_combo_keys - actual_combo_keys
-    check("_COMBO_TO_REGISTRY has all 7 expected combo keys",
-          len(missing_combo_keys) == 0,
-          f"missing combo keys: {missing_combo_keys}")
+    # Verify no hardcoded strategy filter functions imported
+    for fn_name in ("_filter_draw", "_filter_xg", "_filter_drift",
+                    "_filter_clustering", "_filter_pressure",
+                    "_filter_tardesia", "_filter_momentum"):
+        check(f"No {fn_name} in optimizer_cli",
+              fn_name not in cli_src)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

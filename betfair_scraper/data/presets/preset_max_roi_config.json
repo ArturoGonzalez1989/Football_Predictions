@@ -38,7 +38,7 @@
       }
     },
     "goal_clustering": {
-      "enabled": true,
+      "enabled": false,
       "sotMin": 0,
       "minuteMin": 20,
       "minuteMax": 65,
@@ -88,7 +88,7 @@
       }
     },
     "under35_late": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 60,
       "minuteMax": 85,
       "xgMax": 2.5,
@@ -129,7 +129,7 @@
       }
     },
     "cs_one_goal": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 68,
       "minuteMax": 88,
       "oddsMin": 1.8,
@@ -156,7 +156,7 @@
       }
     },
     "home_fav_leading": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 60,
       "minuteMax": 83,
       "max_lead": 3,
@@ -170,7 +170,7 @@
       }
     },
     "cs_20": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 75,
       "minuteMax": 90,
       "odds_max": 10.0,
@@ -196,7 +196,7 @@
       }
     },
     "draw_xg_conv": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 65,
       "minuteMax": 83,
       "xg_diff_max": 1.3,
@@ -221,7 +221,7 @@
       "oddsMin": 1.4
     },
     "cs_11": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 70,
       "minuteMax": 90,
       "oddsMin": 0,
@@ -246,7 +246,7 @@
       "poss_min": 60
     },
     "draw_11": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 70,
       "minuteMax": 90,
       "oddsMin": 0.0,
@@ -271,7 +271,7 @@
       }
     },
     "away_fav_leading": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 60,
       "minuteMax": 88,
       "max_lead": 1,
@@ -298,7 +298,7 @@
       }
     },
     "draw_equalizer": {
-      "enabled": true,
+      "enabled": false,
       "minuteMin": 65,
       "minuteMax": 90,
       "fav_pre_max": 2.5,
@@ -390,10 +390,10 @@
   "adjustments": {
     "enabled": true,
     "dedup": false,
-    "max_odds": null,
+    "max_odds": 10.0,
     "min_odds": null,
     "drift_min_minute": 0,
-    "slippage_pct": 0,
+    "slippage_pct": 2,
     "conflict_filter": false,
     "allow_contrarias": true,
     "stability": 1,
@@ -403,10 +403,10 @@
     "cashout_pct": 0
   },
   "_optimizer_stats": {
-    "n": 12,
-    "wr": 91.7,
-    "ci_low": 64.6,
-    "ci_high": 98.5,
-    "roi": 10.84
+    "n": 372,
+    "wr": 60.2,
+    "ci_low": 55.2,
+    "ci_high": 65.1,
+    "roi": 104.44
   }
 }

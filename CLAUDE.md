@@ -70,8 +70,8 @@ betfair_scraper/
       api/config.py      → GET/PUT cartera_config.json (102 lineas)
       api/matches.py     → Datos de partidos (133 lineas)
       api/system.py      → Start/stop scraper (381 lineas)
-      api/optimize.py    → Optimizacion presets Phase 1+2 (1329 lineas)
-      api/optimizer_cli.py → CLI para optimizacion paralela (691 lineas)
+      api/optimize.py    → Optimizacion presets: steepest descent dinamico + adjustments (~700 lineas)
+      api/optimizer_cli.py → CLI para optimizacion de portfolio (~500 lineas)
       utils/csv_reader.py → Estrategias, backtest, live, helpers compartidos (~6200 lineas)
       utils/sd_strategies.py → eval_sd() evaluador legacy para notebook (205 lineas)
       utils/scraper_status.py → Estado scraper via psutil + log parsing
@@ -133,18 +133,19 @@ bt_optimizer.py features: `_eval_preset_real_stats()` para stats honestas de pha
 
 ### _build_preset_config
 
-`optimizer_cli._build_preset_config()` parte del `cartera_config.json` actual y solo aplica `enabled: true/false` por estrategia segun el combo optimo. Los params (xgMax, driftMin, etc.) se preservan del grid search de bt_optimizer.
+`optimizer_cli._build_preset_config(disabled, adj, risk_filter, br_mode, ...)` parte del `cartera_config.json` actual. Recibe un `disabled: set` con las estrategias que el optimizer decidio desactivar (dinamico, no hardcodeado). Los params (xgMax, driftMin, etc.) se preservan del grid search de bt_optimizer. Respeta quality gates: nunca re-habilita una estrategia que bt_optimizer marco como `enabled: false`.
 
 ## Sistema de Presets
 
-Los presets se computan offline via `optimizer_cli.py` y se guardan directamente en `cartera_config.json`. La optimizacion ejecuta 5 fases: on/off combos (2,048), adjustments (7,776), strategy disabling (Phase 2.5), momentum minute range (Phase 3), cashout pct (Phase 4). Produce la configuracion optima segun el criterio seleccionado (max_roi, max_pl, max_wr, min_dd, max_bets).
+Los presets se computan offline via `optimizer_cli.py` y se guardan directamente en `cartera_config.json`. La optimizacion ejecuta estas fases:
 
-### Heuristico CO por criterio
-- `max_roi` → 15% (solo cashouts con ganancia grande)
-- `max_pl` → 20% (equilibrado)
-- `max_wr` → 30% (cashout agresivo, mas % ganadas)
-- `min_dd` → 10% (cashout muy temprano, reduce perdidas)
-- `max_bets` → 20% (default)
+1. **Phase 1**: steepest descent forward+backward sobre TODAS las estrategias presentes en los bets (dinamico, no hardcodeado). Prueba `risk_filter` (4 opciones) y `bankroll_mode` (solo para min_dd — irrelevante para max_roi/max_pl/max_wr porque usan metricas flat).
+2. **Phase 2**: adjustments realistas (7,776 combos): dedup, min/max odds, slippage, conflict filter, stability, minute ranges.
+3. **Phase 2.5**: re-check post-adj — steepest descent adicional con adjustments aplicados.
+4. **Phase 3**: momentum minute range (5 opciones).
+5. **Phase 4**: cashout pct (9 opciones).
+
+Produce la configuracion optima segun el criterio seleccionado (max_roi, max_pl, max_wr, min_dd).
 
 ## 5 Background tasks del backend
 
@@ -200,7 +201,7 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config. Hardcodeados identicos en backtest y live.
 2. **Cache key parcial**: analyze_cartera() cache incluye min_duration + enabled states de todas las estrategias del registry. Cambios de parametros config distintos de enabled/min_duration requieren invalidacion manual (limpiar _result_cache).
 3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
-4. **Portfolio optimizer auto-desactiva xg/drift**: El optimizer_cli decide que el portfolio optimo no incluye xg_underperformance y odds_drift (mejoran WR y ROI excluyendolos). Es comportamiento correcto del optimizer, no un bug.
+4. **Portfolio optimizer dinamico**: El optimizer_cli usa steepest descent forward+backward sobre TODAS las estrategias (ya no hay 7 hardcodeadas). Puede desactivar cualquier estrategia que perjudique al portfolio. `bankroll_mode` solo se prueba para `min_dd` (para max_roi/max_pl/max_wr es irrelevante porque usan metricas flat).
 6. **Deduplicacion de mercado** (implementado 2026-03-13, actualizado 2026-03-16): Una sola apuesta por mercado por partido. `_STRATEGY_MARKET` en csv_reader.py define los grupos. Primera estrategia en disparar (por minuto) tiene prioridad. LIVE dedup es siempre-activo via Pass 5 en `_apply_realistic_adjustments()`. Para ver los grupos actuales, leer `_STRATEGY_MARKET` en csv_reader.py:372.
 
 ## placed_bets.csv — estado 2026-03-13

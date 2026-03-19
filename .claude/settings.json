@@ -53,7 +53,9 @@
       "Bash(python3:*)",
       "Bash(jq \".strategies | to_entries[] | select\\(.key | test\\(\"\"^cs_\"\"\\)\\) | {key: .key, value: .value}\" /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/cartera_config.json)",
       "Bash(python auxiliar/analyze_goal_recency.py)",
-      "Bash(python auxiliar/analyze_goal_recency_deep.py)"
+      "Bash(python auxiliar/analyze_goal_recency_deep.py)",
+      "Bash(python tests/test_optimizer_dynamic.py)",
+      "Bash(python tests/test_system_integrity.py)"
     ],
     "additionalDirectories": [
       "c:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\dashboard\\frontend\\src\\components",

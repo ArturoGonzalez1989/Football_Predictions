@@ -483,27 +483,28 @@ Cada ejecucion genera un preset: un fichero de configuracion completo optimizado
 
 El optimizador de portfolio ejecuta 5 sub-fases. Vamos a verlas:
 
-#### Sub-Phase 1: Probar combinaciones on/off (2,048 combinaciones)
+#### Sub-Phase 1: Steepest descent dinamico sobre todas las estrategias
 
-El codigo esta en `optimize.py`, funcion `_phase1_worker()` (linea 477).
+El codigo esta en `optimize.py`, funciones `_steepest_descent()` y `_eval_dynamic()`, y en `optimizer_cli.py`, funcion `_run_phase1()`.
 
-De las 32 estrategias, solo 7 (las "originales") participan en el juego de on/off del portfolio:
-- `back_draw_00`, `xg_underperformance`, `odds_drift`, `goal_clustering`, `pressure_cooker`, `tarde_asia`, `momentum_xg`
+**Todas** las estrategias presentes en los bets participan en el on/off — no hay listas hardcodeadas. El optimizer descubre dinamicamente que estrategias hay y puede desactivar cualquiera.
 
-Las otras 25 estan siempre incluidas (su activacion/desactivacion ya se decidio en Phase 1 individual).
+El proceso tiene dos pasos:
 
-Para estas 7 estrategias, se prueban todas las combinaciones de encenderlas o apagarlas (2^7 = 128). Ademas, para cada combinacion se prueban:
-- 4 modos de gestion de bankroll: `fixed` (stake fijo al 2%), `half_kelly` (criterio Kelly/2), `dd_protection` (reduce stake en drawdowns), `anti_racha` (reduce tras rachas perdedoras).
-- 4 filtros de riesgo: `all` (todo), `no_risk` (solo bajo riesgo), `with_risk` (solo medio/alto riesgo), `medium`.
+**Paso 1: Encontrar el mejor risk_filter (y bankroll_mode para min_dd)**
 
-Total: 128 x 4 x 4 = **2,048 combinaciones**.
+Se prueban las 4 opciones de risk_filter (`all`, `no_risk`, `with_risk`, `medium`) con todas las estrategias encendidas. Para `min_dd` tambien se prueban los 4 modos de bankroll (`fixed`, `half_kelly`, `dd_protection`, `anti_racha`). Para los otros tres criterios el bankroll_mode es irrelevante (sus scores usan metricas flat que no dependen del modo de bankroll).
 
-Para cada una:
-1. Se recogen todas las apuestas de las estrategias activadas (las bets ya existen, generadas previamente por `analyze_cartera()`).
-2. Se aplica un filtro de cuotas minimas por estrategia (`_meets_min_odds()` — hay cuotas minimas hardcodeadas en `MIN_ODDS` para las 7 originales, como 1.93 para back_draw_00).
-3. Se ordenan cronologicamente.
-4. Se aplica el filtro de riesgo.
-5. Si quedan al menos 15 apuestas, se simula el bankroll completo (`_simulate_cartera_py()`, explicada abajo) y se calcula un score.
+Total: 4 combos para max_roi/max_pl/max_wr, o 16 para min_dd.
+
+**Paso 2: Forward+backward steepest descent**
+
+Con el mejor risk_filter y bankroll_mode fijados, el algoritmo optimiza que estrategias activar/desactivar:
+
+- **Backward pass**: empieza con todas encendidas. En cada iteracion, prueba apagar cada estrategia activa individualmente. La que mas mejora el score al apagarla, se apaga. Repite hasta que ninguna desactivacion mejora.
+- **Forward pass**: luego prueba re-encender cada estrategia desactivada. Si reactivar alguna mejora el score, se reactiva. Esto rompe optimos locales donde desactivar A fue bueno pero desactivar A+B juntas fue excesivo.
+
+Con ~17 estrategias supervivientes y ~5 pases, son ~170 evaluaciones (vs 2,048 de la fuerza bruta anterior). Ademas, cubre TODAS las estrategias, no solo 7.
 
 El score depende del criterio:
 
@@ -514,23 +515,17 @@ El score depende del criterio:
 | `max_wr` | Wilson CI lower bound | Probabilidad minima de ganar |
 | `min_dd` | (P/L gestionado - 2×maxDD + WR×0.5) × confianza | Minimizar perdidas |
 
-Donde **confianza** = `min(1.0, N/60)` — una penalizacion para portfolios con pocas apuestas (si tienes solo 20 bets, tu confianza es 20/60 = 0.33, asi que tu score se reduce a un tercio).
+Donde **confianza** = `min(1.0, N/60)` — penaliza portfolios con pocas apuestas.
 
-**Simulacion de bankroll** (`_simulate_cartera_py()` en optimize.py, linea 351):
+**Simulacion de bankroll** (`_simulate_cartera_py()` en optimize.py):
 
-Simula recorrer las apuestas una a una, como si estuvieras apostando de verdad con un bankroll real. Para cada bet:
-- Calcula el stake segun el modo de bankroll elegido (por ejemplo, 2% del bankroll actual).
-- Aplica el P/L (ajustado por la proporcion stake/10 — las bets del backtest asumen stake=10).
-- Actualiza el bankroll, trackea pico, drawdown, wins/losses.
-- Al final devuelve: total bets, wins, win%, flat P/L, flat ROI, managed P/L, max drawdown.
-
-**Paralelizacion**: Las 2,048 combinaciones se dividen en 4 chunks (por pares draw x xg) y se ejecutan en paralelo usando `ProcessPoolExecutor`.
+Simula recorrer las apuestas una a una con un bankroll real. Para cada bet calcula el stake segun el modo de bankroll, aplica el P/L, actualiza bankroll, trackea pico y drawdown. Devuelve: total bets, wins, win%, flat P/L, flat ROI, managed P/L, max drawdown.
 
 #### Sub-Phase 2: Ajustes realistas (7,776 combinaciones)
 
-El codigo esta en `optimize.py`, funcion `_phase2_worker()` (linea 541).
+El codigo esta en `optimize.py`, funcion `_phase2_worker()`.
 
-Dado el mejor combo de Sub-Phase 1 (que estrategias on, que modo de bankroll, que filtro de riesgo), ahora se optimizan los **ajustes realistas** del portfolio. Estos son filtros y correcciones que hacen la simulacion mas parecida a la realidad:
+Dado el resultado de Sub-Phase 1 (que estrategias on, que risk_filter, que bankroll_mode), ahora se optimizan los **ajustes realistas** del portfolio. Son filtros y correcciones que hacen la simulacion mas parecida a la realidad:
 
 ```
 dedup:             [false, true]
@@ -568,23 +563,17 @@ global_min/max:    [(null,null), (15,85), (20,80)]
    Rango global de minutos: solo aceptar apuestas entre estos minutos.
 ```
 
-Total: 2 × 3 × 3 × 3 × 2 × 2 × 3 × 3 × 3 = **7,776 combinaciones**.
+Total: 2 x 3 x 3 x 3 x 2 x 2 x 3 x 3 x 3 = **7,776 combinaciones**.
 
-Cada una se aplica sobre las bets del combo ganador, se filtra por riesgo, se simula bankroll, y se puntua.
+Cada una se aplica sobre las bets activas, se filtra por riesgo, se simula bankroll, y se puntua.
 
-#### Sub-Phase 2.5: Desactivacion por descenso (steepest descent)
+#### Sub-Phase 2.5: Re-check post-adjustments
 
-El codigo esta en `optimizer_cli.py`, funcion `_run_phase25()` (linea 422).
+El codigo esta en `optimizer_cli.py`, funcion `_run_phase25()`.
 
-Sub-Phase 1 eligio que estrategias activar **sin considerar los adjustments**. Ahora que tenemos los adjustments optimos, puede que alguna estrategia ya no aporte al portfolio (porque sus bets son filtradas por los adjustments).
+Sub-Phase 1 eligio que estrategias activar **sin considerar los adjustments**. Ahora que tenemos los adjustments optimos, puede que alguna estrategia ya no aporte (porque sus bets son filtradas por los adjustments). Se ejecuta otro steepest descent forward+backward con los adjustments aplicados.
 
-El algoritmo es iterativo:
-1. Calcula el score actual del portfolio completo (con adjustments).
-2. Para cada estrategia activa: "que pasaria si la apago?"
-3. Si apagar alguna mejora el score: apaga la que mas mejora y repite.
-4. Para cuando ninguna desactivacion mejora (o tras 5 iteraciones).
-
-Si el combo cambio, se **re-ejecuta Sub-Phase 2** con el combo actualizado (Phase 2b) para re-optimizar los adjustments.
+Si el conjunto de desactivadas cambio, se **re-ejecuta Sub-Phase 2** con el nuevo conjunto para re-optimizar los adjustments.
 
 #### Sub-Phase 3: Rango de minutos para momentum (5 opciones)
 
