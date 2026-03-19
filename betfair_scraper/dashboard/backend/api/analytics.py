@@ -70,6 +70,10 @@ def _save_telegram_state(state: dict) -> None:
 # Inicializar desde disco al arrancar el módulo
 _telegram_signal_messages: dict = _load_telegram_state()  # type: dict[str, int]
 
+# In-memory snapshot of the last signal dict per sig_key — used to rebuild message
+# content when marking a signal as DESCARTADA on expiry (not persisted across restarts).
+_telegram_signal_data: dict = {}  # type: dict[str, dict]
+
 # Retraso adicional tras madurez de señal antes de colocar la apuesta paper.
 # 0 = se coloca en cuanto la señal alcanza min_dur (sin delay artificial).
 PAPER_REACTION_DELAY_MINS = 0
@@ -592,6 +596,17 @@ def run_paper_auto_place() -> dict:
         checked = 0
         _n_filtered_audit = len(raw_signals) - len(filtered_signals)
 
+        # Build set of market keys already placed (in-memory + persistent) to suppress
+        # duplicate previews when a second strategy targets the same market after the first was placed.
+        _placed_market_keys: set = set(_auto_placed_keys)
+        try:
+            if _PLACED_BETS_CSV.exists():
+                with open(_PLACED_BETS_CSV, 'r', encoding='utf-8') as _f:
+                    for _row in csv.DictReader(_f):
+                        _placed_market_keys.add(_live_market_key(_row))
+        except Exception:
+            pass
+
         # Conflict filter: skip momentum_xg when xg_underperformance is also mature+favorable
         # for the same match (0% WR pair — ported from frontend BettingSignalsView)
         xg_underperf_mature_matches = {
@@ -624,8 +639,9 @@ def run_paper_auto_place() -> dict:
                 if placed_ok:
                     placed += 1
                 elif msg_id:
-                    # Mercado ya ocupado por otra estrategia: limpiar preview de Telegram
-                    _tg.delete_message(msg_id)
+                    # Mercado ya ocupado por otra estrategia: marcar preview como DESCARTADA
+                    sig_snap = _telegram_signal_data.pop(sig_key, None)
+                    _tg.mark_signal_discarded(msg_id, sig_snap, flat_stake)
             else:
                 # Señal activa pero no madura aún (espera min_duration) o cuota desfavorable
                 if not sig.get("odds_favorable", True):
@@ -639,19 +655,26 @@ def run_paper_auto_place() -> dict:
                     except Exception as e:
                         _log.debug(f"Audit log_signal_maturing failed: {e}")
                     # ── Telegram: ciclo de vida pre-madurez ──
-                    try:
-                        if sig_key not in _telegram_signal_messages:
-                            msg_id = _tg.send_signal_preview(sig, needed, flat_stake)
-                            if msg_id:
-                                _telegram_signal_messages[sig_key] = msg_id
-                                _save_telegram_state(_telegram_signal_messages)
-                        else:
-                            _tg.update_signal_preview(_telegram_signal_messages[sig_key], sig, needed, flat_stake)
-                    except Exception as e:
-                        _log.debug(f"Telegram preview lifecycle failed: {e}")
+                    # Skip preview if this market was already placed by another strategy
+                    _preview_market_key = _live_market_key(sig)
+                    if _preview_market_key in _placed_market_keys:
+                        pass  # market slot taken; suppress preview to avoid duplicate signals
+                    else:
+                        try:
+                            if sig_key not in _telegram_signal_messages:
+                                msg_id = _tg.send_signal_preview(sig, needed, flat_stake)
+                                if msg_id:
+                                    _telegram_signal_messages[sig_key] = msg_id
+                                    _telegram_signal_data[sig_key] = sig
+                                    _save_telegram_state(_telegram_signal_messages)
+                            else:
+                                _tg.update_signal_preview(_telegram_signal_messages[sig_key], sig, needed, flat_stake)
+                                _telegram_signal_data[sig_key] = sig
+                        except Exception as e:
+                            _log.debug(f"Telegram preview lifecycle failed: {e}")
                 _n_filtered_audit += 1
 
-        # ── Telegram: borrar mensajes de señales que ya no están en filtered_signals ──
+        # ── Telegram: marcar como DESCARTADA señales que ya no están en filtered_signals ──
         # Siempre elimina del dict+fichero aunque la llamada a Telegram falle (no reintentar indefinidamente)
         try:
             current_filtered_keys = {f"{s.get('match_id')}_{s.get('strategy')}" for s in filtered_signals}
@@ -659,8 +682,9 @@ def run_paper_auto_place() -> dict:
             if telegram_expired_keys:
                 for exp_key in telegram_expired_keys:
                     msg_id = _telegram_signal_messages.pop(exp_key, None)
+                    sig_snap = _telegram_signal_data.pop(exp_key, None)
                     if msg_id:
-                        _tg.delete_message(msg_id)  # fallo capturado en telegram_notifier, no reintentamos
+                        _tg.mark_signal_discarded(msg_id, sig_snap, flat_stake)
                 _save_telegram_state(_telegram_signal_messages)
         except Exception as e:
             _log.debug(f"Telegram message cleanup failed: {e}")

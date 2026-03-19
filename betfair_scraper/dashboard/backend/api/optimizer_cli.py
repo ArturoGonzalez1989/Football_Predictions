@@ -236,9 +236,13 @@ def _build_preset_config(combo: dict, adj: dict, risk_filter: str,
     strategies = {k: dict(v) if isinstance(v, dict) else v
                   for k, v in _base_strategies.items()}
 
-    # Apply on/off from combo
+    # Apply on/off from combo.
+    # Respect quality gates: if staging disabled a strategy (failed phase1/2), never re-enable it.
     for combo_key, reg_key in _COMBO_TO_REGISTRY.items():
         enabled = combo.get(combo_key, "off") != "off"
+        base_entry = _base_strategies.get(reg_key, {})
+        if isinstance(base_entry, dict) and not base_entry.get("enabled", True):
+            enabled = False  # failed quality gates — keep disabled regardless of combo
         if reg_key in strategies and isinstance(strategies[reg_key], dict):
             strategies[reg_key]["enabled"] = enabled
         else:

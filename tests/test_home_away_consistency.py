@@ -1,70 +1,43 @@
 """
-test_home_away_consistency.py — Detecta y opcionalmente corrige CSVs de partidos
-donde el orden URL (local/visitante) NO coincide con la designación Betfair HOME/AWAY.
+test_home_away_consistency.py -- Detecta y clasifica CSVs de partidos con inconsistencias
+entre odds HOME/AWAY y el marcador local/visitante.
 
-Síntoma:  back_home > back_away cuando goles_local > goles_visitante
-          (el equipo que va ganando tiene cuota más alta que el perdedor — imposible en mercado líquido)
+Tres categorias de salida:
 
-Causa:    El scraper construye la URL en un orden, pero Betfair asigna HOME/AWAY
-          de forma independiente. En algunos mercados (MLS, torneos neutrales, etc.)
-          el equipo URL-first es el Betfair AWAY.
+  FIXABLE  -- >70% de filas decisivas invertidas: el swap global mejora el archivo.
+              Accion: python fixes/fix_home_away_swap.py
 
-Fix:      Intercambiar los pares de columnas afectados en todo el archivo CSV:
-          - back_home  ↔  back_away
-          - lay_home   ↔  lay_away
-          - back_rc_X_Y ↔ back_rc_Y_X  (para todos los RC no simétricos)
-          - lay_rc_X_Y  ↔ lay_rc_Y_X
+  DELETE   -- 25-70% invertidas con muestra suficiente (>=10 filas): datos mixtos
+              irrecuperables que ensucian el backtest.
+              Accion: python fixes/fix_delete_inconsistent.py
+
+  BORDERLINE -- 15-25% invertidas, o >25% con muestra pequeña (<10 filas):
+              dudosas, no se toman acciones automaticas.
 
 Uso:
-    python tests/test_home_away_consistency.py            # solo detecta
-    python tests/test_home_away_consistency.py --fix      # detecta y corrige
-    python tests/test_home_away_consistency.py --verbose  # muestra detalle por CSV
+    python tests/test_home_away_consistency.py            # resumen
+    python tests/test_home_away_consistency.py --verbose  # detalle por CSV
 """
 
 import sys
 import csv
-import shutil
+import io
 from pathlib import Path
-from datetime import datetime
 
-ROOT      = Path(__file__).resolve().parent.parent
-DATA_DIR  = ROOT / "betfair_scraper" / "data"
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-# ── Configuración de detección ────────────────────────────────────────────────
-MIN_DECISIVE_ROWS = 3      # Mínimo de filas con marcador definido para evaluar
-INVERSION_THRESHOLD = 0.70 # Si >70% de las filas decisivas tienen odds invertidas → flag
+ROOT     = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT / "betfair_scraper" / "data"
 
-# ── Pares de columnas a intercambiar ─────────────────────────────────────────
-# Pares simétricos (1-0 ↔ 0-1, 2-0 ↔ 0-2, etc.) — scores donde home≠away
-RC_SWAP_PAIRS = [
-    ("1_0", "0_1"),
-    ("2_0", "0_2"),
-    ("2_1", "1_2"),
-    ("3_0", "0_3"),
-    ("3_1", "1_3"),
-    ("3_2", "2_3"),
-]
-
-def _build_swap_map() -> dict:
-    """Construye el mapping completo de columnas a intercambiar."""
-    m = {
-        "back_home": "back_away",
-        "back_away": "back_home",
-        "lay_home":  "lay_away",
-        "lay_away":  "lay_home",
-    }
-    for a, b in RC_SWAP_PAIRS:
-        for prefix in ("back_rc_", "lay_rc_"):
-            col_a = f"{prefix}{a}"
-            col_b = f"{prefix}{b}"
-            m[col_a] = col_b
-            m[col_b] = col_a
-    return m
-
-SWAP_MAP = _build_swap_map()
+# Umbrales
+MIN_DECISIVE_ROWS  = 3     # minimo de filas decisivas para evaluar
+FIXABLE_THRESHOLD  = 0.70  # >= 70%  -> FIXABLE
+DELETE_THRESHOLD   = 0.25  # >= 25% (con >=10 filas) -> DELETE
+DELETE_MIN_ROWS    = 10    # minimo filas decisivas para marcar DELETE
+BORDERLINE_LO      = 0.15  # >= 15% -> al menos BORDERLINE
 
 
-def _to_float(val: str):
+def _to_float(val):
     try:
         return float(val)
     except (TypeError, ValueError):
@@ -73,121 +46,83 @@ def _to_float(val: str):
 
 def analyze_csv(path: Path) -> dict:
     """
-    Analiza un CSV de partido y devuelve:
-      {
-        "decisive": int,      # filas con marcador definido y odds disponibles
-        "inverted": int,      # de esas, cuántas tienen odds invertidas
-        "ratio": float,       # inverted / decisive
-        "is_reversed": bool,  # True si ratio > INVERSION_THRESHOLD
-        "examples": list,     # hasta 3 filas de ejemplo
-      }
+    Lee un CSV y devuelve:
+      decisive    -- filas con marcador definido y ambas odds disponibles
+      inverted    -- de esas, cuantas tienen odds inconsistentes con el marcador
+      ratio       -- inverted / decisive
+      category    -- "clean" | "borderline" | "delete" | "fixable" | "skip"
+      examples    -- hasta 2 filas de ejemplo
     """
-    decisive = 0
-    inverted = 0
+    ok = bad = 0
     examples = []
 
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                gl = _to_float(row.get("goles_local", ""))
-                gv = _to_float(row.get("goles_visitante", ""))
-                bh = _to_float(row.get("back_home", ""))
-                ba = _to_float(row.get("back_away", ""))
+            for row in csv.DictReader(f):
+                gl = _to_float(row.get("goles_local"))
+                gv = _to_float(row.get("goles_visitante"))
+                bh = _to_float(row.get("back_home"))
+                ba = _to_float(row.get("back_away"))
 
-                if gl is None or gv is None or bh is None or ba is None:
+                if None in (gl, gv, bh, ba) or gl == gv:
                     continue
-                if gl == gv:
-                    continue  # empate: no podemos determinar dirección
 
-                decisive += 1
-                min_ = row.get("minuto", "?")
-
-                # Inversión: el equipo ganador tiene cuotas MÁS ALTAS que el perdedor
-                # (en un mercado normal, el líder siempre tiene odds menores)
                 is_inv = (gl > gv and bh > ba) or (gv > gl and ba > bh)
                 if is_inv:
-                    inverted += 1
-                    if len(examples) < 3:
+                    bad += 1
+                    if len(examples) < 2:
                         examples.append({
-                            "min": min_,
-                            "score": f"{int(gl)}-{int(gv)}",
+                            "min":       row.get("minuto", "?"),
+                            "score":     f"{int(gl)}-{int(gv)}",
                             "back_home": bh,
                             "back_away": ba,
                         })
+                else:
+                    ok += 1
+
     except Exception as e:
-        return {"error": str(e), "decisive": 0, "inverted": 0, "ratio": 0.0,
-                "is_reversed": False, "examples": []}
+        return {"error": str(e), "decisive": 0, "inverted": 0,
+                "ratio": 0.0, "category": "skip", "examples": []}
 
+    decisive = ok + bad
     if decisive < MIN_DECISIVE_ROWS:
-        return {"decisive": decisive, "inverted": inverted, "ratio": 0.0,
-                "is_reversed": False, "examples": []}
+        return {"decisive": decisive, "inverted": bad, "ratio": 0.0,
+                "category": "skip", "examples": []}
 
-    ratio = inverted / decisive
+    ratio = bad / decisive
+
+    if ratio >= FIXABLE_THRESHOLD:
+        category = "fixable"
+    elif ratio >= DELETE_THRESHOLD and decisive >= DELETE_MIN_ROWS:
+        category = "delete"
+    elif ratio >= BORDERLINE_LO:
+        category = "borderline"
+    else:
+        category = "clean"
+
     return {
-        "decisive": decisive,
-        "inverted": inverted,
-        "ratio": ratio,
-        "is_reversed": ratio >= INVERSION_THRESHOLD,
-        "examples": examples,
+        "decisive":  decisive,
+        "inverted":  bad,
+        "ratio":     ratio,
+        "category":  category,
+        "examples":  examples,
     }
 
 
-def fix_csv(path: Path) -> bool:
-    """
-    Intercambia las columnas home/away en el CSV. Hace backup antes de escribir.
-    Devuelve True si tuvo éxito.
-    """
-    backup = path.with_suffix(f".csv.bak_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-    try:
-        shutil.copy2(path, backup)
-
-        with open(path, encoding="utf-8", errors="replace", newline="") as f:
-            reader = csv.DictReader(f)
-            fieldnames = reader.fieldnames or []
-            rows = list(reader)
-
-        # Aplicar swap en cada fila
-        fixed_rows = []
-        for row in rows:
-            new_row = dict(row)
-            for col_src, col_dst in SWAP_MAP.items():
-                if col_src in row and col_dst in row:
-                    # Solo intercambiamos una vez por par (el bucle cubre ambas direcciones)
-                    pass  # handled below via snapshot
-            # Snapshot para hacer el swap sin side-effects
-            snapshot = dict(row)
-            for col_src, col_dst in SWAP_MAP.items():
-                if col_src in snapshot and col_dst in snapshot:
-                    new_row[col_src] = snapshot[col_dst]
-            fixed_rows.append(new_row)
-
-        with open(path, "w", encoding="utf-8", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(fixed_rows)
-
-        return True
-    except Exception as e:
-        print(f"    ERROR al corregir {path.name}: {e}")
-        # Restaurar backup si algo falló
-        if backup.exists():
-            shutil.copy2(backup, path)
-        return False
-
-
 def main():
-    fix_mode = "--fix" in sys.argv
-    verbose  = "--verbose" in sys.argv
+    verbose = "--verbose" in sys.argv
 
     csvs = sorted(DATA_DIR.glob("partido_*.csv"))
     if not csvs:
         print(f"No se encontraron CSVs en {DATA_DIR}")
         sys.exit(1)
 
-    reversed_files = []
-    skipped = 0
-    errors  = 0
+    fixable    = []
+    deletable  = []
+    borderline = []
+    skipped    = 0
+    errors     = 0
+    clean      = 0
 
     for path in csvs:
         result = analyze_csv(path)
@@ -195,65 +130,75 @@ def main():
         if "error" in result:
             errors += 1
             if verbose:
-                print(f"  ERROR  {path.name}: {result['error']}")
+                print(f"  ERROR      {path.name}: {result['error']}")
             continue
 
-        if result["decisive"] < MIN_DECISIVE_ROWS:
+        cat = result["category"]
+
+        if cat == "skip":
             skipped += 1
-            continue
-
-        if result["is_reversed"]:
-            reversed_files.append((path, result))
-
-        if verbose and result["decisive"] > 0:
-            flag = "⚠ INVERTIDO" if result["is_reversed"] else "✓"
-            print(f"  {flag}  {path.name}  "
-                  f"({result['inverted']}/{result['decisive']} = {result['ratio']:.0%} invertidas)")
-            if result["is_reversed"] and result["examples"]:
+        elif cat == "clean":
+            clean += 1
+            if verbose:
+                print(f"  [clean]    {path.name}")
+        elif cat == "fixable":
+            fixable.append((path, result))
+            if verbose:
+                print(f"  [FIXABLE]  {path.name}"
+                      f"  ({result['inverted']}/{result['decisive']}"
+                      f" = {result['ratio']:.0%})")
+        elif cat == "delete":
+            deletable.append((path, result))
+            if verbose:
+                print(f"  [DELETE]   {path.name}"
+                      f"  ({result['inverted']}/{result['decisive']}"
+                      f" = {result['ratio']:.0%})")
                 for ex in result["examples"]:
-                    print(f"         min={ex['min']} score={ex['score']} "
-                          f"back_home={ex['back_home']} back_away={ex['back_away']}")
+                    print(f"             min={ex['min']} score={ex['score']}"
+                          f" back_home={ex['back_home']} back_away={ex['back_away']}")
+        elif cat == "borderline":
+            borderline.append((path, result))
+            if verbose:
+                print(f"  [border]   {path.name}"
+                      f"  ({result['inverted']}/{result['decisive']}"
+                      f" = {result['ratio']:.0%})")
 
-    # ── Resumen ───────────────────────────────────────────────────────────────
-    total = len(csvs)
-    print(f"\nCSVs analizados : {total}")
-    print(f"Sin datos suficientes: {skipped}")
-    print(f"Con errores de lectura: {errors}")
-    print(f"Con inversión HOME/AWAY detectada: {len(reversed_files)}")
+    # -- Resumen ---------------------------------------------------------------
+    total  = len(csvs)
+    issues = len(fixable) + len(deletable)
 
-    if reversed_files:
-        print("\nArchivos con odds HOME/AWAY invertidas:")
-        for path, result in reversed_files:
-            print(f"  ⚠  {path.name}  "
-                  f"({result['inverted']}/{result['decisive']} = {result['ratio']:.0%})")
-            if result["examples"]:
-                ex = result["examples"][0]
-                print(f"     Ej. min={ex['min']} score={ex['score']} "
-                      f"back_home={ex['back_home']} back_away={ex['back_away']}")
+    print(f"\nCSVs analizados  : {total}")
+    print(f"  Limpios        : {clean}")
+    print(f"  Sin datos      : {skipped}")
+    print(f"  Borderline     : {len(borderline)}  (15-25% inconsistencia o muestra pequenya)")
+    print(f"  FIXABLE        : {len(fixable)}  (>70% invertidas -- swap global posible)")
+    print(f"  DELETE         : {len(deletable)}  (25-70% invertidas, >=10 filas -- irrecuperables)")
 
-    # ── Fix ───────────────────────────────────────────────────────────────────
-    if fix_mode and reversed_files:
-        print(f"\nAplicando fix (swap back_home↔back_away + RC simétricos) en "
-              f"{len(reversed_files)} archivo(s)…")
-        fixed = 0
-        for path, result in reversed_files:
-            ok = fix_csv(path)
-            status = "✓ corregido" if ok else "✗ error"
-            print(f"  {status}  {path.name}")
-            if ok:
-                fixed += 1
-        print(f"\n{fixed}/{len(reversed_files)} archivos corregidos.")
-        print("Backup de cada archivo guardado junto al original (.csv.bak_*).")
-    elif fix_mode and not reversed_files:
-        print("\nNo hay archivos que corregir.")
-    elif not fix_mode and reversed_files:
-        print("\nEjecuta con --fix para aplicar la corrección automáticamente.")
+    if fixable:
+        print(f"\n[FIXABLE] Archivos corregibles por swap ({len(fixable)}):")
+        for path, r in fixable:
+            print(f"  {path.name}"
+                  f"  ({r['inverted']}/{r['decisive']} = {r['ratio']:.0%})")
+        print("\n  -> Ejecuta: python fixes/fix_home_away_swap.py")
 
-    # ── Resultado del test ────────────────────────────────────────────────────
-    passed = total - len(reversed_files) - skipped - errors
-    failed = len(reversed_files)
+    if deletable:
+        print(f"\n[DELETE] Archivos con datos insalvables ({len(deletable)}):")
+        for path, r in sorted(deletable, key=lambda x: x[1]["ratio"], reverse=True):
+            print(f"  {path.name}"
+                  f"  ({r['inverted']}/{r['decisive']} = {r['ratio']:.0%})")
+        print("\n  -> Ejecuta: python fixes/fix_delete_inconsistent.py")
+
+    if borderline and verbose:
+        print(f"\n[BORDERLINE] Archivos con inconsistencia leve ({len(borderline)}):")
+        for path, r in sorted(borderline, key=lambda x: x[1]["ratio"], reverse=True):
+            print(f"  {path.name}"
+                  f"  ({r['inverted']}/{r['decisive']} = {r['ratio']:.0%})")
+
+    # -- Resultado del test ----------------------------------------------------
+    # El test FALLA si hay FIXABLE o DELETE (requieren accion)
+    passed = clean + skipped
+    failed = issues
     print(f"\nResultados: {passed} passed, {failed} failed")
-
     sys.exit(0 if failed == 0 else 1)
 
 

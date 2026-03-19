@@ -1513,6 +1513,12 @@ def extraer_estadisticas(driver, cached_event_id: str = None) -> dict:
         log.debug("  → Obteniendo estadísticas de la API...")
         all_stats = get_all_stats(event_id)
 
+        # Guardar raw Opta snapshot en el driver para que capturar() lo incluya en evidencias
+        try:
+            driver._last_opta_raw = all_stats
+        except Exception:
+            pass
+
         if not all_stats or not all_stats.get('summary'):
             log.warning("  × No hay estadísticas disponibles en la API")
             return stats
@@ -2427,6 +2433,29 @@ class MatchDriver:
                             _exact_shot = os.path.join(OUTPUT_DIR, f"screenshot_{self.match_id}_{_req_min}.png")
                             _src_shot = _exact_shot if os.path.exists(_exact_shot) else screenshot_path
                             _shutil2.copy2(_src_shot, os.path.join(_evidencias_dir, _fname))
+
+                            # Guardar raw Opta JSON (stats completos del momento del trigger)
+                            try:
+                                import gzip as _gzip
+                                _opta_raw = getattr(self.driver, '_last_opta_raw', None)
+                                if _opta_raw:
+                                    _opta_fname = f"{self.match_id}_min{_req.get('minute')}_{_req.get('strategy')}_{_ts}.opta.json"
+                                    with open(os.path.join(_evidencias_dir, _opta_fname), 'w', encoding='utf-8') as _sf:
+                                        _json2.dump(_opta_raw, _sf, ensure_ascii=False, indent=2)
+                                    log.info(f"[EVIDENCIA] Opta JSON guardado: {_opta_fname}")
+                            except Exception as _oe:
+                                log.debug(f"[{self.match_id}] Opta snapshot error: {_oe}")
+
+                            # Guardar HTML comprimido (cuotas de todos los mercados)
+                            try:
+                                import gzip as _gzip
+                                _html_fname = f"{self.match_id}_min{_req.get('minute')}_{_req.get('strategy')}_{_ts}.html.gz"
+                                with _gzip.open(os.path.join(_evidencias_dir, _html_fname), 'wt', encoding='utf-8') as _hf:
+                                    _hf.write(self.driver.page_source)
+                                log.info(f"[EVIDENCIA] HTML DOM guardado: {_html_fname}")
+                            except Exception as _he:
+                                log.debug(f"[{self.match_id}] HTML snapshot error: {_he}")
+
                             os.remove(_req_path)
                             log.info(f"[EVIDENCIA] Captura de señal guardada: {_fname}")
                         except Exception as _re:

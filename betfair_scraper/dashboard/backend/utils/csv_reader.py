@@ -502,23 +502,23 @@ def _analyze_strategy_simple(key: str, trigger_fn, extractor_fn, win_fn,
                     first_seen = curr_idx
                     trig_data = trig
                 if curr_idx >= first_seen + min_dur - 1:
-                    extracted = extractor_fn(trig_data)
+                    extracted = extractor_fn(trig)
                     if extracted is None:
                         break
                     odds, rec, entry_cond = extracted
-                    won = win_fn(trig_data, ft_gl, ft_gv)
+                    won = win_fn(trig, ft_gl, ft_gv)
                     is_lay = rec.upper().startswith("LAY")
                     if is_lay:
                         pl = round(0.95 if won else -(odds - 1), 2)
                     else:
                         pl = round((odds - 1) * 0.95 if won else -1.0, 2)
                     try:
-                        minuto = int(float(rows[first_seen].get("minuto") or 0))
+                        minuto = int(float(rows[curr_idx].get("minuto") or 0))
                     except (ValueError, TypeError):
                         minuto = 0
                     try:
-                        _gl_bet = int(float(rows[first_seen].get("goles_local") or 0))
-                        _gv_bet = int(float(rows[first_seen].get("goles_visitante") or 0))
+                        _gl_bet = int(float(rows[curr_idx].get("goles_local") or 0))
+                        _gv_bet = int(float(rows[curr_idx].get("goles_visitante") or 0))
                         score_bet = f"{_gl_bet}-{_gv_bet}"
                     except (ValueError, TypeError):
                         score_bet = ""
@@ -533,9 +533,9 @@ def _analyze_strategy_simple(key: str, trigger_fn, extractor_fn, win_fn,
                         "pl": pl,
                         "score_bet": score_bet,
                         "score_final": f"{ft_gl}-{ft_gv}",
-                        "País": rows[first_seen].get("País", "Desconocido"),
-                        "Liga": rows[first_seen].get("Liga", "Desconocida"),
-                        "timestamp_utc": rows[first_seen].get("timestamp_utc", ""),
+                        "País": rows[curr_idx].get("País", "Desconocido"),
+                        "Liga": rows[curr_idx].get("Liga", "Desconocida"),
+                        "timestamp_utc": rows[curr_idx].get("timestamp_utc", ""),
                     })
                     break
             else:
@@ -974,13 +974,13 @@ def analyze_cartera() -> dict:
         return {"bets": nn, "wins": ww,
                 "win_pct": round(ww / nn * 100, 1) if nn else 0,
                 "pl": round(pp, 2),
-                "roi": round(pp / (nn * 10) * 100, 1) if nn else 0}
+                "roi": round(pp / nn * 100, 1) if nn else 0}
 
     result = {
         "total_bets": n,
         "flat": {
             "pl": flat_pl,
-            "roi": round(flat_pl / (n * 10) * 100, 1) if n else 0,
+            "roi": round(flat_pl / n * 100, 1) if n else 0,
             "cumulative": flat_cum,
         },
         "managed": {

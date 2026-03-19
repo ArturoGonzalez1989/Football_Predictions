@@ -229,6 +229,85 @@ def delete_message(message_id: int) -> bool:
         return False
 
 
+def mark_signal_discarded(message_id: int, sig: dict | None, stake: float) -> bool:
+    """Edit an existing preview message to show it was discarded (signal expired or market taken).
+    Preserves the full message content but replaces the title with ❌ ... — DESCARTADA.
+    Falls back to delete_message if sig is not available.
+    Returns True if the edit succeeded."""
+    if not message_id:
+        return False
+    if sig is None:
+        return delete_message(message_id)
+    _load_env_if_needed()
+    if not _TOKEN or not _CHAT_ID:
+        return False
+    try:
+        bet_type      = sig.get("bet_type", "BACK").upper()
+        strategy_name = sig.get("strategy_name", "")
+        match_name    = sig.get("match_name", "")
+        match_url     = sig.get("match_url", "")
+        minute        = sig.get("minute", "?")
+        score         = sig.get("score", "?")
+        back_odds     = sig.get("back_odds", "?")
+        min_odds      = sig.get("min_odds")
+        wr            = sig.get("win_rate_historical")
+        sample_size   = sig.get("sample_size")
+        rec           = sig.get("recommendation", "")
+        rec_action    = rec.rsplit(" @ ", 1)[0]
+        entry_conditions = sig.get("entry_conditions") or {}
+
+        match_line = f"[{match_name}]({match_url})" if match_url else match_name
+        odds_str   = f"{back_odds:.2f}" if isinstance(back_odds, (int, float)) else str(back_odds)
+        if min_odds is not None:
+            _min_fmt = str(int(min_odds)) if min_odds == int(min_odds) else f"{min_odds:.2f}"
+            min_str = f" | mín: {_min_fmt}"
+        else:
+            min_str = ""
+
+        stats_parts = []
+        if wr:
+            stats_parts.append(f"WR {wr:.0f}%")
+        if sample_size:
+            stats_parts.append(f"N={sample_size}")
+        stats_line = f"· {' | '.join(stats_parts)}" if stats_parts else None
+
+        cond_lines = []
+        for k, v in entry_conditions.items():
+            if k == "odds":
+                continue
+            label   = k.replace("_", " ").title()
+            val_str = f"{v:.2f}" if isinstance(v, float) else str(v)
+            cond_lines.append(f"  {label}: {val_str}")
+
+        icon = "🔴" if bet_type == "LAY" else "🟢"
+        lines = [
+            f"❌ {icon} *{strategy_name}* — DESCARTADA",
+            "",
+            match_line,
+            f"· {rec_action} @ {odds_str}{min_str}",
+            f"· Min {minute}' | {score}",
+        ]
+        if stats_line:
+            lines.append(stats_line)
+        lines.append(f"· Stake {stake:.2f} EUR")
+        if cond_lines:
+            lines.append("· Params:")
+            lines.extend(cond_lines)
+
+        text = "\n".join(lines)
+        result = _telegram_api("editMessageText", {
+            "chat_id": _CHAT_ID,
+            "message_id": message_id,
+            "text": text,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True,
+        })
+        return bool(result and result.get("ok"))
+    except Exception as e:
+        log.debug(f"Telegram mark_signal_discarded failed: {e}")
+        return False
+
+
 def send_signal(sig: dict, stake: float, message_id: int | None = None) -> bool:
     """Send or edit a Telegram message for a newly placed signal. Never raises.
     If message_id is provided, edits the existing pre-maturity preview.

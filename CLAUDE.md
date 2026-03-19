@@ -122,7 +122,7 @@ Resultados del ultimo run completo (1202 partidos): ver `auxiliar/bt_optimizer_r
 
 bt_optimizer.py features: `_eval_preset_real_stats()` para stats honestas de phase4, `MIN_PRESET_N=200`, `DEFAULT_SELECTOR="robust"`.
 
-**cartera_config.json actual**: 32 estrategias, enabled segun ultimo BT run. El portfolio optimizer (phase3) genera 4 presets para las 7 estrategias "core" (on/off combos). Las otras 25 siempre activas si pasan quality gates.
+**cartera_config.json actual**: 32 estrategias, enabled segun ultimo BT run. El portfolio optimizer (phase3) genera 4 presets via optimizer_cli. Todas las estrategias son iguales, no hay jerarquias ni categorias.
 
 ### phase4_apply — merge inteligente
 

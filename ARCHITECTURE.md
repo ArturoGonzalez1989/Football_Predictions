@@ -364,7 +364,7 @@ Ambos sistemas (backtest y live) parten del mismo CSV. Si un stat es null en una
 
 ### 7.0 Quality Gates (aplicados a TODAS las estrategias)
 
-Tanto las estrategias core como las SD deben pasar 3 quality gates:
+Todas las estrategias deben pasar 3 quality gates:
 
 1. **N >= G_MIN_BETS**: minimo de apuestas (dinamico: `max(15, n_partidos // 25)`, ~46 con 1168 partidos)
 2. **ROI >= G_MIN_ROI** (10%): retorno minimo sobre inversion
@@ -423,7 +423,7 @@ Si una estrategia no pasa alguno de estos gates, se desactiva automaticamente en
 
 ### 7.8 Las 25 estrategias adicionales — completamente integradas
 
-Las 25 estrategias adicionales fueron descubiertas por el agente strategy-designer en varias rondas. Las primeras 19 tenian historicamente el prefijo `sd_`, eliminado en 2026-03-12. Las ultimas 6 (R19) son descubrimientos brute-force posteriores. Todas son entidades completamente independientes e iguales al resto.
+Las 31 estrategias adicionales fueron descubiertas por el agente strategy-designer en varias rondas. Todas son entidades completamente independientes e iguales al resto.
 
 **Integracion completa** (identica a las 7 estrategias originales):
 - Trigger propio `_detect_<name>_trigger()` en `csv_reader.py`
@@ -860,4 +860,4 @@ BettingSignalsView (auto-refresh 10s)
 5. **csv_reader.py** es el fichero mas critico y complejo. Cualquier cambio aqui debe ser quirurgico.
 6. **Testar cambios** comparando output de backtest y senales live con los mismos datos.
 7. **Los params hardcodeados** de Momentum xG y Odds Drift backtest son un problema conocido — no asumir que estan en config.
-8. **SD strategies** son backtest-only. Sus configs estan en `sd_strategies.py` y se integran en presets via `optimizer_cli.py`.
+8. `sd_strategies.py` contiene el evaluador `eval_sd()` para uso del notebook legacy solamente.

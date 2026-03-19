@@ -33,10 +33,31 @@
       "Bash(python auxiliar/league_analysis.py)",
       "Bash(python auxiliar/tier_analysis.py)",
       "Bash(ls -t auxiliar/bt_optimizer_results* auxiliar/bt_optimizer*)",
-      "Bash(python tests/test_home_away_consistency.py --verbose)"
+      "Bash(python tests/test_home_away_consistency.py --verbose)",
+      "Bash(python tests/test_home_away_consistency.py)",
+      "Bash(python fixes/fix_home_away_swap.py auxiliar/test_seattle_copy.csv)",
+      "Bash(python fixes/fix_home_away_swap.py \"C:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/auxiliar/test_seattle_copy.csv\")",
+      "Bash(python fixes/fix_home_away_swap.py)",
+      "Bash(python tests/run_all.py)",
+      "Bash(python fixes/fix_delete_inconsistent.py --dry-run)",
+      "Bash(python fixes/fix_delete_inconsistent.py)",
+      "Bash(ls c:/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/cartera_config*.bak*)",
+      "Bash(python auxiliar/signal_outcome_report.py)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''main.py''\\).read\\(\\)\\); print\\(''OK - sin errores de sintaxis''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''main.py'', encoding=''utf-8''\\).read\\(\\)\\); print\\(''OK - sin errores de sintaxis''\\)\")",
+      "Bash(ls \"c:\\\\Users\\\\agonz\\\\OneDrive\\\\Documents\\\\Proyectos\\\\Furbo\\\\betfair_scraper\\\\evidencias\"\" | grep -E \".opta.json)",
+      "Bash(.html.gz \")",
+      "Bash(python auxiliar/fix_system_auditor.py)",
+      "Bash(grep -rn \"SD strategies\\\\|core strategies\\\\|core\\\\|sd\\\\|7 Core\\\\|9 SD\\\\|10 SD\\\\|SD solo BT\\\\|SD con LIVE\" --include=*.py --include=*.md --include=*.json --include=*.ts --include=*.tsx .)",
+      "Bash(grep -rn \"SD strategies\\\\|core strategies\\\\|7 Core\\\\|9 SD\\\\|10 SD\\\\|SD solo BT\\\\|SD con LIVE\" --include=*.md .)",
+      "Bash(python3:*)",
+      "Bash(jq \".strategies | to_entries[] | select\\(.key | test\\(\"\"^cs_\"\"\\)\\) | {key: .key, value: .value}\" /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/cartera_config.json)",
+      "Bash(python auxiliar/analyze_goal_recency.py)",
+      "Bash(python auxiliar/analyze_goal_recency_deep.py)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\dashboard\\frontend\\src\\components"
+      "c:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\dashboard\\frontend\\src\\components",
+      "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper"
     ]
   }
 }

@@ -107,7 +107,7 @@ _ODDS_KEYS = [
     "back_sot_odds", "back_over15_odds", "lay_false_fav_odds", "lay_draw_odds",
     "lay_over25_odds", "lay_over15_odds", "back_draw", "back_over_odds",
     "over_odds", "back_odds",
-    # SD strategy odds keys
+    # Additional strategy odds keys
     "lay_over45_odds", "back_leader_odds", "back_over25_odds", "back_draw_eq_odds",
     "back_under25_odds", "back_under35_odds", "back_draw_stl_odds",
     "back_draw_conv_odds", "back_over35_odds", "back_over05_odds",

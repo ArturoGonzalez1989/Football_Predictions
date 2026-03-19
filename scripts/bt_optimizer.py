@@ -55,11 +55,13 @@ from api import optimizer_cli
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 CARTERA_CFG   = ROOT / "betfair_scraper" / "cartera_config.json"
+CARTERA_BAK_DIR = ROOT / "backup" / "cartera_config"
 PRESETS_DIR   = ROOT / "betfair_scraper" / "data" / "presets"
 EXPORTS_DIR   = ROOT / "analisis"
 RESULTS_FILE  = ROOT / "auxiliar" / "bt_optimizer_results.json"
 
 PRESETS_DIR.mkdir(parents=True, exist_ok=True)
+CARTERA_BAK_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Estrategias permanentemente excluidas del optimizer ───────────────────────
 # Riesgo asimétrico LAY: pérdidas de hasta (odds-1)x stake vs ganancia máx 1x stake
@@ -300,12 +302,10 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
     # tarde_asia: no grid search (detection is liga-based, no tunable params)
 }
 
-# All strategy keys — one registry entry per strategy, no versioning.
+# All strategy keys — one registry entry per strategy, no versioning, no categories.
 SINGLE_STRATEGIES = [
-    # Original 7 (formerly versioned, now direct entries with cfg params)
     "back_draw_00", "xg_underperformance", "odds_drift", "momentum_xg",
     "goal_clustering", "pressure_cooker",
-    # SD strategies
     "over25_2goal", "under35_late", "longshot",
     "cs_close", "cs_one_goal", "ud_leading", "home_fav_leading",
     "cs_20", "cs_big_lead", "lay_over45_v3", "draw_xg_conv",
@@ -313,7 +313,6 @@ SINGLE_STRATEGIES = [
     "under35_3goals", "away_fav_leading", "under45_3goals", "cs_11",
     "draw_equalizer", "draw_22",
     "lay_over45_blowout",
-    # R19 brute-force discoveries
     "over35_early_goals", "lay_draw_away_leading", "lay_cs11",
 ]
 
@@ -870,7 +869,7 @@ def phase3_presets(new_strategies: dict, workers: int = 4,
     base_cfg = _load_config()
     staging  = {**base_cfg, "strategies": new_strategies}
 
-    bak = CARTERA_CFG.with_suffix(f".json.bak_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    bak = CARTERA_BAK_DIR / f"cartera_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     if not dry_run:
         shutil.copy2(CARTERA_CFG, bak)
         CARTERA_CFG.write_text(json.dumps(staging, indent=2, ensure_ascii=False),
@@ -1021,8 +1020,7 @@ def phase4_apply(preset_paths: dict[str, Path],
 
     src = preset_paths[best["criterion"]]
     if not dry_run:
-        bak = CARTERA_CFG.with_suffix(
-            f".json.bak_{datetime.now().strftime('%Y%m%d_%H%M%S')}_final")
+        bak = CARTERA_BAK_DIR / f"cartera_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}_final.json"
         shutil.copy2(CARTERA_CFG, bak)
 
         preset_cfg = json.loads(src.read_text(encoding="utf-8"))

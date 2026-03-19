@@ -1,7 +1,7 @@
 """
 Shared trigger-detection helpers for Betfair Exchange strategies.
 
-Each function implements the core "does this snapshot meet condition X?" logic
+Each function implements the "does this snapshot meet condition X?" logic
 shared by both:
   - analyze_strategy_*() (batch backtest over historical rows)
   - detect_betting_signals() (live, single-snapshot evaluation)
@@ -19,7 +19,7 @@ def _get_over_odds_field(total_goals: int) -> str:
             3: "back_over35", 4: "back_over45"}.get(total_goals, "")
 
 # ── GR8: Shared trigger-detection helpers ───────────────────────────────
-# These functions encapsulate the core "does this snapshot meet condition X?"
+# These functions encapsulate the "does this snapshot meet condition X?"
 # logic that is common to both:
 #   - analyze_strategy_*() (batch backtest over historical rows), and
 #   - detect_betting_signals() (live, single-snapshot evaluation).
@@ -700,7 +700,8 @@ def _detect_xg_underperformance_trigger(rows: list, curr_idx: int, cfg: dict) ->
         return None
     result = candidates[0]
     odds_min = float(cfg.get("odds_min", cfg.get("min_odds", 0)))
-    if odds_min > 0 and result.get("back_odds", 999) < odds_min:
+    back_over = result.get("back_over")
+    if odds_min > 0 and (back_over is None or back_over < odds_min):
         return None
     return result
 

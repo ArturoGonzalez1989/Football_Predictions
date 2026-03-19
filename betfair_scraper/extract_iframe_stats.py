@@ -142,7 +142,7 @@ def extract_stats_from_iframe(driver, betfair_event_id: str) -> dict:
         #          Substitutions, Injuries — no usadas por ninguna estrategia
         log.debug("  → Extrayendo estadísticas críticas del iframe...")
 
-        # Shots y corners (usados por core + SD strategies)
+        # Shots y corners (usados por todas las estrategias)
         home_shots_on, away_shots_on = get_dual_stat("Shots on target")
         home_shots_off, away_shots_off = get_dual_stat("Shots off target")
         home_shots_blocked, away_shots_blocked = get_dual_stat("Shots blocked")
