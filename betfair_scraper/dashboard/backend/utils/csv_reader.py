@@ -1012,28 +1012,90 @@ _OVER_CO_COLS: dict[str, tuple[str, str]] = {
 }
 
 
-def _co_market_cols(bet: dict, strategy: str) -> tuple[str, str, float]:
-    """Return (back_col, lay_col, back_odds) for the bet's market."""
-    if strategy.startswith("back_draw_00"):
-        return "back_draw", "lay_draw", bet.get("back_draw") or 0.0
+_UNDER_CO_COLS: dict[str, tuple[str, str]] = {
+    "3.5": ("back_under35", "lay_under35"),
+    "4.5": ("back_under45", "lay_under45"),
+}
 
-    if strategy.startswith("xg_underperformance") or strategy in ("goal_clustering", "pressure_cooker", "tarde_asia"):
+
+def _co_market_cols(bet: dict, strategy: str) -> tuple[str, str, float]:
+    """Return (back_col, lay_col, back_odds) for the bet's market.
+
+    Covers all 32 strategies in _STRATEGY_REGISTRY. The mapping is derived
+    from each strategy's extractor function (which odds column it reads).
+    """
+    # ── Draw market (BACK or LAY) ─────────────────────────────────────────
+    if strategy in ("back_draw_00", "draw_xg_conv", "draw_11",
+                    "draw_equalizer", "draw_22"):
+        return "back_draw", "lay_draw", bet.get("back_draw") or bet.get("back_odds") or 0.0
+
+    if strategy == "lay_draw_away_leading":
+        return "lay_draw", "back_draw", bet.get("back_odds") or 0.0
+
+    # ── Over market ───────────────────────────────────────────────────────
+    if strategy in ("xg_underperformance", "goal_clustering", "pressure_cooker"):
         over_line = bet.get("over_line", "")
         m = re.search(r"(\d+\.?\d+)", over_line or "")
         key = m.group(1) if m else ""
         bc, lc = _OVER_CO_COLS.get(key, ("", ""))
-        return bc, lc, bet.get("back_over_odds") or 0.0
+        return bc, lc, bet.get("back_over_odds") or bet.get("back_odds") or 0.0
 
-    if strategy.startswith("odds_drift"):
-        team = bet.get("team", "")
-        bc = "back_home" if team == "home" else "back_away"
-        lc = "lay_home" if team == "home" else "lay_away"
+    if strategy in ("over25_2goal", "over25_2goals", "tarde_asia"):
+        return "back_over25", "lay_over25", bet.get("back_odds") or 0.0
+
+    if strategy == "over35_early_goals":
+        return "back_over35", "lay_over35", bet.get("back_odds") or 0.0
+
+    if strategy == "poss_extreme":
+        return "back_over05", "lay_over05", bet.get("back_odds") or 0.0
+
+    # ── Under market ──────────────────────────────────────────────────────
+    if strategy in ("under35_late", "under35_3goals"):
+        return "back_under35", "lay_under35", bet.get("back_odds") or 0.0
+
+    if strategy == "under45_3goals":
+        return "back_under45", "lay_under45", bet.get("back_odds") or 0.0
+
+    # ── LAY Over 4.5 ──────────────────────────────────────────────────────
+    if strategy in ("lay_over45_v3", "lay_over45_blowout"):
+        return "lay_over45", "back_over45", bet.get("back_odds") or 0.0
+
+    # ── Correct Score (dynamic column from trigger_score) ─────────────────
+    if strategy in ("cs_close", "cs_one_goal", "cs_20", "cs_big_lead"):
+        score = bet.get("trigger_score") or bet.get("score_bet", "")
+        if score:
+            col_suffix = score.replace("-", "_")
+            return f"back_rc_{col_suffix}", f"lay_rc_{col_suffix}", bet.get("back_odds") or 0.0
+        return "", "", 0.0
+
+    if strategy == "cs_00":
+        return "back_rc_0_0", "lay_rc_0_0", bet.get("back_odds") or 0.0
+
+    if strategy == "cs_11":
+        return "back_rc_1_1", "lay_rc_1_1", bet.get("back_odds") or 0.0
+
+    if strategy == "lay_cs11":
+        return "lay_rc_1_1", "back_rc_1_1", bet.get("back_odds") or 0.0
+
+    # ── Home/Away team market ─────────────────────────────────────────────
+    if strategy == "home_fav_leading":
+        return "back_home", "lay_home", bet.get("back_odds") or 0.0
+
+    if strategy == "away_fav_leading":
+        return "back_away", "lay_away", bet.get("back_odds") or 0.0
+
+    if strategy in ("odds_drift", "longshot", "ud_leading"):
+        team = bet.get("team") or bet.get("longshot_team") or bet.get("ud_team") or ""
+        is_home = team in ("home", "local", "Local")
+        bc = "back_home" if is_home else "back_away"
+        lc = "lay_home" if is_home else "lay_away"
         return bc, lc, bet.get("back_odds") or 0.0
 
-    if strategy.startswith("momentum_xg"):
+    if strategy == "momentum_xg":
         dt = bet.get("dominant_team", "")
-        bc = "back_home" if dt == "Local" else "back_away"
-        lc = "lay_home" if dt == "Local" else "lay_away"
+        is_home = dt in ("Home", "Local")
+        bc = "back_home" if is_home else "back_away"
+        lc = "lay_home" if is_home else "lay_away"
         return bc, lc, bet.get("back_odds") or 0.0
 
     return "", "", 0.0
@@ -1056,20 +1118,44 @@ def _get_trigger_score(rows: list, trigger_min: float) -> tuple:
 
 def _is_adverse_goal(row: dict, strategy: str, team: str, gl_trigger: float, gv_trigger: float) -> bool:
     """True si en este row se ha producido un gol adverso para la apuesta.
-    Solo aplica a apuestas de match odds (draw, home, away).
-    Over bets: ningún gol es adverso (más goles = mejor para Over).
+
+    Draw bets: any goal is adverse.
+    Home/Away bets: rival scoring is adverse.
+    Over bets: never adverse (more goals = better).
+    Under bets: any goal is adverse.
+    Correct Score bets: any goal change is adverse.
+    LAY bets: inverted logic handled by caller (CO direction is reversed).
     """
     gl = _to_float(row.get("goles_local", "")) or 0
     gv = _to_float(row.get("goles_visitante", "")) or 0
-    if strategy.startswith("back_draw_00"):
-        return (gl + gv) > (gl_trigger + gv_trigger)  # cualquier gol perjudica el empate
-    if strategy.startswith("momentum_xg"):
-        if team == "Local": return gv > gv_trigger    # rival (visitante) marcó
-        if team == "Away":  return gl > gl_trigger    # rival (local) marcó
-    if strategy.startswith("odds_drift"):
-        if team == "home":  return gv > gv_trigger    # visitante marcó
-        if team == "away":  return gl > gl_trigger    # local marcó
-    return False  # Over bets: nunca adverso
+    total_now = gl + gv
+    total_trigger = gl_trigger + gv_trigger
+
+    # Draw strategies: any goal breaks the draw
+    if strategy in ("back_draw_00", "draw_xg_conv", "draw_11",
+                    "draw_equalizer", "draw_22"):
+        return total_now > total_trigger
+
+    # Correct Score: any score change is adverse
+    if strategy in ("cs_close", "cs_one_goal", "cs_20", "cs_big_lead",
+                    "cs_00", "cs_11"):
+        return gl != gl_trigger or gv != gv_trigger
+
+    # Under bets: any new goal is adverse
+    if strategy in ("under35_late", "under35_3goals", "under45_3goals"):
+        return total_now > total_trigger
+
+    # Home/Away team bets: rival scoring is adverse
+    if strategy in ("home_fav_leading", "momentum_xg", "odds_drift",
+                    "longshot", "ud_leading", "away_fav_leading"):
+        is_home = team in ("home", "local", "Local", "Home")
+        if is_home:
+            return gv > gv_trigger  # away team scored
+        else:
+            return gl > gl_trigger  # home team scored
+
+    # Over bets: never adverse (more goals = better)
+    return False
 
 
 def _co_is_corrupted(row: dict, back_col: str, lay_col: str) -> bool:

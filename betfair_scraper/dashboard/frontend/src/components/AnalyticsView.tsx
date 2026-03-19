@@ -78,29 +78,8 @@ export function AnalyticsView() {
 
       {/* Strategy & Market Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Strategy Performance */}
-        <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-          <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
-            🎯 Rendimiento por Estrategia
-          </h2>
-          <div className="space-y-2">
-            {strategyPerf.map((strat) => (
-              <StrategyCard key={strat.name} {...strat} />
-            ))}
-          </div>
-        </section>
-
-        {/* Market Performance */}
-        <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-          <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
-            📊 Rendimiento por Mercado
-          </h2>
-          <div className="space-y-2">
-            {marketPerf.map((market) => (
-              <MarketCard key={market.name} {...market} />
-            ))}
-          </div>
-        </section>
+        <SortableStrategyTable data={strategyPerf} />
+        <SortableMarketTable data={marketPerf} />
       </div>
 
       {/* Daily Stats */}
@@ -617,70 +596,125 @@ function PLChart({ data }: { data: { timestamp: string; pl: number }[] }) {
   )
 }
 
-function StrategyCard({ name, bets, winRate, pl, roi }: {
-  name: string
-  bets: number
-  winRate: number
-  pl: number
-  roi: number
+type SortDir = "asc" | "desc"
+type StrategySortKey = "name" | "bets" | "winRate" | "pl" | "roi"
+type MarketSortKey = "name" | "bets" | "winRate" | "pl"
+
+function SortHeader({ label, active, dir, onClick, align = "right" }: {
+  label: string; active: boolean; dir: SortDir; onClick: () => void; align?: "left" | "right" | "center"
 }) {
+  const alignClass = align === "left" ? "text-left" : align === "center" ? "text-center" : "text-right"
   return (
-    <div className="bg-zinc-800/50 rounded p-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-sm font-medium text-zinc-200">{name}</div>
-        <div className="text-xs text-zinc-500">{bets} bets</div>
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        <div>
-          <div className="text-zinc-500">WR</div>
-          <div className={`font-bold ${winRate >= 60 ? "text-green-400" : winRate >= 50 ? "text-amber-400" : "text-red-400"}`}>
-            {winRate.toFixed(1)}%
-          </div>
-        </div>
-        <div>
-          <div className="text-zinc-500">P/L</div>
-          <div className={`font-bold ${pl >= 0 ? "text-green-400" : "text-red-400"}`}>
-            {pl >= 0 ? "+" : ""}{pl.toFixed(2)}
-          </div>
-        </div>
-        <div>
-          <div className="text-zinc-500">ROI</div>
-          <div className={`font-bold ${roi >= 50 ? "text-green-400" : roi >= 0 ? "text-amber-400" : "text-red-400"}`}>
-            {roi.toFixed(1)}%
-          </div>
-        </div>
-      </div>
-    </div>
+    <th
+      className={`py-2 px-2 cursor-pointer select-none hover:text-zinc-300 transition-colors ${alignClass}`}
+      onClick={onClick}
+    >
+      {label} {active ? (dir === "asc" ? "▲" : "▼") : ""}
+    </th>
   )
 }
 
-function MarketCard({ name, bets, winRate, pl }: {
-  name: string
-  bets: number
-  winRate: number
-  pl: number
-}) {
+function SortableStrategyTable({ data }: { data: { name: string; bets: number; winRate: number; pl: number; roi: number }[] }) {
+  const [sortKey, setSortKey] = useState<StrategySortKey>("roi")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
+
+  const toggle = (key: StrategySortKey) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc")
+    else { setSortKey(key); setSortDir("desc") }
+  }
+
+  const sorted = [...data].sort((a, b) => {
+    const mul = sortDir === "asc" ? 1 : -1
+    if (sortKey === "name") return mul * a.name.localeCompare(b.name)
+    return mul * (a[sortKey] - b[sortKey])
+  })
+
   return (
-    <div className="bg-zinc-800/50 rounded p-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-sm font-medium text-zinc-200">{name}</div>
-        <div className="text-xs text-zinc-500">{bets} bets</div>
+    <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+      <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
+        Rendimiento por Estrategia
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-[11px] text-zinc-500 uppercase tracking-wide border-b border-zinc-800">
+              <SortHeader label="Estrategia" active={sortKey === "name"} dir={sortDir} onClick={() => toggle("name")} align="left" />
+              <SortHeader label="Bets" active={sortKey === "bets"} dir={sortDir} onClick={() => toggle("bets")} align="center" />
+              <SortHeader label="WR%" active={sortKey === "winRate"} dir={sortDir} onClick={() => toggle("winRate")} />
+              <SortHeader label="P/L" active={sortKey === "pl"} dir={sortDir} onClick={() => toggle("pl")} />
+              <SortHeader label="ROI%" active={sortKey === "roi"} dir={sortDir} onClick={() => toggle("roi")} />
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((s) => (
+              <tr key={s.name} className="border-b border-zinc-800/50 hover:bg-zinc-800/20">
+                <td className="py-2 px-2 text-zinc-200 font-medium">{s.name}</td>
+                <td className="py-2 px-2 text-center text-zinc-400">{s.bets}</td>
+                <td className={`py-2 px-2 text-right font-bold ${s.winRate >= 60 ? "text-green-400" : s.winRate >= 50 ? "text-amber-400" : "text-red-400"}`}>
+                  {s.winRate.toFixed(1)}%
+                </td>
+                <td className={`py-2 px-2 text-right font-mono font-bold ${s.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {s.pl >= 0 ? "+" : ""}{s.pl.toFixed(2)}
+                </td>
+                <td className={`py-2 px-2 text-right font-bold ${s.roi >= 50 ? "text-green-400" : s.roi >= 0 ? "text-amber-400" : "text-red-400"}`}>
+                  {s.roi.toFixed(1)}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div>
-          <div className="text-zinc-500">Win Rate</div>
-          <div className={`font-bold ${winRate >= 60 ? "text-green-400" : winRate >= 50 ? "text-amber-400" : "text-red-400"}`}>
-            {winRate.toFixed(1)}%
-          </div>
-        </div>
-        <div>
-          <div className="text-zinc-500">P/L</div>
-          <div className={`font-bold ${pl >= 0 ? "text-green-400" : "text-red-400"}`}>
-            {pl >= 0 ? "+" : ""}{pl.toFixed(2)}
-          </div>
-        </div>
+    </section>
+  )
+}
+
+function SortableMarketTable({ data }: { data: { name: string; bets: number; winRate: number; pl: number }[] }) {
+  const [sortKey, setSortKey] = useState<MarketSortKey>("pl")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
+
+  const toggle = (key: MarketSortKey) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc")
+    else { setSortKey(key); setSortDir("desc") }
+  }
+
+  const sorted = [...data].sort((a, b) => {
+    const mul = sortDir === "asc" ? 1 : -1
+    if (sortKey === "name") return mul * a.name.localeCompare(b.name)
+    return mul * (a[sortKey] - b[sortKey])
+  })
+
+  return (
+    <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+      <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
+        Rendimiento por Mercado
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-[11px] text-zinc-500 uppercase tracking-wide border-b border-zinc-800">
+              <SortHeader label="Mercado" active={sortKey === "name"} dir={sortDir} onClick={() => toggle("name")} align="left" />
+              <SortHeader label="Bets" active={sortKey === "bets"} dir={sortDir} onClick={() => toggle("bets")} align="center" />
+              <SortHeader label="WR%" active={sortKey === "winRate"} dir={sortDir} onClick={() => toggle("winRate")} />
+              <SortHeader label="P/L" active={sortKey === "pl"} dir={sortDir} onClick={() => toggle("pl")} />
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((m) => (
+              <tr key={m.name} className="border-b border-zinc-800/50 hover:bg-zinc-800/20">
+                <td className="py-2 px-2 text-zinc-200 font-medium">{m.name}</td>
+                <td className="py-2 px-2 text-center text-zinc-400">{m.bets}</td>
+                <td className={`py-2 px-2 text-right font-bold ${m.winRate >= 60 ? "text-green-400" : m.winRate >= 50 ? "text-amber-400" : "text-red-400"}`}>
+                  {m.winRate.toFixed(1)}%
+                </td>
+                <td className={`py-2 px-2 text-right font-mono font-bold ${m.pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {m.pl >= 0 ? "+" : ""}{m.pl.toFixed(2)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
   )
 }
 

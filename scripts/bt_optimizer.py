@@ -49,6 +49,7 @@ from utils.csv_reader import (
     _STRATEGY_REGISTRY_KEYS,
     _analyze_strategy_simple,
     _cfg_add_snake_keys,
+    _normalize_mercado,
 )
 from utils.csv_loader import _get_all_finished_matches, _read_csv_rows
 from api import optimizer_cli
@@ -74,7 +75,9 @@ _PERMANENTLY_DISABLED: set[str] = {
 # ── Quality gates ─────────────────────────────────────────────────────────────
 G_MIN_ROI        = 10.0   # minimum ROI %
 IC95_MIN_LOW     = 40.0   # minimum Wilson CI lower bound
-G_MIN_PL_PER_BET = 0.15   # minimum P/L per bet (units) — filters low risk/reward strategies
+def _min_pl_per_bet(n_fin: int) -> float:
+    """Dynamic PL/bet threshold: more data = more demanding. Capped at 0.30."""
+    return min(0.30, 0.10 + n_fin / 10000)
 
 # ── Selector ──────────────────────────────────────────────────────────────────
 CRITERIA = ["max_roi", "max_pl", "max_wr", "min_dd"]
@@ -349,7 +352,7 @@ def _eval_bets(bets: list, n_fin: int) -> dict | None:
     roi  = pl / n * 100
     if roi < G_MIN_ROI:
         return None
-    if pl / n < G_MIN_PL_PER_BET:
+    if pl / n < _min_pl_per_bet(n_fin):
         return None
     ci_l, ci_h = _wilson_ci(wins, n)
     if ci_l < IC95_MIN_LOW:
@@ -933,6 +936,8 @@ def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
     Evaluate a preset using analyze_cartera-equivalent logic.
     Returns real stats (n, wr, roi, pl, ci_low) reflecting what the live system
     would actually produce — not the portfolio optimizer's internal cherry-pick.
+
+    Applies global min_odds floor and market dedup (same as analyze_cartera).
     """
     strategy_configs = _merge_preset_strategies(preset_cfg, base_cfg)
     md = base_cfg.get("min_duration", {})
@@ -948,6 +953,24 @@ def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
             _cfg_add_snake_keys(s_cfg), min_dur,
         )
         all_bets.extend(bets)
+
+    # Global min_odds floor (mirrors analyze_cartera)
+    global_min_odds = (base_cfg.get("adjustments") or {}).get("min_odds") or 0
+    if global_min_odds > 0:
+        all_bets = [b for b in all_bets if (b.get("back_odds") or 0) >= global_min_odds]
+
+    # Market dedup: one bet per market per match, earliest by minuto wins
+    # (mirrors analyze_cartera — uses _normalize_mercado for BT/LIVE alignment)
+    seen_market: dict = {}
+    deduped: list = []
+    for b in sorted(all_bets, key=lambda x: x.get("minuto", 0) or 0):
+        mid = b.get("match_id", "")
+        mkt = _normalize_mercado(b.get("mercado", ""))
+        mkey = (mid, mkt)
+        if mkey not in seen_market:
+            seen_market[mkey] = True
+            deduped.append(b)
+    all_bets = deduped
 
     n = len(all_bets)
     if n == 0:

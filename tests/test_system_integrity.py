@@ -1,7 +1,7 @@
 """
 test_system_integrity.py — Verificacion de integridad del sistema Betfair
 
-Cubre 13 categorias de invariantes que deben mantenerse en cualquier estado del sistema:
+Cubre 16 categorias de invariantes que deben mantenerse en cualquier estado del sistema:
 
   T1  Registry — sin versiones, conteo correcto, triggers existentes
   T2  Config structure — sin keys legacy, sin campos version, sin leakage
@@ -17,6 +17,8 @@ Cubre 13 categorias de invariantes que deben mantenerse en cualquier estado del 
   T12 SEARCH_SPACES — cubre todos los SINGLE_STRATEGIES de bt_optimizer
   T13 _COMBO_TO_REGISTRY — todos los valores son registry keys validos
   T14 Signal min_odds — usa oddsMin del config, no hardcoded 1.21
+  T15 Settlement — placed_bets won/lost coincide con score final del CSV
+  T16 Match finalization — CSVs de partidos con apuestas tienen estado finalizado
 
 Uso:
     python tests/test_system_integrity.py
@@ -847,6 +849,183 @@ def t14_signal_min_odds():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# T15 — Settlement: placed_bets won/lost matches final CSV score
+# ─────────────────────────────────────────────────────────────────────────────
+
+def t15_settlement():
+    section("T15 — Settlement correctness")
+
+    import glob as _glob
+    from urllib.parse import quote
+
+    placed = os.path.join(ROOT, "betfair_scraper", "placed_bets.csv")
+    data_dir = os.path.join(ROOT, "betfair_scraper", "data")
+
+    if not os.path.exists(placed):
+        check("placed_bets.csv exists", False, "file not found")
+        return
+
+    def _resolve(mid):
+        p = os.path.join(data_dir, f"partido_{mid}.csv")
+        if os.path.exists(p):
+            return p
+        enc = quote(mid, safe="-")
+        p2 = os.path.join(data_dir, f"partido_{enc}.csv")
+        if os.path.exists(p2):
+            return p2
+        prefix = re.sub(r"-?\d+$", "", mid)
+        if prefix:
+            for f in sorted(_glob.glob(os.path.join(data_dir, f"partido_{prefix}*.csv"))):
+                if f.endswith(".csv"):
+                    return f
+            enc_prefix = re.sub(r"-?\d+$", "", enc)
+            if enc_prefix != prefix:
+                for f in sorted(_glob.glob(os.path.join(data_dir, f"partido_{enc_prefix}*.csv"))):
+                    if f.endswith(".csv"):
+                        return f
+        return None
+
+    def _final_score(mid):
+        path = _resolve(mid)
+        if not path or not os.path.exists(path):
+            return None, None
+        import csv as _csv
+        with open(path, "r", encoding="utf-8") as f:
+            rows = list(_csv.DictReader(f))
+        for row in reversed(rows):
+            est = row.get("estado_partido", "").strip().lower()
+            if est not in ("pre_partido", "prematch"):
+                try:
+                    return int(float(row.get("goles_local", ""))), int(float(row.get("goles_visitante", "")))
+                except (ValueError, TypeError):
+                    return None, None
+        return None, None
+
+    def _check_would_win(rec, gl, gv):
+        rec = rec.upper()
+        is_lay = rec.startswith("LAY")
+        if "DRAW" in rec:
+            r = gl == gv
+            return (not r) if is_lay else r
+        m = re.search(r"CS\s+(\d+)-(\d+)", rec)
+        if m:
+            r = gl == int(m.group(1)) and gv == int(m.group(2))
+            return (not r) if is_lay else r
+        m = re.search(r"OVER\s+(\d+\.?\d*)", rec)
+        if m:
+            r = (gl + gv) > float(m.group(1))
+            return (not r) if is_lay else r
+        m = re.search(r"UNDER\s+(\d+\.?\d*)", rec)
+        if m:
+            r = (gl + gv) < float(m.group(1))
+            return (not r) if is_lay else r
+        if "HOME" in rec:
+            r = gl > gv
+            return (not r) if is_lay else r
+        if "AWAY" in rec:
+            r = gv > gl
+            return (not r) if is_lay else r
+        return None
+
+    import csv as _csv
+    with open(placed, "r", encoding="utf-8") as f:
+        bets = list(_csv.DictReader(f))
+
+    wrong = []
+    verified = 0
+    for b in bets:
+        status = b.get("status", "")
+        if status not in ("won", "lost"):
+            continue
+        gl, gv = _final_score(b["match_id"])
+        if gl is None:
+            continue
+        expected = _check_would_win(b.get("recommendation", ""), gl, gv)
+        if expected is None:
+            continue
+        verified += 1
+        expected_status = "won" if expected else "lost"
+        if status != expected_status:
+            wrong.append(f"ID={b['id']} {b['match_name'][:30]} | {b['recommendation'][:25]} | final={gl}-{gv} | is={status} should={expected_status}")
+
+    check(f"All settled bets match final score ({verified} verified)",
+          len(wrong) == 0,
+          "\n".join(wrong) if wrong else "")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T16 — Match finalization: CSVs for bet matches have estado=finalizado
+# ─────────────────────────────────────────────────────────────────────────────
+
+def t16_match_finalization():
+    section("T16 — Match finalization")
+
+    import glob as _glob
+    from urllib.parse import quote
+
+    placed = os.path.join(ROOT, "betfair_scraper", "placed_bets.csv")
+    data_dir = os.path.join(ROOT, "betfair_scraper", "data")
+
+    if not os.path.exists(placed):
+        check("placed_bets.csv exists", False, "file not found")
+        return
+
+    def _resolve(mid):
+        p = os.path.join(data_dir, f"partido_{mid}.csv")
+        if os.path.exists(p):
+            return p
+        enc = quote(mid, safe="-")
+        p2 = os.path.join(data_dir, f"partido_{enc}.csv")
+        if os.path.exists(p2):
+            return p2
+        prefix = re.sub(r"-?\d+$", "", mid)
+        if prefix:
+            for f in sorted(_glob.glob(os.path.join(data_dir, f"partido_{prefix}*.csv"))):
+                if f.endswith(".csv"):
+                    return f
+            enc_prefix = re.sub(r"-?\d+$", "", enc)
+            if enc_prefix != prefix:
+                for f in sorted(_glob.glob(os.path.join(data_dir, f"partido_{enc_prefix}*.csv"))):
+                    if f.endswith(".csv"):
+                        return f
+        return None
+
+    import csv as _csv
+    with open(placed, "r", encoding="utf-8") as f:
+        bets = list(_csv.DictReader(f))
+
+    # Only check settled bets (won/lost) — pending ones may still be in play
+    settled_match_ids = set()
+    for b in bets:
+        if b.get("status") in ("won", "lost", "cashout"):
+            settled_match_ids.add(b["match_id"])
+
+    finished_states = {"finalizado", "finished", "ft", "full_time", "ended"}
+    missing_final = []
+
+    for mid in sorted(settled_match_ids):
+        path = _resolve(mid)
+        if not path or not os.path.exists(path):
+            continue
+        with open(path, "r", encoding="utf-8") as f:
+            rows = list(_csv.DictReader(f))
+        # Check last non-pre_partido row
+        for row in reversed(rows):
+            est = row.get("estado_partido", "").strip().lower()
+            if est not in ("pre_partido", "prematch"):
+                if est not in finished_states:
+                    gl = row.get("goles_local", "?")
+                    gv = row.get("goles_visitante", "?")
+                    minuto = row.get("minuto", "?")
+                    missing_final.append(f"{mid[:45]} | {gl}-{gv} min={minuto} | estado={est}")
+                break
+
+    check(f"All settled-bet match CSVs have estado=finalizado ({len(settled_match_ids)} matches)",
+          len(missing_final) == 0,
+          "\n".join(missing_final) if missing_final else "")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -875,6 +1054,8 @@ def main():
     t12_search_spaces()
     t13_combo_to_registry()
     t14_signal_min_odds()
+    t15_settlement()
+    t16_match_finalization()
 
     total = PASS + FAIL
     print(f"\n{'='*65}")

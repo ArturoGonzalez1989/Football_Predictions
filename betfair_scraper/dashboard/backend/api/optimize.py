@@ -111,6 +111,12 @@ def _collect_bets_dynamic(bets: List[Dict], disabled: set) -> List[Dict]:
     return cb
 
 
+# Minimum bets for a portfolio to be considered viable in the optimizer.
+# Aligned with MIN_PRESET_N in bt_optimizer.py — portfolios below this
+# threshold will be rejected by Phase 4 anyway, so no point optimizing them.
+MIN_PORTFOLIO_BETS = 200
+
+
 def _eval_dynamic(bets: List[Dict], disabled: set, adj: Optional[Dict],
                   risk: str, bankroll_init: float, br: str, criterion: str) -> float:
     """Score a portfolio with a given set of disabled strategies."""
@@ -118,7 +124,7 @@ def _eval_dynamic(bets: List[Dict], disabled: set, adj: Optional[Dict],
     if adj:
         cb = _apply_realistic_adj(cb, adj)
     cb = _filter_by_risk(cb, risk)
-    if len(cb) < 15:
+    if len(cb) < MIN_PORTFOLIO_BETS:
         return -math.inf
     sim = _simulate_cartera_py(cb, bankroll_init, br)
     return _score_of(sim, criterion)
@@ -428,6 +434,10 @@ def _simulate_cartera_py(bets: List[Dict], bankroll_init: float, mode: str, flat
     total_staked = total * FLAT_STAKE
     managed_max_dd = _calc_max_drawdown(managed_cum_arr)
 
+    # Normalized metrics: percentages of initial bankroll (bounded, comparable)
+    managed_roi = _round2(managed_pl / bankroll_init * 100) if bankroll_init > 0 else 0.0
+    managed_dd_pct = _round2(managed_max_dd / max(peak_bankroll, bankroll_init) * 100) if peak_bankroll > 0 else 0.0
+
     return {
         "total": total,
         "wins": flat_wins,
@@ -436,6 +446,8 @@ def _simulate_cartera_py(bets: List[Dict], bankroll_init: float, mode: str, flat
         "flat_roi": _round2(flat_cum / total_staked * 100) if total_staked > 0 else 0.0,
         "managed_pl": managed_pl,
         "managed_max_dd": managed_max_dd,
+        "managed_roi": managed_roi,
+        "managed_dd_pct": managed_dd_pct,
     }
 
 
@@ -455,7 +467,19 @@ def _score_of(sim: Dict, criterion: str) -> float:
         ci_low, _ = _wilson_ci(sim["wins"], n)
         return ci_low  # Wilson CI lower bound: statistically principled, no magic numbers
     if criterion == "min_dd":
-        return (sim["managed_pl"] - sim["managed_max_dd"] * 2.0 + sim["win_pct"] * 0.5) * conf
+        # Uses flat_roi (bounded, doesn't compound) for return, and
+        # managed_dd_pct (varies by bankroll mode) for risk.
+        # This way dd_protection/anti_racha can win by reducing drawdown,
+        # without half_kelly's exponential growth dominating the score.
+        flat_roi = sim["flat_roi"]
+        dd_pct = max(sim.get("managed_dd_pct", 0.0), 1.0)  # floor at 1%
+        wr = sim["win_pct"]
+        calmar = flat_roi / dd_pct
+        # Penalty: drawdown > 30% → score multiplied by 0.5^((dd-30)/20)
+        dd_penalty = 1.0
+        if dd_pct > 30.0:
+            dd_penalty = 0.5 ** ((dd_pct - 30.0) / 20.0)
+        return calmar * (wr / 100.0) * dd_penalty * conf
     return sim["flat_pl"] * conf
 
 

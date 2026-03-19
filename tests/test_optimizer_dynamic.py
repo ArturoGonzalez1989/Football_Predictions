@@ -58,16 +58,17 @@ def _make_bets(n_win=30, n_lose=20, strategy="cs_one_goal", odds=3.0):
 
 
 def _make_multi_strategy_bets():
-    """Generate bets from multiple strategies for steepest descent testing."""
+    """Generate bets from multiple strategies for steepest descent testing.
+    Must produce >= MIN_PORTFOLIO_BETS (200) total bets for _eval_dynamic."""
     bets = []
-    # Good strategy: 65% WR, profitable
-    bets.extend(_make_bets(n_win=39, n_lose=21, strategy="cs_one_goal", odds=2.8))
-    # Good strategy: 60% WR, profitable
-    bets.extend(_make_bets(n_win=36, n_lose=24, strategy="draw_11", odds=3.2))
-    # Bad strategy: 40% WR, unprofitable
-    bets.extend(_make_bets(n_win=16, n_lose=24, strategy="poss_extreme", odds=2.5))
-    # Mediocre strategy: 52% WR, slightly profitable
-    bets.extend(_make_bets(n_win=26, n_lose=24, strategy="under35_late", odds=2.2))
+    # Good strategy: 65% WR, profitable (80 bets)
+    bets.extend(_make_bets(n_win=52, n_lose=28, strategy="cs_one_goal", odds=2.8))
+    # Good strategy: 60% WR, profitable (80 bets)
+    bets.extend(_make_bets(n_win=48, n_lose=32, strategy="draw_11", odds=3.2))
+    # Bad strategy: 40% WR, unprofitable (60 bets)
+    bets.extend(_make_bets(n_win=24, n_lose=36, strategy="poss_extreme", odds=2.5))
+    # Mediocre strategy: 52% WR, slightly profitable (60 bets)
+    bets.extend(_make_bets(n_win=31, n_lose=29, strategy="under35_late", odds=2.2))
     bets.sort(key=lambda b: b["timestamp_utc"])
     return bets
 

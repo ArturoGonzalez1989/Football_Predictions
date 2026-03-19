@@ -78,10 +78,19 @@ def _get_lay_col(recommendation: str) -> Optional[str]:
         return "lay_home"
     if "AWAY" in rec:
         return "lay_away"
+    # CS X-Y → lay_rc_X_Y
+    m_cs = re.search(r"CS\s+(\d+)-(\d+)", rec)
+    if m_cs:
+        return f"lay_rc_{m_cs.group(1)}_{m_cs.group(2)}"
     # Over X.5
     for line, col in [("4.5", "lay_over45"), ("3.5", "lay_over35"),
                        ("2.5", "lay_over25"), ("1.5", "lay_over15"), ("0.5", "lay_over05")]:
-        if line in rec:
+        if f"OVER {line}" in rec:
+            return col
+    # Under X.5
+    for line, col in [("4.5", "lay_under45"), ("3.5", "lay_under35"),
+                       ("2.5", "lay_under25"), ("1.5", "lay_under15"), ("0.5", "lay_under05")]:
+        if f"UNDER {line}" in rec:
             return col
     return None
 
@@ -153,6 +162,13 @@ def _check_would_win(recommendation: str, gl: float, gv: float) -> bool:
     if m:
         line = float(m.group(1))
         result = (gl + gv) > line
+        return (not result) if is_lay else result
+
+    # Under X.5
+    m = re.search(r"UNDER\s+(\d+\.?\d*)", rec)
+    if m:
+        line = float(m.group(1))
+        result = (gl + gv) < line
         return (not result) if is_lay else result
 
     # HOME
@@ -317,6 +333,9 @@ def _market_key_from_recommendation(recommendation: str) -> str:
     m = re.search(r"OVER\s+(\d+\.?\d*)", rec)
     if m:
         return f"over_{m.group(1)}"
+    m = re.search(r"UNDER\s+(\d+\.?\d*)", rec)
+    if m:
+        return f"under_{m.group(1)}"
     return recommendation  # fallback: clave literal
 
 

@@ -1,10 +1,21 @@
 {
-  "disabled": [],
+  "disabled": [
+    "cs_11",
+    "cs_20",
+    "cs_big_lead",
+    "cs_one_goal",
+    "draw_11",
+    "draw_22",
+    "draw_equalizer",
+    "draw_xg_conv",
+    "longshot",
+    "under35_late"
+  ],
   "risk_filter": "all",
-  "br": "half_kelly",
-  "best_score": 1.316162886759857e+22,
+  "br": "anti_racha",
+  "best_score": 70.01059,
   "adj": {
-    "dedup": false,
+    "dedup": true,
     "minOdds": null,
     "maxOdds": 10.0,
     "slippagePct": 2,
@@ -12,16 +23,16 @@
     "allowContrarias": true,
     "minStability": 1,
     "driftMinMinute": null,
-    "globalMinuteMin": null,
-    "globalMinuteMax": null
+    "globalMinuteMin": 15,
+    "globalMinuteMax": 85
   },
-  "n_bets": 1697,
-  "wins": 1048,
-  "win_pct": 61.8,
-  "flat_roi": 74.42,
-  "flat_pl": 12629.68,
-  "ci_low": 59.4,
-  "ci_high": 64.0,
+  "n_bets": 311,
+  "wins": 212,
+  "win_pct": 68.2,
+  "flat_roi": 102.7,
+  "flat_pl": 3194.08,
+  "ci_low": 62.8,
+  "ci_high": 73.1,
   "csv_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_min_dd.csv",
   "config_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_min_dd_config.json"
 }
