@@ -1,0 +1,4 @@
+usage: bt_optimizer.py [-h] [--phase {all,individual,presets,apply,export}]
+                       [--strategies STRATEGIES] [--criterion CRITERION]
+                       [--workers WORKERS] [--dry-run] [--no-crossval]
+bt_optimizer.py: error: unrecognized arguments: d
