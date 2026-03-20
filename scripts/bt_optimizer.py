@@ -10,6 +10,7 @@ Phases:
   3  Portfolio preset generation: run optimizer_cli.run() for 4 criteria
   4  Select best preset and apply to cartera_config.json
   5  Export CSV + XLSX with all bets from the final portfolio
+  6  Monte Carlo risk analysis: strategy fragility, DD distribution, profit distribution
 
 Usage:
   python scripts/bt_optimizer.py                      # run all phases
@@ -54,6 +55,7 @@ from utils.csv_reader import (
 )
 from utils.csv_loader import _get_all_finished_matches, _read_csv_rows, _final_result_row
 from api import optimizer_cli
+import monte_carlo
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 CARTERA_CFG   = ROOT / "betfair_scraper" / "cartera_config.json"
@@ -148,6 +150,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "goal_diff_min": [1, 2],
         "sot_total_min": [0, 2, 3, 5],
         "odds_min":      [1.2, 1.4, 1.6],
+        "odds_max":      [6.0, 8.0, 10.0],
     },
     "under35_late": {
         "m_min":      [60, 65, 70],
@@ -156,6 +159,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "goals_min":  [2, 3],
         "goals_max":  [3, 4],
         "odds_min":   [0, 1.20, 1.30, 1.40],
+        "odds_max":   [6.0, 8.0, 10.0],
     },
     "longshot": {
         "m_min":     [60, 65, 70],
@@ -248,6 +252,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "max_lead": [1, 2, 3],
         "fav_max":  [2.0, 2.5, 3.0],
         "odds_min": [0, 1.20, 1.40, 1.60],
+        "odds_max": [5.0, 8.0, 10.0],
     },
     "under45_3goals": {
         "m_min":    [50, 55, 58, 60],
@@ -259,6 +264,7 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "m_min":    [62, 65, 68, 70],
         "m_max":    [82, 85, 88, 90],
         "odds_min": [0, 3.0, 4.0, 5.0],
+        "odds_max": [8.0, 12.0, 15.0, 999],
     },
     "draw_equalizer": {
         "m_min":          [60, 63, 65, 68],
@@ -1212,6 +1218,29 @@ def phase5_export():
     return csv_path
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 6 — Monte Carlo risk analysis
+# ─────────────────────────────────────────────────────────────────────────────
+
+def phase6_monte_carlo(n_fin: int, n_sims: int = 10_000, seed: int = 42) -> dict:
+    """Run Monte Carlo analysis on the final portfolio. Read-only — no config changes."""
+    _log(f"Phase 6 — Monte Carlo risk analysis ({n_sims:,} sims, seed={seed})…")
+    t0 = time.time()
+
+    csv_reader.clear_analytics_cache()
+    data = csv_reader.analyze_cartera()
+    bets = data.get("bets", [])
+    _log(f"  {len(bets)} bets in final portfolio")
+
+    report = monte_carlo.run_full_analysis(
+        bets, n_fin, bankroll_init=500.0, n_sims=n_sims, seed=seed,
+    )
+
+    monte_carlo.print_report(report)
+    _log(f"\n  Phase 6 done in {time.time()-t0:.1f}s")
+    return report
+
+
 def _xlsx_write_rows(ws, headers: list, rows: list):
     """Write headers + rows to a worksheet with basic formatting."""
     from openpyxl.styles import Font, PatternFill, Alignment
@@ -1229,12 +1258,14 @@ def _xlsx_write_rows(ws, headers: list, rows: list):
 # SAVE / LOAD intermediate results
 # ─────────────────────────────────────────────────────────────────────────────
 
-def save_results(individual: dict, approved_strategies: dict, cv_details: dict | None = None):
+def save_results(individual: dict, approved_strategies: dict,
+                  cv_details: dict | None = None, mc_report: dict | None = None):
     data = {
         "timestamp":  datetime.now().isoformat(),
         "individual": individual,
         "approved":   approved_strategies,
         "crossval":   cv_details or {},
+        "monte_carlo": mc_report or {},
     }
     RESULTS_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False),
                              encoding="utf-8")
@@ -1266,6 +1297,12 @@ def main():
         help="Never write to cartera_config.json")
     parser.add_argument("--no-crossval", action="store_true",
         help="Skip Phase 2.5 cross-validation robustness filter")
+    parser.add_argument("--no-mc", action="store_true",
+        help="Skip Phase 6 Monte Carlo risk analysis")
+    parser.add_argument("--mc-sims", type=int, default=10_000,
+        help="Number of Monte Carlo simulations (default: 10000)")
+    parser.add_argument("--mc-seed", type=int, default=42,
+        help="Random seed for Monte Carlo (default: 42)")
     args = parser.parse_args()
 
     only = [s.strip() for s in args.strategies.split(",")] if args.strategies else None
@@ -1341,6 +1378,11 @@ def main():
 
     if args.phase in ("all", "export"):
         phase5_export()
+
+    # Phase 6: Monte Carlo risk analysis (always runs in "all", after export)
+    if args.phase == "all" and not args.no_mc:
+        mc_report = phase6_monte_carlo(n_fin, n_sims=args.mc_sims, seed=args.mc_seed)
+        save_results(individual, new_strats, cv_details, mc_report)
 
     _log("\n✓ bt_optimizer.py completado")
 

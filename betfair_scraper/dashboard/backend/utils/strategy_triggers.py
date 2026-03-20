@@ -1401,7 +1401,7 @@ def _detect_away_fav_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Op
     """BACK away team when they are pre-match favourite and leading, m_min-m_max.
 
     Pre-match odds are read from rows[0] to determine if away is favourite.
-    cfg keys: m_min, m_max, max_lead, odds_max
+    cfg keys: m_min, m_max, max_lead, fav_max, odds_max
     Returns dict with trigger data or None if no trigger at this row.
     """
     if not rows:
@@ -1409,6 +1409,7 @@ def _detect_away_fav_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Op
     m_min = float(cfg.get("m_min", 55))
     m_max = float(cfg.get("m_max", 90))
     max_lead = int(cfg.get("max_lead", 3))
+    fav_max = float(cfg.get("fav_max", 3.0))
     odds_max = float(cfg.get("odds_max", 50.0))
     # Determine if away is favourite from first row pre-match odds
     first_home = _to_float(rows[0].get("back_home", ""))
@@ -1417,6 +1418,8 @@ def _detect_away_fav_leading_trigger(rows: list, curr_idx: int, cfg: dict) -> Op
         return None
     if first_away >= first_home:
         return None  # away is NOT favourite
+    if first_away > fav_max:
+        return None  # fav odds too high (not a clear favourite)
 
     row = rows[curr_idx]
     m = _to_float(row.get("minuto", ""))

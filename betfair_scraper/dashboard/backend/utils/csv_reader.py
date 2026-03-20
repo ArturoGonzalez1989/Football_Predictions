@@ -414,7 +414,8 @@ def _normalize_mercado(mercado: str) -> str:
     if cs:
         return f"cs_{cs.group(1)}_{cs.group(2)}"
     # Over/Under: "OVER 3.5", "UNDER 3.5", "U3.5", "U4.5"
-    ou = _re.search(r"\b(OVER|UNDER|U)(\d+\.?\d*)", m)
+    # \s* allows optional space between keyword and number (e.g. "OVER 2.5" vs "U3.5")
+    ou = _re.search(r"\b(OVER|UNDER|U)\s*(\d+\.?\d*)", m)
     if ou:
         kind = "over" if ou.group(1) == "OVER" else "under"
         return f"{kind}_{ou.group(2)}"
