@@ -39,22 +39,24 @@ El proceso involucra varios ficheros que colaboran entre si. Vamos a conocerlos 
 
 ### El director de orquesta
 
-**`scripts/bt_optimizer.py`** (~1337 lineas) — Es el script principal que ejecutas para lanzar el backtest. Piensa en el como un director de orquesta: el no toca ningun instrumento, pero le dice a cada musico cuando entrar. Organiza las 6 fases del proceso (Phase 0 a 5), llama a las funciones correctas en el orden correcto, y al final genera los ficheros de salida.
+**`scripts/bt_optimizer.py`** (~1359 lineas) — Es el script principal que ejecutas para lanzar el backtest. Piensa en el como un director de orquesta: el no toca ningun instrumento, pero le dice a cada musico cuando entrar. Organiza las 6 fases del proceso (Phase 0 a 5), llama a las funciones correctas en el orden correcto, y al final genera los ficheros de salida.
 
 ### Los musicos principales
 
-**`betfair_scraper/dashboard/backend/utils/csv_reader.py`** (~6200 lineas) — El fichero mas grande e importante del proyecto. Contiene dos cosas fundamentales:
+**`betfair_scraper/dashboard/backend/utils/csv_reader.py`** (~2392 lineas) — Fichero central del proyecto. Contiene dos cosas fundamentales:
 
 - La **lista de las 32 estrategias** (llamada `_STRATEGY_REGISTRY`, un array donde cada elemento describe una estrategia: su nombre, su trigger, como extraer las cuotas, y como saber si gano).
 - La **funcion `_analyze_strategy_simple()`** que es el "motor" del backtest: toma una estrategia y la ejecuta sobre todos los partidos historicos, generando una lista de apuestas simuladas con su resultado (gano/perdio, cuanto).
 
-**`betfair_scraper/dashboard/backend/utils/strategy_triggers.py`** (~2000+ lineas) — Contiene las 32 funciones de deteccion (una por estrategia). Cada funcion responde a la pregunta: "dado el estado actual de un partido en un minuto concreto, se cumple la condicion para apostar?" Por ejemplo, la funcion `_detect_back_draw_00_trigger` comprueba si el marcador es 0-0, si estamos en el rango de minutos correcto, y si las estadisticas (xG, posesion, tiros) estan dentro de los limites configurados.
+Las funciones de deteccion (triggers) estan en `strategy_triggers.py` y se importan desde ahi.
+
+**`betfair_scraper/dashboard/backend/utils/strategy_triggers.py`** (~1969 lineas) — Contiene las 32 funciones de deteccion (una por estrategia). Cada funcion responde a la pregunta: "dado el estado actual de un partido en un minuto concreto, se cumple la condicion para apostar?" Por ejemplo, la funcion `_detect_back_draw_00_trigger` comprueba si el marcador es 0-0, si estamos en el rango de minutos correcto, y si las estadisticas (xG, posesion, tiros) estan dentro de los limites configurados.
 
 **`betfair_scraper/dashboard/backend/utils/csv_loader.py`** (~1230 lineas) — Se encarga de leer los ficheros CSV de los partidos, preprocesarlos (limpiar datos erroneos, normalizar minutos) y cachearlos en memoria para que las demas funciones no tengan que releer ficheros del disco constantemente.
 
-**`betfair_scraper/dashboard/backend/api/optimizer_cli.py`** (597 lineas) — El optimizador de portfolio. Mientras `bt_optimizer.py` optimiza cada estrategia por separado, este fichero optimiza **como combinar las estrategias entre si**: cuales activar, que filtros aplicar al conjunto, que modo de bankroll usar, etc.
+**`betfair_scraper/dashboard/backend/api/optimizer_cli.py`** (~496 lineas) — El optimizador de portfolio. Mientras `bt_optimizer.py` optimiza cada estrategia por separado, este fichero optimiza **como combinar las estrategias entre si**: cuales activar, que filtros aplicar al conjunto, que modo de bankroll usar, etc. Usa steepest descent dinamico sobre todas las estrategias (sin listas hardcodeadas).
 
-**`betfair_scraper/dashboard/backend/api/optimize.py`** (816 lineas) — Contiene las funciones "worker" que hace el trabajo pesado del optimizador de portfolio: probar combinaciones de on/off, aplicar filtros realistas, simular un bankroll, y calcular puntuaciones. Tambien expone endpoints de la API para lanzar la optimizacion desde el dashboard web.
+**`betfair_scraper/dashboard/backend/api/optimize.py`** (~755 lineas) — Contiene las funciones "worker" que hacen el trabajo pesado del optimizador de portfolio: el algoritmo de steepest descent forward+backward, la evaluacion dinamica de portfolios, la aplicacion de filtros realistas, la simulacion de bankroll, y el calculo de puntuaciones. Tambien expone endpoints de la API para lanzar la optimizacion desde el dashboard web.
 
 ### Los datos
 
@@ -82,10 +84,10 @@ El proceso involucra varios ficheros que colaboran entre si. Vamos a conocerlos 
             |                       |                       |
     csv_reader.py            optimizer_cli.py        cartera_config.json
     (motor de backtest       (optimizador de         (configuracion
-     + 32 estrategias)        portfolio)              central)
+     + registry)              portfolio)              central)
          |                       |
     +----+----+             optimize.py
-    |         |             (workers y
+    |         |             (steepest descent,
 csv_loader.py  strategy_    simulacion
 (leer CSVs,   triggers.py   bankroll)
  preprocesar)  (32 triggers)
@@ -147,7 +149,7 @@ PARTIDOS HISTORICOS (1200+ CSVs con datos minuto a minuto)
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `phase0_load()` (linea 459). Esta funcion llama a `_get_all_finished_matches()` que vive en `csv_loader.py` (linea 1135), y esta a su vez llama a `_get_cached_finished_data()` (linea 1030) que es donde ocurre el trabajo real.
+En `bt_optimizer.py`, la funcion `phase0_load()` (linea 462). Esta funcion llama a `_get_all_finished_matches()` que vive en `csv_loader.py` (linea 1135), y esta a su vez llama a `_get_cached_finished_data()` (linea 1030) que es donde ocurre el trabajo real.
 
 ### Que hace, paso a paso
 
@@ -187,7 +189,7 @@ Aproximadamente 5 segundos para ~1200 partidos.
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `phase1_individual()` (linea 575). Dentro, llama repetidamente a `_run_single_strategy()` (linea 553) que a su vez usa `_analyze_strategy_simple()` de `csv_reader.py` (linea 470).
+En `bt_optimizer.py`, la funcion `phase1_individual()` (linea 578). Dentro, llama repetidamente a `_run_single_strategy()` (linea 556) que a su vez usa `_analyze_strategy_simple()` de `csv_reader.py` (linea 470).
 
 ### La idea
 
@@ -215,7 +217,7 @@ minute_max: se prueba con [75, 80, 85, 90]               → 4 opciones
 
 Total: 5 x 5 x 5 x 3 x 4 = **1500 combinaciones** a probar solo para esta estrategia.
 
-Las combinaciones estan definidas en el diccionario `SEARCH_SPACES` al principio de `bt_optimizer.py` (linea 98). Hay un search space para cada una de las 32 estrategias (excepto `tarde_asia`, que no tiene parametros ajustables porque se basa solo en la liga del partido).
+Las combinaciones estan definidas en el diccionario `SEARCH_SPACES` al principio de `bt_optimizer.py` (linea 101). Hay un search space para cada una de las 32 estrategias. `tarde_asia` tiene un search space vacio (`{}`) porque su deteccion se basa solo en la liga del partido — se evalua una vez con parametros por defecto.
 
 ### Como se prueba cada combinacion
 
@@ -233,7 +235,7 @@ Para cada combinacion de parametros, se ejecuta esta secuencia:
 
 4. El resultado es una lista de apuestas: por ejemplo, "220 apuestas, 132 ganadas, P/L total = +38.5 unidades".
 
-5. Se pasa esa lista por `_eval_bets()` (bt_optimizer.py, linea 342): las **puertas de calidad** (quality gates). Si no pasa los criterios minimos (explicados en seccion 13), devuelve `None` y esa combinacion se descarta. Si pasa, devuelve un diccionario con las metricas.
+5. Se pasa esa lista por `_eval_bets()` (bt_optimizer.py, linea 345): las **puertas de calidad** (quality gates). Si no pasa los criterios minimos (explicados en seccion 13), devuelve `None` y esa combinacion se descarta. Si pasa, devuelve un diccionario con las metricas.
 
 6. Se calcula un **score** para comparar: `score = ci_low * roi / 100`. Aqui, `ci_low` es el limite inferior del intervalo de confianza (una medida estadistica de "que tan seguro estoy de que este win rate es real y no suerte") y `roi` es el retorno sobre la inversion. Multiplicarlos equilibra rentabilidad con solidez estadistica.
 
@@ -290,7 +292,7 @@ Las estrategias que no aparecen aqui no pasaron las puertas de calidad.
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `_calibrate_odds_min()` (linea 487). Se ejecuta inmediatamente despues del grid search de cada estrategia, dentro del bucle de `phase1_individual()`.
+En `bt_optimizer.py`, la funcion `_calibrate_odds_min()` (linea 490). Se ejecuta inmediatamente despues del grid search de cada estrategia, dentro del bucle de `phase1_individual()`.
 
 ### El problema que resuelve
 
@@ -347,7 +349,7 @@ No se aplica a estrategias LAY, porque su P/L es asimetrico y la comparacion WR 
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `phase2_build_config()` (linea 654).
+En `bt_optimizer.py`, la funcion `phase2_build_config()` (linea 657).
 
 ### Que hace
 
@@ -358,7 +360,7 @@ Es una fase sencilla pero importante: toma los resultados de Phase 1 (los mejore
 1. **Lee la configuracion actual** de `cartera_config.json` como base.
 
 2. **Para cada estrategia que paso quality gates** (las que estan en `individual_results`):
-   - Convierte los nombres de parametros de snake_case a camelCase. Esto lo hace `_snake_to_camel()` (linea 695). Ejemplo:
+   - Convierte los nombres de parametros de snake_case a camelCase. Esto lo hace `_snake_to_camel()` (linea 698). Ejemplo:
      ```
      "minute_min" → "minuteMin"
      "xg_excess_min" → "xgExcessMin"
@@ -401,7 +403,7 @@ Es una fase sencilla pero importante: toma los resultados de Phase 1 (los mejore
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `phase2_5_crossval()` (linea 730).
+En `bt_optimizer.py`, la funcion `phase2_5_crossval()` (linea 733).
 
 ### El problema
 
@@ -415,7 +417,7 @@ Imagina que divides los 1200 partidos en 5 bolsas de 240 partidos cada una, mezc
 
 Si una estrategia tiene ROI=25% en 4 bolsas pero ROI=-15% en la quinta, probablemente su rendimiento depende de unos pocos partidos favorables. Una estrategia robusta deberia funcionar bien en la mayoria de las bolsas.
 
-La funcion `_eval_on_matches_subset()` (linea 384) ejecuta una estrategia solo sobre un subconjunto de partidos. Es una version reducida de `_analyze_strategy_simple()` — el mismo loop de trigger → persistencia → extraccion → resultado, pero solo sobre los partidos que le pasas.
+La funcion `_eval_on_matches_subset()` (linea 387) ejecuta una estrategia solo sobre un subconjunto de partidos. Es una version reducida de `_analyze_strategy_simple()` — el mismo loop de trigger → persistencia → extraccion → resultado, pero solo sobre los partidos que le pasas.
 
 **Prueba 2: Test temporal (70/30)**
 
@@ -459,7 +461,7 @@ En este ejemplo, `poss_extreme` tiene buena media pero alta varianza, ROI negati
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `phase3_presets()` (linea 859). Esta funcion llama a `optimizer_cli.run()` de `optimizer_cli.py` (linea 469), que a su vez usa las funciones worker de `optimize.py`.
+En `bt_optimizer.py`, la funcion `phase3_presets()` (linea 862). Esta funcion llama a `optimizer_cli.run()` de `optimizer_cli.py` (linea 359), que a su vez usa las funciones worker de `optimize.py`.
 
 ### Por que necesitamos otro nivel de optimizacion
 
@@ -485,9 +487,11 @@ El optimizador de portfolio ejecuta 5 sub-fases. Vamos a verlas:
 
 #### Sub-Phase 1: Steepest descent dinamico sobre todas las estrategias
 
-El codigo esta en `optimize.py`, funciones `_steepest_descent()` y `_eval_dynamic()`, y en `optimizer_cli.py`, funcion `_run_phase1()`.
+El codigo esta en `optimize.py`, funciones `_steepest_descent()` (linea 133), `_eval_dynamic()` (linea 120) y `_collect_bets_dynamic()` (linea 107), y en `optimizer_cli.py`, funcion `_run_phase1()` (linea 276).
 
-**Todas** las estrategias presentes en los bets participan en el on/off — no hay listas hardcodeadas. El optimizer descubre dinamicamente que estrategias hay y puede desactivar cualquiera.
+**Todas** las estrategias presentes en los bets participan en el on/off — no hay listas hardcodeadas. El optimizer descubre dinamicamente que estrategias hay y puede desactivar cualquiera. Internamente trabaja con un `disabled: set` (conjunto de estrategias desactivadas), no con un diccionario combo de on/off.
+
+Un portfolio debe tener al menos **200 apuestas** (`MIN_PORTFOLIO_BETS`) para ser considerado viable. Portfolios por debajo devuelven `-inf` y se descartan.
 
 El proceso tiene dos pasos:
 
@@ -510,27 +514,32 @@ El score depende del criterio:
 
 | Criterio | Formula del score | Que optimiza |
 |----------|-------------------|--------------|
-| `max_roi` | ROI × confianza | Rentabilidad proporcional |
-| `max_pl` | P/L absoluto × confianza | Beneficio total en dinero |
+| `max_roi` | flat_roi × confianza | Rentabilidad proporcional |
+| `max_pl` | flat_pl × confianza | Beneficio total en dinero |
 | `max_wr` | Wilson CI lower bound | Probabilidad minima de ganar |
-| `min_dd` | (P/L gestionado - 2×maxDD + WR×0.5) × confianza | Minimizar perdidas |
+| `min_dd` | Calmar ratio × (WR/100) × dd_penalty × confianza | Minimizar perdidas ajustado por rentabilidad |
 
-Donde **confianza** = `min(1.0, N/60)` — penaliza portfolios con pocas apuestas.
+Donde:
+- **confianza** = `min(1.0, N/60)` — penaliza portfolios con pocas apuestas.
+- **Calmar ratio** = `flat_roi / managed_dd_pct` — el retorno flat dividido por el drawdown porcentual gestionado. Usa metricas flat para el retorno (para que half_kelly no domine exponencialmente) y metricas gestionadas para el drawdown (para que dd_protection/anti_racha puedan ganar).
+- **dd_penalty** = penalizacion exponencial cuando el drawdown supera el 30%: `0.5^((dd-30)/20)`. Un drawdown del 50% multiplica el score por ~0.35.
 
 **Simulacion de bankroll** (`_simulate_cartera_py()` en optimize.py):
 
-Simula recorrer las apuestas una a una con un bankroll real. Para cada bet calcula el stake segun el modo de bankroll, aplica el P/L, actualiza bankroll, trackea pico y drawdown. Devuelve: total bets, wins, win%, flat P/L, flat ROI, managed P/L, max drawdown.
+Simula recorrer las apuestas una a una con un bankroll real. Para cada bet calcula el stake segun el modo de bankroll, aplica el P/L, actualiza bankroll, trackea pico y drawdown. Devuelve: total bets, wins, win%, flat P/L, flat ROI, managed P/L, max drawdown, managed ROI (% del bankroll inicial), y managed drawdown porcentual (% del pico de bankroll). Estas dos ultimas metricas normalizadas permiten comparar justamente entre modos de bankroll en la formula de min_dd.
 
 #### Sub-Phase 2: Ajustes realistas (7,776 combinaciones)
 
-El codigo esta en `optimize.py`, funcion `_phase2_worker()`.
+El codigo esta en `optimize.py`, funcion `_phase2_worker()` (linea 486), orquestada desde `optimizer_cli.py` funcion `_run_phase2()` (linea 320).
 
 Dado el resultado de Sub-Phase 1 (que estrategias on, que risk_filter, que bankroll_mode), ahora se optimizan los **ajustes realistas** del portfolio. Son filtros y correcciones que hacen la simulacion mas parecida a la realidad:
 
 ```
 dedup:             [false, true]
    Deduplicacion: si en el mismo partido se generan 2 apuestas en el mismo
-   mercado, quedarse solo con la primera.
+   mercado, quedarse solo con la primera. Usa `_normalize_mercado()` para
+   derivar la clave de mercado de cada apuesta — alineado con
+   `analyze_cartera()` y el sistema LIVE.
 
 min_odds:          [null, 1.15, 1.21]
    Cuota minima global (ademas de las individuales por estrategia).
@@ -550,7 +559,9 @@ conflict_filter:   [false, true]
 allow_contrarias:  [true, false]
    Permitir apuestas contradictorias en match odds del mismo partido.
    Ejemplo: apostar al empate Y apostar al local. Si es false, solo
-   se mantiene la primera.
+   se mantiene la primera. Detecta TODAS las estrategias que apuestan
+   en mercados home/away/draw (no solo un subconjunto hardcodeado)
+   usando `_normalize_mercado()`.
 
 min_stability:     [1, 2, 3]
    Numero minimo de capturas consecutivas con cuotas estables. Si la cuota
@@ -569,15 +580,15 @@ Cada una se aplica sobre las bets activas, se filtra por riesgo, se simula bankr
 
 #### Sub-Phase 2.5: Re-check post-adjustments
 
-El codigo esta en `optimizer_cli.py`, funcion `_run_phase25()`.
+El codigo esta en `optimizer_cli.py`, funcion `_run_phase25()` (linea 336).
 
-Sub-Phase 1 eligio que estrategias activar **sin considerar los adjustments**. Ahora que tenemos los adjustments optimos, puede que alguna estrategia ya no aporte (porque sus bets son filtradas por los adjustments). Se ejecuta otro steepest descent forward+backward con los adjustments aplicados.
+Sub-Phase 1 eligio que estrategias activar **sin considerar los adjustments**. Ahora que tenemos los adjustments optimos, puede que alguna estrategia ya no aporte (porque sus bets son filtradas por los adjustments). Se ejecuta otro steepest descent forward+backward con los adjustments aplicados, pero solo sobre las estrategias que no fueron desactivadas en Phase 1.
 
-Si el conjunto de desactivadas cambio, se **re-ejecuta Sub-Phase 2** con el nuevo conjunto para re-optimizar los adjustments.
+El steepest descent recibe `initial_disabled` con las estrategias ya desactivadas por Phase 1, de modo que el score base de partida refleja las decisiones anteriores (sin esto, partiria de un score con todas encendidas, que seria incorrecto). Si el conjunto total de desactivadas cambio respecto al de antes de Phase 2.5, se **re-ejecuta Sub-Phase 2** con el nuevo conjunto para re-optimizar los adjustments.
 
 #### Sub-Phase 3: Rango de minutos para momentum (5 opciones)
 
-El codigo esta en `optimizer_cli.py`, funcion `_find_best_momentum_range()` (linea 131).
+El codigo esta en `optimizer_cli.py`, funcion `_find_best_momentum_range()` (linea 110).
 
 Si la estrategia `momentum_xg` esta activa, prueba 5 rangos de minutos:
 ```
@@ -592,7 +603,7 @@ Elige el rango que maximiza el score del portfolio.
 
 #### Sub-Phase 4: Porcentaje de cashout (9 opciones)
 
-El codigo esta en `optimizer_cli.py`, funcion `_find_best_co_pct()` (linea 152).
+El codigo esta en `optimizer_cli.py`, funcion `_find_best_co_pct()` (linea 135).
 
 Prueba 9 niveles de cashout (cerrar la apuesta antes de que termine el partido):
 ```
@@ -605,15 +616,16 @@ Para cada nivel, llama a `simulate_cashout_cartera()` de csv_reader.py (explicad
 
 #### Generacion del config final
 
-El codigo esta en `optimizer_cli.py`, funcion `_build_preset_config()` (linea 192).
+El codigo esta en `optimizer_cli.py`, funcion `_build_preset_config()` (linea 175).
 
 Con todos los resultados, construye un `cartera_config.json` completo:
 - **Lee la config actual** como base (preserva todos los parametros individuales del grid search).
-- **Aplica on/off** de las 7 estrategias segun el combo ganador.
+- **Aplica on/off dinamicamente**: recibe un `disabled: set` con las estrategias que el optimizer decidio desactivar. Itera sobre TODAS las estrategias en la config (no un subconjunto hardcodeado).
 - **Nunca re-habilita** una estrategia que fallo quality gates (por seguridad).
 - **Aplica el rango de minutos** de momentum (Sub-Phase 3).
 - **Aplica los adjustments** optimizados (Sub-Phase 2).
 - **Aplica el cashout %** (Sub-Phase 4).
+- **Aplica el bankroll_mode** encontrado en Sub-Phase 1.
 - Lo guarda como `preset_{criterio}_config.json`.
 
 Tambien genera un CSV (`preset_{criterio}.csv`) con todas las apuestas del portfolio, con columnas detalladas para analisis externo.
@@ -624,7 +636,7 @@ Tambien genera un CSV (`preset_{criterio}.csv`) con todas las apuestas del portf
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `phase4_apply()` (linea 967).
+En `bt_optimizer.py`, la funcion `phase4_apply()` (linea 990).
 
 ### Que hace
 
@@ -634,8 +646,10 @@ Phase 3 genero 4 presets (max_roi, max_pl, max_wr, min_dd). Ahora hay que elegir
 
 1. **Para cada uno de los 4 presets**:
    a. Lee su fichero de configuracion (`preset_*_config.json`).
-   b. Llama a `_eval_preset_real_stats()` (linea 931), que hace lo siguiente:
+   b. Llama a `_eval_preset_real_stats()` (linea 934), que hace lo siguiente:
       - Toma la configuracion del preset y la aplica: para cada estrategia que el preset habilita, ejecuta `_analyze_strategy_simple()` con los parametros del preset.
+      - Aplica el **filtro global de cuota minima** (`min_odds` de los adjustments del preset), eliminando apuestas con cuotas inferiores al umbral. Lee `min_odds` del preset que esta evaluando (no de la config base), para simular exactamente lo que `analyze_cartera()` haria si ese preset se aplicara.
+      - Aplica **deduplicacion de mercado**: ordena las apuestas por minuto y, para cada par (match_id, mercado_normalizado), se queda solo con la primera. Usa `_normalize_mercado()` para garantizar alineamiento con `analyze_cartera()`.
       - Cuenta el total de apuestas, ganadas, P/L, calcula Wilson CI.
       - Esto produce **metricas honestas**: el resultado real que obtendrias si usaras esta configuracion.
    c. Verifica que pase dos quality gates de portfolio:
@@ -656,7 +670,7 @@ Phase 3 genero 4 presets (max_roi, max_pl, max_wr, min_dd). Ahora hay que elegir
 
 ### El merge inteligente
 
-La funcion `_merge_preset_strategies()` (linea 912) aplica el preset con cuidado:
+La funcion `_merge_preset_strategies()` (linea 915) aplica el preset con cuidado:
 
 - **Estrategia habilitada por el preset**: Se copian TODOS los parametros del preset (que ya incluyen los parametros individuales del grid search mas las decisiones del portfolio optimizer).
 - **Estrategia deshabilitada por el preset**: Solo se cambia `enabled: false`. Los parametros optimizados del grid search se **preservan**. Asi, si en el futuro quieres re-habilitarla, ya tiene buenos parametros.
@@ -670,7 +684,7 @@ Antes de escribir, se hace un backup timestamped automatico.
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `phase5_export()` (linea 1053).
+En `bt_optimizer.py`, la funcion `phase5_export()` (linea 1076).
 
 ### Que hace
 
@@ -792,7 +806,7 @@ Para cada partido terminado:
 
 ### Donde esta el codigo
 
-En `strategy_triggers.py`. Todas las funciones siguen exactamente la misma interfaz:
+En `strategy_triggers.py` (~1969 lineas). Todas las funciones siguen exactamente la misma interfaz:
 
 ```python
 def _detect_<nombre>_trigger(rows: list, curr_idx: int, cfg: dict) -> dict | None
@@ -859,7 +873,7 @@ La magia del diseno es que estas funciones se llaman igual desde el backtest (it
 
 ### Donde esta el codigo
 
-En `bt_optimizer.py`, la funcion `_eval_bets()` (linea 342) y las constantes en lineas 74-78.
+En `bt_optimizer.py`, la funcion `_eval_bets()` (linea 345) y las constantes/funciones en lineas 76-80.
 
 ### Que son las puertas de calidad (quality gates)
 
@@ -887,13 +901,14 @@ ROI del 10% significa que por cada unidad apostada, ganas 0.10 de media. Si tien
 
 Razon: Una estrategia con ROI del 2% probablemente no cubra los costes reales (slippage, latencia, etc.). El 10% da un margen de seguridad.
 
-**Puerta 3: P/L por apuesta minimo (>= 0.15 unidades)**
+**Puerta 3: P/L por apuesta minimo (dinamico)**
 
 ```python
 P/L por bet = P/L total / N
+umbral = min(0.30, 0.10 + numero_de_partidos / 10000)
 ```
 
-Similar al ROI pero medido en unidades absolutas, no en porcentaje. Filtra estrategias de bajo riesgo/recompensa que ganan muchas veces pero poquito.
+Similar al ROI pero medido en unidades absolutas, no en porcentaje. Filtra estrategias de bajo riesgo/recompensa que ganan muchas veces pero poquito. El umbral es **dinamico**: con 1200 partidos es ~0.22, y crece hasta un maximo de 0.30 a medida que el dataset aumenta. Cuantos mas datos tenemos, mas exigentes somos con el P/L por apuesta.
 
 **Puerta 4: Intervalo de confianza Wilson (limite inferior >= 40%)**
 
@@ -917,7 +932,7 @@ La funcion devuelve `None`, y esa combinacion de parametros se descarta silencio
 
 ### Donde esta el codigo
 
-En `csv_reader.py`, funcion `_normalize_mercado()` (linea 392) y dentro de `analyze_cartera()` (lineas 924-940).
+En `csv_reader.py`, funcion `_normalize_mercado()` (linea 392) y dentro de `analyze_cartera()` (a partir de linea 891).
 
 ### El problema
 
@@ -961,7 +976,7 @@ El sistema en vivo (LIVE) usa la misma logica de deduplicacion, implementada en 
 
 ### Donde esta el codigo
 
-En `csv_reader.py`, la funcion `simulate_cashout_cartera()` (linea 1291).
+En `csv_reader.py`, la funcion `simulate_cashout_cartera()` (linea 1377).
 
 ### Que es el cashout
 
@@ -979,6 +994,17 @@ La simulacion de cashout se usa en el portfolio optimizer (Phase 3, Sub-Phase 4)
 
 Para cada apuesta del portfolio, busca en el CSV del partido las filas posteriores al trigger y aplica el modo de cashout seleccionado. Si se dispara el cashout, recalcula el P/L basandose en las cuotas de cierre (no en el resultado final).
 
+Dos funciones auxiliares determinan que columnas de cuotas usar y cuando cerrar:
+
+- **`_co_market_cols()`** — Mapea cada una de las 32 estrategias a sus columnas BACK/LAY correspondientes. Cubre todos los tipos de mercado: draw (5 estrategias), over (6 estrategias con deteccion de linea dinamica), under (3 estrategias), correct score (6 estrategias con columna dinamica segun el marcador), home/away (6 estrategias con deteccion de equipo), y LAY (3 estrategias con columnas invertidas).
+
+- **`_is_adverse_goal()`** — Determina si un gol perjudica la apuesta, para decidir si activar el cashout por gol adverso. La logica varia por tipo de mercado:
+  - **Draw**: cualquier gol es adverso (rompe el empate).
+  - **Correct Score**: cualquier cambio en el marcador es adverso.
+  - **Under**: cualquier gol es adverso (acerca al over).
+  - **Home/Away**: gol del rival es adverso.
+  - **Over**: ningun gol es adverso (mas goles = mejor).
+
 ### Modos de cashout disponibles
 
 | Modo | Como funciona |
@@ -987,7 +1013,7 @@ Para cada apuesta del portfolio, busca en el CSV del partido las filas posterior
 | **Minuto fijo** (`cashout_minute=N`) | Cierra en la fila mas cercana al minuto N. Simple pero rigido. |
 | **Lay %** (`cashout_lay_pct=20`) | Cierra cuando la cuota LAY >= cuota BACK de entrada × 1.20. Es decir, cuando puedes cerrar con al menos un 20% de "colchon" sobre tu entrada. |
 | **Adaptativo** (`adaptive_early/late_pct`) | Dos umbrales diferentes: uno mas holgado antes de cierto minuto, y uno mas ajustado despues. Ejemplo: 30% antes del minuto 70, 15% despues. |
-| **Gol adverso** (`adverse_goal_stop`) | Cierra inmediatamente cuando se produce un gol que perjudica la apuesta (solo para apuestas de match odds, no de Over/Under). |
+| **Gol adverso** (`adverse_goal_stop`) | Cierra inmediatamente cuando se produce un gol que perjudica la apuesta. Cubre las 32 estrategias con logica especifica por tipo de mercado (ver arriba). |
 | **Trailing stop** (`trailing_stop_pct`) | Un stop que se mueve: trackea la cuota LAY minima vista, y cierra cuando sube un X% sobre ese minimo. |
 
 Los modos son **combinables**: si activas varios, el primero que se dispara gana.
@@ -1087,7 +1113,7 @@ El backtest y el sistema en vivo usan **exactamente el mismo codigo** de detecci
 
 | Componente | En backtest | En vivo |
 |------------|-------------|---------|
-| **Funcion de deteccion** | `trigger_fn(rows, curr_idx, cfg)` iterando `curr_idx` de 0 a N | `trigger_fn(rows, len(rows)-1, cfg)` — solo la ultima fila |
+| **Funcion de deteccion** | `trigger_fn(rows, curr_idx, cfg)` iterando `curr_idx` de 0 a N (definidas en `strategy_triggers.py`) | `trigger_fn(rows, len(rows)-1, cfg)` — solo la ultima fila |
 | **Configuracion** | Lee `cartera_config.json` | Lee `cartera_config.json` — el mismo fichero |
 | **Traduccion de parametros** | `_cfg_add_snake_keys()` | `_cfg_add_snake_keys()` — la misma funcion |
 | **Motor** | `_analyze_strategy_simple()` | `detect_betting_signals()` |
@@ -1168,9 +1194,6 @@ python scripts/bt_optimizer.py --phase export
 
 # Modo seguro: no modifica cartera_config.json
 python scripts/bt_optimizer.py --dry-run
-
-# Mas paralelismo para Phase 3
-python scripts/bt_optimizer.py --workers 8
 
 # Saltar la validacion de robustez (Phase 2.5)
 python scripts/bt_optimizer.py --no-crossval

@@ -50,8 +50,9 @@ from utils.csv_reader import (
     _analyze_strategy_simple,
     _cfg_add_snake_keys,
     _normalize_mercado,
+    _TO_CANONICAL,
 )
-from utils.csv_loader import _get_all_finished_matches, _read_csv_rows
+from utils.csv_loader import _get_all_finished_matches, _read_csv_rows, _final_result_row
 from api import optimizer_cli
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -95,8 +96,9 @@ DEFAULT_MIN_DUR = {
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SEARCH SPACES
-# Keys must match what _cfg_add_snake_keys() produces (snake_case) or the
-# camelCase names that _cfg_add_snake_keys translates.
+# Keys are snake_case — must match what trigger functions read via cfg.get().
+# Multi-name params (m_min vs minute_min) are normalized to canonical form
+# by _TO_CANONICAL when writing to cartera_config.json.
 # ─────────────────────────────────────────────────────────────────────────────
 SEARCH_SPACES: dict[str, dict[str, list]] = {
 
@@ -302,7 +304,8 @@ SEARCH_SPACES: dict[str, dict[str, list]] = {
         "odds_max":  [20.0, 50.0],
     },
 
-    # tarde_asia: no grid search (detection is liga-based, no tunable params)
+    # tarde_asia: no tunable params (liga-based detection), evaluated once with defaults
+    "tarde_asia": {},
 }
 
 # All strategy keys — one registry entry per strategy, no versioning, no categories.
@@ -317,6 +320,7 @@ SINGLE_STRATEGIES = [
     "draw_equalizer", "draw_22",
     "lay_over45_blowout",
     "over35_early_goals", "lay_draw_away_leading", "lay_cs11",
+    "tarde_asia",
 ]
 
 
@@ -386,7 +390,12 @@ def _max_drawdown(pl_list: list) -> float:
 
 def _eval_on_matches_subset(key: str, entry: tuple, cfg: dict, min_dur: int,
                             matches: list) -> list:
-    """Run a strategy on a specific subset of matches. Used by Phase 2.5 crossval."""
+    """Run a strategy on a specific subset of matches. Used by Phase 2.5 crossval.
+
+    Uses _final_result_row() for FT score extraction — same logic as
+    _analyze_strategy_simple() — to avoid divergence on matches with
+    trailing rows or missing 'finalizado' estado.
+    """
     _, _, trigger_fn, _, extract_fn, win_fn = entry
     bets = []
     for match_data in matches:
@@ -394,10 +403,12 @@ def _eval_on_matches_subset(key: str, entry: tuple, cfg: dict, min_dur: int,
         if not rows:
             continue
         match_id = match_data["match_id"]
-        last = rows[-1]
+        last = _final_result_row(rows)
+        if last is None:
+            continue
         try:
-            ft_gl = int(float(last.get("goles_local") or ""))
-            ft_gv = int(float(last.get("goles_visitante") or ""))
+            ft_gl = int(float(last["goles_local"]))
+            ft_gv = int(float(last["goles_visitante"]))
         except (ValueError, TypeError):
             continue
         effective_cfg = {**cfg, "match_id": match_id,
@@ -668,10 +679,10 @@ def phase2_build_config(individual_results: dict) -> dict:
 
     for family, result in individual_results.items():
         params = result["params"]
-        camel_params = _snake_to_camel(params)
+        canonical_params = _normalize_params(params)
         new_strategies[family] = {
             "enabled": True,
-            **camel_params,
+            **canonical_params,
             "_stats": {
                 "wr": round(result["wr"], 1),
                 "roi": round(result["roi"], 1),
@@ -682,8 +693,7 @@ def phase2_build_config(individual_results: dict) -> dict:
         approved.append(family)
 
     # Disable strategies that didn't pass quality gates
-    all_families = SINGLE_STRATEGIES + ["tarde_asia"]
-    for fam in all_families:
+    for fam in SINGLE_STRATEGIES:
         if fam not in individual_results:
             if fam in new_strategies:
                 new_strategies[fam] = {**new_strategies[fam], "enabled": False}
@@ -695,35 +705,13 @@ def phase2_build_config(individual_results: dict) -> dict:
     return new_strategies
 
 
-def _snake_to_camel(params: dict) -> dict:
-    """Convert snake_case param keys to camelCase for cartera_config.json."""
-    SNAKE_TO_CAMEL = {
-        "minute_min":    "minuteMin",
-        "min_minute":    "minuteMin",
-        "minute_max":    "minuteMax",
-        "max_minute":    "minuteMax",
-        "xg_max":        "xgMax",
-        "poss_max":      "possMax",
-        "shots_max":     "shotsMax",
-        "xg_excess_min": "xgExcessMin",
-        "sot_min":       "sotMin",
-        "xg_rem_min":    "xgRemMin",
-        "drift_min_pct": "driftMin",
-        "max_odds":      "oddsMax",
-        "odds_min":      "oddsMin",
-        "goal_diff_min": "goalDiffMin",
-        "drift_mom_gap_min": "momGapMin",
-        # Direct keys (already camelCase or pass-through)
-        "m_min":          "minuteMin",
-        "m_max":          "minuteMax",
-        "min_m":          "minuteMin",
-        "max_m":          "minuteMax",
-    }
-    result = {}
-    for k, v in params.items():
-        camel = SNAKE_TO_CAMEL.get(k, k)
-        result[camel] = v
-    return result
+def _normalize_params(params: dict) -> dict:
+    """Normalize param key variants to canonical snake_case for cartera_config.json.
+
+    Uses _TO_CANONICAL from csv_reader to map aliases (m_min, min_m, min_minute)
+    to their canonical form (minute_min). Keys without aliases pass through as-is.
+    """
+    return {_TO_CANONICAL.get(k, k): v for k, v in params.items()}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -954,8 +942,9 @@ def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
         )
         all_bets.extend(bets)
 
-    # Global min_odds floor (mirrors analyze_cartera)
-    global_min_odds = (base_cfg.get("adjustments") or {}).get("min_odds") or 0
+    # Global min_odds floor (mirrors analyze_cartera).
+    # Read from preset_cfg — each preset has its own optimized adjustments.
+    global_min_odds = (preset_cfg.get("adjustments") or {}).get("min_odds") or 0
     if global_min_odds > 0:
         all_bets = [b for b in all_bets if (b.get("back_odds") or 0) >= global_min_odds]
 
@@ -1080,11 +1069,8 @@ def phase5_export():
     _log("Phase 5 — exportando resultados…")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # Re-run analyze_cartera with final config
-    if hasattr(csv_reader, "_cartera_cache"):
-        csv_reader._cartera_cache.clear()
-    if hasattr(csv_reader, "_result_cache"):
-        csv_reader._result_cache.clear()
+    # Re-run analyze_cartera with final config (clear cache so it reads fresh config)
+    csv_reader.clear_analytics_cache()
 
     data  = csv_reader.analyze_cartera()
     bets  = data.get("bets", [])
@@ -1255,11 +1241,11 @@ def save_results(individual: dict, approved_strategies: dict, cv_details: dict |
     _log(f"Resultados guardados en {RESULTS_FILE.name}")
 
 
-def load_results() -> tuple[dict, dict] | None:
+def load_results() -> tuple[dict, dict, dict] | None:
     if not RESULTS_FILE.exists():
         return None
     data = json.loads(RESULTS_FILE.read_text(encoding="utf-8"))
-    return data.get("individual", {}), data.get("approved", {})
+    return data.get("individual", {}), data.get("approved", {}), data.get("crossval", {})
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1327,7 +1313,7 @@ def main():
             _log("ERROR: no hay resultados de phase individual guardados. "
                  "Ejecuta --phase individual primero.")
             sys.exit(1)
-        individual, new_strats = saved
+        individual, new_strats, cv_details = saved
 
     if args.phase in ("all", "presets"):
         preset_paths = phase3_presets(new_strats, workers=args.workers, dry_run=dry)
@@ -1345,6 +1331,10 @@ def main():
                 for c in CRITERIA
                 if (PRESETS_DIR / f"preset_{c}_config.json").exists()
             }
+            if not preset_paths:
+                _log(f"ERROR: no hay ficheros preset en {PRESETS_DIR}. "
+                     "Ejecuta --phase presets primero.")
+                sys.exit(1)
         best = phase4_apply(preset_paths, selector=args.criterion, dry_run=dry)
         if best:
             _log(f"\n✓ Preset aplicado: {best}")

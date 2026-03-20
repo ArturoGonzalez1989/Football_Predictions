@@ -120,7 +120,7 @@ Implementados en `_eval_bets()` (`scripts/bt_optimizer.py`), `_eval_combo()` (no
 
 Resultados del ultimo run completo (1202 partidos): ver `auxiliar/bt_optimizer_results.json`. Las 32 estrategias se evaluan; las que no pasan quality gates quedan con `enabled: false` en `cartera_config.json`.
 
-bt_optimizer.py features: `_eval_preset_real_stats()` para stats honestas de phase4, `MIN_PRESET_N=200`, `DEFAULT_SELECTOR="robust"`.
+bt_optimizer.py features: `_eval_preset_real_stats()` para stats honestas de phase4 (lee `min_odds` del preset, no de base_cfg), `MIN_PRESET_N=200`, `DEFAULT_SELECTOR="robust"`. `tarde_asia` tiene search space vacio `{}` (evaluada una vez con defaults).
 
 **cartera_config.json actual**: 32 estrategias, enabled segun ultimo BT run. El portfolio optimizer (phase3) genera 4 presets via optimizer_cli. Todas las estrategias son iguales, no hay jerarquias ni categorias.
 
@@ -140,8 +140,8 @@ bt_optimizer.py features: `_eval_preset_real_stats()` para stats honestas de pha
 Los presets se computan offline via `optimizer_cli.py` y se guardan directamente en `cartera_config.json`. La optimizacion ejecuta estas fases:
 
 1. **Phase 1**: steepest descent forward+backward sobre TODAS las estrategias presentes en los bets (dinamico, no hardcodeado). Prueba `risk_filter` (4 opciones) y `bankroll_mode` (solo para min_dd — irrelevante para max_roi/max_pl/max_wr porque usan metricas flat).
-2. **Phase 2**: adjustments realistas (7,776 combos): dedup, min/max odds, slippage, conflict filter, stability, minute ranges.
-3. **Phase 2.5**: re-check post-adj — steepest descent adicional con adjustments aplicados.
+2. **Phase 2**: adjustments realistas (7,776 combos): dedup y anti-contrarias via `_normalize_mercado()` (alineado con analyze_cartera), min/max odds, slippage, conflict filter, stability, minute ranges.
+3. **Phase 2.5**: re-check post-adj — steepest descent adicional con adjustments aplicados. Recibe `initial_disabled` de Phase 1 para que el baseline sea correcto.
 4. **Phase 3**: momentum minute range (5 opciones).
 5. **Phase 4**: cashout pct (9 opciones).
 
@@ -162,8 +162,8 @@ Las **32 estrategias** usan **helpers compartidos**. BT y LIVE ejecutan el mismo
 ### Arquitectura de helpers compartidos
 
 Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en csv_reader.py que:
-- **BT** llama iterando todas las filas con `curr_idx=idx` + persistencia (min_dur)
-- **LIVE** llama con `curr_idx=len(rows)-1` (ultima fila)
+- **BT** llama iterando todas las filas con `curr_idx=idx` + persistencia (min_dur). Extrae del trigger **actual** (`extractor_fn(trig)`, no del primer disparo).
+- **LIVE** llama con `curr_idx=len(rows)-1` (ultima fila). Usa `_trigger_first_data` para bloquear odds al primer disparo (estabilidad de señal). Para estrategias CS, resetea `_trigger_first_data` si `trigger_score` cambia (cambio de score = mercado diferente, señal anterior invalida).
 - Solo mira `rows[:curr_idx+1]` — nunca filas futuras
 
 **32 triggers** en csv_reader.py, todos con la misma interfaz `_detect_<name>_trigger(rows, curr_idx, cfg)`:
@@ -201,7 +201,8 @@ Cada estrategia tiene un helper `_detect_<name>_trigger(rows, curr_idx, cfg)` en
 1. **Momentum xG hardcodeado**: Params internos (sotMin, sotRatioMin, xgUnderperfMin, oddsMin, oddsMax) no estan en config. Hardcodeados identicos en backtest y live.
 2. **Cache key parcial**: analyze_cartera() cache incluye min_duration + enabled states de todas las estrategias del registry. Cambios de parametros config distintos de enabled/min_duration requieren invalidacion manual (limpiar _result_cache).
 3. **conservative_odds solo en BT**: Requiere ventana historial, no disponible en live.
-4. **Portfolio optimizer dinamico** (implementado 2026-03-19): optimizer_cli usa steepest descent forward+backward sobre TODAS las estrategias (sin hardcoding). `bankroll_mode` solo se prueba para `min_dd` (irrelevante para max_roi/max_pl/max_wr). `min_dd` usa Calmar ratio con penalizacion exponencial por drawdown >30%. `_co_market_cols()` y `_is_adverse_goal()` cubren las 32 estrategias para cashout simulation. `MIN_PORTFOLIO_BETS=200` previene over-selectivity.
+4. **Portfolio optimizer dinamico** (implementado 2026-03-19, corregido 2026-03-20): optimizer_cli usa steepest descent forward+backward sobre TODAS las estrategias (sin hardcoding). `bankroll_mode` solo se prueba para `min_dd` (irrelevante para max_roi/max_pl/max_wr). `min_dd` usa Calmar ratio con penalizacion exponencial por drawdown >30%. `_co_market_cols()` y `_is_adverse_goal()` cubren las 32 estrategias para cashout simulation. `MIN_PORTFOLIO_BETS=200` previene over-selectivity. Correcciones 2026-03-20: dedup y anti-contrarias en `_apply_realistic_adj()` usan `_normalize_mercado()` (alineado con analyze_cartera); `_steepest_descent()` acepta `initial_disabled` para que Phase 2.5 parta del baseline correcto; `_eval_preset_real_stats()` lee `min_odds` del preset (no de base_cfg).
+5. **`_trigger_first_data` y CS score reset** (fix 2026-03-20): LIVE cachea el trigger del primer disparo para estabilidad de odds. Para estrategias CS (`trigger_score` en trigger dict), si el score cambia (ej: gol anulado 1-3→0-3), se resetea el cache porque el mercado es diferente. BT no tiene este problema (extrae siempre del trigger actual). `trig_data` en BT es codigo muerto (se guarda pero nunca se usa para extraccion).
 6. **Deduplicacion de mercado** (implementado 2026-03-13, actualizado 2026-03-16): Una sola apuesta por mercado por partido. `_STRATEGY_MARKET` en csv_reader.py define los grupos. Primera estrategia en disparar (por minuto) tiene prioridad. LIVE dedup es siempre-activo via Pass 5 en `_apply_realistic_adjustments()`. Para ver los grupos actuales, leer `_STRATEGY_MARKET` en csv_reader.py:372.
 
 ## placed_bets.csv — estado 2026-03-13

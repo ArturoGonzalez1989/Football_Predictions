@@ -265,13 +265,13 @@ def t3_config_registry_sync():
           len(orphaned_config) == 0,
           f"in config but not registry: {sorted(orphaned_config)}")
 
-    # SINGLE_STRATEGIES + ["tarde_asia"] covers all registry keys
+    # SINGLE_STRATEGIES covers all registry keys (including tarde_asia)
     try:
         sys.path.insert(0, os.path.join(ROOT, "scripts"))
         import bt_optimizer as _bt
-        bt_families = set(_bt.SINGLE_STRATEGIES + ["tarde_asia"])
+        bt_families = set(_bt.SINGLE_STRATEGIES)
         missing_in_bt = registry_keys - bt_families
-        check("bt_optimizer SINGLE_STRATEGIES + tarde_asia covers all registry keys",
+        check("bt_optimizer SINGLE_STRATEGIES covers all registry keys",
               len(missing_in_bt) == 0,
               f"in registry but not in bt_optimizer: {sorted(missing_in_bt)}")
         extra_in_bt = bt_families - registry_keys
@@ -752,12 +752,11 @@ def t12_search_spaces():
               len(unknown_in_sp) == 0,
               f"in SEARCH_SPACES but not registry: {sorted(unknown_in_sp)}")
 
-    # tarde_asia intentionally excluded from SINGLE_STRATEGIES (no grid search)
-    check("tarde_asia intentionally excluded from SINGLE_STRATEGIES",
-          "tarde_asia" not in ss)
-    if CSV_READER_OK:
-        check("tarde_asia still in registry",
-              "tarde_asia" in {e[0] for e in _cr._STRATEGY_REGISTRY})
+    # tarde_asia included in SINGLE_STRATEGIES with empty search space (evaluated once with defaults)
+    check("tarde_asia included in SINGLE_STRATEGIES",
+          "tarde_asia" in ss)
+    check("tarde_asia has empty search space (no tunable params)",
+          _bt.SEARCH_SPACES.get("tarde_asia") == {})
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -50,7 +50,7 @@ from utils.csv_reader import (
 import bt_optimizer
 from bt_optimizer import (
     SEARCH_SPACES, SINGLE_STRATEGIES, _PERMANENTLY_DISABLED,
-    _eval_bets, _wilson_ci, _max_drawdown, _snake_to_camel,
+    _eval_bets, _wilson_ci, _max_drawdown, _normalize_params,
     _calibrate_odds_min, _ODDS_BUCKETS, _MIN_BUCKET_N,
     G_MIN_ROI, IC95_MIN_LOW, _min_pl_per_bet, _min_n,
     phase2_build_config, _merge_preset_strategies,
@@ -202,12 +202,12 @@ def c1_search_spaces_alignment():
           len(missing_cfg) == 0,
           f"in registry but not config: {sorted(missing_cfg)}")
 
-    # C1.9: SEARCH_SPACES param lists are non-empty
+    # C1.9: SEARCH_SPACES param lists are non-empty (empty {} is valid for tarde_asia)
     empty_params = [k for k, v in SEARCH_SPACES.items()
-                    if not v or any(len(vals) == 0 for vals in v.values())]
-    check("C1.9 All SEARCH_SPACES have non-empty param lists",
+                    if v and any(len(vals) == 0 for vals in v.values())]
+    check("C1.9 All SEARCH_SPACES with params have non-empty value lists",
           len(empty_params) == 0,
-          f"empty param lists: {empty_params}")
+          f"empty param value lists: {empty_params}")
 
     # C1.10: Grid sizes are reasonable (< 50,000 combos per strategy)
     import itertools
@@ -359,103 +359,77 @@ def c4_param_mapping():
         all_search_params.update(space.keys())
 
     # C4.1: Every SEARCH_SPACES param survives the full round-trip:
-    #   snake (grid search) → _snake_to_camel → config → _cfg_add_snake_keys → trigger
-    # Some params have explicit camelCase mappings (xg_max→xgMax); others are
-    # pass-through (fav_max stays fav_max). Both are valid as long as the trigger
-    # can read the value after the round-trip.
-    camel_results = {}
+    #   snake (grid search) → _normalize_params → config → _cfg_add_snake_keys → trigger
+    # _normalize_params maps aliases to canonical snake_case (e.g. m_min → minute_min).
+    # _cfg_add_snake_keys then expands canonical to ALL aliases so triggers find their key.
     roundtrip_failures = []
     for param in sorted(all_search_params):
-        result = _snake_to_camel({param: 42})
-        camel_key = list(result.keys())[0]
-        camel_results[param] = camel_key
-        # Now simulate reading from config: _cfg_add_snake_keys should produce
-        # the original param key (or the value should be accessible)
-        cfg_out = _cfg_add_snake_keys({camel_key: 42})
-        # The trigger reads cfg.get(param) — the original snake key must be present
-        if param not in cfg_out and camel_key not in cfg_out:
-            roundtrip_failures.append(f"{param} → {camel_key} → lost in _cfg_add_snake_keys")
-        elif cfg_out.get(param) != 42 and cfg_out.get(camel_key) != 42:
-            roundtrip_failures.append(f"{param} → {camel_key} → value changed")
+        canonical = _normalize_params({param: 42})
+        canon_key = list(canonical.keys())[0]
+        # Simulate reading from config: _cfg_add_snake_keys should expand
+        cfg_out = _cfg_add_snake_keys({canon_key: 42})
+        # The trigger reads cfg.get(param) — must be accessible
+        if cfg_out.get(param) != 42:
+            roundtrip_failures.append(f"{param} → {canon_key} → lost in _cfg_add_snake_keys")
 
-    check("C4.1 All SEARCH_SPACES params survive round-trip (snake→camel→config→trigger)",
+    check("C4.1 All SEARCH_SPACES params survive round-trip (snake→canonical→config→trigger)",
           len(roundtrip_failures) == 0,
           f"failures: {roundtrip_failures}")
 
-    # C4.2: No collisions — two different snake keys shouldn't map to same camelCase
+    # C4.2: No collisions — two different snake keys from same strategy shouldn't
+    # map to the same canonical name
     from collections import Counter
-    camel_values = list(camel_results.values())
-    dupes = {v: [k for k, cv in camel_results.items() if cv == v]
-             for v, count in Counter(camel_values).items() if count > 1}
-    # Filter: only flag if the colliding keys are from the SAME strategy's search space
     real_collisions = {}
-    for camel, snake_keys in dupes.items():
-        for strat, space in SEARCH_SPACES.items():
-            overlapping = [sk for sk in snake_keys if sk in space]
-            if len(overlapping) > 1:
-                real_collisions[f"{strat}/{camel}"] = overlapping
-    check("C4.2 No same-strategy snake_to_camel collisions",
+    for strat, space in SEARCH_SPACES.items():
+        canon_keys = [list(_normalize_params({k: 1}).keys())[0] for k in space]
+        dupes = {v for v, c in Counter(canon_keys).items() if c > 1}
+        if dupes:
+            real_collisions[strat] = sorted(dupes)
+    check("C4.2 No same-strategy canonical collisions",
           len(real_collisions) == 0,
           f"collisions: {real_collisions}")
 
-    # C4.3: _cfg_add_snake_keys round-trip — camelCase → snake → used by trigger
-    # For each camel key that _snake_to_camel produces, _cfg_add_snake_keys
-    # should produce the original snake_case key (or an alias)
+    # C4.3: _cfg_add_snake_keys round-trip — canonical snake → all aliases
     failed_roundtrip = []
-    for snake_param, camel_param in camel_results.items():
-        cfg_out = _cfg_add_snake_keys({camel_param: 42})
-        # The original snake_case key (or a known alias) should be present
-        if snake_param not in cfg_out:
-            # Check common aliases
-            aliases_present = [k for k in cfg_out.keys()
-                               if k != camel_param and cfg_out[k] == 42]
-            if not aliases_present:
-                failed_roundtrip.append(
-                    f"{camel_param} → _cfg_add_snake_keys → "
-                    f"missing '{snake_param}' (got keys: {list(cfg_out.keys())})"
-                )
-    check("C4.3 _cfg_add_snake_keys produces snake aliases for all camel keys",
+    for param in sorted(all_search_params):
+        canonical = list(_normalize_params({param: 42}).keys())[0]
+        cfg_out = _cfg_add_snake_keys({canonical: 42})
+        if param not in cfg_out:
+            failed_roundtrip.append(
+                f"{canonical} → _cfg_add_snake_keys → missing '{param}'"
+            )
+    check("C4.3 _cfg_add_snake_keys produces all aliases for canonical keys",
           len(failed_roundtrip) == 0,
           "\n      ".join(failed_roundtrip[:5]))
 
     # C4.4: Params written to config can be read back by triggers
-    # Verify that for each strategy, the camelCase params in config are
-    # what _cfg_add_snake_keys can translate
     cfg = _load_config()
     strategies = cfg.get("strategies", {})
     known_non_param_keys = {"enabled", "_stats", "label", "description"}
-    untranslatable = []
+    unreadable = []
     for strat_key, strat_cfg in strategies.items():
         if not isinstance(strat_cfg, dict):
             continue
+        expanded = _cfg_add_snake_keys(strat_cfg)
         for param_key in strat_cfg:
             if param_key in known_non_param_keys or param_key.startswith("_"):
                 continue
-            # This camelCase key should be translatable by _cfg_add_snake_keys
-            translated = _cfg_add_snake_keys({param_key: strat_cfg[param_key]})
-            # Should produce at least one snake_case alias beyond the original
-            snake_aliases = [k for k in translated if k != param_key]
-            if not snake_aliases and "_" not in param_key:
-                # camelCase key with no snake translation — potential issue
-                # but only flag if the key has uppercase (true camelCase)
-                if any(c.isupper() for c in param_key) and param_key not in translated:
-                    untranslatable.append(f"{strat_key}.{param_key}")
+            # After expansion, the value should still be accessible
+            if expanded.get(param_key) != strat_cfg[param_key]:
+                unreadable.append(f"{strat_key}.{param_key}")
+    check("C4.4 All config params readable after _cfg_add_snake_keys expansion",
+          len(unreadable) == 0,
+          f"unreadable: {unreadable}")
 
-    # This is informational — not all camelCase keys need snake aliases
-    # (some triggers read camelCase directly via cfg.get())
-    if VERBOSE and untranslatable:
-        print(f"    [INFO] camelCase keys without snake aliases: {untranslatable[:10]}")
-
-    # C4.5: _snake_to_camel handles all keys in DEFAULT_MIN_DUR-related spaces
-    # The minute_min/minute_max/min_minute/max_minute aliases are particularly tricky
+    # C4.5: _normalize_params handles all minute aliases correctly
     minute_aliases = ["minute_min", "minute_max", "min_minute", "max_minute",
                       "m_min", "m_max", "min_m", "max_m"]
     for alias in minute_aliases:
-        result = _snake_to_camel({alias: 50})
-        camel = list(result.keys())[0]
-        check(f"C4.5 _snake_to_camel('{alias}') → camelCase '{camel}'",
-              camel in ("minuteMin", "minuteMax"),
-              f"got: {camel}")
+        result = _normalize_params({alias: 50})
+        canon = list(result.keys())[0]
+        check(f"C4.5 _normalize_params('{alias}') → canonical '{canon}'",
+              canon in ("minute_min", "minute_max"),
+              f"got: {canon}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -590,9 +564,9 @@ def c6_config_flow():
                   new_strats[key].get("enabled") is False)
             break  # just check one representative
 
-    # C6.8: Approved strategy has camelCase params
-    check("C6.8 Approved strategy params are camelCase",
-          "minuteMin" in new_strats.get("cs_one_goal", {}),
+    # C6.8: Approved strategy has canonical snake_case params
+    check("C6.8 Approved strategy params are canonical snake_case",
+          "minute_min" in new_strats.get("cs_one_goal", {}),
           f"keys: {list(new_strats.get('cs_one_goal', {}).keys())}")
 
     # ── C6.9-C6.10: _eval_preset_real_stats applies dedup ────────────────────
@@ -639,13 +613,11 @@ def c6_config_flow():
 def c7_export_consistency():
     section("C7 — Phase 4→5: Export consistency")
 
-    # C7.1: phase5_export clears caches before running
+    # C7.1: phase5_export clears caches before running (via clear_analytics_cache)
     src = inspect.getsource(bt_optimizer.phase5_export)
-    check("C7.1 phase5_export clears _cartera_cache",
-          "_cartera_cache" in src and "clear" in src,
+    check("C7.1 phase5_export clears analytics cache",
+          "clear_analytics_cache" in src,
           "Must clear cache to pick up Phase 4 config changes")
-    check("C7.2 phase5_export clears _result_cache",
-          "_result_cache" in src and "clear" in src)
 
     # C7.3: phase5_export uses analyze_cartera (ground truth)
     check("C7.3 phase5_export calls analyze_cartera()",

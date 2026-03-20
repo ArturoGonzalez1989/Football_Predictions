@@ -426,43 +426,61 @@ def _normalize_mercado(mercado: str) -> str:
         return "draw"
     return mercado.lower().replace(" ", "_")
 
-# camelCase config keys → snake_case keys expected by trigger functions.
-# Each value is a list because some camelCase keys map to multiple snake_case aliases
-# used by different trigger functions (e.g. minuteMin → min_minute AND minute_min).
-_CAMEL_TO_SNAKE_ALIASES: dict[str, list[str]] = {
-    "minuteMin":   ["min_minute", "minute_min", "m_min", "min_m"],
-    "minuteMax":   ["max_minute", "minute_max", "m_max", "max_m"],
-    "sotMin":      ["sot_min"],
-    "sotRatioMin": ["sot_ratio_min"],
-    "xgRemMin":    ["xg_rem_min"],
-    "xgExcessMin": ["xg_excess_min"],
-    "xgUnderperfMin": ["xg_underperf_min"],
-    "xgMax":       ["xg_max"],
-    "possMax":     ["poss_max"],
-    "shotsMax":    ["shots_max"],
-    "driftMin":    ["drift_min_pct"],
-    "oddsMax":     ["max_odds"],
-    "oddsMin":     ["min_odds", "odds_min"],
-    "goalDiffMin": ["goal_diff_min"],
-    "momGapMin":   ["drift_mom_gap_min"],
-}
+# Parameter alias groups: each list contains ALL equivalent names for one
+# logical parameter (camelCase legacy + snake_case variants).  If ANY name
+# from a group is present in a config dict, _cfg_add_snake_keys() expands
+# it to ALL names in the group so trigger functions always find their key.
+#
+# First snake_case entry in each group is the canonical name used when
+# writing to cartera_config.json.
+_PARAM_ALIAS_GROUPS: list[list[str]] = [
+    ["minute_min",      "minuteMin", "min_minute", "m_min", "min_m"],
+    ["minute_max",      "minuteMax", "max_minute", "m_max", "max_m"],
+    ["xg_max",          "xgMax"],
+    ["poss_max",        "possMax"],
+    ["shots_max",       "shotsMax"],
+    ["sot_min",         "sotMin"],
+    ["sot_ratio_min",   "sotRatioMin"],
+    ["xg_rem_min",      "xgRemMin"],
+    ["xg_excess_min",   "xgExcessMin"],
+    ["xg_underperf_min","xgUnderperfMin"],
+    ["drift_min_pct",   "driftMin"],
+    ["odds_max",        "oddsMax", "max_odds"],
+    ["odds_min",        "oddsMin", "min_odds"],
+    ["goal_diff_min",   "goalDiffMin"],
+    ["drift_mom_gap_min","momGapMin"],
+]
+
+# Derived: any alias → canonical snake_case name (first entry in group).
+# Used by bt_optimizer to normalize params before writing to config.
+_TO_CANONICAL: dict[str, str] = {}
+for _group in _PARAM_ALIAS_GROUPS:
+    _canonical = _group[0]
+    for _alias in _group[1:]:
+        _TO_CANONICAL[_alias] = _canonical
 
 
 def _cfg_add_snake_keys(cfg: dict) -> dict:
-    """Return cfg enriched with snake_case aliases for camelCase keys.
+    """Return cfg enriched with all parameter aliases.
 
-    Trigger functions in strategy_triggers.py read snake_case keys (e.g.
-    ``sot_min``, ``max_minute``) while cartera_config.json stores camelCase
-    (``sotMin``, ``minuteMax``). This function adds the snake_case equivalents
-    so both coexist without modifying the config schema.
+    Trigger functions use various snake_case key names (e.g. ``sot_min``,
+    ``max_minute``, ``m_min``).  Config may store camelCase (legacy) or
+    canonical snake_case.  This function ensures ALL known aliases are
+    present so triggers always find their preferred key name.
     Only adds keys that are not already present.
     """
     out = dict(cfg)
-    for camel, snakes in _CAMEL_TO_SNAKE_ALIASES.items():
-        if camel in cfg:
-            for snake in snakes:
-                if snake not in out:
-                    out[snake] = cfg[camel]
+    for group in _PARAM_ALIAS_GROUPS:
+        # Find first key from this group present in cfg
+        source_val = None
+        for key in group:
+            if key in cfg:
+                source_val = cfg[key]
+                break
+        if source_val is not None:
+            for key in group:
+                if key not in out:
+                    out[key] = source_val
     return out
 
 
@@ -2140,9 +2158,13 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 # Trigger no longer active — reset first-data so next activation is fresh.
                 _trigger_first_data.pop((match_id, _key), None)
                 continue
-            # Use trigger data from FIRST activation (mirrors BT's trig_data from first_seen row).
+            # Use trigger data from FIRST activation for signal stability (locked odds).
+            # Reset when trigger_score changes (CS strategies) — score change means
+            # a different market, so the old signal is invalid.
             _cache_key = (match_id, _key)
             if _cache_key not in _trigger_first_data:
+                _trigger_first_data[_cache_key] = _trig
+            elif _trig.get("trigger_score") and _trig["trigger_score"] != _trigger_first_data[_cache_key].get("trigger_score"):
                 _trigger_first_data[_cache_key] = _trig
             _extracted = _extract(_trigger_first_data[_cache_key])
             if _extracted is None:

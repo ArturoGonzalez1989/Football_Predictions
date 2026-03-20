@@ -222,8 +222,8 @@ def _build_preset_config(disabled: set, adj: dict, risk_filter: str,
 
     # Apply momentum minute range from Phase 3
     if "momentum_xg" in strategies and isinstance(strategies["momentum_xg"], dict):
-        strategies["momentum_xg"]["minuteMin"] = m_min
-        strategies["momentum_xg"]["minuteMax"] = m_max
+        strategies["momentum_xg"]["minute_min"] = m_min
+        strategies["momentum_xg"]["minute_max"] = m_max
 
     # Apply strategy_params overrides if provided
     _sp = strategy_params or {}
@@ -340,16 +340,18 @@ def _run_phase25(bets, disabled, best_adj, best_risk, best_br, criterion, bankro
     current_score = _eval_dynamic(bets, disabled, best_adj, best_risk, bankroll_init, best_br, criterion)
     _log(f"Phase 2.5 — score inicial con adj: {current_score:.4f}")
 
-    new_disabled = _steepest_descent(
+    # Steepest descent starts from the Phase 1 disabled state so the baseline
+    # score reflects prior decisions. Only active strategies are candidates.
+    combined = _steepest_descent(
         bets, [k for k in strategy_keys if k not in disabled],
-        best_adj, best_risk, bankroll_init, best_br, criterion)
+        best_adj, best_risk, bankroll_init, best_br, criterion,
+        initial_disabled=disabled)
 
-    # Merge: original disabled + newly disabled
-    combined = disabled | new_disabled
+    newly_disabled = combined - disabled
     final_score = _eval_dynamic(bets, combined, best_adj, best_risk, bankroll_init, best_br, criterion)
 
-    if new_disabled:
-        _log(f"  Phase 2.5 desactivó adicionalmente: {', '.join(sorted(new_disabled))}")
+    if newly_disabled:
+        _log(f"  Phase 2.5 desactivó adicionalmente: {', '.join(sorted(newly_disabled))}")
     _log(f"Phase 2.5 completada — score final: {final_score:.4f}")
     return combined, final_score
 

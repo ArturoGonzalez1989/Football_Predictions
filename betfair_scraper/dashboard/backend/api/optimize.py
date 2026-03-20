@@ -32,6 +32,8 @@ _backend_dir = Path(__file__).resolve().parent.parent
 if str(_backend_dir) not in sys.path:
     sys.path.insert(0, str(_backend_dir))
 
+from utils.csv_reader import _normalize_mercado  # noqa: E402
+
 router = APIRouter()
 
 # Pre-computed preset CSVs live here (written by optimizer_cli.py after each run).
@@ -105,10 +107,12 @@ def _fv(b: Dict, key: str) -> Optional[float]:
 # ── Dynamic bet collection ────────────────────────────────────────────────────
 
 def _collect_bets_dynamic(bets: List[Dict], disabled: set) -> List[Dict]:
-    """Return bets excluding disabled strategies, sorted chronologically."""
-    cb = [b for b in bets if b.get("strategy") not in disabled]
-    cb.sort(key=lambda b: b.get("timestamp_utc") or "")
-    return cb
+    """Return bets excluding disabled strategies.
+
+    Expects bets pre-sorted by timestamp_utc (as returned by analyze_cartera).
+    Filtering preserves relative order, so no re-sort is needed.
+    """
+    return [b for b in bets if b.get("strategy") not in disabled]
 
 
 # Minimum bets for a portfolio to be considered viable in the optimizer.
@@ -132,7 +136,8 @@ def _eval_dynamic(bets: List[Dict], disabled: set, adj: Optional[Dict],
 
 def _steepest_descent(bets: List[Dict], strategy_keys: List[str],
                       adj: Optional[Dict], risk: str, bankroll_init: float,
-                      br: str, criterion: str, max_passes: int = 10) -> set:
+                      br: str, criterion: str, max_passes: int = 10,
+                      initial_disabled: set = None) -> set:
     """Forward+backward steepest descent over strategy on/off.
 
     Backward pass: start with all on, iteratively disable the strategy
@@ -141,8 +146,12 @@ def _steepest_descent(bets: List[Dict], strategy_keys: List[str],
     re-enable it. Breaks local optima where removing A was good but
     removing A+B together was excessive.
 
-    Returns the set of disabled strategy keys."""
-    disabled = set()
+    initial_disabled: strategies already disabled by a prior phase. The
+    descent starts from this state instead of all-on, so the baseline
+    score reflects previous decisions accurately.
+
+    Returns the set of disabled strategy keys (includes initial_disabled)."""
+    disabled = set(initial_disabled) if initial_disabled else set()
     current_score = _eval_dynamic(bets, disabled, adj, risk, bankroll_init, br, criterion)
 
     # Backward pass: disable strategies that hurt the portfolio
@@ -202,17 +211,15 @@ def _filter_by_risk(bets: List[Dict], risk: str) -> List[Dict]:
 # ── Realistic adjustment helpers (mirrors applyRealisticAdjustments in cartera.ts) ──
 
 def _bet_market_key(b: Dict) -> str:
-    strategy = b.get("strategy", "")
+    """Canonical dedup key: (match_id, normalized_market).
+
+    Uses _normalize_mercado() from csv_reader — the same function used by
+    analyze_cartera() and _eval_preset_real_stats() — so the optimizer's
+    dedup step is aligned with the rest of the pipeline.
+    """
     match_id = b.get("match_id", "")
-    if strategy == "back_draw_00":
-        return f"{match_id}:draw"
-    if strategy in ("odds_drift", "momentum_xg"):
-        return f"{match_id}:back:{b.get('team') or 'unknown'}"
-    # Goal Clustering: deduplicate at strategy level — only the first trigger per match fires.
-    # Each goal changes over_line but we only want the first clustering signal per match.
-    if strategy == "goal_clustering":
-        return f"{match_id}:goal_clustering"
-    return f"{match_id}:over:{b.get('over_line') or 'unknown'}"
+    mkt = _normalize_mercado(b.get("mercado", ""))
+    return f"{match_id}:{mkt}"
 
 
 def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
@@ -275,25 +282,25 @@ def _apply_realistic_adj(bets: List[Dict], adj: Dict) -> List[Dict]:
             or b.get("match_id") not in xg_matches
         ]
 
-    # 5b. Anti-contrarias: remove later contradictory match-odds bets on same match
+    # 5b. Anti-contrarias: remove later contradictory match-odds bets on same match.
+    # Match-odds markets are: home, away, draw. Uses _normalize_mercado to detect.
+    _MATCH_ODDS_MARKETS = {"home", "away", "draw"}
     if not adj.get("allowContrarias", True):
         seen_match: Dict[str, str] = {}
         new2: List[Dict] = []
         for b in result:
-            strategy = b.get("strategy", "")
-            is_match_odds = strategy in ("back_draw_00", "odds_drift", "momentum_xg")
-            if not is_match_odds:
+            mkt = _normalize_mercado(b.get("mercado", ""))
+            if mkt not in _MATCH_ODDS_MARKETS:
                 new2.append(b)
                 continue
-            bet_type = "draw" if strategy == "back_draw_00" else (b.get("team") or "home")
             match_id = b.get("match_id")
             first = seen_match.get(match_id)
             if first is None:
-                seen_match[match_id] = bet_type
+                seen_match[match_id] = mkt
                 new2.append(b)
-            elif first == bet_type:
+            elif first == mkt:
                 new2.append(b)
-            # else: contraria → skip
+            # else: contraria → skip (different match-odds market on same match)
         result = new2
 
     # 6. Stability filter

@@ -552,10 +552,13 @@ function strategyCriteria(cfg: Record<string, any>): string[] {
   const mMin = cfg.minuteMin ?? cfg.m_min ?? 0
   const mMax = cfg.minuteMax ?? cfg.m_max ?? 90
   if (mMin > 0 || mMax < 90) c.push(`Min ${mMin}–${mMax < 90 ? mMax : "FT"}`)
-  if (cfg.xgMax != null && cfg.xgMax < 5)     c.push(`xG < ${cfg.xgMax}`)
+  const xgMax = cfg.xgMax ?? cfg.xg_max
+  if (xgMax != null && xgMax < 5)             c.push(`xG < ${xgMax}`)
   if (cfg.xg_diff_max != null)                c.push(`xG diff ≤ ${cfg.xg_diff_max}`)
-  if (cfg.sotMin != null && cfg.sotMin > 0)   c.push(`SoT ≥ ${cfg.sotMin}`)
-  if (cfg.goalDiffMin != null && cfg.goalDiffMin > 0) c.push(`GD ≥ ${cfg.goalDiffMin}`)
+  const sotMin = cfg.sotMin ?? cfg.sot_min
+  if (sotMin != null && sotMin > 0)           c.push(`SoT ≥ ${sotMin}`)
+  const gdMin = cfg.goalDiffMin ?? cfg.goal_diff_min
+  if (gdMin != null && gdMin > 0)             c.push(`GD ≥ ${gdMin}`)
   if (cfg.goals_min != null)                  c.push(`G ${cfg.goals_min}–${cfg.goals_max ?? "+"}`)
   if (cfg.poss_min != null)                   c.push(`Pos ≥ ${cfg.poss_min}%`)
   if (cfg.fav_max != null)                    c.push(`Fav ≤ ${cfg.fav_max}`)
