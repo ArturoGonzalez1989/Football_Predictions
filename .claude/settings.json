@@ -120,11 +120,24 @@
       "Bash(then echo:*)",
       "Bash(grep -l \"en_vivo\\\\|finalizado\" /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/data/partido_*.csv)",
       "Bash(ls /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/data/partido_ac*)",
-      "mcp__plugin_claude-mem_mcp-search__smart_search"
+      "mcp__plugin_claude-mem_mcp-search__smart_search",
+      "Bash(find /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo -name partido_*.csv)",
+      "Bash(ls -1 /c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/betfair_scraper/data/partido_*.csv)",
+      "Bash(python scripts/monte_carlo.py --sims 1000)",
+      "Bash(python scripts/monte_carlo.py --sims 10000)",
+      "Bash(python -m pytest tests/test_monte_carlo.py -v)",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_type",
+      "Bash(curl -s http://127.0.0.1:1234/v1/models)",
+      "Bash(python -m json.tool)",
+      "WebSearch",
+      "Bash(python -c \"from betting_agent.agent import BettingAgent, schedule_live_bet; from betting_agent.verifier import verify_market, verify_betslip, verify_confirmation; print\\(''All imports OK''\\)\")",
+      "Read(//c/Users/agonz/OneDrive/Documents/Proyectos/Furbo/$6 >= 75 && $6 <= 90 {printf \"\"\"\"min=%s score=%s-%s back_home=%s back_away=%s/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\dashboard\\frontend\\src\\components",
-      "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper"
+      "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper",
+      "c:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper"
     ]
   }
 }

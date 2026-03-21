@@ -1,0 +1,17 @@
+Mercado: **Resultados del partido** (solo ganador)  
+Selección en el betslip: **Empate**  
+Odd actual: **3.85**  
+Stake introducido: **€2.00**  
+Ganancia potencial: **€5.70** (incluye stake, es decir, retorno total si gana)  
+Riesgo: **€2.00**
+
+Estado del partido:  
+- Fecha: sábado 21 de marzo  
+- Hora: 13:30  
+- Equipos: Brighton vs Liverpool  
+- Estado: **Irá en juego** (no ha comenzado aún)  
+- Cuota total igualada: EUR 22,602
+
+Nota: La odd del empate mostrada en el betslip (3.85) coincide con la cuota “Contra” para Brighton en la tabla de cuotas de partido (fila Empate → Contra = 3.9, pero redondeado o actualizado a 3.85 en el betslip).
+---
+Tokens: {"prompt_tokens": 1215, "completion_tokens": 219, "total_tokens": 1434}

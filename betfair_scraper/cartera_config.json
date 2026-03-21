@@ -2,6 +2,9 @@
   "bankroll_mode": "fixed",
   "active_preset": "max_pl",
   "risk_filter": "all",
+  "auto_bet_live": false,
+  "lm_studio_url": "http://127.0.0.1:1234",
+  "lm_studio_model": "qwen/qwen3.5-9b:2",
   "min_duration": {
     "back_draw_00": 2,
     "xg_underperformance": 3,

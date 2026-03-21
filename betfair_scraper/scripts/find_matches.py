@@ -23,7 +23,7 @@ GAMES_CSV = Path(__file__).parent.parent / "games.csv"
 HEADLESS = True
 TIMEOUT = 15000  # ms para Playwright
 MAX_PAGES = 10   # Maximo de paginas de paginacion a recorrer
-MAX_MATCHES = 15  # Maximo de partidos simultáneos en games.csv
+MAX_MATCHES = 20  # Maximo de partidos simultáneos en games.csv
 
 # Ligas por tier — usadas para priorizar cuando hay >MAX_MATCHES partidos
 # Slugs URL-decoded y lowercase, tal como aparecen en las URLs de Betfair

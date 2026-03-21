@@ -638,10 +638,17 @@ def run_paper_auto_place() -> dict:
                 placed_ok = _auto_place_signal(sig, flat_stake, message_id=msg_id)
                 if placed_ok:
                     placed += 1
+                    # ── Live bet: trigger betting agent if enabled ──
+                    if cfg.get("auto_bet_live", False):
+                        try:
+                            from betting_agent.agent import schedule_live_bet
+                            schedule_live_bet(sig, flat_stake, cfg)
+                        except Exception as e:
+                            _log.error("Live bet scheduling failed: %s", e)
                 elif msg_id:
                     # Mercado ya ocupado por otra estrategia: marcar preview como DESCARTADA
                     sig_snap = _telegram_signal_data.pop(sig_key, None)
-                    _tg.mark_signal_discarded(msg_id, sig_snap, flat_stake)
+                    _tg.mark_signal_discarded(msg_id, sig_snap, flat_stake, reason="Mercado ocupado por otra estrategia")
             else:
                 # Señal activa pero no madura aún (espera min_duration) o cuota desfavorable
                 if not sig.get("odds_favorable", True):
@@ -684,7 +691,7 @@ def run_paper_auto_place() -> dict:
                     msg_id = _telegram_signal_messages.pop(exp_key, None)
                     sig_snap = _telegram_signal_data.pop(exp_key, None)
                     if msg_id:
-                        _tg.mark_signal_discarded(msg_id, sig_snap, flat_stake)
+                        _tg.mark_signal_discarded(msg_id, sig_snap, flat_stake, reason="Señal expirada (condiciones ya no se cumplen)")
                 _save_telegram_state(_telegram_signal_messages)
         except Exception as e:
             _log.debug(f"Telegram message cleanup failed: {e}")

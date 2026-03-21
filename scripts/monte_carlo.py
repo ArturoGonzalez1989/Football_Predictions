@@ -4,13 +4,15 @@ monte_carlo.py — Monte Carlo risk analysis for the Furbo betting portfolio.
 Pure analysis module: receives lists of bets, returns distributions and metrics.
 Does NOT modify any config or data files.
 
-Three analyses:
+Four analyses:
   1. Strategy fragility (bootstrap): resample each strategy's bets with replacement,
      check how often quality gates still pass.
   2. Portfolio drawdown distribution (permutation): shuffle bet order, compute
      max drawdown for each permutation → percentile distribution.
   3. Portfolio profit distribution (bootstrap): resample portfolio bets with
      replacement → profit percentiles + P(loss) + P(ruin).
+  4. Goal sensitivity: for each bet, test whether ±1 goal changes the outcome.
+     Classifies bets as edge (robust), bad luck, good luck, or fragile.
 
 Usage standalone:
     python scripts/monte_carlo.py                    # run on current cartera_config
@@ -305,7 +307,292 @@ def portfolio_profit_distribution(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Full report: combines all three analyses
+# 4. Goal sensitivity — does ±1 goal change the bet outcome?
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Win condition type per strategy: how does the FT score determine win/loss?
+# "draw"       → win if gl == gv
+# "cs"         → win if FT matches exact trigger score
+# "over_N"     → win if total goals >= N
+# "under_N"    → win if total goals <= N
+# "team_home"  → win if gl > gv (home wins)
+# "team_away"  → win if gv > gl (away wins)
+# "not_draw"   → win if gl != gv (lay draw)
+# "not_cs"     → win if FT != specific score (lay CS)
+_WIN_TYPE: dict[str, str] = {
+    "back_draw_00":      "draw",
+    "draw_xg_conv":      "draw",
+    "draw_11":           "draw",
+    "draw_equalizer":    "draw",
+    "draw_22":           "draw",
+    "cs_close":          "cs",
+    "cs_one_goal":       "cs",
+    "cs_20":             "cs",
+    "cs_big_lead":       "cs",
+    "cs_00":             "cs",
+    "cs_11":             "cs",
+    "over25_2goal":      "over_3",
+    "over25_2goals":     "over_3",
+    "over35_early_goals": "over_4",
+    "pressure_cooker":   "over_dynamic",
+    "goal_clustering":   "over_dynamic",
+    "xg_underperformance": "over_dynamic",
+    "poss_extreme":      "over_1",
+    "tarde_asia":        "over_3",
+    "under35_late":      "under_3",
+    "under35_3goals":    "under_3",
+    "under45_3goals":    "under_4",
+    "lay_over45_v3":     "under_4",
+    "lay_over45_blowout": "under_4",
+    "longshot":          "team",
+    "ud_leading":        "team",
+    "home_fav_leading":  "team_home",
+    "away_fav_leading":  "team_away",
+    "odds_drift":        "team",
+    "momentum_xg":       "team",
+    "lay_draw_away_leading": "not_draw",
+    "lay_cs11":          "not_cs_11",
+}
+
+
+def _parse_score(score_str: str) -> tuple[int, int]:
+    """Parse '2-1' → (2, 1).  Returns (-1, -1) on failure."""
+    try:
+        parts = score_str.split("-")
+        return int(parts[0]), int(parts[1])
+    except Exception:
+        return -1, -1
+
+
+def _check_win(strategy: str, ft_gl: int, ft_gv: int, bet: dict) -> bool:
+    """Re-evaluate win condition for a hypothetical FT score."""
+    wtype = _WIN_TYPE.get(strategy, "")
+    if wtype == "draw":
+        return ft_gl == ft_gv
+    if wtype == "cs":
+        tgl, tgv = _parse_score(bet.get("score_bet", ""))
+        return ft_gl == tgl and ft_gv == tgv
+    if wtype.startswith("over_"):
+        if wtype == "over_dynamic":
+            # Over: needs more goals than at trigger time
+            tgl, tgv = _parse_score(bet.get("score_bet", ""))
+            if tgl >= 0:
+                return (ft_gl + ft_gv) > (tgl + tgv)
+            return (ft_gl + ft_gv) >= 3  # fallback
+        threshold = int(wtype.split("_")[1])
+        return (ft_gl + ft_gv) >= threshold
+    if wtype.startswith("under_"):
+        threshold = int(wtype.split("_")[1])
+        return (ft_gl + ft_gv) <= threshold
+    if wtype == "team_home":
+        return ft_gl > ft_gv
+    if wtype == "team_away":
+        return ft_gv > ft_gl
+    if wtype == "team":
+        # Determine which team the bet backs from bet data
+        team = (bet.get("team") or bet.get("dominant_team")
+                or bet.get("longshot_team") or bet.get("ud_team") or "")
+        mercado = bet.get("mercado", "")
+        if "HOME" in mercado.upper() or team in ("home", "local", "Local", "Home"):
+            return ft_gl > ft_gv
+        return ft_gv > ft_gl
+    if wtype == "not_draw":
+        return ft_gl != ft_gv
+    if wtype == "not_cs_11":
+        return not (ft_gl == 1 and ft_gv == 1)
+    return False
+
+
+def _recalc_pl(won: bool, odds: float, bet: dict) -> float:
+    """Recalculate PnL for a hypothetical outcome."""
+    mercado = bet.get("mercado", "")
+    is_lay = "LAY" in mercado.upper()
+    if is_lay:
+        return round(0.95 if won else -(odds - 1), 2)
+    return round((odds - 1) * 0.95 if won else -1.0, 2)
+
+
+def goal_sensitivity(bets: list[dict]) -> dict:
+    """For each bet, test if ±1 goal would flip the outcome.
+
+    Generates 4 alternative FT scores per bet:
+      - home +1 goal (final = gl+1, gv)
+      - away +1 goal (final = gl, gv+1)
+      - home -1 goal (final = max(gl-1,0), gv)  — only if home scored after trigger
+      - away -1 goal (final = gl, max(gv-1,0))  — only if away scored after trigger
+
+    Classification per bet:
+      - EDGE:      won=True  AND all variations still win → robust edge
+      - GOOD_LUCK: won=True  AND some variations lose → lucky
+      - BAD_LUCK:  won=False AND some variations win → unlucky
+      - FRAGILE:   won=False AND all variations still lose → structural loss
+
+    Returns per-strategy summary + per-bet detail.
+    """
+    details = []
+    by_strat: dict[str, list] = {}
+
+    for bet in bets:
+        strategy = bet.get("strategy", "unknown")
+        if strategy not in _WIN_TYPE:
+            continue
+
+        ft_gl, ft_gv = _parse_score(bet.get("score_final", ""))
+        bt_gl, bt_gv = _parse_score(bet.get("score_bet", ""))
+        if ft_gl < 0 or bt_gl < 0:
+            continue
+
+        odds = bet.get("back_odds", 0) or 0
+        if odds <= 1.0:
+            continue
+
+        actual_won = bet["won"]
+        actual_pl = bet["pl"]
+
+        # Goals scored AFTER the trigger
+        home_scored_after = max(0, ft_gl - bt_gl)
+        away_scored_after = max(0, ft_gv - bt_gv)
+
+        # Build alternative final scores
+        scenarios = []
+
+        # +1 home goal
+        scenarios.append(("home+1", ft_gl + 1, ft_gv))
+        # +1 away goal
+        scenarios.append(("away+1", ft_gl, ft_gv + 1))
+        # -1 home goal (only if home scored after trigger)
+        if home_scored_after > 0:
+            scenarios.append(("home-1", ft_gl - 1, ft_gv))
+        # -1 away goal (only if away scored after trigger)
+        if away_scored_after > 0:
+            scenarios.append(("away-1", ft_gl, ft_gv - 1))
+        # No goals after trigger
+        if home_scored_after + away_scored_after > 0:
+            scenarios.append(("no_goals_after", bt_gl, bt_gv))
+
+        alt_results = []
+        flips = 0
+        for label, alt_gl, alt_gv in scenarios:
+            alt_won = _check_win(strategy, alt_gl, alt_gv, bet)
+            alt_pl = _recalc_pl(alt_won, odds, bet)
+            if alt_won != actual_won:
+                flips += 1
+            alt_results.append({
+                "scenario": label,
+                "score": f"{alt_gl}-{alt_gv}",
+                "won": alt_won,
+                "pl": alt_pl,
+                "flipped": alt_won != actual_won,
+            })
+
+        n_scenarios = len(scenarios)
+        flip_pct = round(flips / n_scenarios * 100, 1) if n_scenarios else 0
+
+        # Classification
+        if actual_won and flips == 0:
+            classification = "EDGE"
+        elif actual_won and flips > 0:
+            classification = "GOOD_LUCK"
+        elif not actual_won and flips > 0:
+            classification = "BAD_LUCK"
+        else:
+            classification = "FRAGILE"
+
+        detail = {
+            "match_id": bet.get("match_id", ""),
+            "strategy": strategy,
+            "minuto": bet.get("minuto", 0),
+            "score_bet": bet.get("score_bet", ""),
+            "score_final": bet.get("score_final", ""),
+            "odds": odds,
+            "actual_won": actual_won,
+            "actual_pl": actual_pl,
+            "classification": classification,
+            "flip_pct": flip_pct,
+            "scenarios": alt_results,
+        }
+        details.append(detail)
+        by_strat.setdefault(strategy, []).append(detail)
+
+    # Per-strategy summary
+    strat_summary = {}
+    for key, strat_details in sorted(by_strat.items()):
+        n = len(strat_details)
+        edge = sum(1 for d in strat_details if d["classification"] == "EDGE")
+        good_luck = sum(1 for d in strat_details if d["classification"] == "GOOD_LUCK")
+        bad_luck = sum(1 for d in strat_details if d["classification"] == "BAD_LUCK")
+        fragile = sum(1 for d in strat_details if d["classification"] == "FRAGILE")
+
+        avg_flip = round(sum(d["flip_pct"] for d in strat_details) / n, 1)
+        actual_pl = sum(d["actual_pl"] for d in strat_details)
+
+        # Compute "expected PnL" = average PnL across all scenarios of all bets
+        expected_pl = 0.0
+        for d in strat_details:
+            scenario_pls = [s["pl"] for s in d["scenarios"]]
+            # Include actual result too (it's one of the possible universes)
+            all_pls = scenario_pls + [d["actual_pl"]]
+            expected_pl += sum(all_pls) / len(all_pls)
+
+        luck_score = round(actual_pl - expected_pl, 2)
+
+        # Robustness verdict accounts for market type.
+        # Draw/CS/Under strategies can NEVER have EDGE bets (any ±1 goal flips
+        # them by design), so we classify by luck balance instead.
+        _edge_possible = any(
+            _WIN_TYPE.get(key, "").startswith(p)
+            for p in ("team", "not_", "over_")
+        )
+        if _edge_possible:
+            # Team/Over/Lay strategies: use edge_pct directly
+            robustness = (
+                "ROBUST" if edge / n >= 0.30 else
+                "MODERATE" if edge / n >= 0.10 else
+                "FRAGILE"
+            )
+        else:
+            # Draw/CS/Under: edge is structurally impossible, use luck balance.
+            # A ROBUST strategy here means it profits DESPITE being inherently
+            # goal-sensitive — i.e. expected_pl > 0 (survives across scenarios).
+            # luck_score > 0 means actual ran ABOVE expectation (riding luck).
+            robustness = (
+                "ROBUST" if expected_pl > 0 and abs(luck_score) < actual_pl * 0.5 else
+                "MODERATE" if expected_pl > 0 else
+                "FRAGILE"
+            )
+
+        strat_summary[key] = {
+            "n": n,
+            "edge_pct": round(edge / n * 100, 1),
+            "good_luck_pct": round(good_luck / n * 100, 1),
+            "bad_luck_pct": round(bad_luck / n * 100, 1),
+            "fragile_pct": round(fragile / n * 100, 1),
+            "avg_flip_pct": avg_flip,
+            "actual_pl": round(actual_pl, 2),
+            "expected_pl": round(expected_pl, 2),
+            "luck_score": luck_score,
+            "robustness": robustness,
+        }
+
+    # Portfolio totals
+    total_n = len(details)
+    total_edge = sum(1 for d in details if d["classification"] == "EDGE")
+    total_good = sum(1 for d in details if d["classification"] == "GOOD_LUCK")
+    total_bad = sum(1 for d in details if d["classification"] == "BAD_LUCK")
+    total_fragile = sum(1 for d in details if d["classification"] == "FRAGILE")
+
+    return {
+        "n_bets_analyzed": total_n,
+        "portfolio_edge_pct": round(total_edge / max(1, total_n) * 100, 1),
+        "portfolio_good_luck_pct": round(total_good / max(1, total_n) * 100, 1),
+        "portfolio_bad_luck_pct": round(total_bad / max(1, total_n) * 100, 1),
+        "portfolio_fragile_pct": round(total_fragile / max(1, total_n) * 100, 1),
+        "by_strategy": strat_summary,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Full report: combines all four analyses
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_full_analysis(
@@ -333,6 +620,7 @@ def run_full_analysis(
             "by_strategy": { "strategy_key": { fragility metrics }, ... },
             "portfolio_drawdown": { DD distribution },
             "portfolio_profit": { profit distribution },
+            "goal_sensitivity": { per-strategy goal sensitivity analysis },
         }
     """
     # Group bets by strategy
@@ -356,6 +644,9 @@ def run_full_analysis(
         bets, bankroll_init=bankroll_init, n_sims=n_sims, seed=seed,
     )
 
+    # 4. Goal sensitivity (deterministic, no sims needed)
+    gs = goal_sensitivity(bets)
+
     return {
         "timestamp": datetime.now().isoformat(),
         "n_sims": n_sims,
@@ -364,6 +655,7 @@ def run_full_analysis(
         "by_strategy": strat_results,
         "portfolio_drawdown": dd_dist,
         "portfolio_profit": profit_dist,
+        "goal_sensitivity": gs,
     }
 
 
@@ -376,6 +668,7 @@ def print_report(report: dict):
     strats = report.get("by_strategy", {})
     dd = report.get("portfolio_drawdown", {})
     profit = report.get("portfolio_profit", {})
+    gs = report.get("goal_sensitivity", {})
 
     n_sims = report.get("n_sims", 0)
     print(f"\n  Strategy Robustness ({n_sims:,} bootstrap resamples):")
@@ -405,6 +698,28 @@ def print_report(report: dict):
     print(f"    p95:         {profit.get('profit_p95', 0):+.2f}")
     print(f"    P(loss):     {profit.get('p_loss', 0):.1f}%")
     print(f"    P(ruin<50%): {profit.get('p_ruin_50pct', 0):.1f}%")
+
+    # Goal Sensitivity section
+    if gs:
+        gs_strats = gs.get("by_strategy", {})
+        print(f"\n  Goal Sensitivity ({gs.get('n_bets_analyzed', 0)} bets analyzed):")
+        print(f"  {'Strategy':<28} {'N':>5} {'Edge%':>6} {'Lucky%':>7} "
+              f"{'Unlck%':>7} {'Fragl%':>7} {'Luck':>7} {'Verdict':>10}")
+        print(f"  {'-'*82}")
+
+        for key, m in sorted(gs_strats.items(),
+                              key=lambda x: -x[1]["edge_pct"]):
+            print(f"  {key:<28} {m['n']:>5} {m['edge_pct']:>5.1f}% "
+                  f"{m['good_luck_pct']:>6.1f}% "
+                  f"{m['bad_luck_pct']:>6.1f}% "
+                  f"{m['fragile_pct']:>6.1f}% "
+                  f"{m['luck_score']:>+6.2f} "
+                  f"{m['robustness']:>10}")
+
+        print(f"\n    Portfolio: {gs.get('portfolio_edge_pct', 0):.1f}% edge, "
+              f"{gs.get('portfolio_good_luck_pct', 0):.1f}% lucky, "
+              f"{gs.get('portfolio_bad_luck_pct', 0):.1f}% unlucky, "
+              f"{gs.get('portfolio_fragile_pct', 0):.1f}% fragile")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -451,7 +766,7 @@ def main():
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False),
                         encoding="utf-8")
-    print(f"  Report saved → {out_path.name}")
+    print(f"  Report saved -> {out_path.name}")
 
 
 if __name__ == "__main__":

@@ -2029,13 +2029,16 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         }
     }
 
-    def calculate_min_odds(win_rate: float) -> float:
-        """Calculate minimum profitable odds based on win rate (break-even + margin)."""
+    def calculate_min_odds(win_rate: float, commission: float = 0.05) -> float:
+        """Calculate breakeven odds including Betfair commission.
+
+        At exactly these odds, betting 1000 times at the historical win rate
+        yields net 0 profit after commission.
+        Formula: 1 + (1 - WR) / (WR * (1 - commission))
+        """
         if win_rate <= 0:
             return 999.0
-        # Break-even odds = 1 / win_rate
-        # Add 10% margin for commission (5%) + variance
-        return (1.0 / win_rate) * 1.10
+        return 1.0 + (1.0 - win_rate) / (win_rate * (1.0 - commission))
 
     def calculate_ev(odds: float, win_rate: float, stake: float = 10.0) -> float:
         """Calculate expected value considering 5% commission."""
@@ -2190,11 +2193,12 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         _xg_total = (xg_local + xg_visitante) if (xg_local is not None and xg_visitante is not None) else None
         _m = int(minuto) if minuto is not None else 0
 
-        def _sd_signal(strategy_key, strategy_name, recommendation, odds, description, entry_cond, cfg_min_odds=None, stats=None):
+        def _sd_signal(strategy_key, strategy_name, recommendation, odds, description, entry_cond, stats=None):
             """Helper to build and emit an SD signal."""
             _bt = stats or {}
             _wr_pct = _bt.get("wr", 0)
             _ev = round(calculate_ev(odds, _wr_pct / 100, stake=1.0), 3) if (_wr_pct and odds) else 0
+            _min_odds_be = round(calculate_min_odds(_wr_pct / 100), 2) if _wr_pct > 0 else None
             sig = {
                 "match_id": match_id,
                 "match_name": match["name"],
@@ -2205,9 +2209,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 "score": f"{_gl}-{_gv}",
                 "recommendation": recommendation,
                 "back_odds": round(odds, 2) if odds else None,
-                "min_odds": cfg_min_odds if cfg_min_odds is not None else None,
+                "min_odds": _min_odds_be,
                 "expected_value": _ev,
-                "odds_favorable": (odds >= cfg_min_odds) if (cfg_min_odds and odds) else True,
+                "odds_favorable": (odds >= _min_odds_be) if (_min_odds_be and odds) else True,
                 "confidence": "medium",
                 "win_rate_historical": round(_wr_pct, 1),
                 "roi_historical": round(_bt.get("roi", 0), 1),
@@ -2254,12 +2258,8 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
             if _extracted is None:
                 continue
             _odds_val, _rec_str, _entry_cond = _extracted
-            _odds_min_val = _cfg_entry.get("odds_min")
-            if _odds_min_val is None:
-                _odds_min_val = _cfg_entry.get("min_odds")
-            _cfg_odds_min = _odds_min_val
             _sd_signal(_key, _name, _rec_str, _odds_val, _desc, _entry_cond,
-                       cfg_min_odds=_cfg_odds_min, stats=_cfg_entry.get("_stats"))
+                       stats=_cfg_entry.get("_stats"))
 
     # --- Enrich signals with age and maturity info ---
     _now = datetime.utcnow()

@@ -388,6 +388,8 @@ def test_mc6_statistical_sanity():
           "portfolio_drawdown" in report)
     check("MC6.7 run_full_analysis has portfolio_profit key",
           "portfolio_profit" in report)
+    check("MC6.7b run_full_analysis has goal_sensitivity key",
+          "goal_sensitivity" in report)
 
     # Multi-strategy portfolio groups correctly
     multi_bets = _make_portfolio_bets({
@@ -403,6 +405,107 @@ def test_mc6_statistical_sanity():
           f"a={report2['by_strategy']['strat_a']['n']} b={report2['by_strategy']['strat_b']['n']}")
     check("MC6.10 multi-strategy: portfolio DD uses all 80 bets",
           report2["portfolio_drawdown"]["n_bets"] == 80)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MC7: Goal sensitivity
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _make_gs_bet(strategy, score_bet, score_final, odds, won, pl, mercado="BACK DRAW"):
+    """Helper to build bet dicts for goal sensitivity tests."""
+    return {
+        "strategy": strategy, "match_id": "test-match",
+        "score_bet": score_bet, "score_final": score_final,
+        "back_odds": odds, "won": won, "pl": pl,
+        "mercado": mercado, "minuto": 70,
+    }
+
+
+def test_mc7_goal_sensitivity():
+    if not should_run("MC7"):
+        return
+
+    # 1. Draw bet that WON (1-1 -> 1-1): any +1 goal flips -> GOOD_LUCK
+    b1 = _make_gs_bet("draw_11", "1-1", "1-1", 3.0, True, 1.90)
+    gs = monte_carlo.goal_sensitivity([b1])
+    d = gs["by_strategy"]["draw_11"]
+    check("MC7.1 draw_11 won at 1-1: edge=0%, good_luck=100%",
+          d["edge_pct"] == 0.0 and d["good_luck_pct"] == 100.0,
+          f"edge={d['edge_pct']} luck={d['good_luck_pct']}")
+
+    # 2. Draw bet that LOST (1-1 -> 2-1): -1 home restores draw -> BAD_LUCK
+    b2 = _make_gs_bet("draw_11", "1-1", "2-1", 3.0, False, -1.0)
+    gs2 = monte_carlo.goal_sensitivity([b2])
+    d2 = gs2["by_strategy"]["draw_11"]
+    check("MC7.2 draw_11 lost at 2-1: bad_luck > 0%",
+          d2["bad_luck_pct"] > 0,
+          f"bad_luck={d2['bad_luck_pct']}")
+
+    # 3. home_fav_leading WON by 2+ goals (3-0 -> 3-0): -1 home still wins -> EDGE
+    b3 = _make_gs_bet("home_fav_leading", "3-0", "3-0", 1.5, True, 0.48,
+                       mercado="BACK HOME")
+    gs3 = monte_carlo.goal_sensitivity([b3])
+    d3 = gs3["by_strategy"]["home_fav_leading"]
+    check("MC7.3 home_fav 3-0->3-0: EDGE (survives -1 home)",
+          d3["edge_pct"] == 100.0,
+          f"edge={d3['edge_pct']}")
+
+    # 4. home_fav_leading WON by 1 goal (1-0 -> 1-0): +1 away flips -> GOOD_LUCK
+    b4 = _make_gs_bet("home_fav_leading", "1-0", "1-0", 1.8, True, 0.76,
+                       mercado="BACK HOME")
+    gs4 = monte_carlo.goal_sensitivity([b4])
+    d4 = gs4["by_strategy"]["home_fav_leading"]
+    check("MC7.4 home_fav 1-0->1-0: GOOD_LUCK (away+1 flips)",
+          d4["good_luck_pct"] == 100.0,
+          f"good_luck={d4['good_luck_pct']}")
+
+    # 5. CS bet that WON: always GOOD_LUCK (any goal change breaks CS)
+    b5 = _make_gs_bet("cs_close", "2-1", "2-1", 8.0, True, 6.65,
+                       mercado="BACK CS")
+    gs5 = monte_carlo.goal_sensitivity([b5])
+    d5 = gs5["by_strategy"]["cs_close"]
+    check("MC7.5 cs_close won at 2-1: always GOOD_LUCK",
+          d5["good_luck_pct"] == 100.0,
+          f"good_luck={d5['good_luck_pct']}")
+
+    # 6. under35_late WON (3 goals -> 3 goals): +1 goal flips -> GOOD_LUCK
+    b6 = _make_gs_bet("under35_late", "3-0", "3-0", 1.5, True, 0.43,
+                       mercado="BACK UNDER 3.5")
+    gs6 = monte_carlo.goal_sensitivity([b6])
+    d6 = gs6["by_strategy"]["under35_late"]
+    check("MC7.6 under35 won at 3 goals: GOOD_LUCK (+1 breaks)",
+          d6["good_luck_pct"] == 100.0,
+          f"good_luck={d6['good_luck_pct']}")
+
+    # 7. Empty bets
+    gs_empty = monte_carlo.goal_sensitivity([])
+    check("MC7.7 empty bets -> 0 analyzed",
+          gs_empty["n_bets_analyzed"] == 0)
+
+    # 8. Unknown strategy is skipped
+    b_unk = _make_gs_bet("nonexistent_strategy", "0-0", "1-0", 2.0, False, -1.0)
+    gs_unk = monte_carlo.goal_sensitivity([b_unk])
+    check("MC7.8 unknown strategy skipped",
+          gs_unk["n_bets_analyzed"] == 0)
+
+    # 9. Luck score: for CS bet, actual_pl > expected_pl → luck > 0
+    check("MC7.9 CS won has positive luck_score",
+          d5["luck_score"] > 0,
+          f"luck={d5['luck_score']}")
+
+    # 10. Robustness classification for team bets
+    check("MC7.10 home_fav 3-0 -> ROBUST verdict",
+          d3["robustness"] == "ROBUST",
+          f"robustness={d3['robustness']}")
+
+    # 11. Lay draw won: not_draw — any goal helps maintain non-draw
+    b_lay = _make_gs_bet("lay_draw_away_leading", "0-1", "0-1", 2.5, True, 0.95,
+                          mercado="LAY DRAW")
+    gs_lay = monte_carlo.goal_sensitivity([b_lay])
+    d_lay = gs_lay["by_strategy"]["lay_draw_away_leading"]
+    check("MC7.11 lay_draw won at 0-1: high edge (most variations stay non-draw)",
+          d_lay["edge_pct"] >= 50.0,
+          f"edge={d_lay['edge_pct']}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -429,6 +532,7 @@ def main():
     test_mc4_profit_distribution()
     test_mc5_edge_cases()
     test_mc6_statistical_sanity()
+    test_mc7_goal_sensitivity()
 
     print("\n" + "=" * 60)
     total = PASS + FAIL

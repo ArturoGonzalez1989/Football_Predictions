@@ -61,6 +61,7 @@ export function BettingSignalsView() {
   const [stakeMode, setStakeMode] = useState<"pct" | "fixed">("pct")
   const [effectiveBankroll, setEffectiveBankroll] = useState<number>(100)
   const [stakeConfigSaved, setStakeConfigSaved] = useState(false)
+  const [autoBetLive, setAutoBetLive] = useState(false)
   const [autoOpenBets, setAutoOpenBets] = useState(false)
   const prevSignalKeys = useRef<Set<string> | null>(null)
   // Track auto-opened browser tabs to avoid duplicates across polling cycles
@@ -90,6 +91,7 @@ export function BettingSignalsView() {
         if (cfg.stake_pct != null) setStakePct(cfg.stake_pct)
         if ((cfg as any).stake_fixed != null) setStakeFixed((cfg as any).stake_fixed)
         if ((cfg as any).stake_mode === "fixed") setStakeMode("fixed")
+        if ((cfg as any).auto_bet_live === true) setAutoBetLive(true)
         const effBr = Math.max(1, Math.round(initBr * 100) / 100)
         setEffectiveBankroll(effBr)
         effectiveBankrollRef.current = effBr
@@ -342,6 +344,36 @@ export function BettingSignalsView() {
         >
           {stakeConfigSaved ? "✓ Guardado" : "Guardar"}
         </button>
+
+        {/* Live Betting Agent toggle */}
+        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-zinc-700">
+          <button
+            type="button"
+            onClick={async () => {
+              const next = !autoBetLive
+              setAutoBetLive(next)
+              if (activeConfig) {
+                const updated = { ...activeConfig, auto_bet_live: next } as CarteraConfig
+                await api.saveConfig(updated)
+                setActiveConfig(updated)
+                activeConfigRef.current = updated
+              }
+            }}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              autoBetLive ? "bg-red-600" : "bg-zinc-700"
+            }`}
+            title={autoBetLive ? "Bot activado — el agente colocará apuestas reales en Betfair" : "Bot desactivado"}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                autoBetLive ? "translate-x-4" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+          <span className={`text-xs font-bold uppercase tracking-wide ${autoBetLive ? "text-red-400" : "text-zinc-600"}`}>
+            Bot
+          </span>
+        </div>
       </div>
 
       {/* Signals two-column layout + Watchlist sidebar */}

@@ -229,7 +229,7 @@ def delete_message(message_id: int) -> bool:
         return False
 
 
-def mark_signal_discarded(message_id: int, sig: dict | None, stake: float) -> bool:
+def mark_signal_discarded(message_id: int, sig: dict | None, stake: float, reason: str = "") -> bool:
     """Edit an existing preview message to show it was discarded (signal expired or market taken).
     Preserves the full message content but replaces the title with ❌ ... — DESCARTADA.
     Falls back to delete_message if sig is not available.
@@ -293,6 +293,8 @@ def mark_signal_discarded(message_id: int, sig: dict | None, stake: float) -> bo
         if cond_lines:
             lines.append("· Params:")
             lines.extend(cond_lines)
+        if reason:
+            lines.append(f"· Motivo: {reason}")
 
         text = "\n".join(lines)
         result = _telegram_api("editMessageText", {

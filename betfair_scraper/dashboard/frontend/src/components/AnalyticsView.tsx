@@ -6,6 +6,7 @@ export function AnalyticsView() {
   const [loading, setLoading] = useState(true)
   const [bankrollInit, setBankrollInit] = useState(100)
   const [stakePercent, setStakePercent] = useState(2)
+  const [kellyDivisor, setKellyDivisor] = useState(8)
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -42,6 +43,7 @@ export function AnalyticsView() {
   // Calculate metrics (resolved bets only)
   const stats = calculateStats(sortedResolved)
   const bankrollSim = calculateBankrollSim(sortedResolved, bankrollInit, stakePercent)
+  const kellySim = calculateKellySim(sortedResolved, bankrollInit, kellyDivisor)
   const strategyPerf = calculateStrategyPerformance(sortedResolved)
   const marketPerf = calculateMarketPerformance(sortedResolved)
   const riskMetrics = calculateRiskMetrics(sortedResolved)
@@ -177,7 +179,7 @@ export function AnalyticsView() {
       {/* Bankroll Simulation */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
         <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
-          💰 Simulación de Bankroll
+          Simulacion de Bankroll
         </h2>
 
         {/* Controls */}
@@ -193,11 +195,11 @@ export function AnalyticsView() {
                 onChange={e => setBankrollInit(Math.max(10, Number(e.target.value)))}
                 className="w-24 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-100 text-sm text-right focus:outline-none focus:border-zinc-500"
               />
-              <span className="text-zinc-500">€</span>
+              <span className="text-zinc-500">EUR</span>
             </div>
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-400">
-            Stake por apuesta
+            Stake % fijo
             <div className="flex items-center gap-1">
               <input
                 type="number"
@@ -211,56 +213,124 @@ export function AnalyticsView() {
               <span className="text-zinc-500">%</span>
             </div>
           </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-400">
+            Kelly
+            <select
+              value={kellyDivisor}
+              onChange={e => setKellyDivisor(Number(e.target.value))}
+              className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-100 text-sm focus:outline-none focus:border-zinc-500"
+            >
+              <option value={16}>1/16</option>
+              <option value={8}>1/8</option>
+              <option value={4}>1/4</option>
+              <option value={2}>1/2</option>
+            </select>
+          </label>
           <span className="text-xs text-zinc-600 self-center">
-            Stake inicial: {((bankrollInit * stakePercent) / 100).toFixed(2)}€
+            Stake inicial: {((bankrollInit * stakePercent) / 100).toFixed(2)}EUR
           </span>
         </div>
 
-        {/* Results */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">Bankroll Final</div>
-            <div className={`text-xl font-bold ${bankrollSim.finalBankroll >= bankrollInit ? "text-green-400" : "text-red-400"}`}>
-              {bankrollSim.finalBankroll.toFixed(2)}€
+        {/* Side-by-side results */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Fixed % column */}
+          <div className="bg-zinc-800/40 rounded-lg p-3">
+            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">
+              Stake Fijo ({stakePercent}%)
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Bankroll Final</div>
+                <div className={`text-lg font-bold ${bankrollSim.finalBankroll >= bankrollInit ? "text-green-400" : "text-red-400"}`}>
+                  {bankrollSim.finalBankroll.toFixed(2)}EUR
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">P/L Total</div>
+                <div className={`text-lg font-bold ${bankrollSim.totalPL >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {bankrollSim.totalPL >= 0 ? "+" : ""}{bankrollSim.totalPL.toFixed(2)}EUR
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">ROI</div>
+                <div className={`text-lg font-bold ${bankrollSim.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {bankrollSim.roi >= 0 ? "+" : ""}{bankrollSim.roi.toFixed(1)}%
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Max Drawdown</div>
+                <div className="text-lg font-bold text-red-400">
+                  -{bankrollSim.maxDrawdown.toFixed(2)}EUR
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-zinc-700/50">
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Stake avg</div>
+                <div className="text-sm font-semibold text-zinc-200">{bankrollSim.avgStake.toFixed(2)}EUR</div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Mejor</div>
+                <div className="text-sm font-semibold text-green-400">+{bankrollSim.bestBet.toFixed(2)}EUR</div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Peor</div>
+                <div className="text-sm font-semibold text-red-400">{bankrollSim.worstBet.toFixed(2)}EUR</div>
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">P/L Total</div>
-            <div className={`text-xl font-bold ${bankrollSim.totalPL >= 0 ? "text-green-400" : "text-red-400"}`}>
-              {bankrollSim.totalPL >= 0 ? "+" : ""}{bankrollSim.totalPL.toFixed(2)}€
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">ROI</div>
-            <div className={`text-xl font-bold ${bankrollSim.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
-              {bankrollSim.roi >= 0 ? "+" : ""}{bankrollSim.roi.toFixed(1)}%
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">Max Drawdown</div>
-            <div className="text-xl font-bold text-red-400">
-              -{bankrollSim.maxDrawdown.toFixed(2)}€
-            </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3 pt-3 border-t border-zinc-800">
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">Stake promedio</div>
-            <div className="text-sm font-semibold text-zinc-200">
-              {bankrollSim.avgStake.toFixed(2)}€
+          {/* Kelly 1/8 column */}
+          <div className="bg-zinc-800/40 rounded-lg p-3 border border-amber-900/30">
+            <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3">
+              Kelly 1/{kellyDivisor}
+              <span className="ml-2 text-zinc-500 font-normal normal-case">
+                (rolling WR, cap 3%)
+              </span>
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Bankroll Final</div>
+                <div className={`text-lg font-bold ${kellySim.finalBankroll >= bankrollInit ? "text-green-400" : "text-red-400"}`}>
+                  {kellySim.finalBankroll.toFixed(2)}EUR
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">P/L Total</div>
+                <div className={`text-lg font-bold ${kellySim.totalPL >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {kellySim.totalPL >= 0 ? "+" : ""}{kellySim.totalPL.toFixed(2)}EUR
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">ROI</div>
+                <div className={`text-lg font-bold ${kellySim.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {kellySim.roi >= 0 ? "+" : ""}{kellySim.roi.toFixed(1)}%
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Max Drawdown</div>
+                <div className="text-lg font-bold text-red-400">
+                  -{kellySim.maxDrawdown.toFixed(2)}EUR
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">Mejor apuesta</div>
-            <div className="text-sm font-semibold text-green-400">
-              +{bankrollSim.bestBet.toFixed(2)}€
+            <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-zinc-700/50">
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Stake avg</div>
+                <div className="text-sm font-semibold text-zinc-200">{kellySim.avgStake.toFixed(2)}EUR</div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Mejor</div>
+                <div className="text-sm font-semibold text-green-400">+{kellySim.bestBet.toFixed(2)}EUR</div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Peor</div>
+                <div className="text-sm font-semibold text-red-400">{kellySim.worstBet.toFixed(2)}EUR</div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-xs text-zinc-500 mb-1">Peor apuesta</div>
-            <div className="text-sm font-semibold text-red-400">
-              {bankrollSim.worstBet.toFixed(2)}€
+            <div className="mt-3 pt-3 border-t border-zinc-700/50">
+              <div className="text-xs text-zinc-500 mb-1">Kelly avg fraction</div>
+              <div className="text-sm font-semibold text-amber-400">{kellySim.avgKellyPct.toFixed(2)}%</div>
             </div>
           </div>
         </div>
@@ -351,6 +421,70 @@ function calculateBankrollSim(bets: PlacedBet[], bankrollInit: number, stakePerc
   const avgStake = stakesUsed.length > 0 ? stakesUsed.reduce((a, b) => a + b, 0) / stakesUsed.length : 0
 
   return { finalBankroll: bankroll, totalPL, roi, maxDrawdown, avgStake, bestBet, worstBet }
+}
+
+function calculateKellySim(bets: PlacedBet[], bankrollInit: number, kellyDivisor: number) {
+  const KELLY_FRACTION = 1 / kellyDivisor
+  const KELLY_CAP = 0.03        // max 3% of bankroll per bet
+  const MIN_BETS_FOR_KELLY = 10 // use flat 1% until enough history
+  const FLAT_FALLBACK = 0.01
+
+  let bankroll = bankrollInit
+  let peak = bankrollInit
+  let maxDrawdown = 0
+  let bestBet = 0
+  let worstBet = 0
+  let wins = 0
+  const stakesUsed: number[] = []
+  const kellyPcts: number[] = []
+
+  for (let i = 0; i < bets.length; i++) {
+    const bet = bets[i]
+    const odds = Number(bet.back_odds) || 0
+
+    // Calculate Kelly stake
+    let stakePct: number
+    if (i < MIN_BETS_FOR_KELLY || odds <= 1) {
+      stakePct = FLAT_FALLBACK
+    } else {
+      const p = wins / i  // rolling win rate
+      const b = odds - 1  // net odds
+      const f = (p * b - (1 - p)) / b  // full Kelly
+      stakePct = Math.max(0, Math.min(f * KELLY_FRACTION, KELLY_CAP))
+    }
+    kellyPcts.push(stakePct * 100)
+
+    const stake = bankroll * stakePct
+    stakesUsed.push(stake)
+
+    let pl = 0
+    if (bet.result === "won") {
+      pl = stake * (odds - 1) * 0.95  // 5% commission
+      wins++
+    } else if (bet.result === "lost") {
+      pl = -stake
+    } else if (bet.result === "cashout") {
+      const paperStake = Number(bet.stake) || 1
+      const paperPL = Number(bet.pl) || 0
+      pl = paperStake > 0 ? (paperPL / paperStake) * stake : 0
+      // Count cashout with positive P/L as win for rolling WR
+      if (paperPL > 0) wins++
+    }
+
+    bankroll += pl
+    if (bankroll > peak) peak = bankroll
+    const dd = peak - bankroll
+    if (dd > maxDrawdown) maxDrawdown = dd
+    if (pl > bestBet) bestBet = pl
+    if (pl < worstBet) worstBet = pl
+  }
+
+  const totalPL = bankroll - bankrollInit
+  const roi = (totalPL / bankrollInit) * 100
+  const avgStake = stakesUsed.length > 0 ? stakesUsed.reduce((a, b) => a + b, 0) / stakesUsed.length : 0
+  const avgKellyPct = kellyPcts.length > 0 ? kellyPcts.reduce((a, b) => a + b, 0) / kellyPcts.length : 0
+
+  return { finalBankroll: bankroll, totalPL, roi, maxDrawdown, avgStake, bestBet, worstBet, avgKellyPct }
 }
 
 function calculateStats(bets: PlacedBet[]) {
