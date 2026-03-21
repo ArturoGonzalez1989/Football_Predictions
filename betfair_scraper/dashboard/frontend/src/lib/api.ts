@@ -336,6 +336,8 @@ export interface BettingSignal {
     time_remaining: number
     deficit: number
   }
+  // Data quality warnings (non-blocking — informational for operator)
+  data_warnings?: string[]
   // Signal duration / maturity
   signal_age_minutes?: number
   min_duration_caps?: number

@@ -515,7 +515,7 @@ LEGACY_CODE_CHECKS = [
 ]
 
 SCAN_EXTENSIONS = {".py", ".ts", ".tsx", ".json"}
-EXCLUDE_DIRS = {"borrar", "node_modules", ".git", "__pycache__", ".venv", "venv"}
+EXCLUDE_DIRS = {"borrar", "node_modules", ".git", "__pycache__", ".venv", "venv", "logs"}
 
 
 def _scan_file(fpath: str, pattern: str) -> list[str]:
@@ -835,12 +835,12 @@ def t14_signal_min_odds():
     try:
         cfg = json.load(open(cfg_path, encoding="utf-8"))
         strategies = cfg.get("strategies", {})
-        # Verify that at least some enabled strategies have a meaningful oddsMin (>0)
+        # Verify that at least some enabled strategies have a meaningful odds_min (>0)
         meaningful_odds = [
             k for k, v in strategies.items()
-            if isinstance(v, dict) and v.get("enabled") and (v.get("oddsMin") or 0) > 0
+            if isinstance(v, dict) and v.get("enabled") and (v.get("odds_min") or 0) > 0
         ]
-        check(f"At least some enabled strategies have meaningful oddsMin>0 ({len(meaningful_odds)} found)",
+        check(f"At least some enabled strategies have meaningful odds_min>0 ({len(meaningful_odds)} found)",
               len(meaningful_odds) >= 3,
               f"only found: {meaningful_odds}")
     except Exception as e:

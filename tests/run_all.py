@@ -4,11 +4,16 @@ Run all test suites and show a consolidated summary.
 Usage:
     python tests/run_all.py
     python tests/run_all.py --verbose   # pass --verbose to test_system_integrity
+
+Results are saved to betfair_scraper/logs/test_results.json so the
+dashboard Test Cases view can display them.
 """
 import sys, io
+import json
 import subprocess
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -16,14 +21,18 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT   = Path(__file__).resolve().parent.parent
 TESTS  = Path(__file__).resolve().parent
 
-SUITES = [
-    ("NaN Handling",       TESTS / "test_nan_handling.py",           []),
-    ("Null Stats",         TESTS / "test_null_stats_handling.py",    []),
-    ("Registry Collapse",  TESTS / "test_registry_collapse.py",      []),
-    ("System Integrity",   TESTS / "test_system_integrity.py",       ["--verbose"] if "--verbose" in sys.argv else []),
-    ("Param Fidelity",     TESTS / "test_param_fidelity.py",         []),
-    ("Home/Away Odds",     TESTS / "test_home_away_consistency.py",  []),
-]
+def _discover_suites():
+    """Auto-discover all test_*.py files in the tests/ directory."""
+    verbose = "--verbose" in sys.argv
+    suites = []
+    for script in sorted(TESTS.glob("test_*.py")):
+        # Derive label from filename: test_nan_handling.py -> "NaN Handling"
+        label = script.stem.replace("test_", "").replace("_", " ").title()
+        args = ["--verbose"] if verbose and script.name == "test_system_integrity.py" else []
+        suites.append((label, script, args))
+    return suites
+
+SUITES = _discover_suites()
 
 SEP = "─" * 70
 
@@ -91,7 +100,55 @@ def main():
         print(f"  TOTAL: {total_pass}/{grand} passed — {fail_detail} ✗")
     print(f"{'='*70}\n")
 
+    # ── Save results to JSON for dashboard consumption ────────────────────
+    _save_dashboard_results(results)
+
     sys.exit(0 if suites_failed == 0 else 1)
+
+
+def _save_dashboard_results(results: list):
+    """Persist run results to test_results.json so the dashboard can display them."""
+    results_file = ROOT / "betfair_scraper" / "logs" / "test_results.json"
+    results_file.parent.mkdir(parents=True, exist_ok=True)
+
+    suites_data = []
+    for label, passed, failed, ok, elapsed in results:
+        suite_id = "test_" + label.lower().replace(" ", "_")
+        suites_data.append({
+            "id": suite_id,
+            "label": label,
+            "passed": passed,
+            "failed": failed,
+            "ok": ok,
+            "elapsed": elapsed,
+            "output": "",  # CLI runs don't capture per-suite output here
+        })
+
+    run_result = {
+        "timestamp": datetime.now().isoformat(),
+        "total_passed": sum(s["passed"] for s in suites_data),
+        "total_failed": sum(s["failed"] for s in suites_data),
+        "all_ok": all(s["ok"] for s in suites_data),
+        "suites": suites_data,
+    }
+
+    # Load existing history
+    history = []
+    if results_file.exists():
+        try:
+            with open(results_file, encoding="utf-8") as f:
+                data = json.load(f)
+            history = data.get("history", [])
+        except Exception:
+            pass
+
+    history.insert(0, run_result)
+    history = history[:30]
+
+    with open(results_file, "w", encoding="utf-8") as f:
+        json.dump({"last_run": run_result, "history": history}, f, indent=2, ensure_ascii=False)
+
+    print(f"  Results saved to {results_file.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

@@ -740,6 +740,11 @@ const riskLevel = signal.risk_info?.risk_level || "none"
                 {riskLevel === "high" ? "🔴" : "🟠"} Riesgo
               </span>
             )}
+            {(signal.data_warnings?.length ?? 0) > 0 && (
+              <span className="text-[10px] px-1.5 py-0 rounded-full font-bold bg-red-900/40 text-red-400 border border-red-500/40" title={signal.data_warnings!.join(" | ")}>
+                Datos
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-zinc-500">{signal.strategy_name}</span>
@@ -802,6 +807,17 @@ const riskLevel = signal.risk_info?.risk_level || "none"
               <span className="font-semibold">{riskLevel === "high" ? "🔴 Alto Riesgo" : "🟠 Riesgo Medio"}:</span>{" "}
               {signal.risk_info.risk_reason}{" "}
               <span className="text-zinc-400">({signal.risk_info.time_remaining} min restantes)</span>
+            </div>
+          )}
+          {/* Data quality warnings */}
+          {(signal.data_warnings?.length ?? 0) > 0 && (
+            <div className="p-2.5 rounded border bg-red-900/20 border-red-500/30 text-xs text-red-300/80">
+              <span className="font-semibold">Calidad de datos:</span>
+              <ul className="mt-1 space-y-0.5">
+                {signal.data_warnings!.map((w, i) => (
+                  <li key={i}>· {w}</li>
+                ))}
+              </ul>
             </div>
           )}
           {/* Historical + conditions */}

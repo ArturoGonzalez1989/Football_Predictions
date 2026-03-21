@@ -68,6 +68,85 @@ def is_match_finished(start_time, url=""):
     return ahora > fin_tracking
 
 
+def _sanitize_match_csv(url):
+    """Sanitiza el CSV de un partido eliminado: trunca filas post-finalizado.
+
+    Caso 1: Existe fila 'finalizado' → elimina todo lo posterior.
+    Caso 2: No hay 'finalizado' pero hubo 'en_juego'/'descanso' y termina en
+            'pre_partido' → marca última fila en_juego como finalizado y
+            elimina las pre_partido trailing.
+    """
+    if not url:
+        return
+    match_id = url.rstrip("/").split("/")[-1]
+    csv_candidates = list(DATA_DIR.glob(f"partido_{match_id[:50]}*"))
+    if not csv_candidates:
+        csv_candidates = list(DATA_DIR.glob(f"partido_{match_id[:30]}*"))
+    if not csv_candidates:
+        return
+
+    csv_path = csv_candidates[0]
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return
+
+    if len(lines) < 2:  # solo header o vacío
+        return
+
+    # Caso 1: buscar primer 'finalizado'
+    first_final = -1
+    for i, line in enumerate(lines):
+        if i == 0:  # header
+            continue
+        if ",finalizado," in line:
+            first_final = i
+            break
+
+    if first_final > 0 and first_final < len(lines) - 1:
+        removed = len(lines) - (first_final + 1)
+        with open(csv_path, "w", encoding="utf-8", newline="") as f:
+            f.writelines(lines[: first_final + 1])
+        print(f"   [CSV] {csv_path.name}: {removed} filas post-finalizado eliminadas")
+        return
+
+    if first_final > 0:
+        # finalizado es la última fila, nada que limpiar
+        return
+
+    # Caso 2: sin finalizado, pero was_live + trailing pre_partido
+    last_live_idx = -1
+    for i in range(len(lines) - 1, 0, -1):
+        fields = lines[i].split(",")
+        estado = fields[4].strip() if len(fields) > 4 else ""
+        if estado in ("en_juego", "descanso"):
+            last_live_idx = i
+            break
+
+    if last_live_idx == -1:
+        return
+
+    # Verificar que todo lo posterior son pre_partido
+    all_trailing_pre = True
+    for i in range(last_live_idx + 1, len(lines)):
+        fields = lines[i].split(",")
+        estado = fields[4].strip() if len(fields) > 4 else ""
+        if estado != "pre_partido":
+            all_trailing_pre = False
+            break
+
+    if not all_trailing_pre or last_live_idx == len(lines) - 1:
+        return
+
+    # Marcar última fila en_juego como finalizado y truncar
+    lines[last_live_idx] = lines[last_live_idx].replace(",en_juego,", ",finalizado,").replace(",descanso,", ",finalizado,")
+    removed = len(lines) - (last_live_idx + 1)
+    with open(csv_path, "w", encoding="utf-8", newline="") as f:
+        f.writelines(lines[: last_live_idx + 1])
+    print(f"   [CSV] {csv_path.name}: estado→finalizado + {removed} filas pre_partido eliminadas")
+
+
 def clean_games():
     """Limpia games.csv eliminando partidos terminados"""
 
@@ -108,6 +187,11 @@ def clean_games():
             eliminados.append(partido)
         else:
             activos.append(partido)
+
+    # Sanitizar CSVs de partidos eliminados
+    if eliminados:
+        for p in eliminados:
+            _sanitize_match_csv(p.get("url", ""))
 
     # Guardar si hay cambios
     if eliminados:

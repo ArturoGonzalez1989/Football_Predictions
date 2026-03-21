@@ -218,14 +218,16 @@ for strat, info in sampled.items():
     # ── NEGATIVE: impossible param should block the signal ───────────────
     strats_tight = copy.deepcopy(STRATS)
 
-    if 'oddsMin' in strat_cfg:
-        # Set oddsMin above any realistic market odds
-        strats_tight[strat]['oddsMin'] = 90.0
-        neg_label = 'oddsMin=90.0'
+    if 'odds_min' in strat_cfg or 'oddsMin' in strat_cfg:
+        # Set odds_min above any realistic market odds (all aliases)
+        for k in ('odds_min', 'oddsMin', 'min_odds'):
+            strats_tight[strat][k] = 90.0
+        neg_label = 'odds_min=90.0'
     else:
-        # Block all game minutes (applies to lay strategies without oddsMin)
-        strats_tight[strat]['minuteMin'] = 9999
-        neg_label = 'minuteMin=9999'
+        # Block all game minutes — set ALL known aliases to 9999
+        for k in ('minute_min', 'minuteMin', 'min_minute', 'm_min', 'min_m'):
+            strats_tight[strat][k] = 9999
+        neg_label = 'minute_min=9999'
 
     live_min_neg = _simulate_strategy(csv_path, match_id, strat, strats_tight)
 

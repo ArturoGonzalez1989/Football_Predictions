@@ -2,7 +2,7 @@
   "disabled": [],
   "risk_filter": "all",
   "br": "fixed",
-  "best_score": 12462.94,
+  "best_score": 12488.38,
   "adj": {
     "dedup": false,
     "minOdds": null,
@@ -15,13 +15,13 @@
     "globalMinuteMin": null,
     "globalMinuteMax": null
   },
-  "n_bets": 1638,
-  "wins": 997,
-  "win_pct": 60.9,
-  "flat_roi": 76.09,
-  "flat_pl": 12462.94,
-  "ci_low": 58.5,
-  "ci_high": 63.2,
+  "n_bets": 1503,
+  "wins": 904,
+  "win_pct": 60.1,
+  "flat_roi": 83.09,
+  "flat_pl": 12488.38,
+  "ci_low": 57.6,
+  "ci_high": 62.6,
   "csv_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_max_pl.csv",
   "config_path": "C:\\Users\\agonz\\OneDrive\\Documents\\Proyectos\\Furbo\\betfair_scraper\\data\\presets\\preset_max_pl_config.json"
 }

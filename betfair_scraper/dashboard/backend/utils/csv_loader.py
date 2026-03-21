@@ -73,12 +73,20 @@ def _resolve_csv_path(match_id: str) -> Path:
     return path  # fallback to original (will not exist)
 
 
-def _to_float(val: str) -> Optional[float]:
+def _to_float(val) -> Optional[float]:
+    # Fast path for pre-parsed numeric values (avoids redundant str→float)
+    if isinstance(val, float):
+        return val
+    if isinstance(val, int):
+        return float(val)
+    if val is None:
+        return None
+    # Original string path
     if not val or val.strip() in ("", "N/A", "None"):
         return None
     try:
         return float(val)
-    except ValueError:
+    except (ValueError, TypeError):
         return None
 
 
@@ -469,12 +477,27 @@ def load_games(force_refresh: bool = False) -> list[dict]:
     return games
 
 
+# mtime-based cache: avoids re-reading CSVs that haven't changed on disk.
+# Key = str(path), Value = (mtime, rows).  Cleared via clear_analytics_cache().
+_csv_row_cache: dict[str, tuple[float, list[dict]]] = {}
+
+
 def _read_csv_rows(csv_path: Path) -> list[dict]:
-    """Lee todas las filas de un CSV."""
+    """Lee todas las filas de un CSV (cached by file mtime)."""
     if not csv_path.exists():
         return []
+    key = str(csv_path)
+    try:
+        mtime = csv_path.stat().st_mtime
+    except OSError:
+        mtime = 0.0
+    cached = _csv_row_cache.get(key)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
     with open(csv_path, "r", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+        rows = list(csv.DictReader(f))
+    _csv_row_cache[key] = (mtime, rows)
+    return rows
 
 
 def _normalize_halftime_minutes(rows: list[dict]) -> list[dict]:
@@ -927,6 +950,83 @@ def _clean_odds_outliers(rows: list, ratio: float = 5.0) -> list:
     return cleaned
 
 
+# ── Pre-parse numeric columns (str→float) on cache load ──────────────────
+# Columns known to be numeric from trigger/analytics code.  Pre-parsing once
+# eliminates ~1-2M redundant _to_float(str) calls per backtest run.
+# Columns not in this set keep their original string value — _to_float still
+# handles them correctly (just slower, as before).
+_PREPARSE_NUMERIC_COLS: frozenset[str] = frozenset({
+    # Core match data
+    "minuto", "goles_local", "goles_visitante",
+    # Statistics used by triggers
+    "xg_local", "xg_visitante",
+    "posesion_local", "posesion_visitante",
+    "tiros_local", "tiros_visitante",
+    "tiros_puerta_local", "tiros_puerta_visitante",
+    "corners_local", "corners_visitante",
+    "tackles_local", "tackles_visitante",
+    "momentum_local", "momentum_visitante",
+    "saves_local", "saves_visitante",
+    # Main odds
+    "back_home", "back_draw", "back_away",
+    "lay_home", "lay_draw", "lay_away",
+    # Over/Under odds
+    "back_over05", "lay_over05",
+    "back_over15", "lay_over15",
+    "back_over25", "lay_over25",
+    "back_over35", "lay_over35",
+    "back_over45", "lay_over45",
+    "back_under05", "lay_under05",
+    "back_under15", "lay_under15",
+    "back_under25", "lay_under25",
+    "back_under35", "lay_under35",
+    "back_under45", "lay_under45",
+    # Correct score odds (static, most commonly used)
+    "back_rc_0_0", "lay_rc_0_0",
+    "back_rc_1_1", "lay_rc_1_1",
+    # Volume
+    "volumen_matched",
+})
+
+
+def _preparse_numeric_rows(rows: list[dict]) -> list[dict]:
+    """Convert known numeric columns from str to float in-place (once).
+
+    After this, _to_float() hits the fast ``isinstance(val, float)`` path
+    instead of parsing the same string repeatedly across 32 strategy triggers.
+    Values that are empty or unparseable become None.
+    """
+    cols = _PREPARSE_NUMERIC_COLS
+    for r in rows:
+        for col in cols:
+            v = r.get(col)
+            if v is None or isinstance(v, (float, int)):
+                continue  # already parsed or absent
+            if not v or v == "":
+                r[col] = None
+                continue
+            try:
+                r[col] = float(v)
+            except (ValueError, TypeError):
+                r[col] = None
+    # Also pre-parse any back_rc_*/lay_rc_* columns (correct score, dynamic names)
+    if rows:
+        rc_cols = [k for k in rows[0] if k.startswith(("back_rc_", "lay_rc_"))]
+        for r in rows:
+            for col in rc_cols:
+                v = r.get(col)
+                if v is None or isinstance(v, (float, int)):
+                    continue
+                if not v or v == "":
+                    r[col] = None
+                    continue
+                try:
+                    r[col] = float(v)
+                except (ValueError, TypeError):
+                    r[col] = None
+    return rows
+
+
 def load_match_full(match_id: str) -> dict:
     """Carga resumen completo de un partido finalizado: stats, cuotas, timeline."""
     csv_path = _resolve_csv_path(match_id)
@@ -1019,12 +1119,13 @@ _cache_lock = _threading.Lock()
 
 def clear_analytics_cache():
     """Clear analytics cache to force reload of data."""
-    global _analytics_cache, _analytics_cache_time, _result_cache, _result_cache_time
+    global _analytics_cache, _analytics_cache_time, _result_cache, _result_cache_time, _csv_row_cache
     with _cache_lock:
         _analytics_cache = {}
         _analytics_cache_time = 0
         _result_cache = {}
         _result_cache_time = 0
+        _csv_row_cache = {}
 
 
 def _get_cached_finished_data() -> list[dict]:
@@ -1089,6 +1190,8 @@ def _get_cached_finished_data() -> list[dict]:
                 rows = _clean_odds_outliers(rows)
                 # Strip trailing pre_partido rows with NaN scores (scraper noise after match end)
                 rows = _strip_trailing_pre_partido_rows(rows)
+                # Pre-parse numeric columns (str→float) so triggers hit the fast path
+                rows = _preparse_numeric_rows(rows)
                 # Try to get URL from games.csv mapping by match name
                 game_url = game.get("url") or url_map.get(game["name"], "")
                 finished.append({

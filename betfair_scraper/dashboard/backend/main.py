@@ -70,6 +70,7 @@ from api.bets import router as bets_router, run_auto_cashout
 from api.config import router as config_router
 from api.alerts import router as alerts_router, run_alert_checks
 from api.scripts import router as scripts_router
+from api.test_cases import router as test_cases_router, _run_all_suites, _save_results
 
 # Force fresh reload of csv_reader to avoid stale module cache
 try:
@@ -96,6 +97,7 @@ app.include_router(bets_router, tags=["bets"])
 app.include_router(config_router, prefix="/api", tags=["config"])
 app.include_router(alerts_router, tags=["alerts"])
 app.include_router(scripts_router)
+app.include_router(test_cases_router)
 
 
 # ==================== AUTO REFRESH SCHEDULER ====================
@@ -439,6 +441,7 @@ def _force_kill_scraper(pid: int):
 
 
 ALERTS_MONITOR_INTERVAL = 60  # Check alerts every 60 seconds
+DAILY_TESTS_INTERVAL = 24 * 60 * 60  # Run tests once per day
 
 
 async def _alerts_monitor():
@@ -455,6 +458,30 @@ async def _alerts_monitor():
         except Exception as e:
             print(f"[{datetime.now()}] [ALERTS MONITOR] Error: {e}")
         await asyncio.sleep(ALERTS_MONITOR_INTERVAL)
+
+
+async def _daily_test_runner():
+    """Background task: runs all test suites once per day and saves results."""
+    # Wait 2 minutes at startup before first run (let other services stabilize)
+    await asyncio.sleep(120)
+    while True:
+        try:
+            print(f"[{datetime.now()}] [DAILY-TESTS] Starting scheduled test run...")
+            loop = asyncio.get_event_loop()
+            from api.test_cases import _bg_running, _bg_lock
+            with _bg_lock:
+                if _bg_running:
+                    print(f"[{datetime.now()}] [DAILY-TESTS] Skipped — manual run in progress")
+                    await asyncio.sleep(300)
+                    continue
+            result = await loop.run_in_executor(None, _run_all_suites)
+            _save_results(result)
+            status = "ALL PASS" if result["all_ok"] else f"{result['total_failed']} FAILED"
+            print(f"[{datetime.now()}] [DAILY-TESTS] Complete: "
+                  f"{result['total_passed']} passed, {result['total_failed']} failed — {status}")
+        except Exception as e:
+            print(f"[{datetime.now()}] [DAILY-TESTS] Error: {e}")
+        await asyncio.sleep(DAILY_TESTS_INTERVAL)
 
 
 @app.on_event("startup")
@@ -500,6 +527,8 @@ async def start_scheduler():
     print(f"[{datetime.now()}] Paper trading watchdog started")
     _bg(_alerts_monitor())
     print(f"[{datetime.now()}] Alerts monitor started (logs to alerts.jsonl every 60s)")
+    _bg(_daily_test_runner())
+    print(f"[{datetime.now()}] Daily test runner started (runs every 24h, first run in 2min)")
 
 
 @app.on_event("shutdown")
