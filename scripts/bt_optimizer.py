@@ -931,10 +931,12 @@ def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
     Returns real stats (n, wr, roi, pl, ci_low) reflecting what the live system
     would actually produce — not the portfolio optimizer's internal cherry-pick.
 
-    Applies global min_odds floor and market dedup (same as analyze_cartera).
+    Applies the preset's own adjustments (min_odds, max_odds, global_minute_min/max,
+    slippage) and market dedup — same pipeline LIVE would apply.
     """
     strategy_configs = _merge_preset_strategies(preset_cfg, base_cfg)
     md = base_cfg.get("min_duration", {})
+    adj = preset_cfg.get("adjustments") or {}
 
     all_bets = []
     for (_key, _name, _trigger_fn, _desc, _extract_fn, _win_fn) in _STRATEGY_REGISTRY:
@@ -948,14 +950,46 @@ def _eval_preset_real_stats(preset_cfg: dict, base_cfg: dict) -> dict:
         )
         all_bets.extend(bets)
 
-    # Global min_odds floor (mirrors analyze_cartera).
-    # Read from preset_cfg — each preset has its own optimized adjustments.
-    global_min_odds = (preset_cfg.get("adjustments") or {}).get("min_odds") or 0
+    # Apply preset adjustments (mirrors what LIVE _apply_realistic_adjustments does)
+    # 1. Global min_odds floor
+    global_min_odds = adj.get("min_odds") or 0
     if global_min_odds > 0:
         all_bets = [b for b in all_bets if (b.get("back_odds") or 0) >= global_min_odds]
 
-    # Market dedup: one bet per market per match, earliest by minuto wins
-    # (mirrors analyze_cartera — uses _normalize_mercado for BT/LIVE alignment)
+    # 2. Global max_odds ceiling
+    global_max_odds = adj.get("max_odds")
+    if global_max_odds and global_max_odds < 999:
+        all_bets = [b for b in all_bets if (b.get("back_odds") or 0) <= global_max_odds]
+
+    # 3. Global minute range
+    g_min_minute = adj.get("global_minute_min")
+    g_max_minute = adj.get("global_minute_max")
+    if g_min_minute is not None or g_max_minute is not None:
+        filtered = []
+        for b in all_bets:
+            mn = b.get("minuto") or 0
+            if g_min_minute is not None and mn < g_min_minute:
+                continue
+            if g_max_minute is not None and mn >= g_max_minute:
+                continue
+            filtered.append(b)
+        all_bets = filtered
+
+    # 4. Slippage — reduces P/L of winning BACK bets (mirrors LIVE slippage logic)
+    slippage_pct = adj.get("slippage_pct") or 0
+    if slippage_pct > 0:
+        factor = 1.0 - slippage_pct / 100.0
+        adjusted = []
+        for b in all_bets:
+            if b.get("won") and b.get("pl", 0) > 0:
+                odds = b.get("back_odds") or 2.0
+                new_pl = round((odds * factor - 1) * 0.95, 2)
+                adjusted.append({**b, "pl": new_pl})
+            else:
+                adjusted.append(b)
+        all_bets = adjusted
+
+    # 5. Market dedup: one bet per market per match, earliest by minuto wins
     seen_market: dict = {}
     deduped: list = []
     for b in sorted(all_bets, key=lambda x: x.get("minuto", 0) or 0):
@@ -1005,8 +1039,8 @@ def phase4_apply(preset_paths: dict[str, Path],
         n, wr, roi, ci_l, pl = rs["n"], rs["wr"], rs["roi"], rs["ci_low"], rs["pl"]
         _log(f"    {crit}: N={n} WR={wr}% ROI={roi}% IC={ci_l} P/L={pl}")
 
-        if n < MIN_PRESET_N or ci_l < IC95_MIN_LOW:
-            _log(f"  SKIP {crit}: N={n} ci_low={ci_l} — no pasa quality gate")
+        if n < MIN_PRESET_N or ci_l < IC95_MIN_LOW or roi < G_MIN_ROI:
+            _log(f"  SKIP {crit}: N={n} ci_low={ci_l} ROI={roi}% — no pasa quality gate")
             continue
 
         score_map = {

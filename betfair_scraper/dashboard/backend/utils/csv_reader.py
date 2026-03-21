@@ -1880,6 +1880,82 @@ def _log_signal_ends(current_signal_keys: set[tuple[str, str]]):
         _write_signal_log_row(end_row)
 
 
+def _check_match_data_quality(rows: list[dict]) -> list[str]:
+    """Run lightweight quality checks on match CSV rows.
+
+    Returns a list of warning strings (empty = clean data).
+    Checks:
+      1. Home/away consistency — odds inverted vs score
+      2. Stats completeness — missing xG/possession in live rows
+      3. Score continuity — impossible score jumps
+    """
+    warnings: list[str] = []
+    if not rows:
+        return warnings
+
+    # --- Filter to en_juego rows only ---
+    live_rows = [r for r in rows if r.get("estado_partido") == "en_juego"]
+    if len(live_rows) < 3:
+        return warnings
+
+    # --- 1. Home/away odds consistency ---
+    decisive = 0
+    inverted = 0
+    for r in live_rows:
+        gl = _to_float(r.get("goles_local"))
+        gv = _to_float(r.get("goles_visitante"))
+        bh = _to_float(r.get("back_home"))
+        ba = _to_float(r.get("back_away"))
+        if None in (gl, gv, bh, ba) or gl == gv:
+            continue
+        decisive += 1
+        # When home leads, back_home should be < back_away (home is favorite)
+        if (gl > gv and bh > ba) or (gv > gl and ba > bh):
+            inverted += 1
+    if decisive >= 5 and inverted / decisive >= 0.15:
+        pct = round(100 * inverted / decisive)
+        warnings.append(f"Odds home/away invertidas en {pct}% de filas ({inverted}/{decisive})")
+
+    # --- 2. Stats completeness (xG + possession) ---
+    total_live = len(live_rows)
+    # Only check second half rows (where stats should be available)
+    second_half = [r for r in live_rows if (_to_float(r.get("minuto")) or 0) >= 46]
+    if len(second_half) >= 5:
+        missing_xg = sum(
+            1 for r in second_half
+            if _to_float(r.get("xg_local")) is None and _to_float(r.get("xg_visitante")) is None
+        )
+        if missing_xg / len(second_half) >= 0.8:
+            warnings.append(f"xG ausente en {round(100*missing_xg/len(second_half))}% de 2da parte")
+
+        missing_poss = sum(
+            1 for r in second_half
+            if _to_float(r.get("posesion_local")) is None and _to_float(r.get("posesion_visitante")) is None
+        )
+        if missing_poss / len(second_half) >= 0.8:
+            warnings.append(f"Posesion ausente en {round(100*missing_poss/len(second_half))}% de 2da parte")
+
+    # --- 3. Score continuity ---
+    prev_gl = prev_gv = None
+    for r in live_rows:
+        gl = _to_float(r.get("goles_local"))
+        gv = _to_float(r.get("goles_visitante"))
+        if gl is None or gv is None:
+            continue
+        gl, gv = int(gl), int(gv)
+        if prev_gl is not None:
+            # Score can only increase (goals can't disappear in normal play)
+            drop_home = prev_gl - gl
+            drop_away = prev_gv - gv
+            if drop_home > 0 or drop_away > 0:
+                m = r.get("minuto", "?")
+                warnings.append(f"Score retrocede: {prev_gl}-{prev_gv} -> {gl}-{gv} (min {m})")
+                break  # One warning is enough
+        prev_gl, prev_gv = gl, gv
+
+    return warnings
+
+
 def detect_betting_signals(versions: dict | None = None) -> dict:
     """
     Detect live betting opportunities based on portfolio strategies.
@@ -2061,6 +2137,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
 
     signals = []
 
+    # Per-match data quality warnings (computed once, attached to all signals from that match)
+    _match_warnings: dict[str, list[str]] = {}
+
     for match in live_matches:
         match_id = match["match_id"]
         csv_path = _resolve_csv_path(match_id)
@@ -2071,6 +2150,9 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
         rows = _read_csv_rows(csv_path)
         if not rows:
             continue
+
+        # Run quality checks for this match
+        _match_warnings[match_id] = _check_match_data_quality(rows)
 
         # Get latest capture
         latest = rows[-1]
@@ -2133,6 +2215,7 @@ def detect_betting_signals(versions: dict | None = None) -> dict:
                 "description": description,
                 "entry_conditions": entry_cond,
                 "thresholds": {},
+                "data_warnings": _match_warnings.get(match_id, []),
             }
             if (match_id, sig["strategy"]) not in placed_bets_keys:
                 conflict = _has_conflict(match_id, sig["recommendation"], match_outcomes)
